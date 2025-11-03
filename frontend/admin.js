@@ -1,0 +1,185 @@
+// Admin Portal JavaScript
+let currentAdmin = null;
+
+// Check if user is admin on page load
+document.addEventListener('DOMContentLoaded', async () => {
+    await checkAdminAuth();
+    
+    // Load dashboard stats if on dashboard
+    if (window.location.pathname.includes('admin.html') || window.location.pathname === '/admin.html' || window.location.pathname.includes('index.html')) {
+        await loadAdminStats();
+    }
+});
+
+// Check admin authentication
+async function checkAdminAuth() {
+    try {
+        const response = await UserAPI.getProfile();
+        
+        if (response.role !== 'admin') {
+            showToast('Access denied. Admin privileges required.', 'error');
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 2000);
+            return;
+        }
+        
+        currentAdmin = response;
+        
+        // Update nav
+        const adminUserName = document.getElementById('adminUserName');
+        if (adminUserName) {
+            adminUserName.textContent = response.username;
+        }
+    } catch (error) {
+        showToast('Please login to access admin portal', 'error');
+        setTimeout(() => {
+            window.location.href = 'index.html';
+        }, 2000);
+    }
+}
+
+// Toast notification
+function showToast(message, type = 'info') {
+    const toast = document.getElementById('toast');
+    if (toast) {
+        toast.textContent = message;
+        toast.className = `toast ${type}`;
+        toast.style.display = 'block';
+        setTimeout(() => {
+            toast.style.display = 'none';
+        }, 3000);
+    }
+}
+
+// Load admin dashboard stats
+async function loadAdminStats() {
+    try {
+        const stats = await fetch('http://localhost:5000/api/admin/stats', {
+            credentials: 'include'
+        });
+        
+        if (!stats.ok) {
+            throw new Error('Failed to load stats');
+        }
+        
+        const data = await stats.json();
+        
+        // Update stat cards
+        document.getElementById('totalUsers').textContent = data.total_users || 0;
+        document.getElementById('totalAdmins').textContent = data.total_admins || 0;
+        document.getElementById('totalAuctions').textContent = data.total_auctions || 0;
+        document.getElementById('activeAuctions').textContent = data.active_auctions || 0;
+        document.getElementById('endedAuctions').textContent = data.ended_auctions || 0;
+        document.getElementById('totalBids').textContent = data.total_bids || 0;
+        document.getElementById('recentUsers').textContent = data.recent_users || 0;
+    } catch (error) {
+        console.error('Error loading stats:', error);
+        showToast('Error loading dashboard statistics', 'error');
+    }
+}
+
+// Logout
+async function logout() {
+    try {
+        await UserAPI.logout();
+        window.location.href = 'index.html';
+    } catch (error) {
+        showToast('Logout failed', 'error');
+    }
+}
+
+// Admin API helpers
+const AdminAPI = {
+    getUsers: async (page = 1, search = '') => {
+        const params = new URLSearchParams({ page, per_page: 20 });
+        if (search) params.append('search', search);
+        const response = await fetch(`http://localhost:5000/api/admin/users?${params}`, {
+            credentials: 'include'
+        });
+        if (!response.ok) throw new Error('Failed to fetch users');
+        return response.json();
+    },
+    
+    updateUser: async (userId, data) => {
+        const response = await fetch(`http://localhost:5000/api/admin/users/${userId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify(data)
+        });
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to update user');
+        }
+        return response.json();
+    },
+    
+    deleteUser: async (userId) => {
+        const response = await fetch(`http://localhost:5000/api/admin/users/${userId}`, {
+            method: 'DELETE',
+            credentials: 'include'
+        });
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to delete user');
+        }
+        return response.json();
+    },
+    
+    getAuctions: async (page = 1, status = '') => {
+        const params = new URLSearchParams({ page, per_page: 20 });
+        if (status) params.append('status', status);
+        const response = await fetch(`http://localhost:5000/api/admin/auctions?${params}`, {
+            credentials: 'include'
+        });
+        if (!response.ok) throw new Error('Failed to fetch auctions');
+        return response.json();
+    },
+    
+    updateAuction: async (auctionId, data) => {
+        const response = await fetch(`http://localhost:5000/api/admin/auctions/${auctionId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify(data)
+        });
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to update auction');
+        }
+        return response.json();
+    },
+    
+    deleteAuction: async (auctionId) => {
+        const response = await fetch(`http://localhost:5000/api/admin/auctions/${auctionId}`, {
+            method: 'DELETE',
+            credentials: 'include'
+        });
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to delete auction');
+        }
+        return response.json();
+    },
+    
+    getStats: async () => {
+        const response = await fetch('http://localhost:5000/api/admin/stats', {
+            credentials: 'include'
+        });
+        if (!response.ok) throw new Error('Failed to fetch stats');
+        return response.json();
+    },
+    
+    getUserDetails: async (userId) => {
+        const response = await fetch(`http://localhost:5000/api/admin/users/${userId}`, {
+            credentials: 'include'
+        });
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to fetch user details');
+        }
+        return response.json();
+    }
+};
+

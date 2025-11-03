@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Auction - Admin Portal</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <h1>ZUBID Admin</h1>
+            </div>
+            <div class="nav-menu">
+                <a href="admin.html" class="nav-link">Dashboard</a>
+                <a href="admin-users.html" class="nav-link">Users</a>
+                <a href="admin-auctions.html" class="nav-link">Auctions</a>
+                <a href="admin-create-auction.html" class="nav-link active">Create Auction</a>
+                <a href="admin-categories.html" class="nav-link">Categories</a>
+                <a href="index.html" class="nav-link">User Portal</a>
+                <div class="nav-user">
+                    <span id="adminUserName"></span>
+                    <button class="btn btn-outline" onclick="logout()">Logout</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Create Auction Form -->
+    <section class="admin-section">
+        <div class="container">
+            <div class="admin-form">
+                <h1>Create New Auction</h1>
+                <form id="createAuctionForm" onsubmit="handleCreateAuction(event)">
+                    <div class="form-group">
+                        <label for="itemName">Item Name *</label>
+                        <input type="text" id="itemName" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="description">Description *</label>
+                        <textarea id="description" rows="6" required></textarea>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="category">Category *</label>
+                            <select id="category" required>
+                                <option value="">Select Category</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="startingBid">Starting Bid ($) *</label>
+                            <input type="number" id="startingBid" step="0.01" min="0" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="bidIncrement">Bid Increment ($) *</label>
+                            <input type="number" id="bidIncrement" step="0.01" min="0.01" value="1.00" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="endTime">End Date & Time *</label>
+                            <input type="datetime-local" id="endTime" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="featured">
+                            Feature this auction on homepage
+                        </label>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="images">Upload Images</label>
+                        <input type="file" id="images" accept="image/*" multiple onchange="previewUploadedImages(event)">
+                        <small>Select one or more images for the auction (optional)</small>
+                        <div id="imagePreviewContainer" style="margin-top: 1rem; display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 0.5rem;"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="imageUrls">Or Enter Image URLs (one per line)</label>
+                        <textarea id="imageUrls" rows="4" placeholder="Enter image URLs, one per line&#10;https://example.com/image1.jpg&#10;https://example.com/image2.jpg"></textarea>
+                        <small>You can add image URLs instead of uploading files</small>
+                    </div>
+                    
+                    <div id="formError" class="error-message"></div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Create Auction</button>
+                        <button type="button" class="btn btn-outline" onclick="resetForm()">Reset</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Notification Toast -->
+    <div class="toast" id="toast"></div>
+
+    <script src="api.js"></script>
+    <script src="admin.js"></script>
+    <script src="admin-create-auction.js"></script>
+</body>
+</html>
+

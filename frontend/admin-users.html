@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Users - Admin Portal</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <h1>ZUBID Admin</h1>
+            </div>
+            <div class="nav-menu">
+                <a href="admin.html" class="nav-link">Dashboard</a>
+                <a href="admin-users.html" class="nav-link active">Users</a>
+                <a href="admin-auctions.html" class="nav-link">Auctions</a>
+                <a href="admin-create-auction.html" class="nav-link">Create Auction</a>
+                <a href="admin-categories.html" class="nav-link">Categories</a>
+                <a href="index.html" class="nav-link">User Portal</a>
+                <div class="nav-user">
+                    <span id="adminUserName"></span>
+                    <button class="btn btn-outline" onclick="logout()">Logout</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Users Management -->
+    <section class="admin-section">
+        <div class="container">
+            <h1>User Management</h1>
+            
+            <!-- Search and Filters -->
+            <div class="filters-bar">
+                <input type="text" id="userSearch" placeholder="Search users by name or email..." class="filter-input">
+                <button class="btn btn-primary" onclick="loadUsers()">Search</button>
+                <button class="btn btn-outline" onclick="resetUserSearch()">Reset</button>
+            </div>
+            
+            <!-- Users Table -->
+            <div class="table-container">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Biometric</th>
+                            <th>Auctions</th>
+                            <th>Bids</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTableBody">
+                        <tr>
+                            <td colspan="9" class="loading">Loading users...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            <div class="pagination" id="userPagination"></div>
+        </div>
+    </section>
+
+    <!-- Edit User Modal -->
+    <div class="modal" id="editUserModal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('editUserModal')">&times;</span>
+            <h2>Edit User</h2>
+            <form id="editUserForm" onsubmit="handleUpdateUser(event)">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="editUsername" readonly>
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="editEmail" required>
+                </div>
+                <div class="form-group">
+                    <label>Role</label>
+                    <select id="editRole" required>
+                        <option value="user">User</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+                <input type="hidden" id="editUserId">
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Update User</button>
+                    <button type="button" class="btn btn-outline" onclick="closeModal('editUserModal')">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- View Biometric Information Modal -->
+    <div class="modal" id="biometricModal" style="max-width: 900px;">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('biometricModal')">&times;</span>
+            <h2>Biometric Verification Information</h2>
+            <div id="biometricContent">
+                <div class="loading">Loading biometric information...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div class="toast" id="toast"></div>
+
+    <script src="api.js"></script>
+    <script src="admin.js"></script>
+    <script src="admin-users.js"></script>
+</body>
+</html>
+

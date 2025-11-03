@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Categories - Admin Portal</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <h1>ZUBID Admin</h1>
+            </div>
+            <div class="nav-menu">
+                <a href="admin.html" class="nav-link">Dashboard</a>
+                <a href="admin-users.html" class="nav-link">Users</a>
+                <a href="admin-auctions.html" class="nav-link">Auctions</a>
+                <a href="admin-create-auction.html" class="nav-link">Create Auction</a>
+                <a href="admin-categories.html" class="nav-link active">Categories</a>
+                <a href="index.html" class="nav-link">User Portal</a>
+                <div class="nav-user">
+                    <span id="adminUserName"></span>
+                    <button class="btn btn-outline" onclick="logout()">Logout</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Categories Management -->
+    <section class="admin-section">
+        <div class="container">
+            <h1>Category Management</h1>
+            
+            <!-- Add Category Form -->
+            <div class="admin-form">
+                <h2>Add New Category</h2>
+                <form id="addCategoryForm" onsubmit="handleAddCategory(event)">
+                    <div class="form-group">
+                        <label>Category Name *</label>
+                        <input type="text" id="categoryName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea id="categoryDescription" rows="3"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Add Category</button>
+                </form>
+            </div>
+            
+            <!-- Categories List -->
+            <div class="table-container">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Description</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="categoriesTableBody">
+                        <tr>
+                            <td colspan="4" class="loading">Loading categories...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- Edit Category Modal -->
+    <div class="modal" id="editCategoryModal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('editCategoryModal')">&times;</span>
+            <h2>Edit Category</h2>
+            <form id="editCategoryForm" onsubmit="handleUpdateCategory(event)">
+                <div class="form-group">
+                    <label>Category Name *</label>
+                    <input type="text" id="editCategoryName" required>
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="editCategoryDescription" rows="3"></textarea>
+                </div>
+                <input type="hidden" id="editCategoryId">
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Update Category</button>
+                    <button type="button" class="btn btn-outline" onclick="closeModal('editCategoryModal')">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div class="toast" id="toast"></div>
+
+    <script src="api.js"></script>
+    <script src="admin.js"></script>
+    <script src="admin-categories.js"></script>
+</body>
+</html>
+

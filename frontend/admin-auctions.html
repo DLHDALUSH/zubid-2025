@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Auctions - Admin Portal</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <h1>ZUBID Admin</h1>
+            </div>
+            <div class="nav-menu">
+                <a href="admin.html" class="nav-link">Dashboard</a>
+                <a href="admin-users.html" class="nav-link">Users</a>
+                <a href="admin-auctions.html" class="nav-link active">Auctions</a>
+                <a href="admin-create-auction.html" class="nav-link">Create Auction</a>
+                <a href="admin-categories.html" class="nav-link">Categories</a>
+                <a href="index.html" class="nav-link">User Portal</a>
+                <div class="nav-user">
+                    <span id="adminUserName"></span>
+                    <button class="btn btn-outline" onclick="logout()">Logout</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Auctions Management -->
+    <section class="admin-section">
+        <div class="container">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                <h1>Auction Management</h1>
+                <button class="btn btn-primary" onclick="openCreateAuctionModal()">+ Create New Auction</button>
+            </div>
+            
+            <!-- Filters -->
+            <div class="filters-bar">
+                <select id="statusFilter" class="filter-select" onchange="loadAuctions()">
+                    <option value="">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="ended">Ended</option>
+                    <option value="cancelled">Cancelled</option>
+                </select>
+                <button class="btn btn-outline" onclick="resetAuctionFilters()">Reset</button>
+            </div>
+            
+            <!-- Auctions Table -->
+            <div class="table-container">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Item Name</th>
+                            <th>Seller</th>
+                            <th>Current Bid</th>
+                            <th>Bids</th>
+                            <th>Status</th>
+                            <th>Featured</th>
+                            <th>End Time</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="auctionsTableBody">
+                        <tr>
+                            <td colspan="9" class="loading">Loading auctions...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            <div class="pagination" id="auctionPagination"></div>
+        </div>
+    </section>
+
+    <!-- Create Auction Modal -->
+    <div class="modal" id="createAuctionModal">
+        <div class="modal-content" style="max-width: 700px;">
+            <span class="close" onclick="closeModal('createAuctionModal')">&times;</span>
+            <h2>Create New Auction</h2>
+            <form id="createAuctionForm" onsubmit="handleCreateAuction(event)">
+                <div class="form-group">
+                    <label>Item Name *</label>
+                    <input type="text" id="createItemName" required>
+                </div>
+                <div class="form-group">
+                    <label>Description *</label>
+                    <textarea id="createDescription" rows="4" required></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Category *</label>
+                        <select id="createCategory" required>
+                            <option value="">Select Category</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Starting Bid ($) *</label>
+                        <input type="number" id="createStartingBid" step="0.01" min="0" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Bid Increment ($) *</label>
+                        <input type="number" id="createBidIncrement" step="0.01" min="0.01" value="1.00" required>
+                    </div>
+                    <div class="form-group">
+                        <label>End Date & Time *</label>
+                        <input type="datetime-local" id="createEndTime" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="createFeatured">
+                        Feature this auction on homepage
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label>Upload Images</label>
+                    <input type="file" id="createImages" accept="image/*" multiple onchange="previewUploadedImages(event)">
+                    <small>Select one or more images for the auction (optional)</small>
+                    <div id="imagePreviewContainer" style="margin-top: 1rem; display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 0.5rem;"></div>
+                </div>
+                <div id="createFormError" class="error-message"></div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Create Auction</button>
+                    <button type="button" class="btn btn-outline" onclick="closeModal('createAuctionModal')">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Auction Modal -->
+    <div class="modal" id="editAuctionModal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('editAuctionModal')">&times;</span>
+            <h2>Edit Auction</h2>
+            <form id="editAuctionForm" onsubmit="handleUpdateAuction(event)">
+                <div class="form-group">
+                    <label>Status</label>
+                    <select id="editStatus" required>
+                        <option value="active">Active</option>
+                        <option value="ended">Ended</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="editFeatured">
+                        Featured Auction
+                    </label>
+                </div>
+                <input type="hidden" id="editAuctionId">
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Update Auction</button>
+                    <button type="button" class="btn btn-outline" onclick="closeModal('editAuctionModal')">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div class="toast" id="toast"></div>
+
+    <script src="api.js"></script>
+    <script src="admin.js"></script>
+    <script src="admin-auctions.js"></script>
+</body>
+</html>
+
