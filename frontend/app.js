@@ -668,6 +668,10 @@ async function loadMyBids() {
         console.log('Loading user bids...');
         const bids = await BidAPI.getUserBids();
         console.log('User bids loaded:', bids);
+        // Debug: Log bid status for each bid
+        bids.forEach(bid => {
+            console.log(`Bid ${bid.id} for "${bid.auction_name}": amount=$${bid.amount}, current_bid=$${bid.current_bid}, is_winning=${bid.is_winning}, status=${bid.auction_status}`);
+        });
         
         if (bids && bids.length > 0) {
             console.log(`Showing ${bids.length} user bids`);
@@ -688,7 +692,8 @@ async function loadMyBids() {
                     }
                 } else if (bid.auction_status === 'active') {
                     // For active auctions, check if user is currently winning
-                    const isWinning = bid.is_winning || bid.amount === bid.current_bid;
+                    // Use is_winning from backend, or fallback to checking if bid matches current_bid
+                    const isWinning = bid.is_winning || (Math.abs(bid.amount - bid.current_bid) <= 0.01);
                     if (isWinning) {
                         statusBadge = '<span class="winner-badge">🏆 WINNING</span>';
                         bidClass = 'winner-bid';

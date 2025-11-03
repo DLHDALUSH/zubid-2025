@@ -712,25 +712,47 @@ def get_user_bids():
     
     result = []
     for bid in bids:
-        # Check if this is the winning bid
         auction = bid.auction
-        highest_bid = max([b.amount for b in auction.bids]) if auction.bids else 0
+        if not auction:
+            continue
+            
+        # Get all bids for this auction
+        all_bids = auction.bids if auction.bids else []
+        highest_bid_amount = max([b.amount for b in all_bids]) if all_bids else 0
+        current_bid = auction.current_bid or auction.starting_bid
+        
+        # Get user's bids for this auction
+        user_bids = [b for b in all_bids if b.user_id == session['user_id']]
+        user_highest_bid = max([b.amount for b in user_bids]) if user_bids else 0
+        
+        # Find the highest bidder (user with highest bid)
+        highest_bidder_id = None
+        if all_bids:
+            highest_bid = max(all_bids, key=lambda b: b.amount)
+            highest_bidder_id = highest_bid.user_id
         
         # Determine if user is winning or won
         if auction.status == 'active':
-            # For active auctions, check if user has the highest bid
-            is_winning = bid.amount == highest_bid and bid.amount == auction.current_bid
+            # For active auctions, check if user is the current highest bidder
+            # The winning bid is the one that matches the auction's current_bid
+            # Check if this bid amount equals the current_bid (within small tolerance for floating point)
+            bid_matches_current = abs(bid.amount - current_bid) <= 0.01
+            
+            # Also check if user is the highest bidder (their highest bid equals the highest bid)
+            user_is_highest_bidder = (
+                highest_bidder_id == session['user_id'] and 
+                abs(user_highest_bid - highest_bid_amount) <= 0.01
+            )
+            
+            # Mark as winning if:
+            # 1. This bid matches the current_bid (user is winning with this bid), OR
+            # 2. User is the highest bidder and this is their highest bid
+            is_winning = bid_matches_current or (user_is_highest_bidder and abs(bid.amount - user_highest_bid) <= 0.01)
             is_winner = False
         elif auction.status == 'ended':
             # For ended auctions, check if user is the winner
-            # If winner_id is set and matches current user, they won
             is_winning = False
             is_winner = auction.winner_id == session['user_id']
-            # Also check if this bid amount equals the winning bid (current_bid after auction ended)
-            if is_winner and bid.amount != auction.current_bid:
-                # User won, but this specific bid might not be the winning bid
-                # Still show as winner since user won the auction
-                pass
         else:
             # For cancelled or other statuses
             is_winning = False
@@ -739,14 +761,14 @@ def get_user_bids():
         result.append({
             'id': bid.id,
             'auction_id': bid.auction_id,
-            'auction_name': bid.auction.item_name,
+            'auction_name': auction.item_name,
             'amount': bid.amount,
             'timestamp': bid.timestamp.isoformat(),
             'is_auto_bid': bid.is_auto_bid,
             'is_winning': is_winning,
             'is_winner': is_winner,  # True when auction ended and user won
             'auction_status': auction.status,
-            'current_bid': auction.current_bid or auction.starting_bid,
+            'current_bid': current_bid,
             'winner_id': auction.winner_id
         })
     
