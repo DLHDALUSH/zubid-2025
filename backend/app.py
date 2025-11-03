@@ -933,10 +933,47 @@ def get_user_details(user_id):
 @app.route('/api/admin/users/<int:user_id>', methods=['DELETE'])
 @admin_required
 def delete_user(user_id):
-    user = User.query.get_or_404(user_id)
-    db.session.delete(user)
-    db.session.commit()
-    return jsonify({'message': 'User deleted successfully'}), 200
+    try:
+        user = User.query.get(user_id)
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+        
+        # Prevent deleting admin users
+        if user.role == 'admin':
+            return jsonify({'error': 'Cannot delete admin users'}), 403
+        
+        # Step 1: Delete all bids made by this user (must be done first to avoid foreign key constraint)
+        # This includes bids on auctions they created and bids on other auctions
+        bids = Bid.query.filter_by(user_id=user_id).all()
+        for bid in bids:
+            db.session.delete(bid)
+        
+        # Step 2: Handle auctions where user is the seller
+        # Delete images and auctions they created
+        auctions_as_seller = Auction.query.filter_by(seller_id=user_id).all()
+        for seller_auction in auctions_as_seller:
+            # Delete all images for these auctions
+            auction_images = Image.query.filter_by(auction_id=seller_auction.id).all()
+            for image in auction_images:
+                db.session.delete(image)
+            # Delete the auction
+            db.session.delete(seller_auction)
+        
+        # Step 3: Handle auctions where user is the winner (set winner_id to None)
+        auctions_as_winner = Auction.query.filter_by(winner_id=user_id).all()
+        for auction in auctions_as_winner:
+            auction.winner_id = None
+        
+        # Now delete the user
+        db.session.delete(user)
+        db.session.commit()
+        return jsonify({'message': 'User deleted successfully'}), 200
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error deleting user: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': f'Failed to delete user: {str(e)}'}), 500
 
 @app.route('/api/admin/auctions', methods=['GET'])
 @admin_required
