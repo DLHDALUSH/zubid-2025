@@ -78,7 +78,7 @@ class Auction(db.Model):
     featured = db.Column(db.Boolean, default=False)
     
     images = db.relationship('Image', backref='auction', lazy=True, cascade='all, delete-orphan')
-    bids = db.relationship('Bid', backref='auction', lazy=True, order_by='Bid.timestamp.desc()')
+    bids = db.relationship('Bid', backref='auction', lazy=True, order_by='Bid.timestamp.desc()', cascade='all, delete-orphan')
 
 class Image(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -342,6 +342,12 @@ def get_auctions():
             # Ensure end_time is timezone-aware for calculation
             end_time = ensure_timezone_aware(auction.end_time)
             time_left = (end_time - now).total_seconds() if end_time else 0
+            
+            # Count unique bidders (users who have placed bids)
+            unique_bidders = set()
+            if auction.bids:
+                unique_bidders = {bid.user_id for bid in auction.bids}
+            
             auctions.append({
                 'id': auction.id,
                 'item_name': auction.item_name,
@@ -359,7 +365,7 @@ def get_auctions():
                 'status': auction.status,
                 'featured': auction.featured,
                 'image_url': auction.images[0].url if auction.images else None,
-                'bid_count': len(auction.bids)
+                'bid_count': len(unique_bidders)  # Count unique bidders, not total bids
             })
         
         return jsonify({
@@ -395,6 +401,11 @@ def get_auction(auction_id):
                 auction.current_bid = highest_bid.amount
             db.session.commit()
         
+        # Count unique bidders (users who have placed bids)
+        unique_bidders = set()
+        if auction.bids:
+            unique_bidders = {bid.user_id for bid in auction.bids}
+        
         return jsonify({
             'id': auction.id,
             'item_name': auction.item_name,
@@ -413,7 +424,7 @@ def get_auction(auction_id):
             'status': auction.status,
             'featured': auction.featured,
             'images': [{'id': img.id, 'url': img.url, 'is_primary': img.is_primary} for img in auction.images],
-            'bid_count': len(auction.bids),
+            'bid_count': len(unique_bidders),  # Count unique bidders, not total bids
             'winner_id': auction.winner_id
         }), 200
     except Exception as e:
@@ -778,14 +789,22 @@ def get_user_bids():
 @login_required
 def get_user_auctions():
     auctions = Auction.query.filter_by(seller_id=session['user_id']).all()
-    return jsonify([{
-        'id': auction.id,
-        'item_name': auction.item_name,
-        'current_bid': auction.current_bid or auction.starting_bid,
-        'status': auction.status,
-        'end_time': auction.end_time.isoformat(),
-        'bid_count': len(auction.bids)
-    } for auction in auctions]), 200
+    result = []
+    for auction in auctions:
+        # Count unique bidders (users who have placed bids)
+        unique_bidders = set()
+        if auction.bids:
+            unique_bidders = {bid.user_id for bid in auction.bids}
+        
+        result.append({
+            'id': auction.id,
+            'item_name': auction.item_name,
+            'current_bid': auction.current_bid or auction.starting_bid,
+            'status': auction.status,
+            'end_time': auction.end_time.isoformat(),
+            'bid_count': len(unique_bidders)  # Count unique bidders, not total bids
+        })
+    return jsonify(result), 200
 
 @app.route('/api/featured', methods=['GET'])
 def get_featured():
@@ -989,17 +1008,27 @@ def get_all_auctions_admin():
     
     pagination = query.order_by(Auction.start_time.desc()).paginate(page=page, per_page=per_page, error_out=False)
     
-    return jsonify({
-        'auctions': [{
+    # Build auction list with unique bidder counts
+    auctions_list = []
+    for auction in pagination.items:
+        # Count unique bidders (users who have placed bids)
+        unique_bidders = set()
+        if auction.bids:
+            unique_bidders = {bid.user_id for bid in auction.bids}
+        
+        auctions_list.append({
             'id': auction.id,
             'item_name': auction.item_name,
             'seller': auction.seller.username,
             'current_bid': auction.current_bid,
             'status': auction.status,
             'end_time': auction.end_time.isoformat(),
-            'bid_count': len(auction.bids),
+            'bid_count': len(unique_bidders),  # Count unique bidders, not total bids
             'featured': auction.featured
-        } for auction in pagination.items],
+        })
+    
+    return jsonify({
+        'auctions': auctions_list,
         'total': pagination.total,
         'page': page,
         'per_page': per_page,
@@ -1023,10 +1052,19 @@ def update_auction_admin(auction_id):
 @app.route('/api/admin/auctions/<int:auction_id>', methods=['DELETE'])
 @admin_required
 def delete_auction_admin(auction_id):
-    auction = Auction.query.get_or_404(auction_id)
-    db.session.delete(auction)
-    db.session.commit()
-    return jsonify({'message': 'Auction deleted successfully'}), 200
+    try:
+        auction = Auction.query.get_or_404(auction_id)
+        
+        # Delete all related bids first (cascade should handle this, but explicit deletion ensures it works)
+        Bid.query.filter_by(auction_id=auction_id).delete()
+        
+        # Delete the auction
+        db.session.delete(auction)
+        db.session.commit()
+        return jsonify({'message': 'Auction deleted successfully'}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': f'Failed to delete auction: {str(e)}'}), 500
 
 @app.route('/api/admin/stats', methods=['GET'])
 @admin_required

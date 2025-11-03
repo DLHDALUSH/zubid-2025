@@ -668,10 +668,6 @@ async function loadMyBids() {
         console.log('Loading user bids...');
         const bids = await BidAPI.getUserBids();
         console.log('User bids loaded:', bids);
-        // Debug: Log bid status for each bid
-        bids.forEach(bid => {
-            console.log(`Bid ${bid.id} for "${bid.auction_name}": amount=$${bid.amount}, current_bid=$${bid.current_bid}, is_winning=${bid.is_winning}, status=${bid.auction_status}`);
-        });
         
         if (bids && bids.length > 0) {
             console.log(`Showing ${bids.length} user bids`);
