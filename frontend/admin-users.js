@@ -96,10 +96,42 @@ async function handleUpdateUser(event) {
     }
 }
 
+let pendingDeleteUserId = null;
+
 async function deleteUser(userId) {
-    if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
+    // Store the user ID to delete
+    pendingDeleteUserId = userId;
+    
+    // Show confirmation modal
+    const modal = document.getElementById('deleteConfirmModal');
+    if (modal) {
+        modal.style.display = 'block';
+    } else {
+        // Fallback to default confirm if modal doesn't exist
+        if (confirm('Are you sure you want to delete this account? This action cannot be undone.')) {
+            await confirmDeleteUser();
+        }
+    }
+}
+
+function closeDeleteConfirmModal() {
+    const modal = document.getElementById('deleteConfirmModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+    pendingDeleteUserId = null;
+}
+
+async function confirmDeleteUser() {
+    if (!pendingDeleteUserId) {
         return;
     }
+    
+    const userId = pendingDeleteUserId;
+    pendingDeleteUserId = null;
+    
+    // Close the modal
+    closeDeleteConfirmModal();
     
     try {
         await AdminAPI.deleteUser(userId);
@@ -250,7 +282,11 @@ window.onclick = function(event) {
     const modals = document.querySelectorAll('.modal');
     modals.forEach(modal => {
         if (event.target === modal) {
-            modal.style.display = 'none';
+            if (modal.id === 'deleteConfirmModal') {
+                closeDeleteConfirmModal();
+            } else {
+                modal.style.display = 'none';
+            }
         }
     });
 };
