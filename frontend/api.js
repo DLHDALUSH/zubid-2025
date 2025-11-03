@@ -1,5 +1,7 @@
 // API Configuration
-const API_BASE_URL = 'http://localhost:5000/api';
+// Can be configured via window.API_BASE_URL or defaults to localhost:5000
+// To configure: Add <script>window.API_BASE_URL = 'http://your-api-url/api';</script> before this script
+const API_BASE_URL = window.API_BASE_URL || 'http://localhost:5000/api';
 
 // Helper function for API requests
 async function apiRequest(endpoint, options = {}) {

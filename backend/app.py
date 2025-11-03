@@ -8,15 +8,33 @@ from sqlalchemy import func
 import os
 import json
 
+# Load environment variables
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    # python-dotenv not installed, continue without it
+    pass
+
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'your-secret-key-change-in-production'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///auction.db'
+
+# Configuration from environment variables with fallbacks for development
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'your-secret-key-change-in-production')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URI', 'sqlite:///auction.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max request size
 
 db = SQLAlchemy(app)
-# Allow all origins for development (change in production)
-CORS(app, supports_credentials=True, origins="*")
+
+# CORS configuration - restrict origins in production
+cors_origins = os.getenv('CORS_ORIGINS', '*')
+if cors_origins == '*':
+    # Development mode - allow all origins
+    CORS(app, supports_credentials=True, origins="*")
+else:
+    # Production mode - restrict to specific origins
+    allowed_origins = [origin.strip() for origin in cors_origins.split(',')]
+    CORS(app, supports_credentials=True, origins=allowed_origins)
 
 # Database Models
 class User(db.Model):
@@ -1042,7 +1060,11 @@ def init_db():
             )
             db.session.add(admin)
             db.session.commit()
-            print("Default admin user created: username='admin', password='admin123'")
+            # Security: Don't log credentials in production
+            if os.getenv('FLASK_ENV') != 'production':
+                print("Default admin user created: username='admin', password='admin123'")
+            else:
+                print("Default admin user created. Please change the default password immediately.")
         
         # Create sample auctions if none exist
         if Auction.query.count() == 0 and admin:
@@ -1149,14 +1171,23 @@ def init_db():
 
 if __name__ == '__main__':
     init_db()
+    
+    # Configuration from environment variables
+    debug_mode = os.getenv('FLASK_DEBUG', 'False').lower() == 'true'
+    port = int(os.getenv('PORT', '5000'))
+    host = os.getenv('HOST', '127.0.0.1')
+    
     print("\n" + "="*50)
     print("ZUBID Backend Server Starting...")
     print("="*50)
-    print(f"Server will run on: http://127.0.0.1:5000")
-    print(f"API Test: http://127.0.0.1:5000/api/test")
+    print(f"Server will run on: http://{host}:{port}")
+    print(f"API Test: http://{host}:{port}/api/test")
+    print(f"Debug mode: {'ON' if debug_mode else 'OFF'}")
+    print(f"Environment: {os.getenv('FLASK_ENV', 'development')}")
     print("="*50 + "\n")
+    
     try:
-        app.run(debug=True, port=5000, host='127.0.0.1')
+        app.run(debug=debug_mode, port=port, host=host)
     except Exception as e:
         print(f"\n[ERROR] Failed to start server: {e}")
         print("\nPossible issues:")
