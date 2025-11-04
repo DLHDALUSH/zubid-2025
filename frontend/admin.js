@@ -121,10 +121,24 @@ const AdminAPI = {
             credentials: 'include'
         });
         if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.error || 'Failed to delete user');
+            // Check if response is JSON before trying to parse
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                const error = await response.json();
+                throw new Error(error.error || 'Failed to delete user');
+            } else {
+                // If response is HTML (error page), extract status text
+                throw new Error(`Failed to delete user: ${response.status} ${response.statusText}`);
+            }
         }
-        return response.json();
+        // Check if response has content before parsing
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            return response.json();
+        } else {
+            // If no JSON content, return success message
+            return { message: 'User deleted successfully' };
+        }
     },
     
     getAuctions: async (page = 1, status = '') => {
