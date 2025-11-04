@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (window.skipAppJs || window.location.pathname.includes('profile.html')) {
         // Still setup biometric modal reset even on profile page
         setupBiometricModalReset();
+        initializeDatePicker();
         return;
     }
     
@@ -22,11 +23,116 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     // Setup biometric modal reset
     setupBiometricModalReset();
+    // Initialize date picker
+    initializeDatePicker();
+    // Initialize password strength checker
+    initializePasswordStrength();
 });
 
 // Setup biometric modal reset function (now handled in closeModalAndReset and window.onclick)
 function setupBiometricModalReset() {
     // This function is kept for compatibility but reset is now handled elsewhere
+}
+
+// Initialize modern date picker display
+function initializeDatePicker() {
+    const birthDateInput = document.getElementById('registerBirthDate');
+    const datePickerText = document.getElementById('registerBirthDateText');
+    
+    if (!birthDateInput || !datePickerText) return;
+    
+    // Function to format and update date display
+    function updateDateDisplay() {
+        updateDatePickerDisplay(birthDateInput);
+    }
+    
+    // Update display on input change
+    birthDateInput.addEventListener('change', updateDateDisplay);
+    birthDateInput.addEventListener('input', updateDateDisplay);
+    
+    // Initial update
+    updateDateDisplay();
+}
+
+// Password visibility toggle
+function togglePasswordVisibility(inputId, button) {
+    const passwordInput = document.getElementById(inputId);
+    if (!passwordInput) return;
+    
+    const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+    passwordInput.setAttribute('type', type);
+    
+    const eyeIcon = button.querySelector('.eye-icon');
+    if (eyeIcon) {
+        eyeIcon.textContent = type === 'password' ? '👁️' : '🙈';
+    }
+}
+
+// Password strength checker
+function checkPasswordStrength(password) {
+    const strengthIndicator = document.getElementById('passwordStrength');
+    if (!strengthIndicator) return;
+    
+    if (!password || password.length === 0) {
+        strengthIndicator.className = 'password-strength';
+        return;
+    }
+    
+    let strength = 0;
+    
+    // Length check
+    if (password.length >= 8) strength++;
+    if (password.length >= 12) strength++;
+    
+    // Character variety checks
+    if (/[a-z]/.test(password)) strength++;
+    if (/[A-Z]/.test(password)) strength++;
+    if (/[0-9]/.test(password)) strength++;
+    if (/[^a-zA-Z0-9]/.test(password)) strength++;
+    
+    // Determine strength level
+    if (strength <= 2) {
+        strengthIndicator.className = 'password-strength weak';
+    } else if (strength <= 4) {
+        strengthIndicator.className = 'password-strength medium';
+    } else {
+        strengthIndicator.className = 'password-strength strong';
+    }
+}
+
+// Initialize password strength checker
+function initializePasswordStrength() {
+    const passwordInput = document.getElementById('registerPassword');
+    if (!passwordInput) return;
+    
+    passwordInput.addEventListener('input', function() {
+        checkPasswordStrength(this.value);
+    });
+    
+    passwordInput.addEventListener('blur', function() {
+        if (!this.value || this.value.length === 0) {
+            const strengthIndicator = document.getElementById('passwordStrength');
+            if (strengthIndicator) {
+                strengthIndicator.className = 'password-strength';
+            }
+        }
+    });
+}
+
+// Helper function to update date picker display text
+function updateDatePickerDisplay(dateInput) {
+    const datePickerText = document.getElementById('registerBirthDateText');
+    if (!datePickerText) return;
+    
+    const dateValue = dateInput.value;
+    if (dateValue) {
+        const date = new Date(dateValue + 'T00:00:00');
+        const options = { year: 'numeric', month: 'long', day: 'numeric' };
+        const formattedDate = date.toLocaleDateString('en-US', options);
+        datePickerText.textContent = formattedDate;
+    } else {
+        datePickerText.textContent = 'Click to choose date';
+    }
 }
 
 // Authentication functions
@@ -76,14 +182,24 @@ async function checkAuth() {
 function updateNavAuth(isAuthenticated) {
     const navAuth = document.getElementById('navAuth');
     const navUser = document.getElementById('navUser');
+    const myBidsLink = document.getElementById('myBidsLink');
+    const paymentsLink = document.getElementById('paymentsLink');
     
     if (navAuth && navUser) {
         if (isAuthenticated) {
             navAuth.style.display = 'none';
             navUser.style.display = 'flex';
+            // Show My Bids link
+            if (myBidsLink) myBidsLink.style.display = 'inline-block';
+            // Show Payments link
+            if (paymentsLink) paymentsLink.style.display = 'inline-block';
         } else {
             navAuth.style.display = 'flex';
             navUser.style.display = 'none';
+            // Hide My Bids link
+            if (myBidsLink) myBidsLink.style.display = 'none';
+            // Hide Payments link
+            if (paymentsLink) paymentsLink.style.display = 'none';
         }
     }
 }
@@ -298,7 +414,12 @@ function resetRegistrationFormFields() {
     if (emailField) emailField.value = '';
     if (passwordField) passwordField.value = '';
     if (idNumberField) idNumberField.value = '';
-    if (birthDateField) birthDateField.value = '';
+    if (birthDateField) {
+        birthDateField.value = '';
+        // Reset date picker display
+        const datePickerText = document.getElementById('registerBirthDateText');
+        if (datePickerText) datePickerText.textContent = 'Select your date of birth';
+    }
     if (addressField) addressField.value = '';
     if (phoneField) phoneField.value = '';
 }
@@ -375,6 +496,9 @@ function resetRegistrationForm() {
     if (birthDateField) {
         birthDateField.value = '';
         birthDateField.classList.remove('is-invalid', 'is-valid');
+        // Reset date picker display
+        const datePickerText = document.getElementById('registerBirthDateText');
+        if (datePickerText) datePickerText.textContent = 'Select your date of birth';
         console.log('Birth Date field cleared');
     } else {
         console.warn('Birth Date field not found');
@@ -1876,6 +2000,8 @@ function autoFillRegistrationForm(extractedData, merge = false) {
             if (/^\d{4}-\d{2}-\d{2}$/.test(extractedDate)) {
                 if (!birthDateField.value || merge) {
                     birthDateField.value = extractedDate;
+                    // Update date picker display
+                    updateDatePickerDisplay(birthDateField);
                     filledCount++;
                 }
             } else {
@@ -1885,6 +2011,8 @@ function autoFillRegistrationForm(extractedData, merge = false) {
                     const formattedDate = dateObj.toISOString().split('T')[0];
                     if (!birthDateField.value || merge) {
                         birthDateField.value = formattedDate;
+                        // Update date picker display
+                        updateDatePickerDisplay(birthDateField);
                         filledCount++;
                     }
                 }

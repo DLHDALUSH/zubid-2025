@@ -822,6 +822,38 @@ body {
     font-size: 2.5rem;
     font-weight: 800;
     letter-spacing: -1px;
+    transition: all 0.3s ease;
+}
+
+.timer-normal {
+    color: #4CAF50;
+}
+
+.timer-warning {
+    color: #ff9800;
+    font-weight: 600;
+}
+
+.timer-critical {
+    color: #ff4444;
+    font-weight: bold;
+}
+
+.timer.ended {
+    color: #999;
+    font-weight: normal;
+}
+
+/* Pulse animation for critical countdown */
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.8;
+        transform: scale(1.05);
+    }
 }
 
 .auction-description {
@@ -899,6 +931,698 @@ body {
     margin-top: 0.5rem;
     color: var(--text-secondary);
     font-size: 0.875rem;
+}
+
+/* Enhanced Registration Form Styles */
+.register-modal {
+    max-width: 650px;
+    max-height: 90vh;
+    overflow-y: auto;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(250, 250, 255, 0.98) 100%);
+    border-radius: 24px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(99, 102, 241, 0.1);
+    position: relative;
+}
+
+.register-modal::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #6366f1, #8b5cf6, #ec4899);
+    border-radius: 24px 24px 0 0;
+}
+
+.modal-header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+    padding-bottom: 1.5rem;
+    position: relative;
+}
+
+.header-icon {
+    font-size: 3rem;
+    margin-bottom: 0.5rem;
+    display: inline-block;
+    animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0px);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+.modal-header h2 {
+    margin-bottom: 0.5rem;
+    font-size: 2.2rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: -0.5px;
+}
+
+.modal-subtitle {
+    color: var(--text-secondary);
+    font-size: 1rem;
+    margin: 0;
+    font-weight: 500;
+}
+
+.form-section {
+    margin-bottom: 2rem;
+    padding: 2rem;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(250, 250, 255, 0.9) 100%);
+    border-radius: 20px;
+    border: 2px solid rgba(99, 102, 241, 0.1);
+    box-shadow: 0 4px 20px rgba(99, 102, 241, 0.05);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.form-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #6366f1, #8b5cf6);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.form-section:hover::before {
+    opacity: 1;
+}
+
+.form-section:hover {
+    border-color: rgba(99, 102, 241, 0.2);
+    box-shadow: 0 8px 30px rgba(99, 102, 241, 0.1);
+    transform: translateY(-2px);
+}
+
+.section-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid rgba(99, 102, 241, 0.2);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.section-icon {
+    font-size: 1.5rem;
+    display: inline-block;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+}
+
+.required {
+    color: #ef4444;
+    font-weight: bold;
+    margin-left: 2px;
+}
+
+.required.critical {
+    color: #dc2626;
+    font-size: 1.1em;
+    animation: pulse-critical 2s infinite;
+}
+
+@keyframes pulse-critical {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+.form-group label {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin-bottom: 0.75rem;
+    font-weight: 600;
+    color: var(--text-color);
+    font-size: 0.95rem;
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+    color: #a0a0c0;
+    opacity: 0.7;
+}
+
+.form-group input:required:invalid,
+.form-group textarea:required:invalid {
+    border-color: var(--border-color);
+}
+
+/* Input Wrapper Styles */
+.input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.input-icon {
+    position: absolute;
+    left: 1rem;
+    font-size: 1.1rem;
+    z-index: 1;
+    pointer-events: none;
+    transition: all 0.3s ease;
+}
+
+.input-icon-textarea {
+    top: 1rem;
+    transform: translateY(-50%);
+}
+
+.form-group input,
+.form-group textarea {
+    padding-left: 3rem !important;
+    transition: all 0.3s ease;
+}
+
+.form-group input:focus ~ .input-icon,
+.form-group textarea:focus ~ .input-icon {
+    transform: scale(1.2);
+}
+
+.form-group textarea {
+    padding-top: 0.875rem;
+    padding-left: 3rem !important;
+}
+
+.input-wrapper .password-toggle {
+    position: absolute;
+    right: 1rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+    transition: all 0.3s ease;
+    border-radius: 8px;
+}
+
+.input-wrapper .password-toggle:hover {
+    background: rgba(99, 102, 241, 0.1);
+    transform: scale(1.1);
+}
+
+.eye-icon {
+    font-size: 1.1rem;
+}
+
+/* Password Strength Indicator */
+.password-strength {
+    margin-top: 0.5rem;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--border-light);
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.password-strength::after {
+    content: '';
+    display: block;
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #ef4444, #f59e0b, #10b981);
+    transition: width 0.3s ease;
+    border-radius: 2px;
+}
+
+.password-strength.weak::after {
+    width: 33%;
+    background: #ef4444;
+}
+
+.password-strength.medium::after {
+    width: 66%;
+    background: #f59e0b;
+}
+
+.password-strength.strong::after {
+    width: 100%;
+    background: #10b981;
+}
+
+.form-group input:required:valid,
+.form-group textarea:required:valid {
+    border-color: #10b981;
+    background: rgba(16, 185, 129, 0.02);
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    border-color: var(--primary-color);
+    background: white;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.form-group input:focus:required:invalid,
+.form-group textarea:focus:required:invalid {
+    border-color: #ef4444;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 80px;
+    font-family: inherit;
+}
+
+.form-actions {
+    margin-top: 2.5rem;
+    padding-top: 2rem;
+    border-top: 2px solid rgba(99, 102, 241, 0.1);
+}
+
+.submit-btn {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%);
+    border: none;
+    padding: 1.25rem 2rem;
+    font-size: 1.1rem;
+    font-weight: 700;
+    border-radius: 16px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+}
+
+.submit-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.5s ease;
+}
+
+.submit-btn:hover::before {
+    left: 100%;
+}
+
+.submit-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
+}
+
+.submit-btn:active {
+    transform: translateY(-1px);
+}
+
+.btn-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+}
+
+.btn-text {
+    color: white;
+}
+
+.btn-icon {
+    font-size: 1.2rem;
+    animation: bounce 2s ease-in-out infinite;
+}
+
+@keyframes bounce {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-5px);
+    }
+}
+
+.form-footer {
+    text-align: center;
+    margin-top: 1.5rem;
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+}
+
+.form-footer .link {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.form-footer .link::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: var(--primary-color);
+    transition: width 0.3s ease;
+}
+
+.form-footer .link:hover::after {
+    width: 100%;
+}
+
+.biometric-btn {
+    padding: 1.25rem;
+    font-size: 1rem;
+    border-radius: 14px;
+    transition: all 0.3s ease;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(139, 92, 246, 0.05));
+    border: 2px solid rgba(99, 102, 241, 0.2);
+}
+
+.biometric-btn:hover {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.3);
+    border-color: transparent;
+}
+
+/* Critical field highlight */
+.critical-field {
+    position: relative;
+}
+
+.critical-field::before {
+    content: '';
+    position: absolute;
+    left: -4px;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    border-radius: 4px 0 0 4px;
+}
+
+/* Fallback for browsers that support :has() */
+.form-group:has(.required.critical) {
+    position: relative;
+}
+
+.form-group:has(.required.critical)::before {
+    content: '';
+    position: absolute;
+    left: -4px;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    border-radius: 4px 0 0 4px;
+}
+
+/* Modern Birthday Selector Styles */
+.birthday-selector-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.birthday-selector-wrapper input[type="date"] {
+    position: absolute;
+    opacity: 0;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+    z-index: 3;
+    top: 0;
+    left: 0;
+}
+
+.birthday-selector-wrapper input[type="date"]::-webkit-calendar-picker-indicator {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: auto;
+    height: auto;
+    color: transparent;
+    background: transparent;
+    cursor: pointer;
+}
+
+.birthday-selector {
+    width: 100%;
+    padding: 1.25rem 1.5rem;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(250, 250, 255, 0.98) 100%);
+    border: 2px solid rgba(99, 102, 241, 0.2);
+    border-radius: 16px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.08);
+}
+
+.birthday-selector::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.15), transparent);
+    transition: left 0.6s ease;
+}
+
+.birthday-selector:hover::before {
+    left: 100%;
+}
+
+.birthday-selector:hover {
+    border-color: rgba(99, 102, 241, 0.5);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 1) 0%, rgba(250, 250, 255, 1) 100%);
+    box-shadow: 0 8px 24px rgba(99, 102, 241, 0.2);
+    transform: translateY(-2px);
+}
+
+.birthday-selector:active {
+    transform: translateY(0);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
+}
+
+.birthday-selector-wrapper input[type="date"]:focus + .birthday-selector,
+.birthday-selector-wrapper input[type="date"]:focus-visible + .birthday-selector {
+    border-color: #6366f1;
+    background: white;
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+    outline: none;
+}
+
+.birthday-selector-wrapper input[type="date"]:valid + .birthday-selector {
+    border-color: #10b981;
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(255, 255, 255, 1) 100%);
+    box-shadow: 0 4px 16px rgba(16, 185, 129, 0.2);
+}
+
+.birthday-selector-content {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    position: relative;
+    z-index: 1;
+}
+
+.birthday-icon-wrapper {
+    flex-shrink: 0;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1));
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.birthday-selector:hover .birthday-icon-wrapper {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.2));
+    transform: scale(1.1) rotate(5deg);
+}
+
+.birthday-selector-wrapper input[type="date"]:valid + .birthday-selector .birthday-icon-wrapper {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.2));
+}
+
+.birthday-icon {
+    font-size: 1.75rem;
+    display: inline-block;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+    transition: transform 0.3s ease;
+}
+
+.birthday-selector:hover .birthday-icon {
+    transform: scale(1.15);
+    animation: celebrate 0.6s ease;
+}
+
+@keyframes celebrate {
+    0%, 100% {
+        transform: scale(1.15) rotate(0deg);
+    }
+    25% {
+        transform: scale(1.25) rotate(-10deg);
+    }
+    75% {
+        transform: scale(1.25) rotate(10deg);
+    }
+}
+
+.birthday-text-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    text-align: left;
+}
+
+.birthday-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: color 0.3s ease;
+}
+
+.birthday-selector:hover .birthday-label {
+    color: var(--primary-color);
+}
+
+.birthday-value {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-color);
+    transition: all 0.3s ease;
+}
+
+.birthday-selector-wrapper input[type="date"]:valid + .birthday-selector .birthday-value {
+    color: #10b981;
+    font-weight: 700;
+}
+
+.birthday-arrow-wrapper {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(99, 102, 241, 0.1);
+    border-radius: 10px;
+    transition: all 0.3s ease;
+}
+
+.birthday-selector:hover .birthday-arrow-wrapper {
+    background: rgba(99, 102, 241, 0.2);
+    transform: translateY(2px);
+}
+
+.birthday-selector-wrapper input[type="date"]:valid + .birthday-selector .birthday-arrow-wrapper {
+    background: rgba(16, 185, 129, 0.2);
+}
+
+.birthday-arrow {
+    font-size: 0.875rem;
+    color: var(--primary-color);
+    transition: all 0.3s ease;
+    display: inline-block;
+}
+
+.birthday-selector:hover .birthday-arrow {
+    transform: rotate(180deg);
+    color: var(--primary-color);
+}
+
+.birthday-selector-wrapper input[type="date"]:valid + .birthday-selector .birthday-arrow {
+    color: #10b981;
+}
+
+/* Responsive adjustments for birthday selector */
+@media (max-width: 768px) {
+    .birthday-selector {
+        padding: 1rem 1.25rem;
+    }
+    
+    .birthday-icon-wrapper {
+        width: 44px;
+        height: 44px;
+    }
+    
+    .birthday-icon {
+        font-size: 1.5rem;
+    }
+    
+    .birthday-value {
+        font-size: 0.95rem;
+    }
+    
+    .birthday-arrow-wrapper {
+        width: 32px;
+        height: 32px;
+    }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .register-modal {
+        max-width: 95%;
+        margin: 1rem;
+    }
+    
+    .form-section {
+        padding: 1rem;
+    }
+    
+    .modal-header h2 {
+        font-size: 1.5rem;
+    }
+    
+    .date-picker-btn {
+        padding: 0.75rem 1rem;
+        font-size: 0.95rem;
+    }
+    
+    .date-picker-icon {
+        font-size: 1.1rem;
+    }
 }
 
 .error-message {
@@ -1542,5 +2266,263 @@ body {
     .categories-section h2,
     .section-header h2 {
         font-size: 1.75rem;
+    }
+}
+
+/* Payments Section Styles */
+.payments-section {
+    padding: 4rem 0;
+    min-height: 80vh;
+}
+
+.section-subtitle {
+    color: var(--text-secondary);
+    font-size: 1rem;
+    margin-top: 0.5rem;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: var(--text-secondary);
+}
+
+.empty-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+}
+
+.empty-state h3 {
+    margin-bottom: 1rem;
+    color: var(--text-color);
+}
+
+/* Invoice Card Styles */
+.invoice-card {
+    background: var(--bg-color);
+    border-radius: 20px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border-light);
+    transition: all 0.3s ease;
+}
+
+.invoice-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.invoice-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 2px solid var(--border-light);
+}
+
+.invoice-item-info {
+    display: flex;
+    gap: 1.5rem;
+    flex: 1;
+}
+
+.invoice-item-image {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 12px;
+    border: 2px solid var(--border-light);
+}
+
+.invoice-item-details h3 {
+    margin-bottom: 0.5rem;
+    font-size: 1.5rem;
+    color: var(--text-color);
+}
+
+.invoice-id {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin: 0.25rem 0;
+}
+
+.invoice-date {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    margin: 0.25rem 0;
+}
+
+.invoice-status {
+    flex-shrink: 0;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-pending {
+    background: rgba(251, 191, 36, 0.2);
+    color: #f59e0b;
+}
+
+.status-paid {
+    background: rgba(16, 185, 129, 0.2);
+    color: #10b981;
+}
+
+.status-failed {
+    background: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+}
+
+.invoice-body {
+    margin-top: 1.5rem;
+}
+
+.invoice-breakdown {
+    background: var(--bg-light);
+    padding: 1.5rem;
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+}
+
+.invoice-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.invoice-row:last-child {
+    border-bottom: none;
+}
+
+.invoice-row.total {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--primary-color);
+    padding-top: 1rem;
+    margin-top: 0.5rem;
+    border-top: 2px solid var(--border-light);
+}
+
+.invoice-payment-method {
+    padding: 1rem;
+    background: rgba(99, 102, 241, 0.1);
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    color: var(--text-color);
+}
+
+.invoice-actions {
+    margin-top: 1.5rem;
+}
+
+.invoice-paid-info {
+    padding: 1rem;
+    background: rgba(16, 185, 129, 0.1);
+    border-radius: 8px;
+    color: #10b981;
+    font-weight: 600;
+}
+
+/* Payment Method Modal Styles */
+.payment-methods {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.payment-method-btn {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 1.5rem;
+    background: var(--bg-light);
+    border: 2px solid var(--border-light);
+    border-radius: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: left;
+    width: 100%;
+}
+
+.payment-method-btn:hover {
+    border-color: var(--primary-color);
+    background: rgba(99, 102, 241, 0.05);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
+}
+
+.payment-icon {
+    font-size: 2.5rem;
+    flex-shrink: 0;
+}
+
+.payment-method-info h3 {
+    margin-bottom: 0.25rem;
+    color: var(--text-color);
+    font-size: 1.1rem;
+}
+
+.payment-method-info p {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+.invoice-summary {
+    background: var(--bg-light);
+    padding: 1.5rem;
+    border-radius: 12px;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    color: var(--text-color);
+}
+
+.summary-row.total {
+    font-weight: 700;
+    font-size: 1.2rem;
+    padding-top: 1rem;
+    margin-top: 0.5rem;
+    border-top: 2px solid var(--border-light);
+    color: var(--primary-color);
+}
+
+/* Responsive adjustments for payments */
+@media (max-width: 768px) {
+    .invoice-header {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .invoice-item-info {
+        flex-direction: column;
+    }
+    
+    .invoice-item-image {
+        width: 80px;
+        height: 80px;
+    }
+    
+    .payment-method-btn {
+        padding: 1.25rem;
+    }
+    
+    .payment-icon {
+        font-size: 2rem;
     }
 }

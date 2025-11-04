@@ -95,6 +95,22 @@ class Bid(db.Model):
     is_auto_bid = db.Column(db.Boolean, default=False)
     max_auto_bid = db.Column(db.Float, nullable=True)
 
+class Invoice(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    auction_id = db.Column(db.Integer, db.ForeignKey('auction.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    item_price = db.Column(db.Float, nullable=False)  # Winning bid amount
+    bid_fee = db.Column(db.Float, nullable=False)  # 1% of item price
+    delivery_fee = db.Column(db.Float, nullable=False, default=0.0)
+    total_amount = db.Column(db.Float, nullable=False)
+    payment_method = db.Column(db.String(50))  # 'cash_on_delivery' or 'fib'
+    payment_status = db.Column(db.String(50), default='pending')  # pending, paid, failed, cancelled
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    paid_at = db.Column(db.DateTime, nullable=True)
+    
+    auction = db.relationship('Auction', backref='invoice', lazy=True)
+    user = db.relationship('User', backref='invoices', lazy=True)
+
 # Authentication decorator
 def login_required(f):
     @wraps(f)
@@ -127,6 +143,27 @@ def ensure_timezone_aware(dt):
     # If already timezone-aware, return as-is
     return dt
 
+def calculate_delivery_fee(user_id):
+    """Calculate delivery fee based on user's address"""
+    user = User.query.get(user_id)
+    if not user or not user.address:
+        return 10.0  # Default delivery fee
+    
+    # Simple calculation based on address length/complexity
+    # In production, you'd use a geocoding service or postal code lookup
+    address = user.address.lower()
+    
+    # Basic delivery fee calculation
+    base_fee = 10.0
+    
+    # Add distance-based fees (simplified)
+    if any(keyword in address for keyword in ['remote', 'rural', 'village']):
+        base_fee += 15.0
+    elif any(keyword in address for keyword in ['city', 'urban', 'downtown']):
+        base_fee += 5.0
+    
+    return round(base_fee, 2)
+
 # User Management APIs
 @app.route('/api/register', methods=['POST'])
 def register():
@@ -149,6 +186,20 @@ def register():
             return jsonify({'error': 'Date of Birth is required'}), 400
         if not data.get('biometric_data'):
             return jsonify({'error': 'Biometric authentication is required'}), 400
+        if not data.get('phone') or not data.get('phone').strip():
+            return jsonify({'error': 'Phone number is required'}), 400
+        if not data.get('address') or not data.get('address').strip():
+            return jsonify({'error': 'Address is required'}), 400
+        
+        # Validate phone number format (basic validation)
+        phone = data.get('phone', '').strip()
+        if len(phone) < 8 or len(phone) > 20:
+            return jsonify({'error': 'Phone number must be between 8 and 20 characters'}), 400
+        
+        # Validate address length
+        address = data.get('address', '').strip()
+        if len(address) < 5 or len(address) > 255:
+            return jsonify({'error': 'Address must be between 5 and 255 characters'}), 400
         
         # Check if username already exists
         if User.query.filter_by(username=data['username']).first():
@@ -179,8 +230,8 @@ def register():
             id_number=data['id_number'],
             birth_date=birth_date_obj,
             biometric_data=data['biometric_data'],
-            address=data.get('address', ''),
-            phone=data.get('phone', '')
+            address=data.get('address', '').strip(),
+            phone=data.get('phone', '').strip()
         )
         db.session.add(user)
         db.session.commit()
@@ -310,6 +361,26 @@ def get_auctions():
                     highest_bid = max(auction.bids, key=lambda b: b.amount)
                     auction.winner_id = highest_bid.user_id
                     auction.current_bid = highest_bid.amount
+                    
+                    # Create invoice for the winner
+                    user_id = highest_bid.user_id
+                    existing_invoice = Invoice.query.filter_by(auction_id=auction.id, user_id=user_id).first()
+                    if not existing_invoice:
+                        item_price = auction.current_bid
+                        bid_fee = item_price * 0.01
+                        delivery_fee = calculate_delivery_fee(user_id)
+                        total_amount = item_price + bid_fee + delivery_fee
+                        
+                        invoice = Invoice(
+                            auction_id=auction.id,
+                            user_id=user_id,
+                            item_price=item_price,
+                            bid_fee=bid_fee,
+                            delivery_fee=delivery_fee,
+                            total_amount=total_amount,
+                            payment_status='pending'
+                        )
+                        db.session.add(invoice)
         db.session.commit()
         
         # Rebuild query with all filters (status may have changed after update)
@@ -680,6 +751,24 @@ def place_bid(auction_id):
         
         auction.current_bid = bid_amount
         
+        # BID EXTENSION: Add 2 minutes to end_time when a bid is placed
+        # Only extend if auction is still active and end_time is less than 2 minutes from now
+        end_time = ensure_timezone_aware(auction.end_time)
+        time_until_end = (end_time - now).total_seconds() if end_time else 0
+        
+        # Extend by 2 minutes (120 seconds) if bid is placed
+        # Limit extension to maximum 10 minutes from now (to prevent infinite extensions)
+        if time_until_end > 0:
+            new_end_time = end_time + timedelta(seconds=120)  # Add 2 minutes
+            max_end_time = now + timedelta(minutes=10)  # Maximum 10 minutes from now
+            
+            # Only extend if new end time is before the maximum
+            if new_end_time <= max_end_time:
+                auction.end_time = new_end_time
+            else:
+                # If extension would exceed max, set to max
+                auction.end_time = max_end_time
+        
         # Check for auto-bids from other users
         other_auto_bids = Bid.query.filter(
             Bid.auction_id == auction_id,
@@ -703,10 +792,18 @@ def place_bid(auction_id):
                 bid_amount = new_amount
         
         db.session.commit()
+        
+        # Calculate updated time_left for response
+        updated_end_time = ensure_timezone_aware(auction.end_time)
+        updated_time_left = max(0, int((updated_end_time - datetime.now(timezone.utc)).total_seconds()))
+        
         return jsonify({
             'message': 'Bid placed successfully',
             'current_bid': auction.current_bid,
-            'bid_id': bid.id
+            'bid_id': bid.id,
+            'time_extended': True,
+            'new_end_time': updated_end_time.isoformat(),
+            'time_left': updated_time_left
         }), 201
     
     except Exception as e:
@@ -1090,6 +1187,19 @@ def delete_category_admin(category_id):
 def init_db():
     with app.app_context():
         db.create_all()
+        print("Database tables created/verified successfully!")
+        
+        # Verify Invoice table exists
+        try:
+            from sqlalchemy import inspect
+            inspector = inspect(db.engine)
+            tables = inspector.get_table_names()
+            if 'invoice' not in tables:
+                print("WARNING: Invoice table not found! Creating it now...")
+                db.create_all()
+        except Exception as e:
+            print(f"Note: Could not verify tables: {e}")
+        
         # Create default categories
         if Category.query.count() == 0:
             categories = [
@@ -1228,6 +1338,143 @@ def init_db():
             print("Sample auctions created successfully!")
         
         print("Database initialized successfully!")
+
+@app.route('/api/user/payments', methods=['GET'])
+@login_required
+def get_user_payments():
+    """Get all invoices for the current user"""
+    try:
+        # Check if Invoice table exists
+        try:
+            Invoice.query.first()
+        except Exception as e:
+            print(f"Invoice table error: {e}")
+            return jsonify({'error': 'Database table not initialized. Please restart the backend server.'}), 500
+        
+        # Get all won auctions for the user
+        won_auctions = Auction.query.filter_by(winner_id=session['user_id'], status='ended').all()
+        
+        invoices = []
+        for auction in won_auctions:
+            # Check if invoice exists, if not create one
+            invoice = Invoice.query.filter_by(auction_id=auction.id, user_id=session['user_id']).first()
+            
+            if not invoice:
+                # Calculate fees
+                item_price = auction.current_bid or auction.starting_bid
+                bid_fee = item_price * 0.01  # 1% bid fee
+                delivery_fee = calculate_delivery_fee(session['user_id'])
+                total_amount = item_price + bid_fee + delivery_fee
+                
+                # Create invoice
+                invoice = Invoice(
+                    auction_id=auction.id,
+                    user_id=session['user_id'],
+                    item_price=item_price,
+                    bid_fee=bid_fee,
+                    delivery_fee=delivery_fee,
+                    total_amount=total_amount,
+                    payment_status='pending'
+                )
+                db.session.add(invoice)
+                db.session.commit()
+            
+            # Get auction details
+            auction_data = {
+                'id': auction.id,
+                'item_name': auction.item_name,
+                'description': auction.description,
+                'image_url': auction.images[0].url if auction.images else None,
+                'end_time': auction.end_time.isoformat() if auction.end_time else None
+            }
+            
+            invoices.append({
+                'id': invoice.id,
+                'auction': auction_data,
+                'item_price': invoice.item_price,
+                'bid_fee': invoice.bid_fee,
+                'delivery_fee': invoice.delivery_fee,
+                'total_amount': invoice.total_amount,
+                'payment_method': invoice.payment_method,
+                'payment_status': invoice.payment_status,
+                'created_at': invoice.created_at.isoformat(),
+                'paid_at': invoice.paid_at.isoformat() if invoice.paid_at else None
+            })
+        
+        return jsonify(invoices), 200
+    except Exception as e:
+        print(f"Error in get_user_payments: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': f'Failed to get payments: {str(e)}'}), 500
+
+@app.route('/api/payments/<int:invoice_id>/pay', methods=['POST'])
+@login_required
+def process_payment(invoice_id):
+    """Process payment for an invoice"""
+    try:
+        invoice = Invoice.query.get_or_404(invoice_id)
+        
+        # Verify invoice belongs to user
+        if invoice.user_id != session['user_id']:
+            return jsonify({'error': 'Unauthorized access'}), 403
+        
+        # Check if already paid
+        if invoice.payment_status == 'paid':
+            return jsonify({'error': 'Invoice already paid'}), 400
+        
+        data = request.json
+        payment_method = data.get('payment_method')
+        
+        if payment_method not in ['cash_on_delivery', 'fib']:
+            return jsonify({'error': 'Invalid payment method'}), 400
+        
+        invoice.payment_method = payment_method
+        
+        if payment_method == 'fib':
+            # Process FIB payment (simulate payment gateway)
+            # In production, integrate with actual payment gateway
+            payment_result = process_fib_payment(invoice)
+            if payment_result['success']:
+                invoice.payment_status = 'paid'
+                invoice.paid_at = datetime.now(timezone.utc)
+                db.session.commit()
+                return jsonify({
+                    'message': 'Payment processed successfully',
+                    'invoice_id': invoice.id,
+                    'payment_status': invoice.payment_status
+                }), 200
+            else:
+                invoice.payment_status = 'failed'
+                db.session.commit()
+                return jsonify({'error': payment_result.get('error', 'Payment failed')}), 400
+        else:  # cash_on_delivery
+            invoice.payment_status = 'pending'  # Will be marked as paid when delivered
+            db.session.commit()
+            return jsonify({
+                'message': 'Payment method set to Cash on Delivery',
+                'invoice_id': invoice.id,
+                'payment_status': invoice.payment_status,
+                'note': 'Payment will be collected upon delivery'
+            }), 200
+            
+    except Exception as e:
+        print(f"Error in process_payment: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        db.session.rollback()
+        return jsonify({'error': f'Failed to process payment: {str(e)}'}), 500
+
+def process_fib_payment(invoice):
+    """Process FIB payment gateway (simulated)"""
+    # In production, integrate with actual FIB payment gateway API
+    # For now, simulate successful payment
+    try:
+        # Simulate payment processing
+        # In production: Call FIB API here
+        return {'success': True, 'transaction_id': f'FIB-{invoice.id}-{datetime.now().timestamp()}'}
+    except Exception as e:
+        return {'success': False, 'error': str(e)}
 
 if __name__ == '__main__':
     init_db()

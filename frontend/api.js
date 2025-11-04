@@ -135,6 +135,20 @@ const BidAPI = {
     },
 };
 
+// Payment API
+const PaymentAPI = {
+    getPayments: async () => {
+        return apiRequest('/user/payments');
+    },
+    
+    processPayment: async (invoiceId, paymentMethod) => {
+        return apiRequest(`/payments/${invoiceId}/pay`, {
+            method: 'POST',
+            body: JSON.stringify({ payment_method: paymentMethod }),
+        });
+    },
+};
+
 // Category API
 const CategoryAPI = {
     getAll: async () => {
@@ -144,6 +158,6 @@ const CategoryAPI = {
 
 // Export for use in other files
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { UserAPI, AuctionAPI, BidAPI, CategoryAPI };
+    module.exports = { UserAPI, AuctionAPI, BidAPI, CategoryAPI, PaymentAPI };
 }
 

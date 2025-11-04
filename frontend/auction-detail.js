@@ -96,8 +96,8 @@ function displayAuctionDetail(auction) {
         document.getElementById('biddingClosed').style.display = 'none';
     }
     
-    // Update countdown
-    updateCountdown();
+    // Restart countdown with updated auction data
+    startCountdown();
 }
 
 // Change main image
@@ -215,6 +215,28 @@ async function placeBid() {
         
         // Show immediate success
         showToast('Bid placed successfully!', 'success');
+        
+        // Check if time was extended
+        if (response.time_extended && response.new_end_time) {
+            // Update auctionData with new end_time
+            auctionData.end_time = response.new_end_time;
+            auctionData.time_left = response.time_left;
+            
+            // Show time extension notification
+            showToast('⏰ Auction time extended by 2 minutes!', 'info');
+            
+            // Visual feedback for time extension
+            const timer = document.getElementById('countdownTimer');
+            if (timer) {
+                timer.style.transition = 'all 0.5s';
+                timer.style.transform = 'scale(1.2)';
+                timer.style.color = '#4CAF50';
+                setTimeout(() => {
+                    timer.style.transform = 'scale(1)';
+                    updateCountdown(); // Update countdown immediately
+                }, 500);
+            }
+        }
         
         // Reset form
         bidAmountInput.value = '';
@@ -367,8 +389,18 @@ function startRealTimeUpdates() {
             const oldCurrentBid = auctionData ? auctionData.current_bid : 0;
             const oldBidCount = auctionData ? auctionData.bid_count : 0;
             
+            // Check if end_time changed (bid extension)
+            const oldEndTime = new Date(auctionData.end_time).getTime();
+            const newEndTime = new Date(updatedAuction.end_time).getTime();
+            const timeExtended = newEndTime > oldEndTime;
+            
+            // Update auctionData with latest end_time for countdown
+            if (updatedAuction.end_time) {
+                auctionData.end_time = updatedAuction.end_time;
+            }
+            
             // Update current bid if changed
-            if (updatedAuction.current_bid !== oldCurrentBid || updatedAuction.bid_count !== oldBidCount) {
+            if (updatedAuction.current_bid !== oldCurrentBid || updatedAuction.bid_count !== oldBidCount || timeExtended) {
                 // Get previous bids to check if user was winning
                 let wasWinning = false;
                 if (currentUser && oldCurrentBid > 0) {
@@ -413,6 +445,12 @@ function startRealTimeUpdates() {
                 // Reload bid history to update winner/losing status
                 await loadBidHistory();
                 updateBidForm();
+                
+                // Update countdown if time was extended
+                if (timeExtended) {
+                    updateCountdown();
+                    showToast('⏰ Auction time extended by 2 minutes!', 'info');
+                }
                 
                 // Show notification about bid change
                 if (oldCurrentBid > 0 && currentUser && updatedAuction.current_bid !== oldCurrentBid) {
@@ -494,10 +532,14 @@ function startRealTimeUpdates() {
     }, 3000); // Update every 3 seconds
 }
 
-// Countdown timer
+// Countdown timer with live updates and color changes
 function startCountdown() {
     if (countdownInterval) clearInterval(countdownInterval);
     
+    // Update immediately
+    updateCountdown();
+    
+    // Then update every second for live countdown
     countdownInterval = setInterval(() => {
         updateCountdown();
     }, 1000);
@@ -509,38 +551,57 @@ function updateCountdown() {
     const timer = document.getElementById('countdownTimer');
     if (!timer) return;
     
-    // Use time_left from backend if available, otherwise calculate from end_time
-    let timeLeft;
-    if (auctionData.time_left !== undefined) {
-        // time_left is in seconds
-        timeLeft = auctionData.time_left * 1000; // Convert to milliseconds
-    } else {
-        // Fallback: calculate from end_time
-        const now = new Date().getTime();
-        const endTime = new Date(auctionData.end_time).getTime();
-        timeLeft = Math.max(0, endTime - now);
-    }
+    // Calculate time left from end_time in real-time (live countdown)
+    const now = new Date().getTime();
+    const endTime = new Date(auctionData.end_time).getTime();
+    let timeLeftSeconds = Math.max(0, Math.floor((endTime - now) / 1000));
     
-    if (timeLeft <= 0) {
+    if (timeLeftSeconds <= 0) {
         timer.textContent = 'Auction Ended';
+        timer.className = 'timer ended';
         if (auctionData.status !== 'ended') {
             loadAuctionDetail();
         }
         return;
     }
     
-    const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+    // Calculate time components
+    const days = Math.floor(timeLeftSeconds / (60 * 60 * 24));
+    const hours = Math.floor((timeLeftSeconds % (60 * 60 * 24)) / (60 * 60));
+    const minutes = Math.floor((timeLeftSeconds % (60 * 60)) / 60);
+    const seconds = timeLeftSeconds % 60;
     
+    // Format time string
     let timeString = '';
     if (days > 0) timeString += `${days}d `;
-    if (hours > 0 || days > 0) timeString += `${hours}h `;
-    if (minutes > 0 || hours > 0 || days > 0) timeString += `${minutes}m `;
-    timeString += `${seconds}s`;
+    if (hours > 0 || days > 0) timeString += `${String(hours).padStart(2, '0')}:`;
+    timeString += `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
     
     timer.textContent = timeString;
+    
+    // Color changes based on time remaining
+    const minutesLeft = Math.floor(timeLeftSeconds / 60);
+    timer.classList.remove('timer-normal', 'timer-warning', 'timer-critical', 'ended');
+    
+    if (minutesLeft <= 5) {
+        // Red when 5 minutes or less remain
+        timer.classList.add('timer-critical');
+        timer.style.color = '#ff4444';
+        timer.style.fontWeight = 'bold';
+        timer.style.animation = 'pulse 1s infinite';
+    } else if (minutesLeft <= 15) {
+        // Orange/Yellow when 15 minutes or less remain
+        timer.classList.add('timer-warning');
+        timer.style.color = '#ff9800';
+        timer.style.fontWeight = '600';
+        timer.style.animation = '';
+    } else {
+        // Normal color when more than 15 minutes remain
+        timer.classList.add('timer-normal');
+        timer.style.color = '#4CAF50';
+        timer.style.fontWeight = 'normal';
+        timer.style.animation = '';
+    }
 }
 
 // Cleanup on page unload

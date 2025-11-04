@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payments - ZUBID</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <h1>ZUBID</h1>
+            </div>
+            <div class="nav-menu" id="navMenu">
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="auctions.html" class="nav-link">Auctions</a>
+                <a href="my-bids.html" class="nav-link" id="myBidsLink" style="display: none;">My Bids</a>
+                <a href="payments.html" class="nav-link active" id="paymentsLink" style="display: none;">Payments</a>
+                <a href="profile.html" class="nav-link">Profile</a>
+                <div class="nav-auth" id="navAuth">
+                    <button class="btn btn-outline" onclick="showLogin()">Login</button>
+                    <button class="btn btn-primary" onclick="showRegister()">Sign Up</button>
+                </div>
+                <div class="nav-user" id="navUser" style="display: none;">
+                    <span id="userName"></span>
+                    <button class="btn btn-outline" onclick="logout()">Logout</button>
+                </div>
+            </div>
+            <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
+        </div>
+    </nav>
+
+    <!-- Payments Section -->
+    <section class="payments-section">
+        <div class="container">
+            <div class="section-header">
+                <h2>My Payments & Invoices</h2>
+                <p class="section-subtitle">Manage payments for your won auctions</p>
+            </div>
+
+            <div id="paymentsLoading" class="loading-container">
+                <div class="loading-spinner"></div>
+                <p>Loading payments...</p>
+            </div>
+
+            <div id="paymentsContainer" style="display: none;">
+                <!-- Invoices will be loaded here -->
+            </div>
+
+            <div id="noPayments" style="display: none;" class="empty-state">
+                <div class="empty-icon">💳</div>
+                <h3>No Payments Yet</h3>
+                <p>You don't have any pending payments. When you win an auction, invoices will appear here.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Payment Method Modal -->
+    <div class="modal" id="paymentModal">
+        <div class="modal-content" style="max-width: 500px;">
+            <span class="close" onclick="closeModal('paymentModal')">&times;</span>
+            <h2>Select Payment Method</h2>
+            <div id="paymentMethodContent">
+                <div class="payment-methods">
+                    <button class="payment-method-btn" onclick="selectPaymentMethod('cash_on_delivery')">
+                        <span class="payment-icon">💵</span>
+                        <div class="payment-method-info">
+                            <h3>Cash on Delivery</h3>
+                            <p>Pay when you receive the item</p>
+                        </div>
+                    </button>
+                    <button class="payment-method-btn" onclick="selectPaymentMethod('fib')">
+                        <span class="payment-icon">🏦</span>
+                        <div class="payment-method-info">
+                            <h3>FIB Payment</h3>
+                            <p>Pay securely online via FIB</p>
+                        </div>
+                    </button>
+                </div>
+                <div id="paymentInvoiceDetails" style="display: none; margin-top: 2rem; padding-top: 2rem; border-top: 2px solid var(--border-light);">
+                    <h3>Invoice Summary</h3>
+                    <div class="invoice-summary">
+                        <div class="summary-row">
+                            <span>Item Price:</span>
+                            <span id="summaryItemPrice">$0.00</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Bid Fee (1%):</span>
+                            <span id="summaryBidFee">$0.00</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Delivery Fee:</span>
+                            <span id="summaryDeliveryFee">$0.00</span>
+                        </div>
+                        <div class="summary-row total">
+                            <span>Total:</span>
+                            <span id="summaryTotal">$0.00</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div class="toast" id="toast"></div>
+
+    <script src="api.js"></script>
+    <script src="app.js"></script>
+    <script src="payments.js"></script>
+</body>
+</html>
+

@@ -3,13 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create Auction - ZUBID</title>
+    <title>My Bids - ZUBID</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
-    <!-- Tesseract.js for OCR -->
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1/dist/tesseract.min.js"></script>
 </head>
 <body>
     <!-- Navigation -->
@@ -21,7 +19,7 @@
             <div class="nav-menu" id="navMenu">
                 <a href="index.html" class="nav-link">Home</a>
                 <a href="auctions.html" class="nav-link">Auctions</a>
-                <a href="my-bids.html" class="nav-link" id="myBidsLink" style="display: none;">My Bids</a>
+                <a href="my-bids.html" class="nav-link active" id="myBidsLink" style="display: none;">My Bids</a>
                 <a href="payments.html" class="nav-link" id="paymentsLink" style="display: none;">Payments</a>
                 <a href="profile.html" class="nav-link">Profile</a>
                 <div class="nav-auth" id="navAuth">
@@ -37,65 +35,23 @@
         </div>
     </nav>
 
-    <!-- Create Auction Form -->
-    <section class="auction-form-section">
+    <!-- My Bids Section -->
+    <section class="auctions-section">
         <div class="container">
-            <div class="form-container">
-                <h1>Create New Auction</h1>
-                <form id="createAuctionForm" onsubmit="handleCreateAuction(event)">
-                    <div class="form-group">
-                        <label for="itemName">Item Name *</label>
-                        <input type="text" id="itemName" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="description">Description *</label>
-                        <textarea id="description" rows="6" required></textarea>
-                    </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="category">Category *</label>
-                            <select id="category" required>
-                                <option value="">Select Category</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="startingBid">Starting Bid ($) *</label>
-                            <input type="number" id="startingBid" step="0.01" min="0" required>
-                        </div>
-                    </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="bidIncrement">Bid Increment ($) *</label>
-                            <input type="number" id="bidIncrement" step="0.01" min="0.01" value="1.00" required>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="endTime">End Date & Time *</label>
-                            <input type="datetime-local" id="endTime" required>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>
-                            <input type="checkbox" id="featured">
-                            Feature this auction on homepage
-                        </label>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="imageUrls">Image URLs (one per line)</label>
-                        <textarea id="imageUrls" rows="4" placeholder="Enter image URLs, one per line&#10;https://example.com/image1.jpg&#10;https://example.com/image2.jpg"></textarea>
-                        <small>You can add image URLs. For now, you can use placeholder images or your own hosted images.</small>
-                    </div>
-                    
-                    <div id="formError" class="error-message"></div>
-                    
-                    <button type="submit" class="btn btn-primary btn-large btn-block">Create Auction</button>
-                </form>
+            <div class="section-header">
+                <h1>My Bids</h1>
+            </div>
+            
+            <div id="loadingIndicator" class="loading">Loading your bids...</div>
+            <div id="errorMessage" class="error-message" style="display: none;"></div>
+            
+            <div class="bid-history-list" id="myBidsContainer" style="display: none;">
+                <!-- User bids will be loaded here -->
+            </div>
+            
+            <div id="noBids" style="display: none; text-align: center; padding: 3rem;">
+                <p style="color: #a0a0c0; margin-bottom: 1rem;">You haven't placed any bids yet.</p>
+                <a href="auctions.html" class="btn btn-primary">Browse Auctions</a>
             </div>
         </div>
     </section>
@@ -252,7 +208,7 @@
             </div>
             <div id="cameraActions" style="margin-top: 1.5rem; display: none;">
                 <button class="btn btn-success btn-block" onclick="finishBiometricCapture()">
-                    ✅ Done - Both Photos Captured
+                    ✅ Done - All Photos Captured
                 </button>
             </div>
         </div>
@@ -263,7 +219,7 @@
 
     <script src="api.js"></script>
     <script src="app.js"></script>
-    <script src="create-auction.js"></script>
+    <script src="my-bids.js"></script>
 </body>
 </html>
 
