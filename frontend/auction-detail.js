@@ -302,8 +302,24 @@ async function loadBidHistory() {
         if (!container) return;
         
         if (bids && bids.length > 0) {
-            // Sort bids by amount (highest first) for display
-            const sortedBids = [...bids].sort((a, b) => b.amount - a.amount);
+            // Group bids by user_id and keep only the highest bid per user
+            const bidsByUser = {};
+            bids.forEach(bid => {
+                const userId = bid.user_id;
+                if (!bidsByUser[userId] || bid.amount > bidsByUser[userId].amount) {
+                    bidsByUser[userId] = bid;
+                } else if (bid.amount === bidsByUser[userId].amount) {
+                    // If same amount, keep the most recent one
+                    const existingDate = new Date(bidsByUser[userId].timestamp);
+                    const newDate = new Date(bid.timestamp);
+                    if (newDate > existingDate) {
+                        bidsByUser[userId] = bid;
+                    }
+                }
+            });
+            
+            // Convert back to array and sort by amount (highest first) for display
+            const sortedBids = Object.values(bidsByUser).sort((a, b) => b.amount - a.amount);
             
             container.innerHTML = `
                 <div class="bid-history-list">

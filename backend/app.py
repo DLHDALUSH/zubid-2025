@@ -316,13 +316,27 @@ def get_categories():
 @app.route('/api/categories', methods=['POST'])
 @login_required
 def create_category():
-    data = request.json
-    if Category.query.filter_by(name=data['name']).first():
-        return jsonify({'error': 'Category already exists'}), 400
-    category = Category(name=data['name'], description=data.get('description', ''))
-    db.session.add(category)
-    db.session.commit()
-    return jsonify({'message': 'Category created', 'id': category.id}), 201
+    try:
+        if not request.json:
+            return jsonify({'error': 'No JSON data received'}), 400
+        
+        data = request.json
+        if not data.get('name') or not data.get('name').strip():
+            return jsonify({'error': 'Category name is required'}), 400
+        
+        if Category.query.filter_by(name=data['name'].strip()).first():
+            return jsonify({'error': 'Category already exists'}), 400
+        
+        category = Category(name=data['name'].strip(), description=data.get('description', '').strip())
+        db.session.add(category)
+        db.session.commit()
+        return jsonify({'message': 'Category created', 'id': category.id}), 201
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error creating category: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': f'Failed to create category: {str(e)}'}), 500
 
 # Auction Management APIs
 @app.route('/api/auctions', methods=['GET'])
@@ -988,16 +1002,35 @@ def get_all_users():
 @app.route('/api/admin/users/<int:user_id>', methods=['PUT'])
 @admin_required
 def update_user(user_id):
-    data = request.json
-    user = User.query.get_or_404(user_id)
-    
-    if 'role' in data:
-        user.role = data['role']
-    if 'email' in data:
-        user.email = data['email']
-    
-    db.session.commit()
-    return jsonify({'message': 'User updated successfully'}), 200
+    try:
+        if not request.json:
+            return jsonify({'error': 'No JSON data received'}), 400
+        
+        data = request.json
+        user = User.query.get_or_404(user_id)
+        
+        if 'role' in data:
+            if data['role'] not in ['user', 'admin']:
+                return jsonify({'error': 'Invalid role. Must be "user" or "admin"'}), 400
+            user.role = data['role']
+        
+        if 'email' in data:
+            if not data['email'] or not data['email'].strip():
+                return jsonify({'error': 'Email cannot be empty'}), 400
+            # Check if email already exists for another user
+            existing = User.query.filter_by(email=data['email'].strip()).first()
+            if existing and existing.id != user_id:
+                return jsonify({'error': 'Email already in use by another user'}), 400
+            user.email = data['email'].strip()
+        
+        db.session.commit()
+        return jsonify({'message': 'User updated successfully'}), 200
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error updating user: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': f'Failed to update user: {str(e)}'}), 500
 
 @app.route('/api/admin/users/<int:user_id>', methods=['GET'])
 @admin_required
@@ -1135,16 +1168,29 @@ def get_all_auctions_admin():
 @app.route('/api/admin/auctions/<int:auction_id>', methods=['PUT'])
 @admin_required
 def update_auction_admin(auction_id):
-    data = request.json
-    auction = Auction.query.get_or_404(auction_id)
-    
-    if 'status' in data:
-        auction.status = data['status']
-    if 'featured' in data:
-        auction.featured = data['featured']
-    
-    db.session.commit()
-    return jsonify({'message': 'Auction updated successfully'}), 200
+    try:
+        if not request.json:
+            return jsonify({'error': 'No JSON data received'}), 400
+        
+        data = request.json
+        auction = Auction.query.get_or_404(auction_id)
+        
+        if 'status' in data:
+            if data['status'] not in ['active', 'ended', 'cancelled']:
+                return jsonify({'error': 'Invalid status. Must be "active", "ended", or "cancelled"'}), 400
+            auction.status = data['status']
+        
+        if 'featured' in data:
+            auction.featured = bool(data['featured'])
+        
+        db.session.commit()
+        return jsonify({'message': 'Auction updated successfully'}), 200
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error updating auction: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': f'Failed to update auction: {str(e)}'}), 500
 
 @app.route('/api/admin/auctions/<int:auction_id>', methods=['DELETE'])
 @admin_required
@@ -1189,36 +1235,83 @@ def get_admin_stats():
 @app.route('/api/admin/categories', methods=['POST'])
 @admin_required
 def create_category_admin():
-    data = request.json
-    if Category.query.filter_by(name=data['name']).first():
-        return jsonify({'error': 'Category already exists'}), 400
-    
-    category = Category(name=data['name'], description=data.get('description', ''))
-    db.session.add(category)
-    db.session.commit()
-    return jsonify({'message': 'Category created', 'id': category.id}), 201
+    try:
+        if not request.json:
+            return jsonify({'error': 'No JSON data received'}), 400
+        
+        data = request.json
+        if not data.get('name') or not data.get('name').strip():
+            return jsonify({'error': 'Category name is required'}), 400
+        
+        if Category.query.filter_by(name=data['name'].strip()).first():
+            return jsonify({'error': 'Category already exists'}), 400
+        
+        category = Category(name=data['name'].strip(), description=data.get('description', '').strip())
+        db.session.add(category)
+        db.session.commit()
+        return jsonify({'message': 'Category created', 'id': category.id}), 201
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error creating category: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': f'Failed to create category: {str(e)}'}), 500
 
 @app.route('/api/admin/categories/<int:category_id>', methods=['PUT'])
 @admin_required
 def update_category_admin(category_id):
-    data = request.json
-    category = Category.query.get_or_404(category_id)
-    
-    if 'name' in data:
-        category.name = data['name']
-    if 'description' in data:
-        category.description = data['description']
-    
-    db.session.commit()
-    return jsonify({'message': 'Category updated successfully'}), 200
+    try:
+        if not request.json:
+            return jsonify({'error': 'No JSON data received'}), 400
+        
+        data = request.json
+        category = Category.query.get_or_404(category_id)
+        
+        if 'name' in data:
+            if not data['name'] or not data['name'].strip():
+                return jsonify({'error': 'Category name cannot be empty'}), 400
+            
+            # Check if new name conflicts with existing category
+            existing = Category.query.filter_by(name=data['name'].strip()).first()
+            if existing and existing.id != category_id:
+                return jsonify({'error': 'Category name already exists'}), 400
+            
+            category.name = data['name'].strip()
+        
+        if 'description' in data:
+            category.description = data.get('description', '').strip()
+        
+        db.session.commit()
+        return jsonify({'message': 'Category updated successfully'}), 200
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error updating category: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': f'Failed to update category: {str(e)}'}), 500
 
 @app.route('/api/admin/categories/<int:category_id>', methods=['DELETE'])
 @admin_required
 def delete_category_admin(category_id):
-    category = Category.query.get_or_404(category_id)
-    db.session.delete(category)
-    db.session.commit()
-    return jsonify({'message': 'Category deleted successfully'}), 200
+    try:
+        category = Category.query.get_or_404(category_id)
+        
+        # Check if category has associated auctions
+        auctions_count = Auction.query.filter_by(category_id=category_id).count()
+        if auctions_count > 0:
+            return jsonify({
+                'error': f'Cannot delete category. There are {auctions_count} auction(s) using this category. Please reassign or delete those auctions first.'
+            }), 400
+        
+        db.session.delete(category)
+        db.session.commit()
+        return jsonify({'message': 'Category deleted successfully'}), 200
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error deleting category: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': f'Failed to delete category: {str(e)}'}), 500
 
 # Initialize database
 def init_db():

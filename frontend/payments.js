@@ -1,5 +1,4 @@
 // Payments page functionality
-let currentInvoice = null;
 
 // Wait for app.js to initialize
 document.addEventListener('DOMContentLoaded', async () => {
@@ -75,28 +74,6 @@ function renderPayments(payments) {
     });
 }
 
-function openPaymentModalFromCard(invoiceId) {
-    // Find payment data from stored payments
-    if (!window.paymentsData) {
-        console.error('Payments data not available');
-        if (typeof showToast === 'function') {
-            showToast('Payment data not available. Please refresh the page.', 'error');
-        }
-        return;
-    }
-    
-    const paymentData = window.paymentsData.find(p => p.id === invoiceId);
-    if (!paymentData) {
-        console.error('Payment data not found for invoice:', invoiceId);
-        if (typeof showToast === 'function') {
-            showToast('Payment data not found', 'error');
-        }
-        return;
-    }
-    
-    openPaymentModal(invoiceId, paymentData);
-}
-
 function createInvoiceCard(payment) {
     const card = document.createElement('div');
     card.className = 'invoice-card';
@@ -141,15 +118,9 @@ function createInvoiceCard(payment) {
                 </div>
             </div>
             
-            ${payment.payment_method ? `
-                <div class="invoice-payment-method">
-                    <strong>Payment Method:</strong> ${getPaymentMethodLabel(payment.payment_method)}
-                </div>
-            ` : ''}
-            
-            ${payment.payment_status === 'pending' && !payment.payment_method ? `
+            ${payment.payment_status === 'pending' ? `
                 <div class="invoice-actions">
-                    <button class="btn btn-primary" onclick='openPaymentModalFromCard(${payment.id})'>
+                    <button class="btn btn-primary" onclick='processPaymentDirectly(${payment.id})'>
                         Pay Now
                     </button>
                 </div>
@@ -176,70 +147,14 @@ function getStatusLabel(status) {
     return labels[status] || status;
 }
 
-function getPaymentMethodLabel(method) {
-    const labels = {
-        'cash_on_delivery': 'Cash on Delivery',
-        'fib': 'FIB Payment'
-    };
-    return labels[method] || method;
-}
-
-function openPaymentModal(invoiceId, paymentData) {
+async function processPaymentDirectly(invoiceId) {
     try {
-        // Handle both direct object and JSON string
-        if (typeof paymentData === 'string') {
-            paymentData = JSON.parse(paymentData.replace(/&quot;/g, '"'));
+        if (!invoiceId) {
+            throw new Error('Invalid invoice ID');
         }
         
-        if (!paymentData || typeof paymentData.item_price === 'undefined') {
-            console.error('Invalid payment data:', paymentData);
-            if (typeof showToast === 'function') {
-                showToast('Invalid payment data', 'error');
-            }
-            return;
-        }
-        
-        currentInvoice = { id: invoiceId, ...paymentData };
-        
-        // Update invoice summary
-        const summaryItemPrice = document.getElementById('summaryItemPrice');
-        const summaryBidFee = document.getElementById('summaryBidFee');
-        const summaryDeliveryFee = document.getElementById('summaryDeliveryFee');
-        const summaryTotal = document.getElementById('summaryTotal');
-        const paymentInvoiceDetails = document.getElementById('paymentInvoiceDetails');
-        const paymentModal = document.getElementById('paymentModal');
-        
-        if (summaryItemPrice) summaryItemPrice.textContent = `$${paymentData.item_price.toFixed(2)}`;
-        if (summaryBidFee) summaryBidFee.textContent = `$${paymentData.bid_fee.toFixed(2)}`;
-        if (summaryDeliveryFee) summaryDeliveryFee.textContent = `$${paymentData.delivery_fee.toFixed(2)}`;
-        if (summaryTotal) summaryTotal.textContent = `$${paymentData.total_amount.toFixed(2)}`;
-        if (paymentInvoiceDetails) paymentInvoiceDetails.style.display = 'block';
-        if (paymentModal) paymentModal.style.display = 'block';
-    } catch (error) {
-        console.error('Error opening payment modal:', error);
-        if (typeof showToast === 'function') {
-            showToast('Failed to open payment modal', 'error');
-        } else {
-            alert('Failed to open payment modal');
-        }
-    }
-}
-
-function selectPaymentMethod(method) {
-    if (!currentInvoice) return;
-    
-    processPayment(currentInvoice.id, method);
-}
-
-async function processPayment(invoiceId, paymentMethod) {
-    try {
-        if (!invoiceId || !paymentMethod) {
-            throw new Error('Invalid payment data');
-        }
-        
-        const result = await PaymentAPI.processPayment(invoiceId, paymentMethod);
-        
-        closeModal('paymentModal');
+        // Use cash_on_delivery as default payment method
+        const result = await PaymentAPI.processPayment(invoiceId, 'cash_on_delivery');
         
         if (typeof showToast === 'function') {
             showToast(result.message || 'Payment processed successfully', 'success');
@@ -249,8 +164,6 @@ async function processPayment(invoiceId, paymentMethod) {
         
         // Reload payments
         await loadPayments();
-        
-        currentInvoice = null;
     } catch (error) {
         console.error('Payment error:', error);
         if (typeof showToast === 'function') {
@@ -258,19 +171,6 @@ async function processPayment(invoiceId, paymentMethod) {
         } else {
             alert('Payment failed: ' + (error.message || 'Unknown error'));
         }
-    }
-}
-
-function closeModal(modalId) {
-    document.getElementById(modalId).style.display = 'none';
-    currentInvoice = null;
-}
-
-// Close modal when clicking outside
-window.onclick = function(event) {
-    const modal = document.getElementById('paymentModal');
-    if (event.target === modal) {
-        closeModal('paymentModal');
     }
 }
 

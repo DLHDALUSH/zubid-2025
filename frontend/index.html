@@ -10,6 +10,8 @@
     <link rel="stylesheet" href="styles.css">
     <!-- Tesseract.js for OCR -->
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1/dist/tesseract.min.js"></script>
+    <!-- i18n Translation System -->
+    <script src="i18n.js"></script>
 </head>
 <body>
     <!-- Navigation -->
@@ -19,18 +21,36 @@
                 <h1>ZUBID</h1>
             </div>
             <div class="nav-menu" id="navMenu">
-                <a href="index.html" class="nav-link active">Home</a>
-                <a href="auctions.html" class="nav-link">Auctions</a>
-                <a href="my-bids.html" class="nav-link" id="myBidsLink" style="display: none;">My Bids</a>
-                <a href="payments.html" class="nav-link" id="paymentsLink" style="display: none;">Payments</a>
-                <a href="profile.html" class="nav-link">Profile</a>
+                <a href="index.html" class="nav-link active" data-i18n="nav.home">Home</a>
+                <a href="auctions.html" class="nav-link" data-i18n="nav.auctions">Auctions</a>
+                <a href="my-bids.html" class="nav-link" id="myBidsLink" style="display: none;" data-i18n="nav.myBids">My Bids</a>
+                <a href="payments.html" class="nav-link" id="paymentsLink" style="display: none;" data-i18n="nav.payments">Payments</a>
+                <a href="profile.html" class="nav-link" data-i18n="nav.profile">Profile</a>
+                <!-- Language Switcher -->
+                <div class="language-switcher" id="languageSwitcher">
+                    <button class="language-switcher-btn" onclick="toggleLanguageDropdown()">
+                        <span id="currentLangDisplay">EN</span>
+                        <span>▼</span>
+                    </button>
+                    <div class="language-dropdown" id="languageDropdown">
+                        <div class="language-option active" data-lang="en" onclick="changeLang('en')">
+                            <span>English</span>
+                        </div>
+                        <div class="language-option" data-lang="ku" onclick="changeLang('ku')">
+                            <span>کوردی</span>
+                        </div>
+                        <div class="language-option" data-lang="ar" onclick="changeLang('ar')">
+                            <span>العربية</span>
+                        </div>
+                    </div>
+                </div>
                 <div class="nav-auth" id="navAuth">
-                    <button class="btn btn-outline" onclick="showLogin()">Login</button>
-                    <button class="btn btn-primary" onclick="showRegister()">Sign Up</button>
+                    <button class="btn btn-outline" onclick="showLogin()" data-i18n="nav.login">Login</button>
+                    <button class="btn btn-primary" onclick="showRegister()" data-i18n="nav.signUp">Sign Up</button>
                 </div>
                 <div class="nav-user" id="navUser" style="display: none;">
                     <span id="userName"></span>
-                    <button class="btn btn-outline" onclick="logout()">Logout</button>
+                    <button class="btn btn-outline" onclick="logout()" data-i18n="nav.logout">Logout</button>
                 </div>
             </div>
             <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
@@ -53,8 +73,8 @@
     <section class="search-section">
         <div class="container">
             <div class="search-box">
-                <input type="text" id="searchInput" placeholder="Search for auctions, items, categories..." class="search-input">
-                <button class="search-btn" onclick="performSearch()">Search</button>
+                <input type="text" id="searchInput" data-i18n-placeholder="common.searchPlaceholder" placeholder="Search for auctions, items, categories..." class="search-input">
+                <button class="search-btn" onclick="performSearch()" data-i18n="common.search">Search</button>
             </div>
         </div>
     </section>
@@ -62,7 +82,7 @@
     <!-- Categories Section -->
     <section class="categories-section">
         <div class="container">
-            <h2>Browse Categories</h2>
+            <h2 data-i18n="home.browseCategories">Browse Categories</h2>
             <div class="categories-grid" id="categoriesGrid">
                 <!-- Categories will be loaded here -->
             </div>
@@ -73,8 +93,8 @@
     <section class="auctions-section" id="myAuctionsSection" style="display: none;">
         <div class="container">
             <div class="section-header">
-                <h2>My Auctions</h2>
-                <a href="profile.html" class="view-all">View Profile →</a>
+                <h2 data-i18n="home.myAuctions">My Auctions</h2>
+                <a href="profile.html" class="view-all" data-i18n="home.viewProfile">View Profile →</a>
             </div>
             <div class="auctions-grid" id="myAuctions">
                 <!-- User auctions will be loaded here -->
@@ -86,8 +106,8 @@
     <section class="auctions-section" id="myBidsSection" style="display: none;">
         <div class="container">
             <div class="section-header">
-                <h2>My Bids</h2>
-                <a href="profile.html" class="view-all">View Profile →</a>
+                <h2 data-i18n="home.myBids">My Bids</h2>
+                <a href="profile.html" class="view-all" data-i18n="home.viewProfile">View Profile →</a>
             </div>
             <div class="bid-history-list" id="myBidsContainer">
                 <!-- User bids will be loaded here -->
@@ -99,8 +119,8 @@
     <section class="auctions-section">
         <div class="container">
             <div class="section-header">
-                <h2>Featured Auctions</h2>
-                <a href="auctions.html" class="view-all">View All →</a>
+                <h2 data-i18n="home.featuredAuctions">Featured Auctions</h2>
+                <a href="auctions.html" class="view-all" data-i18n="home.viewAll">View All →</a>
             </div>
             <div class="auctions-grid" id="featuredAuctions">
                 <!-- Auctions will be loaded here -->
@@ -112,17 +132,17 @@
     <div class="modal" id="loginModal">
         <div class="modal-content">
             <span class="close" onclick="closeModal('loginModal')">&times;</span>
-            <h2>Login</h2>
+            <h2 data-i18n="auth.login">Login</h2>
             <form id="loginForm" onsubmit="handleLogin(event)">
                 <div class="form-group">
-                    <label>Username</label>
-                    <input type="text" id="loginUsername" required>
+                    <label data-i18n="auth.username">Username</label>
+                    <input type="text" id="loginUsername" data-i18n-placeholder="auth.username" placeholder="Username" required>
                 </div>
                 <div class="form-group">
-                    <label>Password</label>
-                    <input type="password" id="loginPassword" required>
+                    <label data-i18n="auth.password">Password</label>
+                    <input type="password" id="loginPassword" data-i18n-placeholder="auth.password" placeholder="Password" required>
                 </div>
-                <button type="submit" class="btn btn-primary btn-block">Login</button>
+                <button type="submit" class="btn btn-primary btn-block" data-i18n="auth.login">Login</button>
             </form>
         </div>
     </div>
@@ -133,60 +153,60 @@
             <span class="close" onclick="closeModalAndReset('registerModal')">&times;</span>
             <div class="modal-header">
                 <div class="header-icon">✨</div>
-                <h2>Create Your Account</h2>
-                <p class="modal-subtitle">Join ZUBID to start bidding on amazing auctions</p>
+                <h2 data-i18n="register.createAccount">Create Your Account</h2>
+                <p class="modal-subtitle" data-i18n="register.subtitle">Join ZUBID to start bidding on amazing auctions</p>
             </div>
             <form id="registerForm" onsubmit="handleRegister(event)">
                 <div class="form-section">
                     <h3 class="section-title">
                         <span class="section-icon">👤</span>
-                        Account Information
+                        <span data-i18n="register.accountInfo">Account Information</span>
                     </h3>
                     <div class="form-group">
-                        <label>Username <span class="required">*</span></label>
+                        <label data-i18n="register.username">Username <span class="required">*</span></label>
                         <div class="input-wrapper">
                             <span class="input-icon">👤</span>
-                            <input type="text" id="registerUsername" placeholder="Choose a unique username" required>
+                            <input type="text" id="registerUsername" data-i18n-placeholder="register.usernamePlaceholder" placeholder="Choose a unique username" required>
                         </div>
-                        <small>This will be your display name</small>
+                        <small data-i18n="register.usernameHint">This will be your display name</small>
                     </div>
                     <div class="form-group">
-                        <label>Email <span class="required">*</span></label>
+                        <label data-i18n="register.email">Email <span class="required">*</span></label>
                         <div class="input-wrapper">
                             <span class="input-icon">✉️</span>
-                            <input type="email" id="registerEmail" placeholder="your.email@example.com" required>
+                            <input type="email" id="registerEmail" data-i18n-placeholder="register.emailPlaceholder" placeholder="your.email@example.com" required>
                         </div>
-                        <small>We'll never share your email</small>
+                        <small data-i18n="register.emailHint">We'll never share your email</small>
                     </div>
                     <div class="form-group">
-                        <label>Password <span class="required">*</span></label>
+                        <label data-i18n="register.password">Password <span class="required">*</span></label>
                         <div class="input-wrapper">
                             <span class="input-icon">🔒</span>
-                            <input type="password" id="registerPassword" placeholder="Create a strong password" required>
+                            <input type="password" id="registerPassword" data-i18n-placeholder="register.passwordPlaceholder" placeholder="Create a strong password" required>
                             <button type="button" class="password-toggle" onclick="togglePasswordVisibility('registerPassword', this)">
                                 <span class="eye-icon">👁️</span>
                             </button>
                         </div>
                         <div class="password-strength" id="passwordStrength"></div>
-                        <small>Use at least 8 characters with numbers and symbols</small>
+                        <small data-i18n="register.passwordHint">Use at least 8 characters with numbers and symbols</small>
                     </div>
                 </div>
 
                 <div class="form-section">
                     <h3 class="section-title">
                         <span class="section-icon">🆔</span>
-                        Identity Verification
+                        <span data-i18n="register.identityVerification">Identity Verification</span>
                     </h3>
                     <div class="form-group">
-                        <label>ID Number / Passport <span class="required">*</span></label>
+                        <label data-i18n="register.idNumberPassport">ID Number / Passport <span class="required">*</span></label>
                         <div class="input-wrapper">
                             <span class="input-icon">🆔</span>
-                            <input type="text" id="registerIdNumber" placeholder="Enter your national ID or passport number" required>
+                            <input type="text" id="registerIdNumber" data-i18n-placeholder="register.idNumberPlaceholder" placeholder="Enter your national ID or passport number" required>
                         </div>
-                        <small>This will be used for identity verification</small>
+                        <small data-i18n="register.idNumberHint">This will be used for identity verification</small>
                     </div>
                     <div class="form-group">
-                        <label>Date of Birth <span class="required">*</span></label>
+                        <label data-i18n="register.birthDate">Date of Birth <span class="required">*</span></label>
                         <div class="birthday-selector-wrapper">
                             <input type="date" id="registerBirthDate" required>
                             <div class="birthday-selector" onclick="document.getElementById('registerBirthDate').focus(); if (typeof document.getElementById('registerBirthDate').showPicker === 'function') { document.getElementById('registerBirthDate').showPicker(); }">
@@ -195,8 +215,8 @@
                                         <span class="birthday-icon">🎂</span>
                                     </div>
                                     <div class="birthday-text-wrapper">
-                                        <span class="birthday-label">Select Your Birthday</span>
-                                        <span class="birthday-value" id="registerBirthDateText">Click to choose date</span>
+                                        <span class="birthday-label" data-i18n="register.selectBirthday">Select Your Birthday</span>
+                                        <span class="birthday-value" id="registerBirthDateText" data-i18n="register.clickToChooseDate">Click to choose date</span>
                                     </div>
                                     <div class="birthday-arrow-wrapper">
                                         <span class="birthday-arrow">▼</span>
@@ -204,67 +224,67 @@
                                 </div>
                             </div>
                         </div>
-                        <small>Your date of birth as shown on your ID card</small>
+                        <small data-i18n="register.birthDateHint">Your date of birth as shown on your ID card</small>
                     </div>
                     <div class="form-group">
-                        <label>Biometric Verification <span class="required">*</span></label>
+                        <label data-i18n="register.biometricVerification">Biometric Verification <span class="required">*</span></label>
                         <div id="biometricCapture">
                             <button type="button" id="captureBiometric" class="btn btn-outline btn-block biometric-btn" onclick="openCameraModal()">
-                                <span id="biometricIcon">📷</span> Scan ID & Take Selfie
+                                <span id="biometricIcon">📷</span> <span data-i18n="register.scanIdSelfie">Scan ID & Take Selfie</span>
                             </button>
                             <div id="capturedImages" style="display: none; margin-top: 1rem;">
                                 <div class="captured-image-preview">
                                     <img id="idCardFrontPreview" alt="ID Card Front" style="max-width: 100%; border-radius: 8px; margin-bottom: 0.5rem;">
-                                    <small>✅ ID Card Front</small>
+                                    <small data-i18n="register.idCardFrontCaptured">✅ ID Card Front</small>
                                 </div>
                                 <div class="captured-image-preview">
                                     <img id="idCardBackPreview" alt="ID Card Back" style="max-width: 100%; border-radius: 8px; margin-bottom: 0.5rem;">
-                                    <small>✅ ID Card Back</small>
+                                    <small data-i18n="register.idCardBackCaptured">✅ ID Card Back</small>
                                 </div>
                                 <div class="captured-image-preview">
                                     <img id="selfiePreview" alt="Selfie" style="max-width: 100%; border-radius: 8px; margin-bottom: 0.5rem;">
-                                    <small>✅ Selfie</small>
+                                    <small data-i18n="register.selfieCaptured">✅ Selfie</small>
                                 </div>
                             </div>
                             <div id="biometricStatus" class="biometric-status"></div>
                         </div>
-                        <small>Click the button to scan both sides of your ID card and take a selfie</small>
+                        <small data-i18n="register.biometricHint">Click the button to scan both sides of your ID card and take a selfie</small>
                     </div>
                 </div>
 
                 <div class="form-section">
                     <h3 class="section-title">
                         <span class="section-icon">📞</span>
-                        Contact Information
+                        <span data-i18n="register.contactInfo">Contact Information</span>
                     </h3>
                     <div class="form-group">
-                        <label>Phone Number <span class="required critical">*</span></label>
+                        <label data-i18n="register.phone">Phone Number <span class="required critical">*</span></label>
                         <div class="input-wrapper">
                             <span class="input-icon">📱</span>
-                            <input type="tel" id="registerPhone" placeholder="+1 234 567 8900" required>
+                            <input type="tel" id="registerPhone" data-i18n-placeholder="register.phonePlaceholder" placeholder="+1 234 567 8900" required>
                         </div>
-                        <small>We'll use this to contact you about your auctions</small>
+                        <small data-i18n="register.phoneHint">We'll use this to contact you about your auctions</small>
                     </div>
                     <div class="form-group">
-                        <label>Address <span class="required critical">*</span></label>
+                        <label data-i18n="register.address">Address <span class="required critical">*</span></label>
                         <div class="input-wrapper">
                             <span class="input-icon input-icon-textarea">📍</span>
-                            <textarea id="registerAddress" rows="3" placeholder="Enter your full address (street, city, state, zip code)" required></textarea>
+                            <textarea id="registerAddress" rows="3" data-i18n-placeholder="register.addressPlaceholder" placeholder="Enter your full address (street, city, state, zip code)" required></textarea>
                         </div>
-                        <small>Required for auction transactions and shipping</small>
+                        <small data-i18n="register.addressHint">Required for auction transactions and shipping</small>
                     </div>
                 </div>
 
                 <div class="form-actions">
                     <button type="submit" class="btn btn-primary btn-block btn-large submit-btn">
                         <span class="btn-content">
-                            <span class="btn-text">Create Account</span>
-                            <span class="btn-icon">🚀</span>
-                        </span>
-                    </button>
-                    <p class="form-footer">
-                        Already have an account? <a href="#" onclick="event.preventDefault(); closeModal('registerModal'); showLogin();" class="link">Sign in</a>
-                    </p>
+                        <span class="btn-text" data-i18n="register.createAccount">Create Account</span>
+                        <span class="btn-icon">🚀</span>
+                    </span>
+                </button>
+                <p class="form-footer">
+                    <span data-i18n="register.alreadyHaveAccount">Already have an account?</span> <a href="#" onclick="event.preventDefault(); closeModal('registerModal'); showLogin();" class="link" data-i18n="register.signIn">Sign in</a>
+                </p>
                 </div>
             </form>
         </div>
@@ -274,46 +294,46 @@
     <div class="modal" id="cameraModal">
         <div class="modal-content" style="max-width: 800px;">
             <span class="close" onclick="closeCameraModal()">&times;</span>
-            <h2 id="cameraModalTitle">Scan ID Card</h2>
+            <h2 id="cameraModalTitle" data-i18n="register.scanIdCard">Scan ID Card</h2>
             <div id="cameraContainer">
                 <video id="videoStream" autoplay playsinline style="width: 100%; max-height: 400px; border-radius: 12px; background: #000; display: none;"></video>
                 <canvas id="captureCanvas" style="display: none;"></canvas>
                 <div id="cameraPlaceholder" style="text-align: center; padding: 3rem; background: #1a1a2e; border-radius: 12px;">
-                    <p style="color: #a0a0c0; margin-bottom: 1rem;">Camera will appear here</p>
-                    <button class="btn btn-primary" onclick="startCamera('id_front')" id="startCameraBtn">Start Camera</button>
+                    <p style="color: #a0a0c0; margin-bottom: 1rem;" data-i18n="register.cameraPlaceholder">Camera will appear here</p>
+                    <button class="btn btn-primary" onclick="startCamera('id_front')" id="startCameraBtn" data-i18n="register.startCamera">Start Camera</button>
                 </div>
             </div>
             <div id="captureControls" style="display: none; margin-top: 1.5rem; text-align: center;">
                 <button class="btn btn-primary" onclick="capturePhoto()" id="captureBtn">
-                    <span id="captureIcon">📸</span> Capture Photo
+                    <span id="captureIcon">📸</span> <span data-i18n="register.capturePhoto">Capture Photo</span>
                 </button>
                 <button class="btn btn-outline" onclick="switchCamera()" id="switchCameraBtn" style="margin-left: 1rem;">
-                    🔄 Switch Camera
+                    🔄 <span data-i18n="register.switchCamera">Switch Camera</span>
                 </button>
                 <button class="btn btn-outline" onclick="retakePhoto()" id="retakeBtn" style="margin-left: 1rem; display: none;">
-                    ↻ Retake
+                    ↻ <span data-i18n="register.retake">Retake</span>
                 </button>
             </div>
             <div id="captureSteps" style="margin-top: 1.5rem; display: flex; justify-content: space-between; gap: 1rem;">
                 <div class="capture-step" id="stepIdFront" style="flex: 1; padding: 1rem; background: #1a1a2e; border-radius: 8px; text-align: center;">
                     <div style="font-size: 2rem; margin-bottom: 0.5rem;">📄</div>
-                    <div style="font-weight: 600; margin-bottom: 0.25rem;">Step 1: ID Front</div>
-                    <div id="stepIdFrontStatus" style="font-size: 0.875rem; color: #a0a0c0;">Pending</div>
+                    <div style="font-weight: 600; margin-bottom: 0.25rem;"><span data-i18n="register.step1">Step 1</span>: <span data-i18n="register.stepIdFront">ID Front</span></div>
+                    <div id="stepIdFrontStatus" style="font-size: 0.875rem; color: #a0a0c0;" data-i18n="register.pending">Pending</div>
                 </div>
                 <div class="capture-step" id="stepIdBack" style="flex: 1; padding: 1rem; background: #1a1a2e; border-radius: 8px; text-align: center;">
                     <div style="font-size: 2rem; margin-bottom: 0.5rem;">📄</div>
-                    <div style="font-weight: 600; margin-bottom: 0.25rem;">Step 2: ID Back</div>
-                    <div id="stepIdBackStatus" style="font-size: 0.875rem; color: #a0a0c0;">Pending</div>
+                    <div style="font-weight: 600; margin-bottom: 0.25rem;"><span data-i18n="register.step2">Step 2</span>: <span data-i18n="register.stepIdBack">ID Back</span></div>
+                    <div id="stepIdBackStatus" style="font-size: 0.875rem; color: #a0a0c0;" data-i18n="register.pending">Pending</div>
                 </div>
                 <div class="capture-step" id="stepSelfie" style="flex: 1; padding: 1rem; background: #1a1a2e; border-radius: 8px; text-align: center;">
                     <div style="font-size: 2rem; margin-bottom: 0.5rem;">📷</div>
-                    <div style="font-weight: 600; margin-bottom: 0.25rem;">Step 3: Selfie</div>
-                    <div id="stepSelfieStatus" style="font-size: 0.875rem; color: #a0a0c0;">Pending</div>
+                    <div style="font-weight: 600; margin-bottom: 0.25rem;"><span data-i18n="register.step3">Step 3</span>: <span data-i18n="register.stepSelfie">Selfie</span></div>
+                    <div id="stepSelfieStatus" style="font-size: 0.875rem; color: #a0a0c0;" data-i18n="register.pending">Pending</div>
                 </div>
             </div>
             <div id="cameraActions" style="margin-top: 1.5rem; display: none;">
                 <button class="btn btn-success btn-block" onclick="finishBiometricCapture()">
-                    ✅ Done - All Photos Captured
+                    ✅ <span data-i18n="register.done">Done - All Photos Captured</span>
                 </button>
             </div>
         </div>

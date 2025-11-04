@@ -796,7 +796,31 @@ async function loadMyBids() {
         if (bids && bids.length > 0) {
             console.log(`Showing ${bids.length} user bids`);
             section.style.display = 'block';
-            container.innerHTML = bids.map(bid => {
+            
+            // Group bids by auction_id and keep only the highest bid per auction
+            const bidsByAuction = {};
+            bids.forEach(bid => {
+                const auctionId = bid.auction_id;
+                if (!bidsByAuction[auctionId] || bid.amount > bidsByAuction[auctionId].amount) {
+                    bidsByAuction[auctionId] = bid;
+                } else if (bid.amount === bidsByAuction[auctionId].amount) {
+                    // If same amount, keep the most recent one
+                    const existingDate = new Date(bidsByAuction[auctionId].timestamp);
+                    const newDate = new Date(bid.timestamp);
+                    if (newDate > existingDate) {
+                        bidsByAuction[auctionId] = bid;
+                    }
+                }
+            });
+            
+            // Convert back to array and sort by timestamp (newest first)
+            const uniqueBids = Object.values(bidsByAuction).sort((a, b) => {
+                return new Date(b.timestamp) - new Date(a.timestamp);
+            });
+            
+            console.log(`Showing ${uniqueBids.length} unique bids (from ${bids.length} total bids)`);
+            
+            container.innerHTML = uniqueBids.map(bid => {
                 // Check if user won (for ended auctions) or is winning (for active auctions)
                 let statusBadge = '';
                 let bidClass = 'losing-bid';
