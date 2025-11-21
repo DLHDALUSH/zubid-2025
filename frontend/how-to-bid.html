@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How to Bid - ZUBID</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css?v=20250116-enhanced-enhanced">
+    <script src="i18n.js"></script>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <h1><a href="index.html" style="text-decoration: none; color: inherit;">ZUBID</a></h1>
+            </div>
+            <div class="nav-menu" id="navMenu">
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="auctions.html" class="nav-link">Auctions</a>
+                <a href="how-to-bid.html" class="nav-link active">How to Bid</a>
+                <a href="contact-us.html" class="nav-link">Contact Us</a>
+                <a href="my-bids.html" class="nav-link" id="myBidsLink" style="display: none;">My Bids</a>
+                <a href="payments.html" class="nav-link" id="paymentsLink" style="display: none;">Payments</a>
+                <a href="return-requests.html" class="nav-link" id="returnRequestsLink" style="display: none;">Return Requests</a>
+                <a href="profile.html" class="nav-link" id="profileLink" style="display: none;">Profile</a>
+                <div class="nav-auth" id="navAuth">
+                    <button class="btn btn-outline" onclick="window.location.href='index.html#login'">Login</button>
+                    <button class="btn btn-primary" onclick="window.location.href='index.html#register'">Sign Up</button>
+                </div>
+                <div class="nav-user" id="navUser" style="display: none;">
+                    <span id="userName"></span>
+                    <button class="btn btn-outline" onclick="logout()">Logout</button>
+                </div>
+            </div>
+            <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
+        </div>
+    </nav>
+
+    <!-- How to Bid Section -->
+    <section class="how-to-bid-section" style="padding: 4rem 0; min-height: calc(100vh - 200px);">
+        <div class="container">
+            <div class="section-header" style="text-align: center; margin-bottom: 4rem;">
+                <h1 style="font-size: 2.5rem; margin-bottom: 1rem; background: var(--bg-gradient-warm); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">How to Bid</h1>
+                <p style="font-size: 1.1rem; color: var(--text-secondary); max-width: 700px; margin: 0 auto;">Learn how to participate in auctions and place winning bids on ZUBID. Follow these simple steps to get started.</p>
+            </div>
+
+            <div style="max-width: 1000px; margin: 0 auto;">
+                <!-- Step-by-Step Guide -->
+                <div class="steps-container" style="display: flex; flex-direction: column; gap: 2rem; margin-bottom: 4rem;">
+                    <!-- Step 1 -->
+                    <div class="step-card" style="background: var(--glass-bg); backdrop-filter: blur(10px); border-radius: 20px; padding: 2.5rem; box-shadow: var(--shadow-lg); border: 1px solid var(--glass-border); display: flex; gap: 2rem; align-items: start;">
+                        <div class="step-number" style="width: 60px; height: 60px; background: var(--bg-gradient-warm); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 1.8rem; font-weight: 700; color: white; box-shadow: var(--shadow-primary);">
+                            1
+                        </div>
+                        <div class="step-content" style="flex: 1;">
+                            <h2 style="font-size: 1.5rem; margin-bottom: 1rem; color: var(--primary-color);">Create Your Account</h2>
+                            <p style="color: var(--text-secondary); line-height: 1.8; margin-bottom: 1rem;">Start by creating a free account on ZUBID. Click the "Sign Up" button in the navigation bar and fill in your details. You'll need to provide:</p>
+                            <ul style="color: var(--text-secondary); line-height: 1.8; margin-left: 1.5rem; margin-bottom: 1rem;">
+                                <li>Username and email address</li>
+                                <li>Secure password</li>
+                                <li>Personal information for verification</li>
+                            </ul>
+                            <a href="index.html#register" class="btn btn-primary" style="display: inline-block; margin-top: 0.5rem;">Sign Up Now</a>
+                        </div>
+                    </div>
+
+                    <!-- Step 2 -->
+                    <div class="step-card" style="background: var(--glass-bg); backdrop-filter: blur(10px); border-radius: 20px; padding: 2.5rem; box-shadow: var(--shadow-lg); border: 1px solid var(--glass-border); display: flex; gap: 2rem; align-items: start;">
+                        <div class="step-number" style="width: 60px; height: 60px; background: var(--bg-gradient-warm); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 1.8rem; font-weight: 700; color: white; box-shadow: var(--shadow-primary);">
+                            2
+                        </div>
+                        <div class="step-content" style="flex: 1;">
+                            <h2 style="font-size: 1.5rem; margin-bottom: 1rem; color: var(--primary-color);">Browse Auctions</h2>
+                            <p style="color: var(--text-secondary); line-height: 1.8; margin-bottom: 1rem;">Explore our wide selection of auctions. You can:</p>
+                            <ul style="color: var(--text-secondary); line-height: 1.8; margin-left: 1.5rem; margin-bottom: 1rem;">
+                                <li>Browse by category (Electronics, Jewelry, Vehicles, etc.)</li>
+                                <li>Search for specific items</li>
+                                <li>Filter by price range, status, and more</li>
+                                <li>View featured auctions on the homepage</li>
+                            </ul>
+                            <a href="auctions.html" class="btn btn-primary" style="display: inline-block; margin-top: 0.5rem;">Browse Auctions</a>
+                        </div>
+                    </div>
+
+                    <!-- Step 3 -->
+                    <div class="step-card" style="background: var(--glass-bg); backdrop-filter: blur(10px); border-radius: 20px; padding: 2.5rem; box-shadow: var(--shadow-lg); border: 1px solid var(--glass-border); display: flex; gap: 2rem; align-items: start;">
+                        <div class="step-number" style="width: 60px; height: 60px; background: var(--bg-gradient-warm); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 1.8rem; font-weight: 700; color: white; box-shadow: var(--shadow-primary);">
+                            3
+                        </div>
+                        <div class="step-content" style="flex: 1;">
+                            <h2 style="font-size: 1.5rem; margin-bottom: 1rem; color: var(--primary-color);">View Auction Details</h2>
+                            <p style="color: var(--text-secondary); line-height: 1.8; margin-bottom: 1rem;">Click on any auction to see detailed information:</p>
+                            <ul style="color: var(--text-secondary); line-height: 1.8; margin-left: 1.5rem; margin-bottom: 1rem;">
+                                <li>High-quality images and descriptions</li>
+                                <li>Current bid and bid increment</li>
+                                <li>Time remaining (live countdown)</li>
+                                <li>Bid history and bidder information</li>
+                                <li>Seller information</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Step 4 -->
+                    <div class="step-card" style="background: var(--glass-bg); backdrop-filter: blur(10px); border-radius: 20px; padding: 2.5rem; box-shadow: var(--shadow-lg); border: 1px solid var(--glass-border); display: flex; gap: 2rem; align-items: start;">
+                        <div class="step-number" style="width: 60px; height: 60px; background: var(--bg-gradient-warm); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 1.8rem; font-weight: 700; color: white; box-shadow: var(--shadow-primary);">
+                            4
+                        </div>
+                        <div class="step-content" style="flex: 1;">
+                            <h2 style="font-size: 1.5rem; margin-bottom: 1rem; color: var(--primary-color);">Place Your Bid</h2>
+                            <p style="color: var(--text-secondary); line-height: 1.8; margin-bottom: 1rem;">When you're ready to bid:</p>
+                            <ul style="color: var(--text-secondary); line-height: 1.8; margin-left: 1.5rem; margin-bottom: 1rem;">
+                                <li>Enter your bid amount (must be at least the minimum bid)</li>
+                                <li>Optionally enable auto-bid with a maximum limit</li>
+                                <li>Click "Place Bid" to submit</li>
+                                <li>Watch real-time updates as others bid</li>
+                            </ul>
+                            <div style="background: rgba(255, 102, 0, 0.1); padding: 1rem; border-radius: 12px; margin-top: 1rem; border-left: 4px solid var(--primary-color);">
+                                <p style="color: var(--text-color); margin: 0; font-weight: 500;">💡 Tip: Use auto-bid to automatically increase your bid up to your maximum limit when others outbid you.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 5 -->
+                    <div class="step-card" style="background: var(--glass-bg); backdrop-filter: blur(10px); border-radius: 20px; padding: 2.5rem; box-shadow: var(--shadow-lg); border: 1px solid var(--glass-border); display: flex; gap: 2rem; align-items: start;">
+                        <div class="step-number" style="width: 60px; height: 60px; background: var(--bg-gradient-warm); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 1.8rem; font-weight: 700; color: white; box-shadow: var(--shadow-primary);">
+                            5
+                        </div>
+                        <div class="step-content" style="flex: 1;">
+                            <h2 style="font-size: 1.5rem; margin-bottom: 1rem; color: var(--primary-color);">Win and Pay</h2>
+                            <p style="color: var(--text-secondary); line-height: 1.8; margin-bottom: 1rem;">If you win the auction:</p>
+                            <ul style="color: var(--text-secondary); line-height: 1.8; margin-left: 1.5rem; margin-bottom: 1rem;">
+                                <li>You'll receive a notification when the auction ends</li>
+                                <li>An invoice will be generated automatically</li>
+                                <li>Complete payment through your preferred method</li>
+                                <li>Arrange for delivery or pickup</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tips and FAQ Section -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 4rem;">
+                    <!-- Bidding Tips -->
+                    <div class="tips-card" style="background: var(--glass-bg); backdrop-filter: blur(10px); border-radius: 20px; padding: 2.5rem; box-shadow: var(--shadow-lg); border: 1px solid var(--glass-border);">
+                        <h2 style="font-size: 1.8rem; margin-bottom: 1.5rem; color: var(--primary-color); display: flex; align-items: center; gap: 0.5rem;">
+                            <span>💡</span> Bidding Tips
+                        </h2>
+                        <ul style="color: var(--text-secondary); line-height: 2; list-style: none; padding: 0;">
+                            <li style="margin-bottom: 1rem; padding-left: 1.5rem; position: relative;">
+                                <span style="position: absolute; left: 0; color: var(--primary-color);">✓</span>
+                                Set a maximum budget before bidding
+                            </li>
+                            <li style="margin-bottom: 1rem; padding-left: 1.5rem; position: relative;">
+                                <span style="position: absolute; left: 0; color: var(--primary-color);">✓</span>
+                                Use auto-bid to stay competitive automatically
+                            </li>
+                            <li style="margin-bottom: 1rem; padding-left: 1.5rem; position: relative;">
+                                <span style="position: absolute; left: 0; color: var(--primary-color);">✓</span>
+                                Read item descriptions carefully
+                            </li>
+                            <li style="margin-bottom: 1rem; padding-left: 1.5rem; position: relative;">
+                                <span style="position: absolute; left: 0; color: var(--primary-color);">✓</span>
+                                Check seller ratings and reviews
+                            </li>
+                            <li style="margin-bottom: 1rem; padding-left: 1.5rem; position: relative;">
+                                <span style="position: absolute; left: 0; color: var(--primary-color);">✓</span>
+                                Watch the countdown timer closely
+                            </li>
+                            <li style="padding-left: 1.5rem; position: relative;">
+                                <span style="position: absolute; left: 0; color: var(--primary-color);">✓</span>
+                                Bid early to avoid last-minute rush
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- FAQ -->
+                    <div class="faq-card" style="background: var(--glass-bg); backdrop-filter: blur(10px); border-radius: 20px; padding: 2.5rem; box-shadow: var(--shadow-lg); border: 1px solid var(--glass-border);">
+                        <h2 style="font-size: 1.8rem; margin-bottom: 1.5rem; color: var(--primary-color); display: flex; align-items: center; gap: 0.5rem;">
+                            <span>❓</span> Frequently Asked Questions
+                        </h2>
+                        <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                            <div>
+                                <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem; color: var(--text-color);">Can I retract a bid?</h3>
+                                <p style="color: var(--text-secondary); line-height: 1.6; margin: 0;">Bids are final and cannot be retracted. Please bid carefully and only place bids you're committed to.</p>
+                            </div>
+                            <div>
+                                <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem; color: var(--text-color);">What happens if I'm outbid?</h3>
+                                <p style="color: var(--text-secondary); line-height: 1.6; margin: 0;">You'll receive a notification. If you have auto-bid enabled, it will automatically place a higher bid up to your maximum limit.</p>
+                            </div>
+                            <div>
+                                <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem; color: var(--text-color);">How does auto-bid work?</h3>
+                                <p style="color: var(--text-secondary); line-height: 1.6; margin: 0;">Auto-bid automatically increases your bid when others outbid you, up to your specified maximum amount.</p>
+                            </div>
+                            <div>
+                                <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem; color: var(--text-color);">What are the fees?</h3>
+                                <p style="color: var(--text-secondary); line-height: 1.6; margin: 0;">There's a 1% bid fee on winning bids, plus delivery fees based on your location.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Call to Action -->
+                <div style="text-align: center; margin-top: 4rem; padding: 3rem; background: var(--bg-gradient-warm); border-radius: 20px; box-shadow: var(--shadow-lg);">
+                    <h2 style="font-size: 2rem; margin-bottom: 1rem; color: white;">Ready to Start Bidding?</h2>
+                    <p style="font-size: 1.2rem; margin-bottom: 2rem; color: rgba(255, 255, 255, 0.9);">Join thousands of bidders and discover amazing deals!</p>
+                    <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                        <a href="index.html#register" class="btn" style="background: white; color: var(--primary-color); padding: 1rem 2rem; font-size: 1.1rem; font-weight: 600; border-radius: 12px; text-decoration: none; display: inline-block; transition: var(--transition-base); box-shadow: var(--shadow-md);">Sign Up Now</a>
+                        <a href="auctions.html" class="btn btn-outline" style="background: transparent; border: 2px solid white; color: white; padding: 1rem 2rem; font-size: 1.1rem; font-weight: 600; border-radius: 12px; text-decoration: none; display: inline-block; transition: var(--transition-base);">Browse Auctions</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast" style="display: none;"></div>
+
+    <script src="api.js"></script>
+    <script src="app.js"></script>
+    <script src="how-to-bid.js"></script>
+</body>
+</html>
+

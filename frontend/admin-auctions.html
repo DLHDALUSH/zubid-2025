@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Auctions - Admin Portal</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css?v=20250116-enhanced-enhanced">
     <link rel="stylesheet" href="admin.css">
 </head>
 <body>
@@ -54,19 +54,21 @@
                     <thead>
                         <tr>
                             <th>ID</th>
+                            <th>Item Code</th>
                             <th>Item Name</th>
                             <th>Seller</th>
                             <th>Current Bid</th>
                             <th>Bids</th>
                             <th>Status</th>
                             <th>Featured</th>
+                            <th>Winner</th>
                             <th>End Time</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody id="auctionsTableBody">
                         <tr>
-                            <td colspan="9" class="loading">Loading auctions...</td>
+                            <td colspan="11" class="loading">Loading auctions...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -109,6 +111,18 @@
                         <input type="number" id="createBidIncrement" step="0.01" min="0.01" value="1.00" required>
                     </div>
                     <div class="form-group">
+                        <label>Market Price ($)</label>
+                        <input type="number" id="createMarketPrice" step="0.01" min="0" placeholder="Optional - retail/market value">
+                        <small>Enter the retail or market price of the item (optional)</small>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Real Price / Buy It Now ($) (Optional)</label>
+                    <input type="number" id="createRealPrice" step="0.01" min="0" placeholder="Fixed price to buy immediately">
+                    <small>Set a fixed price that allows buyers to purchase immediately without bidding. Must be higher than starting bid.</small>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
                         <label>End Date & Time *</label>
                         <input type="datetime-local" id="createEndTime" required>
                     </div>
@@ -124,6 +138,33 @@
                     <input type="file" id="createImages" accept="image/*" multiple onchange="previewUploadedImages(event)">
                     <small>Select one or more images for the auction (optional)</small>
                     <div id="imagePreviewContainer" style="margin-top: 1rem; display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 0.5rem;"></div>
+                </div>
+                <div class="form-group">
+                    <label>⭐ Featured Image (Optional)</label>
+                    <input type="file" id="createFeaturedImageFile" accept="image/*" onchange="handleAdminFeaturedImageChange(event)">
+                    <div id="adminFeaturedImagePreviewContainer" style="margin-top: 1rem; display: none;">
+                        <img id="adminFeaturedImagePreview" style="width: 100%; max-width: 500px; border-radius: 8px; border: 2px solid var(--primary-color);" alt="Featured Image Preview">
+                        <div style="margin-top: 0.5rem;">
+                            <button type="button" class="btn btn-outline" onclick="removeAdminFeaturedImage()" style="font-size: 0.875rem;">Remove Featured Image</button>
+                        </div>
+                    </div>
+                    <small>Upload a separate image for featured display (carousel/homepage). Recommended: 1200x400px.</small>
+                </div>
+                <div class="form-group">
+                    <label>Upload Video (Optional)</label>
+                    <input type="file" id="createVideoFile" accept="video/*" onchange="handleAdminVideoFileChange(event)">
+                    <div id="adminVideoPreviewContainer" style="margin-top: 1rem; display: none;">
+                        <video id="adminVideoPreview" controls style="width: 100%; max-width: 500px; border-radius: 8px; background: #000;" preload="metadata"></video>
+                        <div style="margin-top: 0.5rem;">
+                            <button type="button" class="btn btn-outline" onclick="removeAdminVideoFile()" style="font-size: 0.875rem;">Remove Video</button>
+                        </div>
+                    </div>
+                    <small>Upload a video file (MP4, WebM, MOV, etc.) - Maximum 100MB</small>
+                </div>
+                <div class="form-group">
+                    <label>Or Video URL (Optional)</label>
+                    <input type="url" id="createVideoUrl" placeholder="https://www.youtube.com/watch?v=... or https://vimeo.com/...">
+                    <small>Enter a YouTube, Vimeo, or direct video URL</small>
                 </div>
                 <div id="createFormError" class="error-message"></div>
                 <div class="form-actions">

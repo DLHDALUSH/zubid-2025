@@ -13,26 +13,43 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
     
-    await checkAuth();
-    authChecked = true;
+    // Check auth in background - don't block page loading
+    checkAuth().then(() => {
+        authChecked = true;
+    }).catch(() => {
+        authChecked = true; // Mark as checked even if auth fails
+    });
+    
+    // Load content immediately without waiting for auth
     if (document.getElementById('featuredCarousel')) {
         loadFeaturedCarousel();
         loadFeaturedAuctions();
         loadCategories();
     }
     
-    // Setup biometric modal reset
-    setupBiometricModalReset();
     // Initialize date picker
     initializeDatePicker();
     // Initialize password strength checker
     initializePasswordStrength();
+    
+    // Listen for language changes to update dynamic content
+    document.addEventListener('languageChanged', function(event) {
+        const newLang = event.detail.language;
+        // Update dynamic content when language changes
+        if (currentUser && document.getElementById('userName')) {
+            // Username doesn't need translation, but re-apply if needed
+        }
+        
+        // Re-translate any dynamically generated content
+        if (document.getElementById('featuredCarousel')) {
+            // Re-load to get translated content
+            setTimeout(() => {
+                loadFeaturedCarousel();
+                loadFeaturedAuctions();
+            }, 300);
+        }
+    });
 });
-
-// Setup biometric modal reset function (now handled in closeModalAndReset and window.onclick)
-function setupBiometricModalReset() {
-    // This function is kept for compatibility but reset is now handled elsewhere
-}
 
 // Initialize modern date picker display
 function initializeDatePicker() {
@@ -68,35 +85,88 @@ function togglePasswordVisibility(inputId, button) {
     }
 }
 
-// Password strength checker
+// Standard password validation
+function validatePassword(password) {
+    const errors = [];
+    
+    if (!password || password.length < 8) {
+        errors.push('Password must be at least 8 characters long');
+    }
+    if (!/[a-z]/.test(password)) {
+        errors.push('Password must contain at least one lowercase letter');
+    }
+    if (!/[A-Z]/.test(password)) {
+        errors.push('Password must contain at least one uppercase letter');
+    }
+    if (!/[0-9]/.test(password)) {
+        errors.push('Password must contain at least one number');
+    }
+    if (!/[^a-zA-Z0-9]/.test(password)) {
+        errors.push('Password must contain at least one special character (!@#$%^&*()_+-=[]{}|;:,.<>?)');
+    }
+    
+    return {
+        isValid: errors.length === 0,
+        errors: errors
+    };
+}
+
+// Password strength checker with requirement indicators
 function checkPasswordStrength(password) {
     const strengthIndicator = document.getElementById('passwordStrength');
-    if (!strengthIndicator) return;
+    const requirementsList = document.getElementById('passwordRequirements');
     
     if (!password || password.length === 0) {
-        strengthIndicator.className = 'password-strength';
+        if (strengthIndicator) strengthIndicator.className = 'password-strength';
+        if (requirementsList) requirementsList.style.display = 'none';
         return;
     }
     
-    let strength = 0;
+    // Show requirements list
+    if (requirementsList) {
+        requirementsList.style.display = 'block';
+    }
     
-    // Length check
-    if (password.length >= 8) strength++;
-    if (password.length >= 12) strength++;
+    // Check each requirement
+    const checks = {
+        length: password.length >= 8,
+        lowercase: /[a-z]/.test(password),
+        uppercase: /[A-Z]/.test(password),
+        number: /[0-9]/.test(password),
+        special: /[^a-zA-Z0-9]/.test(password)
+    };
     
-    // Character variety checks
-    if (/[a-z]/.test(password)) strength++;
-    if (/[A-Z]/.test(password)) strength++;
-    if (/[0-9]/.test(password)) strength++;
-    if (/[^a-zA-Z0-9]/.test(password)) strength++;
+    // Update requirement indicators
+    updateRequirementIndicator('req-length', checks.length);
+    updateRequirementIndicator('req-lowercase', checks.lowercase);
+    updateRequirementIndicator('req-uppercase', checks.uppercase);
+    updateRequirementIndicator('req-number', checks.number);
+    updateRequirementIndicator('req-special', checks.special);
     
-    // Determine strength level
-    if (strength <= 2) {
-        strengthIndicator.className = 'password-strength weak';
-    } else if (strength <= 4) {
-        strengthIndicator.className = 'password-strength medium';
-    } else {
-        strengthIndicator.className = 'password-strength strong';
+    // Calculate strength for visual indicator
+    const metCount = Object.values(checks).filter(v => v).length;
+    if (strengthIndicator) {
+        if (metCount === 5) {
+            strengthIndicator.className = 'password-strength strong';
+        } else if (metCount >= 3) {
+            strengthIndicator.className = 'password-strength medium';
+        } else {
+            strengthIndicator.className = 'password-strength weak';
+        }
+    }
+}
+
+// Update individual requirement indicator
+function updateRequirementIndicator(id, met) {
+    const indicator = document.getElementById(id);
+    if (indicator) {
+        if (met) {
+            indicator.className = 'requirement-item met';
+            indicator.querySelector('.requirement-icon').textContent = '✓';
+        } else {
+            indicator.className = 'requirement-item';
+            indicator.querySelector('.requirement-icon').textContent = '○';
+        }
     }
 }
 
@@ -131,7 +201,7 @@ function updateDatePickerDisplay(dateInput) {
         const formattedDate = date.toLocaleDateString('en-US', options);
         datePickerText.textContent = formattedDate;
     } else {
-        datePickerText.textContent = 'Click to choose date';
+        datePickerText.textContent = (window.i18n && window.i18n.t) ? window.i18n.t('register.clickToChooseDate', 'Click to choose date') : 'Click to choose date';
     }
 }
 
@@ -154,7 +224,7 @@ async function checkAuth() {
                     adminLink.href = 'admin.html';
                     adminLink.className = 'nav-link';
                     adminLink.id = 'adminLink';
-                    adminLink.textContent = 'Admin';
+                    adminLink.textContent = (window.i18n && window.i18n.t) ? window.i18n.t('messages.admin', 'Admin') : 'Admin';
                     const navUser = document.getElementById('navUser');
                     if (navUser && navUser.parentNode) {
                         navMenu.insertBefore(adminLink, navUser);
@@ -175,7 +245,17 @@ async function checkAuth() {
             loadMyBids();
         }
     } catch (error) {
-        updateNavAuth(false);
+        // Silently handle authentication errors (401) - user is just not logged in
+        if (error.status === 401 || error.message.includes('Authentication required')) {
+            updateNavAuth(false);
+            currentUser = null;
+        } else {
+            // Only log non-auth errors
+            if (window.DEBUG_MODE) {
+                console.error('Auth check error:', error);
+            }
+            updateNavAuth(false);
+        }
     }
 }
 
@@ -184,6 +264,7 @@ function updateNavAuth(isAuthenticated) {
     const navUser = document.getElementById('navUser');
     const myBidsLink = document.getElementById('myBidsLink');
     const paymentsLink = document.getElementById('paymentsLink');
+    const returnRequestsLink = document.getElementById('returnRequestsLink');
     
     if (navAuth && navUser) {
         if (isAuthenticated) {
@@ -193,6 +274,8 @@ function updateNavAuth(isAuthenticated) {
             if (myBidsLink) myBidsLink.style.display = 'inline-block';
             // Show Payments link
             if (paymentsLink) paymentsLink.style.display = 'inline-block';
+            // Show Return Requests link
+            if (returnRequestsLink) returnRequestsLink.style.display = 'inline-block';
         } else {
             navAuth.style.display = 'flex';
             navUser.style.display = 'none';
@@ -200,6 +283,8 @@ function updateNavAuth(isAuthenticated) {
             if (myBidsLink) myBidsLink.style.display = 'none';
             // Hide Payments link
             if (paymentsLink) paymentsLink.style.display = 'none';
+            // Hide Return Requests link
+            if (returnRequestsLink) returnRequestsLink.style.display = 'none';
         }
     }
 }
@@ -209,13 +294,14 @@ async function handleLogin(event) {
     
     // Check if backend is reachable first
     try {
-        const testResponse = await fetch('http://localhost:5000/api/test');
+        const API_BASE = (window.API_BASE_URL || 'http://localhost:5000/api').replace('/api', '');
+        const testResponse = await fetch(`${API_BASE}/api/test`);
         if (!testResponse.ok) {
             throw new Error('Backend server is not responding correctly');
         }
     } catch (error) {
-        showToast('Cannot connect to server! Make sure the backend is running on port 5000. Check the terminal where you ran "python app.py"', 'error');
-        console.error('Backend connection error:', error);
+        showToast('Cannot connect to server! Make sure the backend is running. Check the server logs.', 'error');
+        debugError('Backend connection error:', error);
         return;
     }
     
@@ -225,7 +311,7 @@ async function handleLogin(event) {
     const submitBtn = event.target.querySelector('button[type="submit"]');
     const originalText = submitBtn.textContent;
     submitBtn.disabled = true;
-    submitBtn.textContent = 'Logging in...';
+    submitBtn.textContent = (window.i18n && window.i18n.t) ? window.i18n.t('auth.loggingIn', 'Logging in...') : 'Logging in...';
     
     try {
         const response = await UserAPI.login(username, password);
@@ -235,7 +321,8 @@ async function handleLogin(event) {
             document.getElementById('userName').textContent = response.user.username;
         }
         closeModal('loginModal');
-        showToast('Login successful!', 'success');
+        const successMsg = (window.i18n && window.i18n.t) ? window.i18n.t('auth.loginSuccess', 'Login successful!') : 'Login successful!';
+        showToast(successMsg, 'success');
         
         // Load user-specific sections immediately after login
         if (document.getElementById('myAuctionsSection')) {
@@ -246,8 +333,9 @@ async function handleLogin(event) {
         // Reload page to update UI
         setTimeout(() => window.location.reload(), 1000);
     } catch (error) {
-        console.error('Login error:', error);
-        showToast(error.message || 'Login failed. Please check your credentials.', 'error');
+        debugError('Login error:', error);
+        const errorMsg = (window.i18n && window.i18n.t) ? (error.message || window.i18n.t('auth.loginFailed', 'Login failed. Please check your credentials.')) : (error.message || 'Login failed. Please check your credentials.');
+        showToast(errorMsg, 'error');
     } finally {
         submitBtn.disabled = false;
         submitBtn.textContent = originalText;
@@ -259,78 +347,69 @@ async function handleRegister(event) {
     
     // Check if backend is reachable first
     try {
-        const testResponse = await fetch('http://localhost:5000/api/test');
+        const API_BASE = (window.API_BASE_URL || 'http://localhost:5000/api').replace('/api', '');
+        const testResponse = await fetch(`${API_BASE}/api/test`);
         if (!testResponse.ok) {
             throw new Error('Backend server is not responding correctly');
         }
     } catch (error) {
-        showToast('Cannot connect to server! Make sure the backend is running on port 5000. Check the terminal where you ran "python app.py"', 'error');
-        console.error('Backend connection error:', error);
+        showToast('Cannot connect to server! Make sure the backend is running. Check the server logs.', 'error');
+        debugError('Backend connection error:', error);
         return;
     }
     
-    // Check if biometric data has been captured
-    const biometricData = getStoredBiometric();
-    console.log('Checking for biometric data:', biometricData ? 'Found' : 'Not found');
-    if (!biometricData) {
-        showToast('Please scan your ID card and take a selfie first', 'error');
-        console.warn('Registration blocked: No biometric data found in localStorage');
+    // Validate password before submission
+    const password = document.getElementById('registerPassword').value;
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.isValid) {
+        const errorMsg = 'Password does not meet requirements:\n' + passwordValidation.errors.join('\n');
+        showToast(errorMsg, 'error');
+        
+        // Focus on password field
+        document.getElementById('registerPassword').focus();
         return;
     }
     
-    // Validate that both ID card sides and selfie are captured
-    try {
-        const parsed = JSON.parse(biometricData);
-        // New format with both sides (preferred)
-        if (parsed.id_card_front_image && parsed.id_card_back_image && parsed.selfie_image) {
-            // All required images captured - proceed
-        }
-        // Old format (backward compatibility)
-        else if (parsed.id_card_image && parsed.selfie_image) {
-            // Old format - single ID card + selfie is valid and registration will proceed
-            // No warning needed since this is a supported format and registration succeeds
-            // Users on pages like auctions.html, create-auction.html use single ID mode by design
-        }
-        else {
-            showToast('Please capture both sides of ID card and selfie before registering', 'error');
-            console.warn('Registration blocked: Missing ID card sides or selfie image');
-            return;
-        }
-    } catch (e) {
-        // Old format - might not have images
-        showToast('Please capture both sides of ID card and selfie using the camera feature', 'error');
-        return;
-    }
+    // Get form data
+    const formData = new FormData();
+    formData.append('username', document.getElementById('registerUsername').value);
+    formData.append('email', document.getElementById('registerEmail').value);
+    formData.append('password', password);
+    formData.append('id_number', document.getElementById('registerIdNumber').value);
+    formData.append('birth_date', document.getElementById('registerBirthDate').value);
+    formData.append('address', document.getElementById('registerAddress').value);
+    formData.append('phone', document.getElementById('registerPhone').value);
     
-    const userData = {
-        username: document.getElementById('registerUsername').value,
-        email: document.getElementById('registerEmail').value,
-        password: document.getElementById('registerPassword').value,
-        id_number: document.getElementById('registerIdNumber').value,
-        birth_date: document.getElementById('registerBirthDate').value,
-        biometric_data: biometricData,
-        address: document.getElementById('registerAddress').value,
-        phone: document.getElementById('registerPhone').value,
-    };
+    // Add profile photo if selected
+    const photoInput = document.getElementById('profilePhoto');
+    if (photoInput.files && photoInput.files.length > 0) {
+        formData.append('profile_photo', photoInput.files[0]);
+    }
     
     // Show loading
     const submitBtn = event.target.querySelector('button[type="submit"]');
-    const originalText = submitBtn.textContent;
+    const originalHTML = submitBtn.innerHTML;
     submitBtn.disabled = true;
-    submitBtn.textContent = 'Registering...';
+    const registeringText = (window.i18n && window.i18n.t) ? window.i18n.t('auth.registering', 'Registering...') : 'Registering...';
+    submitBtn.innerHTML = '<span class="btn-content"><span class="btn-text">' + registeringText + '</span><span class="btn-icon">⏳</span></span>';
     
     try {
-        await UserAPI.register(userData);
+        // Use FormData for multipart/form-data upload
+        const baseUrl = API_BASE_URL.replace('/api', '');
+        const response = await fetch(`${baseUrl}/api/register`, {
+            method: 'POST',
+            body: formData,
+            credentials: 'include'
+        });
         
-        // Clear biometric data after successful registration FIRST
-        // This clears localStorage, state variables, and UI
-        clearStoredBiometric();
+        const data = await response.json();
         
-        // Clear all form fields immediately (before closing modal)
-        // Note: resetRegistrationForm also clears biometric variables, but they're already cleared
-        window.skipBiometricUIReset = true; // Prevent double UI reset
+        if (!response.ok) {
+            throw new Error(data.error || 'Registration failed');
+        }
+        
+        // Clear all form fields
         resetRegistrationForm();
-        window.skipBiometricUIReset = false;
         
         // Close modal
         closeModal('registerModal');
@@ -343,7 +422,7 @@ async function handleRegister(event) {
             showLogin();
         }, 500);
     } catch (error) {
-        console.error('Registration error:', error);
+        debugError('Registration error:', error);
         const errorMsg = error.message || 'Registration failed. Please try again.';
         showToast(errorMsg, 'error');
         
@@ -355,8 +434,56 @@ async function handleRegister(event) {
         }
     } finally {
         submitBtn.disabled = false;
-        submitBtn.textContent = originalText;
+        submitBtn.innerHTML = originalHTML;
     }
+}
+
+// Handle photo selection
+function handlePhotoSelect(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+        showToast('Please select an image file', 'error');
+        event.target.value = '';
+        return;
+    }
+    
+    // Validate file size (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+        showToast('Image size must be less than 5MB', 'error');
+        event.target.value = '';
+        return;
+    }
+    
+    // Preview image
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const previewImg = document.getElementById('photoPreviewImg');
+        const placeholder = document.querySelector('.photo-placeholder');
+        const removeBtn = document.getElementById('photoRemoveBtn');
+        
+        previewImg.src = e.target.result;
+        previewImg.style.display = 'block';
+        if (placeholder) placeholder.style.display = 'none';
+        if (removeBtn) removeBtn.style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+}
+
+// Remove photo
+function removePhoto() {
+    const photoInput = document.getElementById('profilePhoto');
+    const previewImg = document.getElementById('photoPreviewImg');
+    const placeholder = document.querySelector('.photo-placeholder');
+    const removeBtn = document.getElementById('photoRemoveBtn');
+    
+    photoInput.value = '';
+    previewImg.src = '';
+    previewImg.style.display = 'none';
+    if (placeholder) placeholder.style.display = 'flex';
+    if (removeBtn) removeBtn.style.display = 'none';
 }
 
 async function logout() {
@@ -377,19 +504,14 @@ function showLogin() {
 }
 
 function showRegister() {
-    // Reset form before showing to ensure it's clean
-    // Note: We don't clear biometric data here - user might have captured it
-    // Only reset the form fields, not the biometric capture state
+    // Reset form before showing
     resetRegistrationFormFields();
     
     // Show modal
     document.getElementById('registerModal').style.display = 'block';
-    
-    // Restore biometric state if data exists (so user doesn't lose their captured images)
-    restoreBiometricState();
 }
 
-// Reset only form fields (not biometric data)
+// Reset only form fields
 function resetRegistrationFormFields() {
     const form = document.getElementById('registerForm');
     if (!form) return;
@@ -398,8 +520,11 @@ function resetRegistrationFormFields() {
     try {
         form.reset();
     } catch (e) {
-        console.warn('Form reset() method failed');
+        debugWarn('Form reset() method failed');
     }
+    
+    // Reset photo preview
+    removePhoto();
     
     // Manually clear specific fields
     const usernameField = document.getElementById('registerUsername');
@@ -418,7 +543,7 @@ function resetRegistrationFormFields() {
         birthDateField.value = '';
         // Reset date picker display
         const datePickerText = document.getElementById('registerBirthDateText');
-        if (datePickerText) datePickerText.textContent = 'Select your date of birth';
+        if (datePickerText) datePickerText.textContent = (window.i18n && window.i18n.t) ? window.i18n.t('register.selectDateOfBirth', 'Select your date of birth') : 'Select your date of birth';
     }
     if (addressField) addressField.value = '';
     if (phoneField) phoneField.value = '';
@@ -432,7 +557,7 @@ function closeModal(modalId) {
 function resetRegistrationForm() {
     const form = document.getElementById('registerForm');
     if (!form) {
-        console.warn('Register form not found');
+        debugWarn('Register form not found');
         return;
     }
     
@@ -440,119 +565,73 @@ function resetRegistrationForm() {
     try {
         form.reset();
     } catch (e) {
-        console.warn('Form reset() method failed, using manual reset');
+        debugWarn('Form reset() method failed, using manual reset');
     }
     
+    // Reset photo preview
+    removePhoto();
+    
     // Manually reset all form fields as backup
-    // First, reset all inputs in the form using querySelectorAll
     const allInputs = form.querySelectorAll('input, textarea, select');
     allInputs.forEach(input => {
         if (input.type === 'checkbox' || input.type === 'radio') {
             input.checked = false;
-        } else {
+        } else if (input.type !== 'file') {
             input.value = '';
             input.classList.remove('is-invalid', 'is-valid');
         }
-        console.log(`Cleared field: ${input.id || input.name || 'unnamed'}`);
     });
     
-    // Specifically target known fields to ensure they're cleared
-    const usernameField = document.getElementById('registerUsername');
-    const emailField = document.getElementById('registerEmail');
-    const passwordField = document.getElementById('registerPassword');
-    const idNumberField = document.getElementById('registerIdNumber');
-    const birthDateField = document.getElementById('registerBirthDate');
-    const addressField = document.getElementById('registerAddress');
-    const phoneField = document.getElementById('registerPhone');
-    
-    if (usernameField) {
-        usernameField.value = '';
-        usernameField.classList.remove('is-invalid', 'is-valid');
-        console.log('Username field cleared');
-    } else {
-        console.warn('Username field not found');
-    }
-    if (emailField) {
-        emailField.value = '';
-        emailField.classList.remove('is-invalid', 'is-valid');
-        console.log('Email field cleared');
-    } else {
-        console.warn('Email field not found');
-    }
-    if (passwordField) {
-        passwordField.value = '';
-        passwordField.classList.remove('is-invalid', 'is-valid');
-        console.log('Password field cleared');
-    } else {
-        console.warn('Password field not found');
-    }
-    if (idNumberField) {
-        idNumberField.value = '';
-        idNumberField.classList.remove('is-invalid', 'is-valid');
-        console.log('ID Number field cleared');
-    } else {
-        console.warn('ID Number field not found');
-    }
-    if (birthDateField) {
-        birthDateField.value = '';
-        birthDateField.classList.remove('is-invalid', 'is-valid');
-        // Reset date picker display
-        const datePickerText = document.getElementById('registerBirthDateText');
-        if (datePickerText) datePickerText.textContent = 'Select your date of birth';
-        console.log('Birth Date field cleared');
-    } else {
-        console.warn('Birth Date field not found');
-    }
-    if (addressField) {
-        addressField.value = '';
-        addressField.classList.remove('is-invalid', 'is-valid');
-        console.log('Address field cleared');
-    } else {
-        console.warn('Address field not found');
-    }
-    if (phoneField) {
-        phoneField.value = '';
-        phoneField.classList.remove('is-invalid', 'is-valid');
-        console.log('Phone field cleared');
-    } else {
-        console.warn('Phone field not found');
+    // Reset date picker display
+    const datePickerText = document.getElementById('registerBirthDateText');
+    if (datePickerText) {
+        datePickerText.textContent = 'Select your date of birth';
     }
     
-    // Reset form validation state
-    form.classList.remove('was-validated');
+    // Reset password strength indicator
+    const passwordStrength = document.getElementById('passwordStrength');
+    if (passwordStrength) {
+        passwordStrength.className = 'password-strength';
+    }
     
-    // Clear any error messages
-    const errorElements = form.querySelectorAll('.error-message');
-    errorElements.forEach(el => {
-        el.style.display = 'none';
-        el.textContent = '';
+    // Hide password requirements list
+    const passwordRequirements = document.getElementById('passwordRequirements');
+    if (passwordRequirements) {
+        passwordRequirements.style.display = 'none';
+    }
+    
+    // Reset all requirement indicators
+    ['req-length', 'req-lowercase', 'req-uppercase', 'req-number', 'req-special'].forEach(id => {
+        const indicator = document.getElementById(id);
+        if (indicator) {
+            indicator.className = 'requirement-item';
+            const icon = indicator.querySelector('.requirement-icon');
+            if (icon) icon.textContent = '○';
+        }
     });
-    
-    // Reset camera capture state variables (already done by clearStoredBiometric if called)
-    // But ensure they're cleared here too
-    capturedIdCardFront = null;
-    capturedIdCardBack = null;
-    capturedSelfie = null;
-    
-    // Reset biometric UI (only if not already reset by clearStoredBiometric)
-    // Check if we should skip to avoid double reset
-    if (!window.skipBiometricUIReset) {
-        resetBiometricUI();
-    }
-    
-    console.log('Registration form reset successfully');
 }
 
-// Close modal and reset biometric data for registration modal
+async function logout() {
+    try {
+        await UserAPI.logout();
+        currentUser = null;
+        updateNavAuth(false);
+        showToast('Logged out successfully', 'success');
+        window.location.href = 'index.html';
+    } catch (error) {
+        debugError('Logout error:', error);
+        showToast('Logout failed', 'error');
+    }
+}
+
+function closeModal(modalId) {
+    document.getElementById(modalId).style.display = 'none';
+}
+
+// Close modal and reset form for registration modal
 function closeModalAndReset(modalId) {
     if (modalId === 'registerModal') {
-        // Reset biometric UI
-        resetBiometricUI();
-        // Also reset form when closing modal (unless it's after successful registration which handles it separately)
-        // Use a small delay to ensure modal closes first
-        setTimeout(() => {
-            resetRegistrationForm();
-        }, 50);
+        resetRegistrationForm();
     }
     closeModal(modalId);
 }
@@ -563,16 +642,9 @@ window.onclick = function(event) {
     modals.forEach(modal => {
         if (event.target === modal) {
             if (modal.id === 'registerModal') {
-                // Reset biometric UI state
-                // Biometric data will be cleared after successful registration
-                resetBiometricUI();
-                // Close the modal
+                resetRegistrationForm();
                 closeModal('registerModal');
-            } else if (modal.id === 'cameraModal') {
-                // Close camera modal properly
-                closeCameraModal();
             } else {
-                // Close other modals
                 modal.style.display = 'none';
             }
         }
@@ -608,9 +680,14 @@ async function loadFeaturedCarousel() {
         const indicators = document.getElementById('carouselIndicators');
         
         if (!featured || featured.length === 0) {
-            carousel.innerHTML = '<div class="carousel-item"><div class="carousel-placeholder">No featured auctions available</div></div>';
+            if (carousel) {
+                const noAuctionsMsg = (window.i18n && window.i18n.t) ? window.i18n.t('messages.noFeaturedAuctions', 'No featured auctions available') : 'No featured auctions available';
+                carousel.innerHTML = '<div class="carousel-item"><div class="carousel-placeholder">' + noAuctionsMsg + '</div></div>';
+            }
             return;
         }
+        
+        if (!carousel || !indicators) return;
         
         carousel.innerHTML = '';
         indicators.innerHTML = '';
@@ -618,14 +695,101 @@ async function loadFeaturedCarousel() {
         featured.forEach((auction, index) => {
             const item = document.createElement('div');
             item.className = 'carousel-item';
-            item.innerHTML = `
-                <img src="${auction.image_url || 'https://via.placeholder.com/1200x400?text=No+Image'}" alt="${auction.item_name}">
-                <div class="carousel-overlay">
-                    <h2>${auction.item_name}</h2>
-                    <p>Current Bid: $${auction.current_bid.toFixed(2)}</p>
-                    <button class="btn btn-primary" onclick="window.location.href='auction-detail.html?id=${auction.id}'">View Auction</button>
-                </div>
+            
+            // Get normalized image URL - prefer featured_image_url for featured auctions
+            let imageUrl = getImageUrl(auction.featured_image_url || auction.image_url);
+            
+            // Replace placeholder dimensions for carousel
+            if (imageUrl && imageUrl.includes('placeholder.com')) {
+                imageUrl = imageUrl.replace('300x200', '1200x400');
+            }
+            
+            // Final safety check - ensure we NEVER have an empty src
+            if (!imageUrl || imageUrl === null || imageUrl === undefined || String(imageUrl).trim() === '' || String(imageUrl) === 'undefined' || String(imageUrl) === 'null') {
+                imageUrl = SVG_PLACEHOLDER_CAROUSEL;
+            }
+            
+            // If it's a placeholder, use carousel-sized version
+            if (imageUrl === SVG_PLACEHOLDER_SVG) {
+                imageUrl = SVG_PLACEHOLDER_CAROUSEL;
+            }
+            
+            if (window.DEBUG_MODE) {
+                console.log('Carousel - Auction ID:', auction.id, 'featured_image_url:', auction.featured_image_url, 'image_url:', auction.image_url, 'Final imageUrl:', imageUrl.substring(0, 100));
+            }
+            
+            // Create image element with proper error handling and enhanced quality
+            const img = document.createElement('img');
+            img.alt = escapeHtml(auction.item_name || 'Auction');
+            img.loading = 'eager';
+            img.style.width = '100%';
+            img.style.height = '100%';
+            img.style.objectFit = 'cover';
+            img.style.display = 'block';
+            // Enhanced image quality settings
+            img.style.imageRendering = 'crisp-edges';
+            img.style.imageRendering = '-webkit-optimize-contrast';
+            img.style.imageRendering = 'optimize-quality';
+            img.style.webkitBackfaceVisibility = 'hidden';
+            img.style.backfaceVisibility = 'hidden';
+            img.style.webkitTransform = 'translateZ(0)';
+            img.style.transform = 'translateZ(0)';
+            
+            // Convert data URI to blob URL if needed (more reliable)
+            let finalImageUrl = imageUrl;
+            if (imageUrl && imageUrl.startsWith('data:image/')) {
+                try {
+                    // Try to convert data URI to blob URL
+                    const commaIndex = imageUrl.indexOf(',');
+                    if (commaIndex !== -1 && commaIndex < imageUrl.length - 1) {
+                        const base64Data = imageUrl.substring(commaIndex + 1);
+                        if (base64Data && base64Data.length > 100) {
+                            const byteCharacters = atob(base64Data);
+                            const byteNumbers = new Array(byteCharacters.length);
+                            for (let i = 0; i < byteCharacters.length; i++) {
+                                byteNumbers[i] = byteCharacters.charCodeAt(i);
+                            }
+                            const byteArray = new Uint8Array(byteNumbers);
+                            const mimeMatch = imageUrl.match(/data:image\/([^;]+)/);
+                            const mimeType = mimeMatch ? `image/${mimeMatch[1]}` : 'image/jpeg';
+                            const blob = new Blob([byteArray], { type: mimeType });
+                            finalImageUrl = URL.createObjectURL(blob);
+                            console.log('Converted data URI to blob URL for carousel');
+                        }
+                    }
+                } catch (error) {
+                    console.warn('Could not convert data URI to blob, using original:', error);
+                    finalImageUrl = imageUrl;
+                }
+            }
+            
+            // CRITICAL: Ensure src is NEVER empty - use data URI as absolute fallback
+            img.src = String(finalImageUrl).trim() || SVG_PLACEHOLDER_CAROUSEL;
+            
+            // Error handler - always fallback to SVG data URI
+            img.onerror = function() {
+                console.error('Image failed to load:', this.src.substring(0, 100));
+                // Always use SVG data URI as final fallback (no external dependency)
+                if (!this.src.includes('data:image/svg+xml')) {
+                    this.src = SVG_PLACEHOLDER_CAROUSEL;
+                }
+            };
+            
+            img.onload = function() {
+                console.log('✅ Carousel image loaded successfully!');
+            };
+            
+            // Create overlay
+            const overlay = document.createElement('div');
+            overlay.className = 'carousel-overlay';
+            overlay.innerHTML = `
+                <h2>${escapeHtml(auction.item_name || 'Auction')}</h2>
+                <p>Current Bid: $${(auction.current_bid || 0).toFixed(2)}</p>
+                <button class="btn btn-primary" onclick="window.location.href='auction-detail.html?id=${auction.id}'">View Auction</button>
             `;
+            
+            item.appendChild(img);
+            item.appendChild(overlay);
             carousel.appendChild(item);
             
             const indicator = document.createElement('span');
@@ -637,7 +801,7 @@ async function loadFeaturedCarousel() {
         
         startCarousel();
     } catch (error) {
-        console.error('Error loading carousel:', error);
+        debugError('Error loading carousel:', error);
     }
 }
 
@@ -684,13 +848,89 @@ async function loadFeaturedAuctions() {
         if (!container) return;
         
         if (response.auctions && response.auctions.length > 0) {
+            // Debug logging
+            if (window.DEBUG_MODE) {
+                console.log('Featured auctions loaded:', response.auctions.length);
+                response.auctions.forEach(auction => {
+                    console.log('Auction:', auction.id, auction.item_name, 'image_url:', auction.image_url, 'featured_image_url:', auction.featured_image_url);
+                });
+            }
+            
             container.innerHTML = response.auctions.map(auction => createAuctionCard(auction)).join('');
+            
+            // Initialize previous auctions state for change detection
+            if (!window.previousFeaturedAuctionsState) {
+                window.previousFeaturedAuctionsState = {};
+            }
+            response.auctions.forEach(auction => {
+                window.previousFeaturedAuctionsState[auction.id] = {
+                    status: auction.status,
+                    current_bid: auction.current_bid,
+                    bid_count: auction.bid_count
+                };
+            });
+            
+            // Start auto-refresh for featured auctions
+            startFeaturedAuctionsRefresh();
         } else {
-            container.innerHTML = '<p>No featured auctions available</p>';
+            const noAuctionsMsg = (window.i18n && window.i18n.t) ? window.i18n.t('messages.noFeaturedAuctions', 'No featured auctions available') : 'No featured auctions available';
+            container.innerHTML = '<p>' + noAuctionsMsg + '</p>';
         }
     } catch (error) {
-        console.error('Error loading featured auctions:', error);
+        debugError('Error loading featured auctions:', error);
+        console.error('Full error:', error);
     }
+}
+
+// Auto-refresh featured auctions when prices change or auctions end
+function startFeaturedAuctionsRefresh() {
+    if (window.featuredRefreshInterval) clearInterval(window.featuredRefreshInterval);
+    
+    window.featuredRefreshInterval = setInterval(async () => {
+        try {
+            const response = await AuctionAPI.getAll({ featured: 'true', status: 'active', per_page: 6 });
+            const container = document.getElementById('featuredAuctions');
+            
+            if (!container) return;
+            
+            // Initialize state if not exists
+            if (!window.previousFeaturedAuctionsState) {
+                window.previousFeaturedAuctionsState = {};
+            }
+            
+            let needsRefresh = false;
+            
+            if (response.auctions && response.auctions.length > 0) {
+                response.auctions.forEach(auction => {
+                    const prevAuction = window.previousFeaturedAuctionsState[auction.id];
+                    
+                    // Check if auction just ended
+                    if (prevAuction && prevAuction.status === 'active' && auction.status === 'ended') {
+                        needsRefresh = true;
+                    }
+                    
+                    // Check if price increased
+                    if (prevAuction && prevAuction.current_bid !== auction.current_bid && auction.current_bid > prevAuction.current_bid) {
+                        needsRefresh = true;
+                    }
+                    
+                    // Store current state
+                    window.previousFeaturedAuctionsState[auction.id] = {
+                        status: auction.status,
+                        current_bid: auction.current_bid,
+                        bid_count: auction.bid_count
+                    };
+                });
+            }
+            
+            // If any auction ended or price changed, refresh the page
+            if (needsRefresh) {
+                window.location.reload();
+            }
+        } catch (error) {
+            debugError('Error checking featured auctions:', error);
+        }
+    }, 5000); // Check every 5 seconds
 }
 
 // Load categories
@@ -708,7 +948,7 @@ async function loadCategories() {
             </div>
         `).join('');
     } catch (error) {
-        console.error('Error loading categories:', error);
+        debugError('Error loading categories:', error);
     }
 }
 
@@ -719,22 +959,22 @@ async function loadMyAuctions() {
         const container = document.getElementById('myAuctions');
         
         if (!section || !container) {
-            console.log('My Auctions section elements not found');
+            debugLog('My Auctions section elements not found');
             return;
         }
         
         if (!currentUser) {
-            console.log('No current user, hiding My Auctions section');
+            debugLog('No current user, hiding My Auctions section');
             section.style.display = 'none';
             return;
         }
         
-        console.log('Loading user auctions...');
+        debugLog('Loading user auctions...');
         const auctions = await AuctionAPI.getUserAuctions();
-        console.log('User auctions loaded:', auctions);
+        debugLog('User auctions loaded:', auctions);
         
         if (auctions && auctions.length > 0) {
-            console.log(`Showing ${auctions.length} user auctions`);
+            debugLog(`Showing ${auctions.length} user auctions`);
             section.style.display = 'block';
             container.innerHTML = auctions.map(auction => `
                 <div class="auction-card" onclick="window.location.href='auction-detail.html?id=${auction.id}'">
@@ -759,12 +999,12 @@ async function loadMyAuctions() {
                 </div>
             `).join('');
         } else {
-            console.log('No user auctions found');
+            debugLog('No user auctions found');
             // Show section even if empty with a message
             section.style.display = 'none';
         }
     } catch (error) {
-        console.error('Error loading my auctions:', error);
+        debugError('Error loading my auctions:', error);
         const section = document.getElementById('myAuctionsSection');
         if (section) {
             section.style.display = 'none';
@@ -779,22 +1019,22 @@ async function loadMyBids() {
         const container = document.getElementById('myBidsContainer');
         
         if (!section || !container) {
-            console.log('My Bids section elements not found');
+            debugLog('My Bids section elements not found');
             return;
         }
         
         if (!currentUser) {
-            console.log('No current user, hiding My Bids section');
+            debugLog('No current user, hiding My Bids section');
             section.style.display = 'none';
             return;
         }
         
-        console.log('Loading user bids...');
+        debugLog('Loading user bids...');
         const bids = await BidAPI.getUserBids();
-        console.log('User bids loaded:', bids);
+        debugLog('User bids loaded:', bids);
         
         if (bids && bids.length > 0) {
-            console.log(`Showing ${bids.length} user bids`);
+            debugLog(`Showing ${bids.length} user bids`);
             section.style.display = 'block';
             
             // Group bids by auction_id and keep only the highest bid per auction
@@ -818,7 +1058,7 @@ async function loadMyBids() {
                 return new Date(b.timestamp) - new Date(a.timestamp);
             });
             
-            console.log(`Showing ${uniqueBids.length} unique bids (from ${bids.length} total bids)`);
+            debugLog(`Showing ${uniqueBids.length} unique bids (from ${bids.length} total bids)`);
             
             container.innerHTML = uniqueBids.map(bid => {
                 // Check if user won (for ended auctions) or is winning (for active auctions)
@@ -872,11 +1112,11 @@ async function loadMyBids() {
             `;
             }).join('');
         } else {
-            console.log('No user bids found');
+            debugLog('No user bids found');
             section.style.display = 'none';
         }
     } catch (error) {
-        console.error('Error loading my bids:', error);
+        debugError('Error loading my bids:', error);
         const section = document.getElementById('myBidsSection');
         if (section) {
             section.style.display = 'none';
@@ -884,24 +1124,111 @@ async function loadMyBids() {
     }
 }
 
+// Escape HTML helper
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Helper function to truncate text
+function truncateText(text, maxLength) {
+    if (!text) return '';
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength) + '...';
+}
+
+// SVG Placeholder Data URI (always works, no external dependency)
+const SVG_PLACEHOLDER_SVG = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZmY2NjAwIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIyNCIgZmlsbD0iI2ZmZmZmZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg==';
+const SVG_PLACEHOLDER_CAROUSEL = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIwMCIgaGVpZ2h0PSI0MDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0iI2ZmNjYwMCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMjQiIGZpbGw9IiNmZmZmZmYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5ObyBJbWFnZTwvdGV4dD48L3N2Zz4=';
+
+// Get and normalize image URL
+function getImageUrl(imageUrl) {
+    // Check for null, undefined, or empty string (handle both null and string "null")
+    if (imageUrl === null || imageUrl === undefined || imageUrl === 'null' || imageUrl === 'undefined') {
+        return SVG_PLACEHOLDER_SVG;
+    }
+    
+    // Convert to string and check if empty
+    const urlString = String(imageUrl).trim();
+    if (urlString === '' || urlString === 'null' || urlString === 'undefined') {
+        return SVG_PLACEHOLDER_SVG;
+    }
+    
+    // Validate data:image URLs - check if they're complete
+    if (urlString.startsWith('data:image/')) {
+        // Check if data URI is complete (has base64 data after comma)
+        const parts = urlString.split(',');
+        if (parts.length < 2 || parts[1].length < 10) {
+            // Incomplete or invalid data URI
+            console.warn('Invalid or incomplete data URI detected:', urlString.substring(0, 50));
+            return SVG_PLACEHOLDER_SVG;
+        }
+        return urlString;
+    }
+    
+    // If already absolute URL (http/https), validate it
+    if (urlString.startsWith('http://') || urlString.startsWith('https://')) {
+        // Basic URL validation
+        try {
+            new URL(urlString);
+            return urlString;
+        } catch (e) {
+            console.warn('Invalid URL:', urlString);
+            return SVG_PLACEHOLDER_SVG;
+        }
+    }
+    
+    // Handle relative URLs - get base URL from API_BASE_URL or default
+    let baseUrl = 'http://localhost:5000';
+    try {
+        if (typeof API_BASE_URL !== 'undefined' && API_BASE_URL) {
+            baseUrl = String(API_BASE_URL).replace('/api', '').replace(/\/$/, '');
+        } else if (typeof window !== 'undefined' && window.API_BASE_URL) {
+            baseUrl = String(window.API_BASE_URL).replace('/api', '').replace(/\/$/, '');
+        }
+    } catch (e) {
+        console.warn('Could not determine base URL, using default:', e);
+    }
+    
+    // Ensure relative URL starts with /
+    const relativeUrl = urlString.startsWith('/') ? urlString : '/' + urlString;
+    
+    return baseUrl + relativeUrl;
+}
+
 // Create auction card HTML
 function createAuctionCard(auction) {
     const timeLeft = formatTimeLeft(auction.time_left);
     const statusClass = auction.status === 'active' ? 'active' : 'ended';
+    // Use featured_image_url if available and auction is featured, otherwise use regular image_url
+    const imageToUse = (auction.featured && auction.featured_image_url) ? auction.featured_image_url : auction.image_url;
+    let imageUrl = getImageUrl(imageToUse);
+    
+    // Final safety check - ensure we NEVER have an empty src
+    if (!imageUrl || imageUrl === null || imageUrl === undefined || String(imageUrl).trim() === '' || String(imageUrl) === 'undefined' || String(imageUrl) === 'null') {
+        imageUrl = SVG_PLACEHOLDER_SVG;
+    }
     
     return `
         <div class="auction-card" onclick="window.location.href='auction-detail.html?id=${auction.id}'">
             <div class="auction-image">
-                <img src="${auction.image_url || 'https://via.placeholder.com/300x200?text=No+Image'}" alt="${auction.item_name}">
+                <img src="${imageUrl || SVG_PLACEHOLDER_SVG}" 
+                     alt="${escapeHtml(auction.item_name || 'Auction')}"
+                     loading="lazy"
+                     style="display: block; width: 100%; height: 100%; object-fit: cover;"
+                     onerror="console.error('Image error:', this.src.substring(0, 100)); if (!this.src.includes('data:image/svg+xml')) { this.src='${SVG_PLACEHOLDER_SVG}'; }">
                 <span class="status-badge ${statusClass}">${auction.status}</span>
+                ${(auction.video_url && typeof auction.video_url === 'string' && auction.video_url.trim() !== '') ? '<button class="video-button" onclick="event.stopPropagation(); window.location.href=\'auction-detail.html?id=' + auction.id + '#video\'" title="Watch Video"><span class="video-icon">🎥</span> Video</button>' : ''}
             </div>
             <div class="auction-card-content">
-                <h3>${auction.item_name}</h3>
-                <p class="auction-description">${auction.description}</p>
+                <h3>${escapeHtml(auction.item_name || 'Auction')}</h3>
+                <p class="auction-description">${escapeHtml(truncateText(auction.description || '', 80))}</p>
                 <div class="auction-stats">
                     <div class="stat">
                         <label>Current Bid</label>
-                        <span class="price">$${auction.current_bid.toFixed(2)}</span>
+                        <span class="price">$${(auction.current_bid || 0).toFixed(2)}</span>
                     </div>
                     <div class="stat">
                         <label>Time Left</label>
@@ -909,7 +1236,7 @@ function createAuctionCard(auction) {
                     </div>
                     <div class="stat">
                         <label>Bids</label>
-                        <span>${auction.bid_count}</span>
+                        <span>${auction.bid_count || 0}</span>
                     </div>
                 </div>
                 <button class="btn btn-primary btn-block">View Auction</button>
@@ -1067,7 +1394,7 @@ function startCamera(mode = 'id_front') {
         showToast('Camera started successfully', 'success');
     })
     .catch(error => {
-        console.error('Camera access error:', error);
+        debugError('Camera access error:', error);
         if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
             showToast('Camera permission denied. Please allow camera access and try again.', 'error');
         } else if (error.name === 'NotFoundError') {
@@ -1130,7 +1457,8 @@ async function capturePhoto() {
     // Disable capture button and show processing message
     if (captureBtn) {
     captureBtn.disabled = true;
-        captureBtn.innerHTML = '<span id="captureIcon">⏳</span> Processing...';
+        const processingText = (window.i18n && window.i18n.t) ? window.i18n.t('messages.processing', 'Processing...') : 'Processing...';
+        captureBtn.innerHTML = '<span id="captureIcon">⏳</span> ' + processingText;
     }
     
     // Store the captured image based on mode
@@ -1145,7 +1473,7 @@ async function capturePhoto() {
         
         // Save the captured image
         capturedIdCardFront = imageData;
-        console.log('ID Card front captured, data length:', imageData.length);
+        debugLog('ID Card front captured, data length:', imageData.length);
         
         // Update preview - this will validate and display the image
         updateIdCardFrontPreview(imageData);
@@ -1162,7 +1490,7 @@ async function capturePhoto() {
                     autoFillRegistrationForm(extractedData);
                 }
             } catch (error) {
-                console.error('OCR processing error:', error);
+                debugError('OCR processing error:', error);
                 showToast('OCR processing failed. Please enter information manually.', 'error');
             }
         }, 100);
@@ -1176,7 +1504,7 @@ async function capturePhoto() {
             const verifyImage = () => {
                 if (frontPreviewImg.complete && frontPreviewImg.naturalWidth > 0) {
                     imageVerified = true;
-                    console.log('ID Card front image verified as loaded');
+                    debugLog('ID Card front image verified as loaded');
                     updateStepStatus('id_front', true);
                     
                     // Move to ID card back capture
@@ -1187,7 +1515,7 @@ async function capturePhoto() {
                         }
                     }, 500);
                 } else {
-                    console.warn('ID Card front image not loading properly');
+                    debugWarn('ID Card front image not loading properly');
                 }
                 captureBtn.disabled = false;
                 captureBtn.innerHTML = '<span id="captureIcon">📸</span> Capture Photo';
@@ -1200,7 +1528,7 @@ async function capturePhoto() {
                 // Wait for load event
                 frontPreviewImg.onload = verifyImage;
                 frontPreviewImg.onerror = () => {
-                    console.error('ID Card front image failed to load');
+                    debugError('ID Card front image failed to load');
                     showToast('ID Card front image failed to load. Please recapture.', 'error');
                     updateStepStatus('id_front', false);
                     capturedIdCardFront = null;
@@ -1242,7 +1570,7 @@ async function capturePhoto() {
         
         // Save the captured image
         capturedIdCardBack = imageData;
-        console.log('ID Card back captured, data length:', imageData.length);
+        debugLog('ID Card back captured, data length:', imageData.length);
         
         // Update preview - this will validate and display the image
         updateIdCardBackPreview(imageData);
@@ -1259,7 +1587,7 @@ async function capturePhoto() {
                     autoFillRegistrationForm(extractedData, true); // true = merge with existing
                 }
             } catch (error) {
-                console.error('OCR processing error:', error);
+                debugError('OCR processing error:', error);
                 showToast('OCR processing failed. Please enter information manually.', 'error');
             }
         }, 100);
@@ -1273,7 +1601,7 @@ async function capturePhoto() {
             const verifyImage = () => {
                 if (backPreviewImg.complete && backPreviewImg.naturalWidth > 0) {
                     imageVerified = true;
-                    console.log('ID Card back image verified as loaded');
+                    debugLog('ID Card back image verified as loaded');
                     updateStepStatus('id_back', true);
                     
                     // Move to selfie capture
@@ -1284,7 +1612,7 @@ async function capturePhoto() {
                         }
                     }, 500);
                 } else {
-                    console.warn('ID Card back image not loading properly');
+                    debugWarn('ID Card back image not loading properly');
                 }
                 captureBtn.disabled = false;
                 captureBtn.innerHTML = '<span id="captureIcon">📸</span> Capture Photo';
@@ -1297,7 +1625,7 @@ async function capturePhoto() {
                 // Wait for load event
                 backPreviewImg.onload = verifyImage;
                 backPreviewImg.onerror = () => {
-                    console.error('ID Card back image failed to load');
+                    debugError('ID Card back image failed to load');
                     showToast('ID Card back image failed to load. Please recapture.', 'error');
                     updateStepStatus('id_back', false);
                     capturedIdCardBack = null;
@@ -1340,7 +1668,7 @@ async function capturePhoto() {
         
         // Save the captured image (use capturedIdCardFront for single ID card mode)
         capturedIdCardFront = imageData;
-        console.log('ID Card captured (single mode), data length:', imageData.length);
+        debugLog('ID Card captured (single mode), data length:', imageData.length);
         
         // Update preview - try both preview element IDs for compatibility
         const idCardPreview = document.getElementById('idCardPreview');
@@ -1370,7 +1698,7 @@ async function capturePhoto() {
                     autoFillRegistrationForm(extractedData);
                 }
             } catch (error) {
-                console.error('OCR processing error:', error);
+                debugError('OCR processing error:', error);
                 showToast('OCR processing failed. Please enter information manually.', 'error');
             }
         }, 100);
@@ -1383,7 +1711,7 @@ async function capturePhoto() {
             const verifyImage = () => {
                 if (previewImg.complete && previewImg.naturalWidth > 0) {
                     imageVerified = true;
-                    console.log('ID Card image verified as loaded (single mode)');
+                    debugLog('ID Card image verified as loaded (single mode)');
                     updateStepStatus('id', true);
                     
                     // Move to selfie capture
@@ -1394,7 +1722,7 @@ async function capturePhoto() {
                         }
                     }, 500);
                 } else {
-                    console.warn('ID Card image not loading properly');
+                    debugWarn('ID Card image not loading properly');
                 }
                 captureBtn.disabled = false;
                 captureBtn.innerHTML = '<span id="captureIcon">📸</span> Capture Photo';
@@ -1405,7 +1733,7 @@ async function capturePhoto() {
             } else {
                 previewImg.onload = verifyImage;
                 previewImg.onerror = () => {
-                    console.error('ID Card image failed to load');
+                    debugError('ID Card image failed to load');
                     showToast('ID Card image failed to load. Please recapture.', 'error');
                     updateStepStatus('id', false);
                     capturedIdCardFront = null;
@@ -1536,12 +1864,12 @@ function updateIdCardFrontPreview(imageData) {
     const container = document.getElementById('capturedImages');
     
     if (!preview) {
-        console.warn('ID Card front preview element not found');
+        debugWarn('ID Card front preview element not found');
         return;
     }
     
     if (!imageData) {
-        console.warn('No image data provided for ID Card front preview');
+        debugWarn('No image data provided for ID Card front preview');
         // Clear the preview if no data
         preview.src = '';
         preview.removeAttribute('src');
@@ -1553,7 +1881,7 @@ function updateIdCardFrontPreview(imageData) {
     
     // Validate image data is a valid data URL
     if (!imageData.startsWith('data:image/')) {
-        console.error('Invalid image data format for ID Card front');
+        debugError('Invalid image data format for ID Card front');
         return;
     }
     
@@ -1571,7 +1899,7 @@ function updateIdCardFrontPreview(imageData) {
     
     // Add error handler to detect broken images
     preview.onerror = function() {
-        console.error('Failed to load ID Card front preview image');
+        debugError('Failed to load ID Card front preview image');
         preview.src = '';
         if (preview.parentElement) {
             preview.parentElement.style.display = 'none';
@@ -1581,10 +1909,10 @@ function updateIdCardFrontPreview(imageData) {
     
     // Add load handler to confirm image loaded successfully
     preview.onload = function() {
-        console.log('ID Card front preview image loaded successfully');
+        debugLog('ID Card front preview image loaded successfully');
     };
     
-    console.log('ID Card front preview updated');
+    debugLog('ID Card front preview updated');
 }
 
 function updateIdCardBackPreview(imageData) {
@@ -1592,12 +1920,12 @@ function updateIdCardBackPreview(imageData) {
     const container = document.getElementById('capturedImages');
     
     if (!preview) {
-        console.warn('ID Card back preview element not found');
+        debugWarn('ID Card back preview element not found');
         return;
     }
     
     if (!imageData) {
-        console.warn('No image data provided for ID Card back preview');
+        debugWarn('No image data provided for ID Card back preview');
         // Clear the preview if no data
         preview.src = '';
         preview.removeAttribute('src');
@@ -1609,7 +1937,7 @@ function updateIdCardBackPreview(imageData) {
     
     // Validate image data is a valid data URL
     if (!imageData.startsWith('data:image/')) {
-        console.error('Invalid image data format for ID Card back');
+        debugError('Invalid image data format for ID Card back');
         return;
     }
     
@@ -1627,7 +1955,7 @@ function updateIdCardBackPreview(imageData) {
     
     // Add error handler to detect broken images
     preview.onerror = function() {
-        console.error('Failed to load ID Card back preview image');
+        debugError('Failed to load ID Card back preview image');
         preview.src = '';
         if (preview.parentElement) {
             preview.parentElement.style.display = 'none';
@@ -1637,10 +1965,10 @@ function updateIdCardBackPreview(imageData) {
     
     // Add load handler to confirm image loaded successfully
     preview.onload = function() {
-        console.log('ID Card back preview image loaded successfully');
+        debugLog('ID Card back preview image loaded successfully');
     };
     
-    console.log('ID Card back preview updated');
+    debugLog('ID Card back preview updated');
 }
 
 function updateSelfiePreview(imageData) {
@@ -1648,12 +1976,12 @@ function updateSelfiePreview(imageData) {
     const container = document.getElementById('capturedImages');
     
     if (!preview) {
-        console.warn('Selfie preview element not found');
+        debugWarn('Selfie preview element not found');
         return;
     }
     
     if (!imageData) {
-        console.warn('No image data provided for selfie preview');
+        debugWarn('No image data provided for selfie preview');
         // Clear the preview if no data
         preview.src = '';
         preview.removeAttribute('src');
@@ -1665,7 +1993,7 @@ function updateSelfiePreview(imageData) {
     
     // Validate image data is a valid data URL
     if (!imageData.startsWith('data:image/')) {
-        console.error('Invalid image data format for selfie');
+        debugError('Invalid image data format for selfie');
         return;
     }
     
@@ -1683,7 +2011,7 @@ function updateSelfiePreview(imageData) {
     
     // Add error handler to detect broken images
     preview.onerror = function() {
-        console.error('Failed to load selfie preview image');
+        debugError('Failed to load selfie preview image');
         preview.src = '';
         if (preview.parentElement) {
             preview.parentElement.style.display = 'none';
@@ -1693,10 +2021,10 @@ function updateSelfiePreview(imageData) {
     
     // Add load handler to confirm image loaded successfully
     preview.onload = function() {
-        console.log('Selfie preview image loaded successfully');
+        debugLog('Selfie preview image loaded successfully');
     };
     
-    console.log('Selfie preview updated');
+    debugLog('Selfie preview updated');
 }
 
 function updateStepStatus(step, completed) {
@@ -1773,7 +2101,7 @@ async function processIDCardWithOCR(imageData, side = 'front') {
     try {
         // Check if Tesseract is available
         if (typeof Tesseract === 'undefined') {
-            console.warn('Tesseract.js not loaded, skipping OCR');
+            debugWarn('Tesseract.js not loaded, skipping OCR');
             return null;
         }
         
@@ -1790,7 +2118,7 @@ async function processIDCardWithOCR(imageData, side = 'front') {
             }
         });
         
-        console.log('OCR Extracted Text:', text);
+        debugLog('OCR Extracted Text:', text);
         
         // Parse the extracted text to find name, birth date, and ID number
         const extractedData = parseIDCardText(text);
@@ -1814,7 +2142,7 @@ function parseIDCardText(text) {
     const normalizedText = text.replace(/\s+/g, ' ').trim();
     const lines = normalizedText.split('\n').map(line => line.trim()).filter(line => line.length > 0);
     
-    console.log('Parsing text lines:', lines);
+    debugLog('Parsing text lines:', lines);
     
     // Try to extract name (usually appears near the top, may contain letters and spaces)
     // Look for lines that look like names (contain letters, possibly with spaces, 2-50 characters)
@@ -1913,7 +2241,7 @@ function parseIDCardText(text) {
         extracted.idNumber = extracted.idNumber.replace(/[\s\-]/g, '');
     }
     
-    console.log('Extracted Data:', extracted);
+    debugLog('Extracted Data:', extracted);
     
     return extracted;
 }
@@ -2048,13 +2376,13 @@ function autoFillRegistrationForm(extractedData, merge = false) {
     if (filledCount > 0) {
         const message = `Auto-filled ${filledCount} field(s) from ID card. Please verify and complete the remaining fields.`;
         showToast(message, 'success');
-        console.log('Auto-filled form fields:', extractedData);
+        debugLog('Auto-filled form fields:', extractedData);
     } else {
         showToast('Could not extract information from ID card. Please enter manually.', 'warning');
     }
     
     // Log extracted data for debugging
-    console.log('Extracted ID Card Data:', extractedData);
+    debugLog('Extracted ID Card Data:', extractedData);
 }
 
 function finishBiometricCapture() {
@@ -2134,7 +2462,7 @@ function finishBiometricCapture() {
         };
     
     localStorage.setItem('pending_biometric', JSON.stringify(biometricData));
-    console.log('Biometric data saved - Mode:', isSingleIdMode ? 'single ID' : 'both sides', 'Front:', !!capturedIdCardFront, 'Back:', !!capturedIdCardBack, 'Selfie:', !!capturedSelfie);
+    debugLog('Biometric data saved - Mode:', isSingleIdMode ? 'single ID' : 'both sides', 'Front:', !!capturedIdCardFront, 'Back:', !!capturedIdCardBack, 'Selfie:', !!capturedSelfie);
     
     // Update UI
     const captureBtn = document.getElementById('captureBiometric');
@@ -2176,7 +2504,7 @@ function generateSimulatedBiometric() {
 
 function getStoredBiometric() {
     const data = localStorage.getItem('pending_biometric');
-    console.log('Retrieving biometric data from localStorage:', data ? 'Found' : 'Not found');
+    debugLog('Retrieving biometric data from localStorage:', data ? 'Found' : 'Not found');
     
     if (!data) return null;
     
@@ -2211,7 +2539,7 @@ function clearStoredBiometric() {
     // Reset biometric UI to ensure everything is cleared
     resetBiometricUI();
     
-    console.log('Biometric data cleared from localStorage and state variables');
+    debugLog('Biometric data cleared from localStorage and state variables');
 }
 
 // Restore biometric UI state if data exists
@@ -2244,10 +2572,10 @@ function restoreBiometricState() {
                     updateIdCardFrontPreview(capturedIdCardFront);
                     updateIdCardBackPreview(capturedIdCardBack);
                     updateSelfiePreview(capturedSelfie);
-                    console.log('Biometric state restored with valid images');
+                    debugLog('Biometric state restored with valid images');
                 } else {
                     // If any image is invalid, clear everything
-                    console.warn('Invalid image data found, clearing biometric state');
+                    debugWarn('Invalid image data found, clearing biometric state');
                     clearStoredBiometric();
                     return;
                 }
@@ -2270,16 +2598,16 @@ function restoreBiometricState() {
                     // Update previews
                     updateIdCardFrontPreview(capturedIdCardFront);
                     updateSelfiePreview(capturedSelfie);
-                    console.log('Biometric state restored (old format)');
+                    debugLog('Biometric state restored (old format)');
                 } else {
                     // If any image is invalid, clear everything
-                    console.warn('Invalid image data found (old format), clearing biometric state');
+                    debugWarn('Invalid image data found (old format), clearing biometric state');
                     clearStoredBiometric();
                     return;
                 }
             }
         } catch (e) {
-            console.error('Error parsing biometric data:', e);
+            debugError('Error parsing biometric data:', e);
             // If parsing fails, clear the invalid data
             clearStoredBiometric();
         }
@@ -2313,19 +2641,19 @@ function resetBiometricUI() {
         captureBtn.disabled = false;
         captureBtn.classList.remove('captured');
         captureBtn.innerHTML = '<span id="biometricIcon">📷</span> Scan ID & Take Selfie';
-        console.log('Biometric button reset');
+        debugLog('Biometric button reset');
     }
     
     if (statusDiv) {
         statusDiv.innerHTML = '';
         statusDiv.className = 'biometric-status';
-        console.log('Biometric status cleared');
+        debugLog('Biometric status cleared');
     }
     
     // Hide captured images preview container
     if (capturedImages) {
         capturedImages.style.display = 'none';
-        console.log('Captured images container hidden');
+        debugLog('Captured images container hidden');
     }
     
     // Reset preview images - get all preview images and clear them
@@ -2340,9 +2668,9 @@ function resetBiometricUI() {
         if (frontPreview.parentElement) {
             frontPreview.parentElement.style.display = 'none';
         }
-        console.log('ID Card front preview cleared');
+        debugLog('ID Card front preview cleared');
     } else {
-        console.warn('ID Card front preview not found');
+        debugWarn('ID Card front preview not found');
     }
     
     // Clear back preview
@@ -2352,9 +2680,9 @@ function resetBiometricUI() {
         if (backPreview.parentElement) {
             backPreview.parentElement.style.display = 'none';
         }
-        console.log('ID Card back preview cleared');
+        debugLog('ID Card back preview cleared');
     } else {
-        console.warn('ID Card back preview not found');
+        debugWarn('ID Card back preview not found');
     }
     
     // Clear selfie preview
@@ -2364,9 +2692,9 @@ function resetBiometricUI() {
         if (selfiePreview.parentElement) {
             selfiePreview.parentElement.style.display = 'none';
         }
-        console.log('Selfie preview cleared');
+        debugLog('Selfie preview cleared');
     } else {
-        console.warn('Selfie preview not found');
+        debugWarn('Selfie preview not found');
     }
     
     // Also clear any old preview elements (backward compatibility)
@@ -2377,9 +2705,9 @@ function resetBiometricUI() {
         if (oldIdPreview.parentElement) {
             oldIdPreview.parentElement.style.display = 'none';
         }
-        console.log('Old ID card preview cleared');
+        debugLog('Old ID card preview cleared');
     }
     
-    console.log('Biometric UI reset complete');
+    debugLog('Biometric UI reset complete');
 }
 

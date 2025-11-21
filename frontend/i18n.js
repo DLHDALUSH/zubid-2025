@@ -293,7 +293,33 @@ const translations = {
             notFound: 'Resource not found',
             validationError: 'Please check your input and try again',
             networkError: 'Network error. Please check your connection.',
-            genericError: 'An error occurred. Please try again later.'
+            genericError: 'An error occurred. Please try again later.',
+            invalidAuctionId: 'Invalid auction ID',
+            loginRequired: 'Please login to place a bid',
+            auctionInactive: 'This auction is no longer active',
+            invalidVideoUrl: 'Invalid video URL format',
+            noFeaturedAuctions: 'No featured auctions available',
+            linkCopied: 'Link copied to clipboard! Paste it in the app.',
+            copyLinkManually: 'Please copy the link manually',
+            shareSuccess: 'Shared successfully!',
+            shareFailed: 'Failed to record share',
+            errorRecordingShare: 'Error recording share. Please try again.',
+            processing: 'Processing...',
+            photoUploaded: 'Photo uploaded successfully',
+            passwordRequirementLength: 'At least 8 characters',
+            passwordRequirementLowercase: 'One lowercase letter',
+            passwordRequirementUppercase: 'One uppercase letter',
+            passwordRequirementNumber: 'One number',
+            passwordRequirementSpecial: 'One special character (!@#$%^&*()_+-=[]{}|;:,.<>?)',
+            passwordMustMeetRequirements: 'Password must meet all requirements above',
+            admin: 'Admin',
+            howToBid: 'How to Bid',
+            contactUs: 'Contact Us',
+            returnRequests: 'Return Requests',
+            profilePhoto: 'Profile Photo',
+            uploadPhoto: 'Upload Photo',
+            optional: 'Optional',
+            max5MB: 'Max 5MB, JPG/PNG'
         }
     },
     ku: {
@@ -587,7 +613,33 @@ const translations = {
             notFound: 'سەرچاوەکە نەدۆزرایەوە',
             validationError: 'تکایە داتاکانت پشکنین بکە و دوبارە هەوڵ بدە',
             networkError: 'هەڵەی تۆڕ. تکایە پشکنینی پەیوەندیت بکە.',
-            genericError: 'هەڵەیەک ڕوویدا. تکایە دواتر هەوڵ بدەوە.'
+            genericError: 'هەڵەیەک ڕوویدا. تکایە دواتر هەوڵ بدەوە.',
+            invalidAuctionId: 'ژمارەی بازاڕ نادروستە',
+            loginRequired: 'تکایە بچۆرەژوورەوە بۆ داوکردن',
+            auctionInactive: 'ئەم بازاڕە چیتر چالاک نییە',
+            invalidVideoUrl: 'شێوازی لینکی ڤیدیۆ نادروستە',
+            noFeaturedAuctions: 'هیچ بازاڕێکی تایبەت بەردەست نییە',
+            linkCopied: 'لینک کۆپی کرا بۆ کلیپبۆرد! لە ئەپدا پیست بکە.',
+            copyLinkManually: 'تکایە لینکەکە بە دەستی کۆپی بکە',
+            shareSuccess: 'بە سەرکەوتوویی هاوبەش کرا!',
+            shareFailed: 'هاوبەشکردن سەرکەوتوو نەبوو',
+            errorRecordingShare: 'هەڵە لە تۆمارکردنی هاوبەشکردندا. تکایە دوبارە هەوڵ بدەوە.',
+            processing: 'پرۆسێسکردن...',
+            photoUploaded: 'وێنە بە سەرکەوتوویی بارکرا',
+            passwordRequirementLength: 'کەمتر لە 8 پیت',
+            passwordRequirementLowercase: 'یەک پیتی بچووک',
+            passwordRequirementUppercase: 'یەک پیتی گەورە',
+            passwordRequirementNumber: 'یەک ژمارە',
+            passwordRequirementSpecial: 'یەک هێمای تایبەت (!@#$%^&*()_+-=[]{}|;:,.<>?)',
+            passwordMustMeetRequirements: 'وشەی تێپەڕ دەبێت هەموو پێویستییەکان بپڕێت',
+            admin: 'بەڕێوەبردن',
+            howToBid: 'چۆن داو بکەیت',
+            contactUs: 'پەیوەندی بەمانا',
+            returnRequests: 'داوای گەڕاندنەوە',
+            profilePhoto: 'وێنەی پڕۆفایل',
+            uploadPhoto: 'بارکردنی وێنە',
+            optional: 'دڵخواز',
+            max5MB: 'کەمتر لە 5MB، JPG/PNG'
         }
     },
     ar: {
@@ -881,7 +933,33 @@ const translations = {
             notFound: 'المورد غير موجود',
             validationError: 'يرجى التحقق من إدخالك والمحاولة مرة أخرى',
             networkError: 'خطأ في الشبكة. يرجى التحقق من اتصالك.',
-            genericError: 'حدث خطأ. يرجى المحاولة مرة أخرى لاحقاً.'
+            genericError: 'حدث خطأ. يرجى المحاولة مرة أخرى لاحقاً.',
+            invalidAuctionId: 'معرّف المزاد غير صحيح',
+            loginRequired: 'يرجى تسجيل الدخول لتقديم عرض',
+            auctionInactive: 'لم يعد هذا المزاد نشطاً',
+            invalidVideoUrl: 'تنسيق رابط الفيديو غير صحيح',
+            noFeaturedAuctions: 'لا توجد مزادات مميزة متاحة',
+            linkCopied: 'تم نسخ الرابط إلى الحافظة! الصقه في التطبيق.',
+            copyLinkManually: 'يرجى نسخ الرابط يدوياً',
+            shareSuccess: 'تم المشاركة بنجاح!',
+            shareFailed: 'فشلت المشاركة',
+            errorRecordingShare: 'خطأ في تسجيل المشاركة. يرجى المحاولة مرة أخرى.',
+            processing: 'جاري المعالجة...',
+            photoUploaded: 'تم رفع الصورة بنجاح',
+            passwordRequirementLength: '8 أحرف على الأقل',
+            passwordRequirementLowercase: 'حرف صغير واحد',
+            passwordRequirementUppercase: 'حرف كبير واحد',
+            passwordRequirementNumber: 'رقم واحد',
+            passwordRequirementSpecial: 'رمز خاص واحد (!@#$%^&*()_+-=[]{}|;:,.<>?)',
+            passwordMustMeetRequirements: 'يجب أن تستوفي كلمة المرور جميع المتطلبات أعلاه',
+            admin: 'الإدارة',
+            howToBid: 'كيفية المزايدة',
+            contactUs: 'اتصل بنا',
+            returnRequests: 'طلبات الإرجاع',
+            profilePhoto: 'صورة الملف الشخصي',
+            uploadPhoto: 'رفع صورة',
+            optional: 'اختياري',
+            max5MB: 'حد أقصى 5MB، JPG/PNG'
         }
     }
 };
@@ -923,6 +1001,15 @@ function applyLanguage(lang) {
     // Update HTML lang attribute
     document.documentElement.lang = lang;
     
+    // Update page title if translation exists
+    const titleTranslation = getTranslation('home.title');
+    if (titleTranslation && document.title) {
+        // Only update if title matches expected pattern or contains 'ZUBID'
+        if (document.title.includes('ZUBID') || !document.title.includes(' - ')) {
+            document.title = titleTranslation;
+        }
+    }
+    
     // Apply RTL if needed
     applyRTL(lang);
     
@@ -939,7 +1026,32 @@ function applyLanguage(lang) {
                     element.placeholder = translation;
                 }
             } else {
-                element.textContent = translation;
+                // Preserve HTML structure if it exists
+                if (element.children.length === 0) {
+                    element.textContent = translation;
+                } else {
+                    // If element has children, only update text nodes
+                    const textNodes = [];
+                    const walker = document.createTreeWalker(
+                        element,
+                        NodeFilter.SHOW_TEXT,
+                        null,
+                        false
+                    );
+                    let node;
+                    while (node = walker.nextNode()) {
+                        textNodes.push(node);
+                    }
+                    if (textNodes.length > 0) {
+                        textNodes[0].textContent = translation;
+                        // Remove other text nodes
+                        for (let i = 1; i < textNodes.length; i++) {
+                            textNodes[i].remove();
+                        }
+                    } else {
+                        element.textContent = translation;
+                    }
+                }
             }
         }
     });
@@ -953,11 +1065,74 @@ function applyLanguage(lang) {
         }
     });
     
+    // Translate title attributes
+    document.querySelectorAll('[data-i18n-title]').forEach(element => {
+        const key = element.getAttribute('data-i18n-title');
+        const translation = getTranslation(key);
+        if (translation) {
+            element.title = translation;
+        }
+    });
+    
+    // Translate aria-label attributes
+    document.querySelectorAll('[data-i18n-aria-label]').forEach(element => {
+        const key = element.getAttribute('data-i18n-aria-label');
+        const translation = getTranslation(key);
+        if (translation) {
+            element.setAttribute('aria-label', translation);
+        }
+    });
+    
+    // Translate option elements within select
+    document.querySelectorAll('option[data-i18n]').forEach(element => {
+        const key = element.getAttribute('data-i18n');
+        const translation = getTranslation(key);
+        if (translation) {
+            element.textContent = translation;
+        }
+    });
+    
     // Update language switcher display
     updateLanguageSwitcherDisplay(lang);
     
+    // Force re-translation of dynamically added content
+    // This helps with content loaded after initial page load
+    setTimeout(() => {
+        document.querySelectorAll('[data-i18n]').forEach(element => {
+            const key = element.getAttribute('data-i18n');
+            const translation = getTranslation(key);
+            if (translation) {
+                if (element.tagName === 'INPUT' && element.type === 'submit') {
+                    element.value = translation;
+                } else if (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA') {
+                    if (!element.hasAttribute('data-i18n-placeholder')) {
+                        element.placeholder = translation;
+                    }
+                } else if (element.children.length === 0) {
+                    element.textContent = translation;
+                }
+            }
+        });
+        
+        document.querySelectorAll('[data-i18n-placeholder]').forEach(element => {
+            const key = element.getAttribute('data-i18n-placeholder');
+            const translation = getTranslation(key);
+            if (translation) {
+                element.placeholder = translation;
+            }
+        });
+    }, 100);
+    
     // Trigger custom event for other scripts to listen
+    // This will allow other scripts to update their dynamic content
     document.dispatchEvent(new CustomEvent('languageChanged', { detail: { language: lang } }));
+    
+    // Update any dynamic content that might need translation
+    // This includes elements created after page load
+    setTimeout(() => {
+        // Re-apply translations after a short delay to catch any dynamically added content
+        applyLanguage(lang);
+    }, 200);
 }
 
 // Get translation by key (supports nested keys like 'nav.home')

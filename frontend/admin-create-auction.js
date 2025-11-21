@@ -1,5 +1,6 @@
 // Admin Create Auction Page
 let uploadedImages = [];
+let html5QrcodeScanner = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
     await checkAdminAuth();
@@ -12,7 +13,216 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (endTimeInput) {
         endTimeInput.value = defaultEndTime.toISOString().slice(0, 16);
     }
+    
+    // Cleanup QR scanner on page unload
+    window.addEventListener('beforeunload', () => {
+        if (html5QrcodeScanner) {
+            stopQRScanner();
+        }
+    });
 });
+
+// QR Code Scanner Functions
+function startQRScanner() {
+    const qrReaderElement = document.getElementById('qr-reader');
+    const startBtn = document.getElementById('startQrScanner');
+    const stopBtn = document.getElementById('stopQrScanner');
+    const resultsDiv = document.getElementById('qr-reader-results');
+    
+    if (!qrReaderElement) return;
+    
+    // Check if html5Qrcode is available
+    if (typeof Html5Qrcode === 'undefined') {
+        showToast('QR Scanner library not loaded. Please refresh the page.', 'error');
+        return;
+    }
+    
+    try {
+        // Clear previous scanner if exists
+        if (html5QrcodeScanner) {
+            stopQRScanner();
+        }
+        
+        // Create new scanner instance
+        html5QrcodeScanner = new Html5Qrcode("qr-reader");
+        
+        // Start scanning
+        html5QrcodeScanner.start(
+            { facingMode: "environment" }, // Use back camera
+            {
+                fps: 10,
+                qrbox: { width: 250, height: 250 },
+                aspectRatio: 1.0
+            },
+            (decodedText, decodedResult) => {
+                // Success callback
+                onScanSuccess(decodedText, decodedResult);
+            },
+            (errorMessage) => {
+                // Error callback - ignore for continuous scanning
+            }
+        ).then(() => {
+            startBtn.style.display = 'none';
+            stopBtn.style.display = 'inline-block';
+            resultsDiv.style.display = 'none';
+            showToast('QR Scanner started. Point camera at QR code.', 'info');
+        }).catch((err) => {
+            console.error('Failed to start QR scanner:', err);
+            showToast('Failed to start camera. Please check permissions.', 'error');
+        });
+    } catch (error) {
+        console.error('Error starting QR scanner:', error);
+        showToast('Failed to start QR scanner: ' + error.message, 'error');
+    }
+}
+
+function stopQRScanner() {
+    const startBtn = document.getElementById('startQrScanner');
+    const stopBtn = document.getElementById('stopQrScanner');
+    
+    if (html5QrcodeScanner) {
+        html5QrcodeScanner.stop().then(() => {
+            html5QrcodeScanner.clear();
+            html5QrcodeScanner = null;
+            startBtn.style.display = 'inline-block';
+            stopBtn.style.display = 'none';
+        }).catch((err) => {
+            console.error('Error stopping QR scanner:', err);
+        });
+    }
+}
+
+function onScanSuccess(decodedText, decodedResult) {
+    // Stop scanner after successful scan
+    stopQRScanner();
+    
+    try {
+        // Try to parse as JSON (our QR code format)
+        let qrData;
+        try {
+            qrData = JSON.parse(decodedText);
+        } catch (e) {
+            // If not JSON, treat as plain text
+            qrData = { raw_text: decodedText };
+        }
+        
+        // Fill form with scanned data
+        fillFormFromQRData(qrData);
+        
+        // Show success message
+        const resultsDiv = document.getElementById('qr-reader-results');
+        const dataDiv = document.getElementById('qr-scanned-data');
+        if (resultsDiv && dataDiv) {
+            resultsDiv.style.display = 'block';
+            dataDiv.textContent = `Scanned: ${qrData.item_name || qrData.raw_text || 'QR Code'}`;
+        }
+        
+        showToast('QR Code scanned! Form filled automatically.', 'success');
+    } catch (error) {
+        console.error('Error processing QR code:', error);
+        showToast('Error processing QR code: ' + error.message, 'error');
+    }
+}
+
+function fillFormFromQRData(qrData) {
+    try {
+        // Fill item name
+        if (qrData.item_name) {
+            const itemNameInput = document.getElementById('itemName');
+            if (itemNameInput) {
+                itemNameInput.value = qrData.item_name;
+            }
+        }
+        
+        // Fill description
+        if (qrData.description) {
+            const descInput = document.getElementById('description');
+            if (descInput) {
+                descInput.value = qrData.description;
+            }
+        } else if (qrData.item_name) {
+            // Create a basic description from item name
+            const descInput = document.getElementById('description');
+            if (descInput && !descInput.value) {
+                descInput.value = `Auction item: ${qrData.item_name}`;
+            }
+        }
+        
+        // Fill item condition if available
+        if (qrData.item_condition) {
+            const conditionInput = document.getElementById('itemCondition');
+            if (conditionInput) {
+                conditionInput.value = qrData.item_condition;
+            }
+        }
+        
+        // Fill starting bid if price is available
+        if (qrData.price) {
+            const startingBidInput = document.getElementById('startingBid');
+            if (startingBidInput) {
+                startingBidInput.value = qrData.price;
+            }
+        }
+        
+        // If auction_id is present, try to fetch more details from API
+        if (qrData.auction_id && qrData.type === 'auction_item') {
+            fetchAuctionDetails(qrData.auction_id);
+        }
+        
+        // Scroll to form after filling
+        setTimeout(() => {
+            document.getElementById('createAuctionForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 300);
+        
+    } catch (error) {
+        console.error('Error filling form:', error);
+        showToast('Error filling form: ' + error.message, 'error');
+    }
+}
+
+async function fetchAuctionDetails(auctionId) {
+    try {
+        const auction = await AuctionAPI.getById(auctionId);
+        
+        // Fill form with auction details
+        const itemNameInput = document.getElementById('itemName');
+        const descInput = document.getElementById('description');
+        const conditionInput = document.getElementById('itemCondition');
+        const startingBidInput = document.getElementById('startingBid');
+        const categoryInput = document.getElementById('category');
+        const imageUrlsInput = document.getElementById('imageUrls');
+        
+        if (itemNameInput && auction.item_name) {
+            itemNameInput.value = auction.item_name;
+        }
+        
+        if (descInput && auction.description) {
+            descInput.value = auction.description;
+        }
+        
+        if (conditionInput && auction.item_condition) {
+            conditionInput.value = auction.item_condition;
+        }
+        
+        if (startingBidInput && auction.current_bid) {
+            startingBidInput.value = auction.current_bid;
+        }
+        
+        if (categoryInput && auction.category_id) {
+            categoryInput.value = auction.category_id;
+        }
+        
+        if (imageUrlsInput && auction.images && auction.images.length > 0) {
+            const imageUrls = auction.images.map(img => img.url).join('\n');
+            imageUrlsInput.value = imageUrls;
+        }
+        
+        showToast('Auction details loaded from QR code!', 'success');
+    } catch (error) {
+        console.error('Error fetching auction details:', error);
+        // Don't show error - we already filled what we could from QR code
+    }
+}
 
 // Load categories for dropdown
 async function loadCategories() {
@@ -139,15 +349,17 @@ async function handleCreateAuction(event) {
     // Get form values
     const itemName = document.getElementById('itemName').value;
     const description = document.getElementById('description').value;
+    const itemCondition = document.getElementById('itemCondition').value;
     const category = document.getElementById('category').value;
     const startingBid = parseFloat(document.getElementById('startingBid').value);
     const bidIncrement = parseFloat(document.getElementById('bidIncrement').value);
     const endTime = document.getElementById('endTime').value;
     const featured = document.getElementById('featured').checked;
     const imageUrlsText = document.getElementById('imageUrls').value;
+    const videoUrl = document.getElementById('videoUrl') ? document.getElementById('videoUrl').value.trim() : '';
     
     // Validate
-    if (!itemName || !description || !category || !startingBid || !endTime) {
+    if (!itemName || !description || !itemCondition || !category || !startingBid || !endTime) {
         formError.textContent = 'Please fill in all required fields';
         return;
     }
@@ -192,12 +404,14 @@ async function handleCreateAuction(event) {
         const auctionData = {
             item_name: itemName,
             description: description,
+            item_condition: itemCondition,
             category_id: parseInt(category),
             starting_bid: startingBid,
             bid_increment: bidIncrement,
             end_time: endTimeISO,
             featured: featured,
-            images: images
+            images: images,
+            video_url: videoUrl || null
         };
         
         const response = await AuctionAPI.create(auctionData);
@@ -227,6 +441,17 @@ function resetForm() {
     document.getElementById('formError').textContent = '';
     document.getElementById('imagePreviewContainer').innerHTML = '';
     uploadedImages = [];
+    
+    // Stop QR scanner if running
+    if (html5QrcodeScanner) {
+        stopQRScanner();
+    }
+    
+    // Clear QR scanner results
+    const resultsDiv = document.getElementById('qr-reader-results');
+    if (resultsDiv) {
+        resultsDiv.style.display = 'none';
+    }
     
     // Reset default end time
     const defaultEndTime = new Date();

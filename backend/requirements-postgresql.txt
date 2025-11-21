@@ -1,0 +1,5 @@
+# PostgreSQL database driver (optional)
+# Only install this if you plan to use PostgreSQL instead of SQLite
+# Install with: pip install -r requirements-postgresql.txt
+psycopg2-binary==2.9.9
+

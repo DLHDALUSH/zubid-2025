@@ -1,0 +1,27 @@
+[Unit]
+Description=ZUBID Auction Platform Backend Service
+After=network.target
+
+[Service]
+Type=notify
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/zubid/backend
+Environment="PATH=/opt/zubid/backend/venv/bin"
+ExecStart=/opt/zubid/backend/venv/bin/gunicorn -c gunicorn_config.py app:app
+Restart=always
+RestartSec=10
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=zubid
+
+# Security settings
+PrivateTmp=true
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/zubid/backend/logs /opt/zubid/backend/uploads /opt/zubid/backend/instance
+
+[Install]
+WantedBy=multi-user.target
+

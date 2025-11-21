@@ -7,9 +7,16 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css?v=20250116-enhanced-enhanced">
+    <!-- Enhanced Utilities -->
+    <script src="utils.js"></script>
+    <script src="enhanced-utils.js"></script>
+    <script src="performance.js"></script>
+    <script src="accessibility.js"></script>
     <!-- Tesseract.js for OCR -->
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1/dist/tesseract.min.js"></script>
+    <!-- html5-qrcode for QR code scanning -->
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 </head>
 <body>
     <!-- Navigation -->
@@ -21,6 +28,8 @@
             <div class="nav-menu" id="navMenu">
                 <a href="index.html" class="nav-link">Home</a>
                 <a href="auctions.html" class="nav-link">Auctions</a>
+                <a href="how-to-bid.html" class="nav-link">How to Bid</a>
+                <a href="contact-us.html" class="nav-link">Contact Us</a>
                 <a href="my-bids.html" class="nav-link" id="myBidsLink" style="display: none;">My Bids</a>
                 <a href="payments.html" class="nav-link" id="paymentsLink" style="display: none;">Payments</a>
                 <a href="profile.html" class="nav-link">Profile</a>
@@ -42,6 +51,28 @@
         <div class="container">
             <div class="form-container">
                 <h1>Create New Auction</h1>
+                
+                <!-- QR Code Scanner Section -->
+                <div class="qr-scanner-section">
+                    <div class="qr-scanner-header">
+                        <h3>📱 Scan Item QR Code</h3>
+                        <p class="qr-scanner-hint">Scan a QR code to auto-fill auction details</p>
+                    </div>
+                    <div class="qr-scanner-container">
+                        <div id="qr-reader" style="width: 100%; max-width: 400px; margin: 0 auto;"></div>
+                        <div id="qr-reader-results" style="display: none; margin-top: 1rem; padding: 1rem; background: rgba(16, 185, 129, 0.1); border-radius: 8px; color: #10b981;">
+                            <p><strong>✓ QR Code Scanned Successfully!</strong></p>
+                            <p id="qr-scanned-data"></p>
+                        </div>
+                        <button type="button" class="btn btn-outline" id="startQrScanner" onclick="startQRScanner()" style="margin-top: 1rem;">
+                            <span>📷 Start Scanner</span>
+                        </button>
+                        <button type="button" class="btn btn-outline" id="stopQrScanner" onclick="stopQRScanner()" style="margin-top: 1rem; display: none;">
+                            <span>⏹️ Stop Scanner</span>
+                        </button>
+                    </div>
+                </div>
+                
                 <form id="createAuctionForm" onsubmit="handleCreateAuction(event)">
                     <div class="form-group">
                         <label for="itemName">Item Name *</label>
@@ -51,6 +82,22 @@
                     <div class="form-group">
                         <label for="description">Description *</label>
                         <textarea id="description" rows="6" required></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="itemCondition">Item Condition *</label>
+                        <select id="itemCondition" required>
+                            <option value="">Select Condition</option>
+                            <option value="new">New</option>
+                            <option value="like_new">Like New</option>
+                            <option value="excellent">Excellent</option>
+                            <option value="very_good">Very Good</option>
+                            <option value="good">Good</option>
+                            <option value="fair">Fair</option>
+                            <option value="poor">Poor</option>
+                            <option value="for_parts">For Parts / Not Working</option>
+                        </select>
+                        <small>Select the condition of the item</small>
                     </div>
                     
                     <div class="form-row">
@@ -74,6 +121,20 @@
                         </div>
                         
                         <div class="form-group">
+                            <label for="marketPrice">Market Price ($)</label>
+                            <input type="number" id="marketPrice" step="0.01" min="0" placeholder="Optional - retail/market value">
+                            <small>Enter the retail or market price of the item (optional)</small>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="realPrice">Real Price / Buy It Now ($) (Optional)</label>
+                        <input type="number" id="realPrice" step="0.01" min="0" placeholder="Fixed price to buy immediately">
+                        <small>Set a fixed price that allows buyers to purchase immediately without bidding. Must be higher than starting bid.</small>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
                             <label for="endTime">End Date & Time *</label>
                             <input type="datetime-local" id="endTime" required>
                         </div>
@@ -87,9 +148,51 @@
                     </div>
                     
                     <div class="form-group">
-                        <label for="imageUrls">Image URLs (one per line)</label>
-                        <textarea id="imageUrls" rows="4" placeholder="Enter image URLs, one per line&#10;https://example.com/image1.jpg&#10;https://example.com/image2.jpg"></textarea>
-                        <small>You can add image URLs. For now, you can use placeholder images or your own hosted images.</small>
+                        <label for="imageFiles">Upload Images</label>
+                        <input type="file" id="imageFiles" multiple accept="image/*" onchange="handleImageFilesChange(event)">
+                        <div id="imagePreviewContainer" style="margin-top: 1rem; display: none;">
+                            <div id="imagePreviews" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 1rem;"></div>
+                        </div>
+                        <small>Upload images directly or use image URLs below. Maximum 5MB per image.</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="imageUrls">Or Image URLs (one per line)</label>
+                        <textarea id="imageUrls" rows="4" placeholder="Enter image URLs, one per line&#10;https://example.com/image1.jpg&#10;https://example.com/image2.jpg" onchange="handleImageUrlsChange(event)"></textarea>
+                        <small>You can also add image URLs if you prefer to host images elsewhere. URLs will be added to your image list.</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="featuredImageFile">⭐ Featured Image (Optional)</label>
+                        <input type="file" id="featuredImageFile" accept="image/*" onchange="handleFeaturedImageChange(event)">
+                        <div id="featuredImagePreviewContainer" style="margin-top: 1rem; display: none;">
+                            <img id="featuredImagePreview" style="width: 100%; max-width: 500px; border-radius: 8px; border: 2px solid var(--primary-color);" alt="Featured Image Preview">
+                            <div style="margin-top: 0.5rem;">
+                                <button type="button" class="btn btn-outline" onclick="removeFeaturedImage()" style="font-size: 0.875rem;">Remove Featured Image</button>
+                            </div>
+                        </div>
+                        <small>Upload a separate image for featured display (carousel/homepage). <strong>Recommended: 1920x600px (16:5 ratio)</strong> for best quality. Images will be automatically optimized and enhanced.</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="videoFile">🎥 Upload Video (Optional)</label>
+                        <input type="file" id="videoFile" accept="video/*" onchange="handleVideoFileChange(event)">
+                        <div id="videoPreviewContainer" style="margin-top: 1rem; display: none;">
+                            <video id="videoPreview" controls style="width: 100%; max-width: 500px; border-radius: 8px; background: #000;" preload="metadata"></video>
+                            <div style="margin-top: 0.5rem;">
+                                <button type="button" class="btn btn-outline" onclick="removeVideoFile()" style="font-size: 0.875rem;">Remove Video</button>
+                            </div>
+                        </div>
+                        <small>Upload a video file (MP4, WebM, MOV, etc.) - Maximum 100MB</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="videoUrl">Or Video URL (Optional)</label>
+                        <input type="url" id="videoUrl" placeholder="https://www.youtube.com/watch?v=... or https://vimeo.com/... or direct video URL">
+                        <small>Enter a YouTube, Vimeo, or direct video URL. Examples:<br>
+                        • YouTube: https://www.youtube.com/watch?v=VIDEO_ID<br>
+                        • Vimeo: https://vimeo.com/VIDEO_ID<br>
+                        • Direct: https://example.com/video.mp4</small>
                     </div>
                     
                     <div id="formError" class="error-message"></div>

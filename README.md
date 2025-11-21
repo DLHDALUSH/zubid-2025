@@ -84,6 +84,9 @@ ZUBID/
    ```bash
    pip install -r requirements.txt
    ```
+   
+   **Note:** The default installation uses SQLite (no additional setup needed). 
+   If you want to use PostgreSQL or MySQL, see `backend/README-INSTALLATION.md` for optional database drivers.
 
 3. Run the Flask application:
    ```bash

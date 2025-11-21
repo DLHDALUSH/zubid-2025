@@ -4,8 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Create Auction - Admin Portal</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css?v=20250116-enhanced-enhanced">
     <link rel="stylesheet" href="admin.css">
+    <!-- html5-qrcode for QR code scanning -->
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 </head>
 <body>
     <!-- Navigation -->
@@ -34,6 +36,28 @@
         <div class="container">
             <div class="admin-form">
                 <h1>Create New Auction</h1>
+                
+                <!-- QR Code Scanner Section -->
+                <div class="qr-scanner-section">
+                    <div class="qr-scanner-header">
+                        <h3>📱 Scan Item QR Code</h3>
+                        <p class="qr-scanner-hint">Scan a QR code to auto-fill auction details</p>
+                    </div>
+                    <div class="qr-scanner-container">
+                        <div id="qr-reader" style="width: 100%; max-width: 400px; margin: 0 auto;"></div>
+                        <div id="qr-reader-results" style="display: none; margin-top: 1rem; padding: 1rem; background: rgba(16, 185, 129, 0.1); border-radius: 8px; color: #10b981;">
+                            <p><strong>✓ QR Code Scanned Successfully!</strong></p>
+                            <p id="qr-scanned-data"></p>
+                        </div>
+                        <button type="button" class="btn btn-outline" id="startQrScanner" onclick="startQRScanner()" style="margin-top: 1rem;">
+                            <span>📷 Start Scanner</span>
+                        </button>
+                        <button type="button" class="btn btn-outline" id="stopQrScanner" onclick="stopQRScanner()" style="margin-top: 1rem; display: none;">
+                            <span>⏹️ Stop Scanner</span>
+                        </button>
+                    </div>
+                </div>
+                
                 <form id="createAuctionForm" onsubmit="handleCreateAuction(event)">
                     <div class="form-group">
                         <label for="itemName">Item Name *</label>
@@ -43,6 +67,22 @@
                     <div class="form-group">
                         <label for="description">Description *</label>
                         <textarea id="description" rows="6" required></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="itemCondition">Item Condition *</label>
+                        <select id="itemCondition" required>
+                            <option value="">Select Condition</option>
+                            <option value="new">New</option>
+                            <option value="like_new">Like New</option>
+                            <option value="excellent">Excellent</option>
+                            <option value="very_good">Very Good</option>
+                            <option value="good">Good</option>
+                            <option value="fair">Fair</option>
+                            <option value="poor">Poor</option>
+                            <option value="for_parts">For Parts / Not Working</option>
+                        </select>
+                        <small>Select the condition of the item</small>
                     </div>
                     
                     <div class="form-row">
@@ -89,6 +129,15 @@
                         <label for="imageUrls">Or Enter Image URLs (one per line)</label>
                         <textarea id="imageUrls" rows="4" placeholder="Enter image URLs, one per line&#10;https://example.com/image1.jpg&#10;https://example.com/image2.jpg"></textarea>
                         <small>You can add image URLs instead of uploading files</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="videoUrl">🎥 Video URL (Optional)</label>
+                        <input type="url" id="videoUrl" placeholder="https://www.youtube.com/watch?v=... or https://vimeo.com/... or direct video URL">
+                        <small>Enter a YouTube, Vimeo, or direct video URL. Examples:<br>
+                        • YouTube: https://www.youtube.com/watch?v=VIDEO_ID<br>
+                        • Vimeo: https://vimeo.com/VIDEO_ID<br>
+                        • Direct: https://example.com/video.mp4</small>
                     </div>
                     
                     <div id="formError" class="error-message"></div>

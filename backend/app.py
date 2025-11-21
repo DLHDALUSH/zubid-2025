@@ -1,12 +1,27 @@
-from flask import Flask, request, jsonify, session
+from flask import Flask, request, jsonify, session, abort, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
+from flask_wtf.csrf import CSRFProtect, generate_csrf
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+from flask_migrate import Migrate
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
 from datetime import datetime, timedelta, date, timezone
 from functools import wraps
-from sqlalchemy import func
+from sqlalchemy import func, text, Index
+from sqlalchemy.orm import joinedload, selectinload
+from functools import lru_cache
 import os
 import json
+import logging
+from logging.handlers import RotatingFileHandler
+from PIL import Image
+import qrcode
+import io
+import base64
+import html
+import re
 
 # Load environment variables
 try:
@@ -19,12 +34,84 @@ except ImportError:
 app = Flask(__name__)
 
 # Configuration from environment variables with fallbacks for development
-app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'your-secret-key-change-in-production')
+# SECURITY: Require SECRET_KEY in production, fail if not set
+secret_key = os.getenv('SECRET_KEY')
+is_production = os.getenv('FLASK_ENV', '').lower() == 'production'
+
+if not secret_key:
+    if is_production:
+        raise ValueError(
+            "SECRET_KEY environment variable is required in production! "
+            "Generate one with: python -c \"import secrets; print(secrets.token_hex(32))\""
+        )
+    else:
+        # Development fallback with warning
+        secret_key = 'your-secret-key-change-in-production'
+        import warnings
+        warnings.warn(
+            "Using default SECRET_KEY. This is insecure for production! "
+            "Set SECRET_KEY environment variable.",
+            UserWarning
+        )
+
+app.config['SECRET_KEY'] = secret_key
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URI', 'sqlite:///auction.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+# Database connection pooling (only for non-SQLite databases)
+if 'sqlite' not in app.config['SQLALCHEMY_DATABASE_URI'].lower():
+    app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+        'pool_pre_ping': True,  # Verify connections before using
+        'pool_recycle': 3600,   # Recycle connections after 1 hour
+        'pool_size': 10,        # Connection pool size
+        'max_overflow': 20      # Max overflow connections
+    }
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max request size
 
+# CSRF Protection Configuration
+# SECURITY: Enable CSRF in production by default, allow override via env
+csrf_enabled_env = os.getenv('CSRF_ENABLED', '').lower()
+if csrf_enabled_env:
+    # Explicitly set via environment variable
+    app.config['WTF_CSRF_ENABLED'] = csrf_enabled_env == 'true'
+else:
+    # Default: enable in production, disable in development
+    app.config['WTF_CSRF_ENABLED'] = is_production
+
+if is_production and not app.config['WTF_CSRF_ENABLED']:
+    import warnings
+    warnings.warn(
+        "CSRF protection is disabled in production. This is a security risk! "
+        "Set CSRF_ENABLED=true in your environment variables.",
+        UserWarning
+    )
+
+app.config['WTF_CSRF_TIME_LIMIT'] = None  # No time limit for API tokens
+
 db = SQLAlchemy(app)
+
+# Initialize Flask-Migrate for database migrations
+migrate = Migrate(app, db)
+
+# Initialize CSRF Protection (optional, can be enabled for specific endpoints)
+# Only initialize if CSRF is enabled, otherwise create a mock object
+csrf_enabled = os.getenv('CSRF_ENABLED', 'false').lower() == 'true'
+if csrf_enabled:
+    csrf = CSRFProtect(app)
+else:
+    # Create a mock CSRF object that allows exempt decorator but does nothing
+    class MockCSRF:
+        def exempt(self, f):
+            return f
+    csrf = MockCSRF()
+
+# Initialize Rate Limiter
+limiter = Limiter(
+    app=app,
+    key_func=get_remote_address,
+    default_limits=["1000 per day", "200 per hour"],
+    storage_uri=os.getenv('RATELIMIT_STORAGE_URL', 'memory://'),  # Use Redis in production
+    enabled=os.getenv('RATE_LIMIT_ENABLED', 'true').lower() == 'true'
+)
 
 # CORS configuration - restrict origins in production
 cors_origins = os.getenv('CORS_ORIGINS', '*')
@@ -36,6 +123,146 @@ else:
     allowed_origins = [origin.strip() for origin in cors_origins.split(',')]
     CORS(app, supports_credentials=True, origins=allowed_origins)
 
+# Input Validation and Sanitization Helpers
+def sanitize_string(value, max_length=None, allow_html=False):
+    """
+    Sanitize string input to prevent XSS attacks
+    
+    Args:
+        value: String to sanitize
+        max_length: Maximum allowed length (None = no limit)
+        allow_html: If True, allow HTML (not recommended for user input)
+    
+    Returns:
+        Sanitized string
+    """
+    if not isinstance(value, str):
+        return str(value) if value is not None else ''
+    
+    # Strip whitespace
+    value = value.strip()
+    
+    # Encode HTML entities to prevent XSS (unless HTML is explicitly allowed)
+    if not allow_html:
+        value = html.escape(value)
+    
+    # Enforce max length
+    if max_length and len(value) > max_length:
+        value = value[:max_length]
+    
+    return value
+
+def validate_email(email):
+    """Validate email format"""
+    if not email or not isinstance(email, str):
+        return False
+    # Basic email regex
+    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    return bool(re.match(pattern, email.strip()))
+
+def validate_phone(phone):
+    """Validate phone number format"""
+    if not phone or not isinstance(phone, str):
+        return False
+    # Remove common separators
+    cleaned = re.sub(r'[\s\-\(\)]', '', phone)
+    # Check if it's all digits and reasonable length
+    return cleaned.isdigit() and 8 <= len(cleaned) <= 20
+
+def sanitize_filename(filename):
+    """Sanitize filename to prevent path traversal"""
+    # Use werkzeug's secure_filename
+    safe = secure_filename(filename)
+    # Additional check: remove any remaining path separators
+    safe = safe.replace('/', '').replace('\\', '')
+    return safe
+
+# Security Headers Middleware
+@app.after_request
+def set_security_headers(response):
+    """Add security headers to all responses"""
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-Frame-Options'] = 'DENY'
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+    
+    # Only add HSTS if HTTPS is enabled
+    if os.getenv('HTTPS_ENABLED', 'false').lower() == 'true':
+        response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+    
+    return response
+
+# Global Error Handlers
+@app.errorhandler(404)
+def not_found(error):
+    """Handle 404 errors"""
+    return jsonify({'error': 'Resource not found'}), 404
+
+@app.errorhandler(500)
+def internal_error(error):
+    """Handle 500 errors"""
+    db.session.rollback()
+    app.logger.error(f'Internal server error: {str(error)}', exc_info=True)
+    # Don't expose internal errors in production
+    if is_production:
+        return jsonify({'error': 'An internal error occurred. Please try again later.'}), 500
+    else:
+        return jsonify({'error': f'Internal server error: {str(error)}'}), 500
+
+@app.errorhandler(400)
+def bad_request(error):
+    """Handle 400 errors"""
+    return jsonify({'error': 'Bad request'}), 400
+
+@app.errorhandler(403)
+def forbidden(error):
+    """Handle 403 errors"""
+    return jsonify({'error': 'Forbidden'}), 403
+
+@app.errorhandler(429)
+def rate_limit_exceeded(error):
+    """Handle rate limit errors"""
+    return jsonify({'error': 'Rate limit exceeded. Please try again later.'}), 429
+
+# Configure Logging
+def setup_logging():
+    """Configure application logging"""
+    log_level = os.getenv('LOG_LEVEL', 'INFO').upper()
+    log_dir = os.getenv('LOG_DIR', 'logs')
+    
+    # Create logs directory if it doesn't exist
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir)
+    
+    # Configure file handler with rotation
+    file_handler = RotatingFileHandler(
+        os.path.join(log_dir, 'zubid.log'),
+        maxBytes=10240000,  # 10MB
+        backupCount=10
+    )
+    file_handler.setFormatter(logging.Formatter(
+        '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
+    ))
+    file_handler.setLevel(getattr(logging, log_level))
+    
+    # Configure console handler
+    console_handler = logging.StreamHandler()
+    console_handler.setFormatter(logging.Formatter(
+        '%(asctime)s %(levelname)s: %(message)s'
+    ))
+    console_handler.setLevel(getattr(logging, log_level))
+    
+    # Set app logger
+    app.logger.addHandler(file_handler)
+    app.logger.addHandler(console_handler)
+    app.logger.setLevel(getattr(logging, log_level))
+    
+    # Suppress Flask default logging
+    logging.getLogger('werkzeug').setLevel(logging.WARNING)
+
+# Initialize logging
+setup_logging()
+
 # Database Models
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -44,7 +271,8 @@ class User(db.Model):
     password_hash = db.Column(db.String(255), nullable=False)
     id_number = db.Column(db.String(50), unique=True, nullable=False)  # National ID or Passport
     birth_date = db.Column(db.Date)  # Date of birth
-    biometric_data = db.Column(db.Text)  # Stored as JSON or encoded fingerprint/face data
+    biometric_data = db.Column(db.Text, nullable=True)  # Deprecated: kept for backward compatibility
+    profile_photo = db.Column(db.String(500), nullable=True)  # Profile photo URL
     address = db.Column(db.String(255))
     phone = db.Column(db.String(20))
     role = db.Column(db.String(20), default='user')  # user, admin
@@ -54,6 +282,11 @@ class User(db.Model):
     auctions = db.relationship('Auction', foreign_keys='Auction.seller_id', backref='seller', lazy=True)
     won_auctions = db.relationship('Auction', foreign_keys='Auction.winner_id', backref='winner', lazy=True)
     bids = db.relationship('Bid', backref='bidder', lazy=True)
+    
+    # Database indexes for performance optimization
+    __table_args__ = (
+        Index('idx_user_role_created', 'role', 'created_at'),
+    )
 
 class Category(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -66,9 +299,12 @@ class Auction(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     item_name = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text)
+    item_condition = db.Column(db.String(50), nullable=True)  # new, used, refurbished, for_parts
     starting_bid = db.Column(db.Float, nullable=False)
     current_bid = db.Column(db.Float, default=0)
     bid_increment = db.Column(db.Float, default=1.0)
+    market_price = db.Column(db.Float, nullable=True)  # Market/retail price of the item
+    real_price = db.Column(db.Float, nullable=True)  # Buy It Now / Real Price - fixed price to purchase immediately
     start_time = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     end_time = db.Column(db.DateTime, nullable=False)
     seller_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -76,15 +312,32 @@ class Auction(db.Model):
     winner_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
     status = db.Column(db.String(20), default='active')  # active, ended, cancelled
     featured = db.Column(db.Boolean, default=False)
+    featured_image_url = db.Column(db.String(500), nullable=True)  # Separate image for featured display (carousel/homepage)
+    qr_code_url = db.Column(db.String(500), nullable=True)  # QR code image URL
+    video_url = db.Column(db.String(500), nullable=True)  # Video URL (YouTube, Vimeo, or direct video link)
     
     images = db.relationship('Image', backref='auction', lazy=True, cascade='all, delete-orphan')
     bids = db.relationship('Bid', backref='auction', lazy=True, order_by='Bid.timestamp.desc()', cascade='all, delete-orphan')
+    
+    # Database indexes for performance optimization
+    __table_args__ = (
+        Index('idx_auction_status_end_time', 'status', 'end_time'),
+        Index('idx_auction_category_status', 'category_id', 'status'),
+        Index('idx_auction_featured_status', 'featured', 'status'),
+        Index('idx_auction_seller', 'seller_id'),
+        Index('idx_auction_end_time', 'end_time'),
+    )
 
 class Image(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     auction_id = db.Column(db.Integer, db.ForeignKey('auction.id'), nullable=False)
-    url = db.Column(db.String(500), nullable=False)
+    url = db.Column(db.Text, nullable=False)  # Changed from String(500) to Text to support long data URIs
     is_primary = db.Column(db.Boolean, default=False)
+    
+    # Database index for performance optimization
+    __table_args__ = (
+        Index('idx_image_auction_primary', 'auction_id', 'is_primary'),
+    )
 
 class Bid(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -94,6 +347,13 @@ class Bid(db.Model):
     timestamp = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     is_auto_bid = db.Column(db.Boolean, default=False)
     max_auto_bid = db.Column(db.Float, nullable=True)
+    
+    # Database indexes for performance optimization
+    __table_args__ = (
+        Index('idx_bid_auction_timestamp', 'auction_id', 'timestamp'),
+        Index('idx_bid_user_timestamp', 'user_id', 'timestamp'),
+        Index('idx_bid_auction_amount', 'auction_id', 'amount'),
+    )
 
 class Invoice(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -110,6 +370,53 @@ class Invoice(db.Model):
     
     auction = db.relationship('Auction', backref='invoice', lazy=True)
     user = db.relationship('User', backref='invoices', lazy=True)
+
+class ReturnRequest(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    invoice_id = db.Column(db.Integer, db.ForeignKey('invoice.id'), nullable=False)
+    auction_id = db.Column(db.Integer, db.ForeignKey('auction.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    reason = db.Column(db.Text, nullable=False)  # Reason for return
+    description = db.Column(db.Text)  # Additional details
+    status = db.Column(db.String(50), default='pending')  # pending, approved, rejected, processing, completed, cancelled
+    admin_notes = db.Column(db.Text)  # Admin notes/response
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    processed_at = db.Column(db.DateTime, nullable=True)  # When admin processed the request
+    
+    invoice = db.relationship('Invoice', backref='return_requests', lazy=True)
+    auction = db.relationship('Auction', backref='return_requests', lazy=True)
+    user = db.relationship('User', backref='return_requests', lazy=True)
+
+class SocialShare(db.Model):
+    """Track social media shares for cashback rewards"""
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    auction_id = db.Column(db.Integer, db.ForeignKey('auction.id'), nullable=True)  # Nullable for general shares
+    platform = db.Column(db.String(50), nullable=False)  # facebook, twitter, linkedin, etc.
+    shared_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    verified = db.Column(db.Boolean, default=False)  # Whether the share was verified
+    
+    user = db.relationship('User', backref='social_shares', lazy=True)
+    auction = db.relationship('Auction', backref='social_shares', lazy=True)
+    
+    # Unique constraint: one share per platform per user per auction
+    __table_args__ = (
+        db.UniqueConstraint('user_id', 'auction_id', 'platform', name='unique_user_auction_platform'),
+    )
+
+class Cashback(db.Model):
+    """Track cashback rewards for social sharing"""
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    auction_id = db.Column(db.Integer, db.ForeignKey('auction.id'), nullable=True)
+    amount = db.Column(db.Float, nullable=False, default=5.0)  # Cashback amount ($5)
+    status = db.Column(db.String(50), default='pending')  # pending, processed, cancelled
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    processed_at = db.Column(db.DateTime, nullable=True)
+    
+    user = db.relationship('User', backref='cashbacks', lazy=True)
+    auction = db.relationship('Auction', backref='cashbacks', lazy=True)
 
 # Authentication decorator
 def login_required(f):
@@ -164,89 +471,519 @@ def calculate_delivery_fee(user_id):
     
     return round(base_fee, 2)
 
+# Health Check Endpoint (for monitoring)
+@app.route('/api/health', methods=['GET'])
+@csrf.exempt
+def health_check():
+    """Health check endpoint for monitoring"""
+    try:
+        # Check database connection
+        db.session.execute(text('SELECT 1'))
+        
+        # Check upload directory
+        upload_dir = os.getenv('UPLOAD_FOLDER', 'uploads')
+        upload_dir_exists = os.path.exists(upload_dir)
+        
+        return jsonify({
+            'status': 'healthy',
+            'timestamp': datetime.now(timezone.utc).isoformat(),
+            'database': 'connected',
+            'upload_directory': 'exists' if upload_dir_exists else 'missing',
+            'version': '1.0.0'
+        }), 200
+    except Exception as e:
+        app.logger.error(f'Health check failed: {str(e)}')
+        return jsonify({
+            'status': 'unhealthy',
+            'timestamp': datetime.now(timezone.utc).isoformat(),
+            'error': str(e) if not is_production else 'Service unavailable'
+        }), 503
+
+# CSRF Token Endpoint
+@app.route('/api/csrf-token', methods=['GET'])
+@csrf.exempt  # Must be exempt to allow clients to fetch initial token
+def get_csrf_token():
+    """Get CSRF token for forms"""
+    return jsonify({'csrf_token': generate_csrf()}), 200
+
+# Image Upload Configuration
+UPLOAD_FOLDER = os.getenv('UPLOAD_FOLDER', 'uploads')
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+ALLOWED_VIDEO_EXTENSIONS = {'mp4', 'webm', 'ogg', 'mov', 'avi', 'mkv', 'm4v'}
+MAX_IMAGE_SIZE = 5 * 1024 * 1024  # 5MB
+MAX_VIDEO_SIZE = 100 * 1024 * 1024  # 100MB
+
+# Create upload directory if it doesn't exist
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
+
+def allowed_file(filename):
+    """Check if file extension is allowed"""
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def allowed_video_file(filename):
+    """Check if video file extension is allowed"""
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_VIDEO_EXTENSIONS
+
+def resize_image(image_path, max_size=(1920, 1920), quality=85, is_featured=False):
+    """Resize image if it's too large"""
+    try:
+        # Check if file exists
+        if not os.path.exists(image_path):
+            app.logger.error(f"Image file not found: {image_path}")
+            return False
+        
+        # Check if file is readable
+        if not os.access(image_path, os.R_OK):
+            app.logger.error(f"Image file is not readable: {image_path}")
+            return False
+        
+        # Open and verify image
+        try:
+            with Image.open(image_path) as img:
+                # Verify image is valid (this will raise an exception if corrupted)
+                img.verify()
+        except Exception as verify_error:
+            app.logger.error(f"Image verification failed for {image_path}: {str(verify_error)}")
+            return False
+        
+        # Reopen image after verification (verify() closes the file)
+        with Image.open(image_path) as img:
+            original_format = img.format
+            original_mode = img.mode
+            needs_resize = img.size[0] > max_size[0] or img.size[1] > max_size[1]
+            needs_conversion = original_mode == 'RGBA' or original_mode == 'LA' or original_mode == 'P'
+            
+            # Convert to RGB if necessary
+            if needs_conversion:
+                if original_mode == 'RGBA':
+                    background = Image.new('RGB', img.size, (255, 255, 255))
+                    if img.mode == 'RGBA':
+                        background.paste(img, mask=img.split()[3] if len(img.split()) > 3 else None)
+                    else:
+                        background.paste(img)
+                    img = background
+                elif original_mode == 'LA':
+                    background = Image.new('RGB', img.size, (255, 255, 255))
+                    background.paste(img)
+                    img = background
+                elif original_mode == 'P':
+                    # Convert palette mode to RGB
+                    img = img.convert('RGB')
+            
+            # Resize if image is larger than max_size
+            if needs_resize:
+                # Use LANCZOS if available, otherwise use ANTIALIAS (for older Pillow versions)
+                try:
+                    img.thumbnail(max_size, Image.Resampling.LANCZOS)
+                except AttributeError:
+                    # Fallback for older Pillow versions
+                    img.thumbnail(max_size, Image.LANCZOS)
+            
+            # For featured images, resize to optimal dimensions first
+            if is_featured:
+                # Featured images: 1920x600 (16:5 aspect ratio) for carousel
+                target_size = (1920, 600)  # Wide format for carousel
+                # Always resize featured images to optimal dimensions
+                img.thumbnail(target_size, Image.Resampling.LANCZOS)
+                needs_resize = True  # Mark as resized so it gets saved
+            
+            # Save if resize or conversion occurred, preserving original format when possible
+            if needs_resize or needs_conversion:
+                # For featured images, use higher quality
+                if is_featured:
+                    # Use high quality for featured images
+                    featured_quality = 95  # Higher quality for featured images
+                    if needs_conversion or not original_format or original_format in ['JPEG', 'JPG']:
+                        img.save(image_path, 'JPEG', quality=featured_quality, optimize=True, progressive=True)
+                    elif original_format == 'PNG':
+                        if not needs_conversion:
+                            img.save(image_path, 'PNG', optimize=True, compress_level=6)
+                        else:
+                            img.save(image_path, 'JPEG', quality=featured_quality, optimize=True, progressive=True)
+                    else:
+                        try:
+                            img.save(image_path, original_format, optimize=True)
+                        except Exception:
+                            img.save(image_path, 'JPEG', quality=featured_quality, optimize=True, progressive=True)
+                else:
+                    # Regular images: standard quality
+                    if needs_conversion or not original_format or original_format in ['JPEG', 'JPG']:
+                        img.save(image_path, 'JPEG', quality=quality, optimize=True)
+                    elif original_format == 'PNG':
+                        if not needs_conversion:
+                            img.save(image_path, 'PNG', optimize=True)
+                        else:
+                            img.save(image_path, 'JPEG', quality=quality, optimize=True)
+                    else:
+                        try:
+                            img.save(image_path, original_format, optimize=True)
+                        except Exception:
+                            img.save(image_path, 'JPEG', quality=quality, optimize=True)
+            
+            return True
+    except IOError as e:
+        app.logger.error(f"IOError resizing image {image_path}: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return False
+    except Exception as e:
+        app.logger.error(f"Error resizing image {image_path}: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return False
+
+def generate_qr_code(auction_id, item_name, item_price=None):
+    """Generate QR code for an auction item"""
+    try:
+        base_url = os.getenv('BASE_URL', 'http://localhost:5000').rstrip('/')
+        
+        # Create QR code data (JSON format with auction info)
+        qr_data = {
+            'auction_id': auction_id,
+            'item_name': item_name,
+            'type': 'auction_item',
+            'url': f'{base_url}/auctions/{auction_id}',
+            'timestamp': datetime.now(timezone.utc).isoformat()
+        }
+        
+        if item_price:
+            qr_data['price'] = item_price
+        
+        # Convert to JSON string
+        qr_json = json.dumps(qr_data)
+        
+        # Create QR code
+        qr = qrcode.QRCode(
+            version=1,
+            error_correction=qrcode.constants.ERROR_CORRECT_L,
+            box_size=10,
+            border=4,
+        )
+        qr.add_data(qr_json)
+        qr.make(fit=True)
+        
+        # Create QR code image
+        qr_img = qr.make_image(fill_color="black", back_color="white")
+        
+        # Save QR code to file
+        timestamp = datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')
+        qr_filename = f"qr_auction_{auction_id}_{timestamp}.png"
+        qr_filepath = os.path.join(UPLOAD_FOLDER, qr_filename)
+        
+        # Ensure upload directory exists
+        if not os.path.exists(UPLOAD_FOLDER):
+            os.makedirs(UPLOAD_FOLDER)
+        
+        qr_img.save(qr_filepath)
+        
+        # Store relative URL (frontend will construct full URL)
+        qr_url = f"/uploads/{qr_filename}"
+        
+        return qr_url
+    except Exception as e:
+        app.logger.error(f"Error generating QR code: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return None
+
+@app.route('/api/upload/image', methods=['POST'])
+@login_required
+@limiter.limit("20 per minute")  # Rate limit image uploads
+def upload_image():
+    """Upload and process auction images"""
+    try:
+        if 'image' not in request.files:
+            return jsonify({'error': 'No image file provided'}), 400
+        
+        file = request.files['image']
+        if file.filename == '':
+            return jsonify({'error': 'No file selected'}), 400
+        
+        if not allowed_file(file.filename):
+            return jsonify({'error': 'Invalid file type. Allowed types: PNG, JPG, JPEG, GIF, WEBP'}), 400
+        
+        # Check file size - handle both file-like objects and werkzeug FileStorage
+        try:
+            if hasattr(file, 'content_length') and file.content_length:
+                file_size = file.content_length
+            else:
+                # Fallback: seek to end and get position
+                file.seek(0, os.SEEK_END)
+                file_size = file.tell()
+                file.seek(0)
+        except (AttributeError, OSError, IOError) as e:
+            app.logger.warning(f"Could not determine file size: {str(e)}")
+            file_size = MAX_IMAGE_SIZE + 1  # Force validation to fail
+        
+        if file_size > MAX_IMAGE_SIZE:
+            return jsonify({'error': f'File too large. Maximum size: {MAX_IMAGE_SIZE / 1024 / 1024}MB'}), 400
+        
+        # Generate secure filename
+        filename = secure_filename(file.filename)
+        if not filename:  # secure_filename returns empty string for invalid filenames
+            return jsonify({'error': 'Invalid filename'}), 400
+        
+        timestamp = datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')
+        unique_filename = f"{timestamp}_{session['user_id']}_{filename}"
+        filepath = os.path.join(UPLOAD_FOLDER, unique_filename)
+        
+        # Additional security: prevent path traversal
+        if not os.path.abspath(filepath).startswith(os.path.abspath(UPLOAD_FOLDER)):
+            return jsonify({'error': 'Invalid file path'}), 400
+        
+        # Save file
+        file.save(filepath)
+        
+        # Check if this is a featured image upload (check request parameter)
+        is_featured = request.form.get('is_featured', 'false').lower() == 'true'
+        
+        # Resize if needed - use higher quality for featured images
+        if is_featured:
+            resize_result = resize_image(filepath, max_size=(1920, 600), quality=95, is_featured=True)
+        else:
+            resize_result = resize_image(filepath)
+        if not resize_result:
+            # If resize failed, delete the uploaded file
+            try:
+                os.remove(filepath)
+            except OSError:
+                pass
+            return jsonify({'error': 'Failed to process image'}), 500
+        
+        # Store relative URL in database (frontend will construct full URL)
+        # This allows the app to work across different domains/environments
+        image_url = f"/uploads/{unique_filename}"
+        
+        app.logger.info(f"Image uploaded: {unique_filename} by user {session['user_id']}")
+        
+        return jsonify({
+            'message': 'Image uploaded successfully',
+            'url': image_url,
+            'filename': unique_filename
+        }), 200
+        
+    except Exception as e:
+        app.logger.error(f"Error uploading image: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': f'Failed to upload image: {str(e)}'}), 500
+
+@app.route('/uploads/<filename>')
+def uploaded_file(filename):
+    """Serve uploaded images and videos"""
+    try:
+        # Security: ensure filename is safe
+        filename = secure_filename(filename)
+        filepath = os.path.join(UPLOAD_FOLDER, filename)
+        
+        # Additional security: prevent path traversal
+        if not os.path.exists(filepath) or not os.path.abspath(filepath).startswith(os.path.abspath(UPLOAD_FOLDER)):
+            abort(404)
+        
+        # Determine content type based on file extension
+        file_ext = filename.rsplit('.', 1)[1].lower() if '.' in filename else ''
+        content_type = None
+        
+        if file_ext in ALLOWED_EXTENSIONS:
+            # Image files
+            content_type_map = {
+                'jpg': 'image/jpeg',
+                'jpeg': 'image/jpeg',
+                'png': 'image/png',
+                'gif': 'image/gif',
+                'webp': 'image/webp'
+            }
+            content_type = content_type_map.get(file_ext, 'application/octet-stream')
+        elif file_ext in ALLOWED_VIDEO_EXTENSIONS:
+            # Video files
+            content_type_map = {
+                'mp4': 'video/mp4',
+                'webm': 'video/webm',
+                'ogg': 'video/ogg',
+                'mov': 'video/quicktime',
+                'avi': 'video/x-msvideo',
+                'mkv': 'video/x-matroska',
+                'm4v': 'video/mp4'
+            }
+            content_type = content_type_map.get(file_ext, 'video/mp4')
+        
+        if content_type:
+            return send_from_directory(UPLOAD_FOLDER, filename, mimetype=content_type)
+        else:
+            return send_from_directory(UPLOAD_FOLDER, filename)
+    except Exception as e:
+        app.logger.error(f"Error serving file: {str(e)}")
+        abort(500)
+
 # User Management APIs
 @app.route('/api/register', methods=['POST'])
+@limiter.limit("5 per minute")  # Rate limit registration
 def register():
     try:
-        if not request.json:
-            return jsonify({'error': 'No JSON data received'}), 400
+        # Handle both JSON and form-data for backward compatibility
+        if request.is_json:
+            # JSON format (legacy)
+            data = request.json
+            form_data = data
+            profile_photo_file = None
+        else:
+            # Form-data format (with photo upload)
+            form_data = request.form.to_dict()
+            profile_photo_file = request.files.get('profile_photo')
         
-        data = request.json
-        
-        # Validate required fields
-        if not data.get('username'):
+        # Sanitize and validate required fields
+        username = sanitize_string(form_data.get('username', ''), max_length=80)
+        if not username:
             return jsonify({'error': 'Username is required'}), 400
-        if not data.get('email'):
+        
+        email = sanitize_string(form_data.get('email', ''), max_length=255).lower()
+        if not email:
             return jsonify({'error': 'Email is required'}), 400
-        if not data.get('password'):
+        if not validate_email(email):
+            return jsonify({'error': 'Invalid email format'}), 400
+        
+        password = form_data.get('password', '')
+        if not password:
             return jsonify({'error': 'Password is required'}), 400
-        if not data.get('id_number'):
+        
+        # Validate password meets standard requirements
+        password_errors = []
+        if len(password) < 8:
+            password_errors.append('Password must be at least 8 characters long')
+        if not any(c.islower() for c in password):
+            password_errors.append('Password must contain at least one lowercase letter')
+        if not any(c.isupper() for c in password):
+            password_errors.append('Password must contain at least one uppercase letter')
+        if not any(c.isdigit() for c in password):
+            password_errors.append('Password must contain at least one number')
+        if not any(c in '!@#$%^&*()_+-=[]{}|;:,.<>?' for c in password):
+            password_errors.append('Password must contain at least one special character')
+        
+        if password_errors:
+            return jsonify({'error': 'Password does not meet requirements: ' + '; '.join(password_errors)}), 400
+        
+        id_number = sanitize_string(form_data.get('id_number', ''), max_length=50)
+        if not id_number:
             return jsonify({'error': 'ID Number is required'}), 400
-        if not data.get('birth_date'):
+        
+        if not form_data.get('birth_date'):
             return jsonify({'error': 'Date of Birth is required'}), 400
-        if not data.get('biometric_data'):
-            return jsonify({'error': 'Biometric authentication is required'}), 400
-        if not data.get('phone') or not data.get('phone').strip():
+        
+        phone = sanitize_string(form_data.get('phone', ''), max_length=20)
+        if not phone:
             return jsonify({'error': 'Phone number is required'}), 400
-        if not data.get('address') or not data.get('address').strip():
+        if not validate_phone(phone):
+            return jsonify({'error': 'Invalid phone number format'}), 400
+        
+        address = sanitize_string(form_data.get('address', ''), max_length=255)
+        if not address:
             return jsonify({'error': 'Address is required'}), 400
-        
-        # Validate phone number format (basic validation)
-        phone = data.get('phone', '').strip()
-        if len(phone) < 8 or len(phone) > 20:
-            return jsonify({'error': 'Phone number must be between 8 and 20 characters'}), 400
-        
-        # Validate address length
-        address = data.get('address', '').strip()
-        if len(address) < 5 or len(address) > 255:
-            return jsonify({'error': 'Address must be between 5 and 255 characters'}), 400
+        if len(address) < 5:
+            return jsonify({'error': 'Address must be at least 5 characters long'}), 400
         
         # Check if username already exists
-        if User.query.filter_by(username=data['username']).first():
+        if User.query.filter_by(username=username).first():
             return jsonify({'error': 'Username already exists'}), 400
         
         # Check if email already exists
-        if User.query.filter_by(email=data['email']).first():
+        if User.query.filter_by(email=email).first():
             return jsonify({'error': 'Email already exists'}), 400
         
         # Check if ID number already exists
-        if User.query.filter_by(id_number=data['id_number']).first():
+        if User.query.filter_by(id_number=id_number).first():
             return jsonify({'error': 'ID Number already registered'}), 400
         
         # Parse birth_date string to Date object
         birth_date_obj = None
-        if data.get('birth_date'):
+        if form_data.get('birth_date'):
             try:
                 # Expecting format YYYY-MM-DD from HTML date input
-                birth_date_obj = datetime.strptime(data['birth_date'], '%Y-%m-%d').date()
+                birth_date_obj = datetime.strptime(form_data['birth_date'], '%Y-%m-%d').date()
             except (ValueError, TypeError) as e:
                 return jsonify({'error': f'Invalid date format for birth date: {str(e)}'}), 400
         
-        # Create user
+        # Handle profile photo upload
+        profile_photo_url = None
+        if profile_photo_file and profile_photo_file.filename:
+            if not allowed_file(profile_photo_file.filename):
+                return jsonify({'error': 'Invalid photo file type. Allowed types: PNG, JPG, JPEG, GIF, WEBP'}), 400
+            
+            # Check file size
+            try:
+                if hasattr(profile_photo_file, 'content_length') and profile_photo_file.content_length:
+                    file_size = profile_photo_file.content_length
+                else:
+                    profile_photo_file.seek(0, os.SEEK_END)
+                    file_size = profile_photo_file.tell()
+                    profile_photo_file.seek(0)
+            except (AttributeError, OSError, IOError) as e:
+                app.logger.warning(f"Could not determine file size: {str(e)}")
+                file_size = MAX_IMAGE_SIZE + 1
+            
+            if file_size > MAX_IMAGE_SIZE:
+                return jsonify({'error': f'Photo too large. Maximum size: {MAX_IMAGE_SIZE / 1024 / 1024}MB'}), 400
+            
+            # Generate secure filename
+            filename = secure_filename(profile_photo_file.filename)
+            if not filename:
+                return jsonify({'error': 'Invalid filename'}), 400
+            
+            timestamp = datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')
+            unique_filename = f"profile_{timestamp}_{filename}"
+            filepath = os.path.join(UPLOAD_FOLDER, unique_filename)
+            
+            # Additional security: prevent path traversal
+            if not os.path.abspath(filepath).startswith(os.path.abspath(UPLOAD_FOLDER)):
+                return jsonify({'error': 'Invalid file path'}), 400
+            
+            # Save file
+            profile_photo_file.save(filepath)
+            
+            # Resize if needed
+            resize_result = resize_image(filepath, max_size=(400, 400), quality=85)
+            if not resize_result:
+                try:
+                    os.remove(filepath)
+                except OSError:
+                    pass
+                return jsonify({'error': 'Failed to process profile photo'}), 500
+            
+            # Store relative URL (frontend will construct full URL)
+            profile_photo_url = f"/uploads/{unique_filename}"
+        
+        # Create user (using sanitized values)
         user = User(
-            username=data['username'],
-            email=data['email'],
-            password_hash=generate_password_hash(data['password']),
-            id_number=data['id_number'],
+            username=username,  # Already sanitized
+            email=email,  # Already sanitized and validated
+            password_hash=generate_password_hash(password),
+            id_number=id_number,  # Already sanitized
             birth_date=birth_date_obj,
-            biometric_data=data['biometric_data'],
-            address=data.get('address', '').strip(),
-            phone=data.get('phone', '').strip()
+            biometric_data=form_data.get('biometric_data'),  # Optional - deprecated
+            profile_photo=profile_photo_url,  # Profile photo URL
+            address=address,  # Already sanitized
+            phone=phone  # Already sanitized and validated
         )
         db.session.add(user)
         db.session.commit()
         
+        app.logger.info(f"User registered: {user.username} (ID: {user.id})")
+        
         return jsonify({
             'message': 'User registered successfully', 
             'user_id': user.id,
-            'username': user.username
+            'username': user.username,
+            'profile_photo': profile_photo_url
         }), 201
     except Exception as e:
         db.session.rollback()
-        print(f"Registration error: {str(e)}")
+        app.logger.error(f"Registration error: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'error': f'Registration failed: {str(e)}'}), 500
 
 @app.route('/api/login', methods=['POST'])
+@limiter.limit("10 per minute")  # Rate limit login attempts
 def login():
     if not request.json:
         return jsonify({'error': 'No JSON data received'}), 400
@@ -286,32 +1023,180 @@ def get_profile():
         'birth_date': user.birth_date.isoformat() if user.birth_date else None,
         'address': user.address,
         'phone': user.phone,
-        'role': user.role
+        'role': user.role,
+        'profile_photo': user.profile_photo
     }), 200
 
 @app.route('/api/user/profile', methods=['PUT'])
 @login_required
 def update_profile():
-    user = User.query.get(session['user_id'])
-    data = request.json
-    if 'email' in data:
-        user.email = data['email']
-    if 'address' in data:
-        user.address = data['address']
-    if 'phone' in data:
-        user.phone = data['phone']
-    db.session.commit()
-    return jsonify({'message': 'Profile updated successfully'}), 200
+    try:
+        user = User.query.get(session['user_id'])
+        
+        # Handle both JSON and form-data for profile photo upload
+        if request.is_json:
+            data = request.json
+            profile_photo_file = None
+        else:
+            # Form-data format (with photo upload)
+            data = request.form.to_dict()
+            profile_photo_file = request.files.get('profile_photo')
+        
+        # Update email with validation and sanitization
+        if 'email' in data:
+            email = sanitize_string(data.get('email', ''), max_length=255).lower()
+            if not email:
+                return jsonify({'error': 'Email cannot be empty'}), 400
+            if not validate_email(email):
+                return jsonify({'error': 'Invalid email format'}), 400
+            # Check if email is already taken by another user
+            existing_user = User.query.filter(User.email == email, User.id != user.id).first()
+            if existing_user:
+                return jsonify({'error': 'Email is already registered'}), 400
+            user.email = email
+        
+        # Update address with validation and sanitization
+        if 'address' in data:
+            address = sanitize_string(data.get('address', ''), max_length=255)
+            if address and len(address) < 5:
+                return jsonify({'error': 'Address must be at least 5 characters long'}), 400
+            user.address = address
+        
+        # Update phone with validation and sanitization
+        if 'phone' in data:
+            phone = sanitize_string(data.get('phone', ''), max_length=20)
+            if phone and not validate_phone(phone):
+                return jsonify({'error': 'Invalid phone number format'}), 400
+            user.phone = phone
+        
+        # Handle profile photo upload
+        if profile_photo_file and profile_photo_file.filename:
+            if not allowed_file(profile_photo_file.filename):
+                return jsonify({'error': 'Invalid photo file type. Allowed types: PNG, JPG, JPEG, GIF, WEBP'}), 400
+            
+            # Check file size
+            try:
+                if hasattr(profile_photo_file, 'content_length') and profile_photo_file.content_length:
+                    file_size = profile_photo_file.content_length
+                else:
+                    profile_photo_file.seek(0, os.SEEK_END)
+                    file_size = profile_photo_file.tell()
+                    profile_photo_file.seek(0)
+            except (AttributeError, OSError, IOError) as e:
+                app.logger.warning(f"Could not determine file size: {str(e)}")
+                file_size = MAX_IMAGE_SIZE + 1
+            
+            if file_size > MAX_IMAGE_SIZE:
+                return jsonify({'error': f'Photo too large. Maximum size: {MAX_IMAGE_SIZE / 1024 / 1024}MB'}), 400
+            
+            # Generate secure filename
+            filename = secure_filename(profile_photo_file.filename)
+            if not filename:
+                return jsonify({'error': 'Invalid filename'}), 400
+            
+            timestamp = datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')
+            unique_filename = f"profile_{timestamp}_{session['user_id']}_{filename}"
+            filepath = os.path.join(UPLOAD_FOLDER, unique_filename)
+            
+            # Additional security: prevent path traversal
+            if not os.path.abspath(filepath).startswith(os.path.abspath(UPLOAD_FOLDER)):
+                return jsonify({'error': 'Invalid file path'}), 400
+            
+            # Delete old profile photo if exists
+            if user.profile_photo:
+                try:
+                    old_filename = user.profile_photo.split('/')[-1]
+                    old_filepath = os.path.join(UPLOAD_FOLDER, old_filename)
+                    if os.path.exists(old_filepath) and os.path.abspath(old_filepath).startswith(os.path.abspath(UPLOAD_FOLDER)):
+                        os.remove(old_filepath)
+                except Exception as e:
+                    app.logger.warning(f"Could not delete old profile photo: {str(e)}")
+            
+            # Save file
+            profile_photo_file.save(filepath)
+            
+            # Resize if needed (profile photos should be smaller)
+            try:
+                resize_result = resize_image(filepath, max_size=(400, 400), quality=85)
+                if not resize_result:
+                    try:
+                        os.remove(filepath)
+                    except OSError:
+                        pass
+                    return jsonify({'error': 'Failed to process profile photo. The image may be corrupted or in an unsupported format.'}), 500
+            except Exception as resize_error:
+                app.logger.error(f"Error in resize_image for profile photo: {str(resize_error)}")
+                import traceback
+                traceback.print_exc()
+                try:
+                    os.remove(filepath)
+                except OSError:
+                    pass
+                return jsonify({'error': f'Failed to process profile photo: {str(resize_error)}'}), 500
+            
+            # Store relative URL (frontend will construct full URL)
+            profile_photo_url = f"/uploads/{unique_filename}"
+            user.profile_photo = profile_photo_url
+        
+        # Also allow updating profile_photo via JSON (URL) with validation
+        elif 'profile_photo' in data and data['profile_photo']:
+            photo_url = data['profile_photo'].strip() if isinstance(data['profile_photo'], str) else str(data['profile_photo']).strip()
+            if photo_url:
+                # Validate URL format
+                if not (photo_url.startswith('http://') or photo_url.startswith('https://')):
+                    return jsonify({'error': 'Invalid profile photo URL. Must start with http:// or https://'}), 400
+                # Check URL length (max 500 characters)
+                if len(photo_url) > 500:
+                    return jsonify({'error': 'Profile photo URL is too long (max 500 characters)'}), 400
+                # Additional security: check for javascript: or data: schemes
+                if photo_url.lower().startswith(('javascript:', 'data:', 'vbscript:')):
+                    return jsonify({'error': 'Invalid profile photo URL scheme'}), 400
+                user.profile_photo = photo_url
+            else:
+                # Empty string means remove photo
+                user.profile_photo = None
+        
+        db.session.commit()
+        return jsonify({
+            'message': 'Profile updated successfully',
+            'profile_photo': user.profile_photo
+        }), 200
+    
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f"Error updating profile: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': f'Failed to update profile: {str(e)}'}), 500
 
 # Category APIs
-@app.route('/api/categories', methods=['GET'])
-def get_categories():
+# Cache categories for 5 minutes (they don't change often)
+@lru_cache(maxsize=1)
+def _get_cached_categories():
+    """Internal function to get categories - cached"""
     categories = Category.query.all()
-    return jsonify([{
+    return [{
         'id': cat.id,
         'name': cat.name,
         'description': cat.description
-    } for cat in categories]), 200
+    } for cat in categories]
+
+@app.route('/api/categories', methods=['GET'])
+def get_categories():
+    # Clear cache if categories were recently modified (simple approach)
+    # In production, use Redis or similar for better cache invalidation
+    try:
+        categories = _get_cached_categories()
+        return jsonify(categories), 200
+    except Exception:
+        # If cache fails, clear it and fetch fresh
+        _get_cached_categories.cache_clear()
+        categories = Category.query.all()
+        return jsonify([{
+            'id': cat.id,
+            'name': cat.name,
+            'description': cat.description
+        } for cat in categories]), 200
 
 @app.route('/api/categories', methods=['POST'])
 @login_required
@@ -321,13 +1206,15 @@ def create_category():
             return jsonify({'error': 'No JSON data received'}), 400
         
         data = request.json
-        if not data.get('name') or not data.get('name').strip():
+        category_name = sanitize_string(data.get('name', ''), max_length=100)
+        if not category_name:
             return jsonify({'error': 'Category name is required'}), 400
         
-        if Category.query.filter_by(name=data['name'].strip()).first():
+        if Category.query.filter_by(name=category_name).first():
             return jsonify({'error': 'Category already exists'}), 400
         
-        category = Category(name=data['name'].strip(), description=data.get('description', '').strip())
+        category_description = sanitize_string(data.get('description', ''), max_length=500)
+        category = Category(name=category_name, description=category_description)
         db.session.add(category)
         db.session.commit()
         return jsonify({'message': 'Category created', 'id': category.id}), 201
@@ -362,21 +1249,26 @@ def get_auctions():
         if status:
             query = query.filter_by(status=status)
         
-        # Update auction status based on end_time (use separate query to avoid modifying main query)
+        # Update auction status based on end_time
+        # Use database-level update to avoid race conditions
         now = datetime.now(timezone.utc)
-        # Check all active auctions and update their status if they've ended
-        active_auctions = Auction.query.filter_by(status='active').all()
-        for auction in active_auctions:
+        from sqlalchemy import and_
+        # Update ended auctions atomically - optimize with eager loading
+        ended_auctions = Auction.query.filter(
+            and_(Auction.status == 'active', Auction.end_time < now)
+        ).options(selectinload(Auction.bids)).all()
+        
+        for auction in ended_auctions:
             # Ensure end_time is timezone-aware for comparison
             end_time = ensure_timezone_aware(auction.end_time)
-            if end_time and end_time < now:
+            if end_time and end_time < now and auction.status == 'active':
                 auction.status = 'ended'
                 if auction.bids:
                     highest_bid = max(auction.bids, key=lambda b: b.amount)
                     auction.winner_id = highest_bid.user_id
                     auction.current_bid = highest_bid.amount
                     
-                    # Create invoice for the winner
+                    # Create invoice for the winner (check if doesn't exist to avoid duplicates)
                     user_id = highest_bid.user_id
                     existing_invoice = Invoice.query.filter_by(auction_id=auction.id, user_id=user_id).first()
                     if not existing_invoice:
@@ -384,6 +1276,13 @@ def get_auctions():
                         bid_fee = item_price * 0.01
                         delivery_fee = calculate_delivery_fee(user_id)
                         total_amount = item_price + bid_fee + delivery_fee
+                        
+                        # Generate QR code if auction doesn't have one
+                        if not auction.qr_code_url:
+                            qr_code_url = generate_qr_code(auction.id, auction.item_name, item_price)
+                            if qr_code_url:
+                                auction.qr_code_url = qr_code_url
+                                db.session.flush()
                         
                         invoice = Invoice(
                             auction_id=auction.id,
@@ -395,7 +1294,9 @@ def get_auctions():
                             payment_status='pending'
                         )
                         db.session.add(invoice)
-        db.session.commit()
+        
+        if ended_auctions:
+            db.session.commit()
         
         # Rebuild query with all filters (status may have changed after update)
         query = Auction.query
@@ -415,10 +1316,33 @@ def get_auctions():
         elif sort_by == 'time_left':
             query = query.order_by(Auction.end_time.asc())
         elif sort_by == 'bids':
-            # Sort by bid count using subquery
-            query = query.outerjoin(Bid).group_by(Auction.id).order_by(func.count(Bid.id).desc())
+            # Sort by bid count using subquery to avoid conflicts with eager loading
+            from sqlalchemy import select
+            bid_count_subq = select(
+                Bid.auction_id,
+                func.count(Bid.id).label('bid_count')
+            ).group_by(Bid.auction_id).subquery()
+            
+            query = query.outerjoin(bid_count_subq, Auction.id == bid_count_subq.c.auction_id)
+            query = query.order_by(bid_count_subq.c.bid_count.desc().nullslast())
+            # For bid sorting, we can't use selectinload for bids since we're already joining
+            # Apply eager loading for other relationships
+            query = query.options(
+                joinedload(Auction.seller),
+                joinedload(Auction.category),
+                selectinload(Auction.images)
+            )
         else:
             query = query.order_by(Auction.end_time.asc())
+        
+        # Optimize query with eager loading to prevent N+1 queries (for non-bid-sorting)
+        if sort_by != 'bids':
+            query = query.options(
+                joinedload(Auction.seller),
+                joinedload(Auction.category),
+                selectinload(Auction.images),
+                selectinload(Auction.bids)
+            )
         
         pagination = query.paginate(page=page, per_page=per_page, error_out=False)
         
@@ -428,29 +1352,43 @@ def get_auctions():
             end_time = ensure_timezone_aware(auction.end_time)
             time_left = (end_time - now).total_seconds() if end_time else 0
             
-            # Count unique bidders (users who have placed bids)
+            # Count unique bidders (users who have placed bids) - optimized
             unique_bidders = set()
-            if auction.bids:
-                unique_bidders = {bid.user_id for bid in auction.bids}
+            try:
+                if auction.bids:
+                    unique_bidders = {bid.user_id for bid in auction.bids}
+            except Exception:
+                # If bids relationship fails to load, query directly
+                try:
+                    bid_user_ids = db.session.query(Bid.user_id).filter_by(auction_id=auction.id).distinct().all()
+                    unique_bidders = {bid[0] for bid in bid_user_ids}
+                except Exception:
+                    unique_bidders = set()
             
             auctions.append({
                 'id': auction.id,
                 'item_name': auction.item_name,
                 'description': auction.description[:100] + '...' if len(auction.description) > 100 else auction.description,
+                'item_condition': auction.item_condition,
                 'starting_bid': auction.starting_bid,
                 'current_bid': auction.current_bid or auction.starting_bid,
                 'bid_increment': auction.bid_increment,
+                'market_price': auction.market_price,
+                'real_price': auction.real_price,  # Buy It Now / Real Price
                 'start_time': ensure_timezone_aware(auction.start_time).isoformat() if auction.start_time else None,
                 'end_time': end_time.isoformat() if end_time else None,
                 'time_left': max(0, int(time_left)),
                 'seller_id': auction.seller_id,
-                'seller_name': auction.seller.username,
+                'seller_name': auction.seller.username if auction.seller else None,
                 'category_id': auction.category_id,
                 'category_name': auction.category.name if auction.category else None,
                 'status': auction.status,
                 'featured': auction.featured,
                 'image_url': auction.images[0].url if auction.images else None,
-                'bid_count': len(unique_bidders)  # Count unique bidders, not total bids
+                'featured_image_url': auction.featured_image_url,  # Separate featured image
+                'bid_count': len(unique_bidders),  # Count unique bidders, not total bids
+                'qr_code_url': auction.qr_code_url,
+                'video_url': auction.video_url
             })
         
         return jsonify({
@@ -463,10 +1401,14 @@ def get_auctions():
     
     except Exception as e:
         db.session.rollback()
-        print(f"Error in get_auctions: {str(e)}")
+        app.logger.error(f"Error in get_auctions: {str(e)}", exc_info=True)
         import traceback
         traceback.print_exc()
-        return jsonify({'error': f'Failed to fetch auctions: {str(e)}'}), 500
+        # Return a more user-friendly error message
+        error_msg = str(e)
+        if 'no such table' in error_msg.lower() or 'relation' in error_msg.lower():
+            return jsonify({'error': 'Database tables not initialized. Please restart the backend server to create tables.'}), 500
+        return jsonify({'error': f'Failed to fetch auctions: {error_msg}'}), 500
 
 @app.route('/api/auctions/<int:auction_id>', methods=['GET'])
 def get_auction(auction_id):
@@ -495,9 +1437,12 @@ def get_auction(auction_id):
             'id': auction.id,
             'item_name': auction.item_name,
             'description': auction.description,
+            'item_condition': auction.item_condition,
             'starting_bid': auction.starting_bid,
             'current_bid': auction.current_bid or auction.starting_bid,
             'bid_increment': auction.bid_increment,
+            'market_price': auction.market_price,
+            'real_price': auction.real_price,  # Buy It Now / Real Price
             'start_time': ensure_timezone_aware(auction.start_time).isoformat() if auction.start_time else None,
             'end_time': end_time.isoformat() if end_time else None,
             'time_left': max(0, int(time_left)),
@@ -509,8 +1454,11 @@ def get_auction(auction_id):
             'status': auction.status,
             'featured': auction.featured,
             'images': [{'id': img.id, 'url': img.url, 'is_primary': img.is_primary} for img in auction.images],
+            'featured_image_url': auction.featured_image_url,  # Separate featured image
             'bid_count': len(unique_bidders),  # Count unique bidders, not total bids
-            'winner_id': auction.winner_id
+            'winner_id': auction.winner_id,
+            'qr_code_url': auction.qr_code_url,
+            'video_url': auction.video_url
         }), 200
     except Exception as e:
         db.session.rollback()
@@ -528,10 +1476,13 @@ def create_auction():
         
         data = request.json
         
-        # Validate required fields
-        if not data.get('item_name'):
+        # Sanitize and validate required fields
+        item_name = sanitize_string(data.get('item_name', ''), max_length=200)
+        if not item_name:
             return jsonify({'error': 'Item name is required'}), 400
-        if not data.get('description'):
+        
+        description = sanitize_string(data.get('description', ''), max_length=5000, allow_html=False)
+        if not description:
             return jsonify({'error': 'Description is required'}), 400
         if not data.get('starting_bid'):
             return jsonify({'error': 'Starting bid is required'}), 400
@@ -594,35 +1545,81 @@ def create_auction():
             except (ValueError, TypeError):
                 return jsonify({'error': 'Invalid category ID'}), 400
         
+        # Sanitize optional fields
+        item_condition = sanitize_string(data.get('item_condition', ''), max_length=50) if data.get('item_condition') else None
+        video_url = sanitize_string(data.get('video_url', ''), max_length=500) if data.get('video_url') else None
+        featured_image_url = sanitize_string(data.get('featured_image_url', ''), max_length=500) if data.get('featured_image_url') else None
+        
+        # Validate market price if provided
+        market_price = None
+        if data.get('market_price'):
+            try:
+                market_price = float(data['market_price'])
+                if market_price < 0:
+                    return jsonify({'error': 'Market price cannot be negative'}), 400
+            except (ValueError, TypeError):
+                return jsonify({'error': 'Invalid market price value'}), 400
+        
+        # Validate real price (Buy It Now) if provided
+        real_price = None
+        if data.get('real_price'):
+            try:
+                real_price = float(data['real_price'])
+                if real_price < 0:
+                    return jsonify({'error': 'Real price cannot be negative'}), 400
+                if real_price <= starting_bid:
+                    return jsonify({'error': 'Real price must be higher than starting bid'}), 400
+            except (ValueError, TypeError):
+                return jsonify({'error': 'Invalid real price value'}), 400
+        
         # Create auction
         auction = Auction(
-            item_name=data['item_name'],
-            description=data['description'],
+            item_name=item_name,
+            description=description,
+            item_condition=item_condition,
             starting_bid=starting_bid,
             bid_increment=bid_increment,
+            market_price=market_price,
+            real_price=real_price,  # Buy It Now / Real Price
             end_time=end_time,
             seller_id=session['user_id'],
             category_id=category_id,
             featured=bool(data.get('featured', False)),
-            current_bid=starting_bid
+            current_bid=starting_bid,
+            video_url=video_url,  # Optional video URL
+            featured_image_url=featured_image_url  # Optional featured image URL
         )
         db.session.add(auction)
         db.session.flush()
         
-        # Add images
+        # Add images (sanitize URLs)
         images = data.get('images', [])
         if images:
             for idx, img_url in enumerate(images):
                 if img_url:  # Only add non-empty image URLs
+                    # For data URIs, don't truncate - they can be very long
+                    # For regular URLs, sanitize normally
+                    if str(img_url).startswith('data:image/'):
+                        # Data URI - store as-is (no truncation)
+                        sanitized_url = str(img_url)
+                    else:
+                        # Regular URL - sanitize with reasonable limit
+                        sanitized_url = sanitize_string(str(img_url), max_length=500, allow_html=False)
+                    
                     image = Image(
                         auction_id=auction.id,
-                        url=str(img_url),
+                        url=sanitized_url,
                         is_primary=(idx == 0)  # First image is primary
                     )
                     db.session.add(image)
         
+        # Generate QR code for the auction
+        qr_code_url = generate_qr_code(auction.id, auction.item_name, auction.starting_bid)
+        if qr_code_url:
+            auction.qr_code_url = qr_code_url
+        
         db.session.commit()
-        return jsonify({'message': 'Auction created', 'id': auction.id}), 201
+        return jsonify({'message': 'Auction created', 'id': auction.id, 'qr_code_url': qr_code_url}), 201
     
     except Exception as e:
         db.session.rollback()
@@ -653,6 +1650,35 @@ def update_auction(auction_id):
         if 'description' in data:
             auction.description = data['description']
         
+        if 'item_condition' in data:
+            auction.item_condition = data['item_condition']
+        
+        if 'market_price' in data:
+            if data['market_price'] is not None:
+                try:
+                    market_price = float(data['market_price'])
+                    if market_price < 0:
+                        return jsonify({'error': 'Market price cannot be negative'}), 400
+                    auction.market_price = market_price
+                except (ValueError, TypeError):
+                    return jsonify({'error': 'Invalid market price value'}), 400
+            else:
+                auction.market_price = None
+        
+        if 'real_price' in data:
+            if data['real_price'] is not None:
+                try:
+                    real_price = float(data['real_price'])
+                    if real_price < 0:
+                        return jsonify({'error': 'Real price cannot be negative'}), 400
+                    if real_price <= auction.starting_bid:
+                        return jsonify({'error': 'Real price must be higher than starting bid'}), 400
+                    auction.real_price = real_price
+                except (ValueError, TypeError):
+                    return jsonify({'error': 'Invalid real price value'}), 400
+            else:
+                auction.real_price = None
+        
         if 'category_id' in data:
             if data['category_id']:
                 category = Category.query.get(data['category_id'])
@@ -664,6 +1690,9 @@ def update_auction(auction_id):
         
         if 'featured' in data:
             auction.featured = bool(data['featured'])
+        
+        if 'video_url' in data:
+            auction.video_url = data['video_url'] if data['video_url'] else None
         
         db.session.commit()
         return jsonify({'message': 'Auction updated'}), 200
@@ -678,22 +1707,41 @@ def update_auction(auction_id):
 def get_bids(auction_id):
     try:
         auction = Auction.query.get_or_404(auction_id)
-        bids = Bid.query.filter_by(auction_id=auction_id).order_by(Bid.amount.desc(), Bid.timestamp.desc()).limit(50).all()
+        # Optimize query with eager loading
+        bids = Bid.query.filter_by(auction_id=auction_id).options(
+            joinedload(Bid.bidder)
+        ).order_by(Bid.amount.desc(), Bid.timestamp.desc()).limit(50).all()
         
         # Find the highest bid amount
         highest_bid_amount = max([bid.amount for bid in bids]) if bids else 0
         current_bid = auction.current_bid or auction.starting_bid
         
-        return jsonify([{
-            'id': bid.id,
-            'user_id': bid.user_id,
-            'username': bid.bidder.username,
-            'amount': bid.amount,
-            'timestamp': bid.timestamp.isoformat(),
-            'is_auto_bid': bid.is_auto_bid,
-            'is_winning': bid.amount == highest_bid_amount and bid.amount == current_bid and auction.status == 'active',
-            'is_highest': bid.amount == highest_bid_amount
-        } for bid in bids]), 200
+        # Determine winning logic based on auction status
+        result = []
+        for bid in bids:
+            is_winning = False
+            
+            if auction.status == 'active':
+                # For active auctions, check if this is the current highest bid
+                is_winning = bid.amount == highest_bid_amount and bid.amount == current_bid
+            elif auction.status == 'ended':
+                # For ended auctions, check if this user is the winner
+                is_winning = auction.winner_id is not None and bid.user_id == auction.winner_id and bid.amount == highest_bid_amount
+            
+            result.append({
+                'id': bid.id,
+                'user_id': bid.user_id,
+                'username': bid.bidder.username,
+                'amount': bid.amount,
+                'timestamp': bid.timestamp.isoformat(),
+                'is_auto_bid': bid.is_auto_bid,
+                'is_winning': is_winning,
+                'is_highest': bid.amount == highest_bid_amount,
+                'auction_status': auction.status,
+                'winner_id': auction.winner_id
+            })
+        
+        return jsonify(result), 200
     except Exception as e:
         print(f"Error in get_bids: {str(e)}")
         import traceback
@@ -702,17 +1750,24 @@ def get_bids(auction_id):
 
 @app.route('/api/auctions/<int:auction_id>/bids', methods=['POST'])
 @login_required
+@limiter.limit("30 per minute")  # Rate limit bid placement
 def place_bid(auction_id):
     try:
-        auction = Auction.query.get_or_404(auction_id)
-        
         if not request.json:
             return jsonify({'error': 'No JSON data received'}), 400
         
         data = request.json
         user_id = session['user_id']
         
+        # Use database lock to prevent race conditions
+        # Lock the auction row for update to prevent concurrent modifications
+        # Start transaction with row-level locking
+        auction = db.session.query(Auction).filter_by(id=auction_id).with_for_update().first()
+        if not auction:
+            return jsonify({'error': 'Auction not found'}), 404
+        
         if auction.status != 'active':
+            db.session.rollback()
             return jsonify({'error': 'Auction is not active'}), 400
         
         now = datetime.now(timezone.utc)
@@ -724,22 +1779,28 @@ def place_bid(auction_id):
             return jsonify({'error': 'Auction has ended'}), 400
         
         if auction.seller_id == user_id:
+            db.session.rollback()
             return jsonify({'error': 'Cannot bid on your own auction'}), 400
         
         # Validate bid amount
         if 'amount' not in data:
+            db.session.rollback()
             return jsonify({'error': 'Bid amount is required'}), 400
         
         try:
             bid_amount = float(data['amount'])
             if bid_amount <= 0:
+                db.session.rollback()
                 return jsonify({'error': 'Bid amount must be greater than 0'}), 400
         except (ValueError, TypeError):
+            db.session.rollback()
             return jsonify({'error': 'Invalid bid amount'}), 400
         
+        # Re-check current bid after lock (may have changed)
         min_bid = (auction.current_bid or auction.starting_bid) + auction.bid_increment
         
         if bid_amount < min_bid:
+            db.session.rollback()
             return jsonify({'error': f'Bid must be at least ${min_bid:.2f}'}), 400
         
         # Check auto-bid logic
@@ -748,10 +1809,13 @@ def place_bid(auction_id):
             try:
                 auto_bid_amount = float(auto_bid_amount)
                 if auto_bid_amount < bid_amount:
+                    db.session.rollback()
                     return jsonify({'error': 'Auto-bid limit must be higher than initial bid'}), 400
                 if auto_bid_amount <= 0:
+                    db.session.rollback()
                     return jsonify({'error': 'Auto-bid limit must be greater than 0'}), 400
             except (ValueError, TypeError):
+                db.session.rollback()
                 return jsonify({'error': 'Invalid auto-bid amount'}), 400
         
         bid = Bid(
@@ -783,17 +1847,24 @@ def place_bid(auction_id):
                 # If extension would exceed max, set to max
                 auction.end_time = max_end_time
         
-        # Check for auto-bids from other users
+        # Check for auto-bids from other users that should counter-bid
+        # Only check active auto-bids that can still bid higher
         other_auto_bids = Bid.query.filter(
             Bid.auction_id == auction_id,
             Bid.user_id != user_id,
             Bid.is_auto_bid == True,
             Bid.max_auto_bid >= bid_amount + auction.bid_increment
-        ).all()
+        ).order_by(Bid.max_auto_bid.desc()).all()
         
+        # Process auto-bids to create counter-bids
+        # Only the highest auto-bid should counter, then process recursively
+        current_bid_amount = bid_amount
         for auto_bid in other_auto_bids:
-            new_amount = min(bid_amount + auction.bid_increment, auto_bid.max_auto_bid)
-            if new_amount > auction.current_bid:
+            # Calculate counter-bid amount
+            new_amount = min(current_bid_amount + auction.bid_increment, auto_bid.max_auto_bid)
+            
+            # Only create counter-bid if it's higher than current bid
+            if new_amount > auction.current_bid and new_amount <= auto_bid.max_auto_bid:
                 counter_bid = Bid(
                     auction_id=auction_id,
                     user_id=auto_bid.user_id,
@@ -803,7 +1874,11 @@ def place_bid(auction_id):
                 )
                 db.session.add(counter_bid)
                 auction.current_bid = new_amount
-                bid_amount = new_amount
+                current_bid_amount = new_amount
+                
+                # Only process first counter-bid in this iteration to avoid infinite loops
+                # Other auto-bids will be processed on next bid
+                break
         
         db.session.commit()
         
@@ -822,10 +1897,10 @@ def place_bid(auction_id):
     
     except Exception as e:
         db.session.rollback()
-        print(f"Error placing bid: {str(e)}")
-        import traceback
-        traceback.print_exc()
-        return jsonify({'error': f'Failed to place bid: {str(e)}'}), 500
+        app.logger.error(f"Error placing bid: {str(e)}", exc_info=True)
+        # Don't expose internal error details in production
+        error_message = 'Failed to place bid' if is_production else f'Failed to place bid: {str(e)}'
+        return jsonify({'error': error_message}), 500
 
 @app.route('/api/user/bids', methods=['GET'])
 @login_required
@@ -899,7 +1974,10 @@ def get_user_bids():
 @app.route('/api/user/auctions', methods=['GET'])
 @login_required
 def get_user_auctions():
-    auctions = Auction.query.filter_by(seller_id=session['user_id']).all()
+    # Optimize query with eager loading
+    auctions = Auction.query.filter_by(seller_id=session['user_id']).options(
+        selectinload(Auction.bids)
+    ).all()
     result = []
     for auction in auctions:
         # Count unique bidders (users who have placed bids)
@@ -920,7 +1998,10 @@ def get_user_auctions():
 @app.route('/api/featured', methods=['GET'])
 def get_featured():
     try:
-        auctions = Auction.query.filter_by(featured=True, status='active').limit(5).all()
+        # Optimize query with eager loading
+        auctions = Auction.query.filter_by(featured=True, status='active').options(
+            selectinload(Auction.images)
+        ).limit(5).all()
         now = datetime.now(timezone.utc)
         featured_list = []
         for auction in auctions:
@@ -932,7 +2013,8 @@ def get_featured():
                 'item_name': auction.item_name,
                 'current_bid': auction.current_bid or auction.starting_bid,
                 'time_left': max(0, int(time_left)),
-                'image_url': auction.images[0].url if auction.images else None
+                'image_url': auction.images[0].url if auction.images else None,
+                'featured_image_url': auction.featured_image_url  # Separate featured image
             })
         return jsonify(featured_list), 200
     except Exception as e:
@@ -964,21 +2046,9 @@ def get_all_users():
     
     pagination = query.order_by(User.created_at.desc()).paginate(page=page, per_page=per_page, error_out=False)
     
-    # Build user list with biometric verification status
+    # Build user list
     users_list = []
     for user in pagination.items:
-        has_biometric = False
-        biometric_type = None
-        
-        if user.biometric_data:
-            try:
-                biometric_json = json.loads(user.biometric_data)
-                has_biometric = True
-                biometric_type = biometric_json.get('type', 'unknown')
-            except (json.JSONDecodeError, TypeError):
-                has_biometric = True  # Legacy format
-                biometric_type = 'legacy'
-        
         users_list.append({
             'id': user.id,
             'username': user.username,
@@ -986,9 +2056,7 @@ def get_all_users():
             'role': user.role,
             'created_at': user.created_at.isoformat(),
             'auction_count': len(user.auctions),
-            'bid_count': len(user.bids),
-            'has_biometric': has_biometric,
-            'biometric_type': biometric_type
+            'bid_count': len(user.bids)
         })
     
     return jsonify({
@@ -1035,34 +2103,8 @@ def update_user(user_id):
 @app.route('/api/admin/users/<int:user_id>', methods=['GET'])
 @admin_required
 def get_user_details(user_id):
-    """Get detailed user information including biometric data"""
+    """Get detailed user information"""
     user = User.query.get_or_404(user_id)
-    
-    # Parse biometric data if it exists
-    biometric_info = None
-    if user.biometric_data:
-        try:
-            biometric_json = json.loads(user.biometric_data)
-            biometric_info = {
-                'has_biometric': True,
-                'type': biometric_json.get('type', 'unknown'),
-                'has_id_front': 'id_card_front_image' in biometric_json or 'id_card_image' in biometric_json,
-                'has_id_back': 'id_card_back_image' in biometric_json,
-                'has_selfie': 'selfie_image' in biometric_json,
-                'timestamp': biometric_json.get('timestamp'),
-                'device': biometric_json.get('device'),
-                # Include images for display
-                'id_card_front_image': biometric_json.get('id_card_front_image') or biometric_json.get('id_card_image'),
-                'id_card_back_image': biometric_json.get('id_card_back_image'),
-                'selfie_image': biometric_json.get('selfie_image')
-            }
-        except (json.JSONDecodeError, TypeError):
-            # If it's not JSON, it might be old format (hashed)
-            biometric_info = {
-                'has_biometric': True,
-                'type': 'legacy',
-                'data_length': len(user.biometric_data) if user.biometric_data else 0
-            }
     
     return jsonify({
         'id': user.id,
@@ -1075,8 +2117,7 @@ def get_user_details(user_id):
         'role': user.role,
         'created_at': user.created_at.isoformat(),
         'auction_count': len(user.auctions),
-        'bid_count': len(user.bids),
-        'biometric_data': biometric_info
+        'bid_count': len(user.bids)
     }), 200
 
 @app.route('/api/admin/users/<int:user_id>', methods=['DELETE'])
@@ -1099,11 +2140,13 @@ def delete_user(user_id):
         
         # Step 2: Handle auctions where user is the seller
         # Delete images and auctions they created
-        auctions_as_seller = Auction.query.filter_by(seller_id=user_id).all()
+        # Optimize: Use eager loading to avoid N+1 queries
+        auctions_as_seller = Auction.query.filter_by(seller_id=user_id).options(
+            selectinload(Auction.images)
+        ).all()
         for seller_auction in auctions_as_seller:
-            # Delete all images for these auctions
-            auction_images = Image.query.filter_by(auction_id=seller_auction.id).all()
-            for image in auction_images:
+            # Delete all images for these auctions (already loaded via eager loading)
+            for image in seller_auction.images:
                 db.session.delete(image)
             # Delete the auction
             db.session.delete(seller_auction)
@@ -1123,6 +2166,100 @@ def delete_user(user_id):
         import traceback
         traceback.print_exc()
         return jsonify({'error': f'Failed to delete user: {str(e)}'}), 500
+
+# Admin Return Request APIs
+@app.route('/api/admin/return-requests', methods=['GET'])
+@admin_required
+def get_all_return_requests():
+    """Get all return requests (admin only)"""
+    try:
+        status = request.args.get('status', '')
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 20, type=int)
+        
+        query = ReturnRequest.query
+        
+        if status:
+            query = query.filter_by(status=status)
+        
+        pagination = query.order_by(ReturnRequest.created_at.desc()).paginate(
+            page=page, per_page=per_page, error_out=False
+        )
+        
+        requests_data = []
+        for req in pagination.items:
+            requests_data.append({
+                'id': req.id,
+                'invoice_id': req.invoice_id,
+                'auction_id': req.auction_id,
+                'auction_name': req.auction.item_name if req.auction else None,
+                'user_id': req.user_id,
+                'username': req.user.username if req.user else None,
+                'reason': req.reason,
+                'description': req.description,
+                'status': req.status,
+                'admin_notes': req.admin_notes,
+                'created_at': req.created_at.isoformat(),
+                'updated_at': req.updated_at.isoformat(),
+                'processed_at': req.processed_at.isoformat() if req.processed_at else None
+            })
+        
+        return jsonify({
+            'return_requests': requests_data,
+            'total': pagination.total,
+            'page': page,
+            'per_page': per_page,
+            'pages': pagination.pages
+        }), 200
+    except Exception as e:
+        print(f"Error in get_all_return_requests: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': f'Failed to get return requests: {str(e)}'}), 500
+
+@app.route('/api/admin/return-requests/<int:request_id>', methods=['PUT'])
+@admin_required
+def update_return_request(request_id):
+    """Update return request status (admin only)"""
+    try:
+        return_request = ReturnRequest.query.get_or_404(request_id)
+        
+        if not request.json:
+            return jsonify({'error': 'No JSON data received'}), 400
+        
+        data = request.json
+        status = data.get('status')
+        admin_notes = sanitize_string(data.get('admin_notes', ''), max_length=2000) if data.get('admin_notes') else None
+        
+        if status:
+            valid_statuses = ['pending', 'approved', 'rejected', 'processing', 'completed', 'cancelled']
+            if status not in valid_statuses:
+                return jsonify({'error': f'Invalid status. Valid statuses: {", ".join(valid_statuses)}'}), 400
+            
+            return_request.status = status
+            return_request.updated_at = datetime.now(timezone.utc)
+            
+            # Set processed_at if status changed from pending
+            if return_request.status != 'pending' and not return_request.processed_at:
+                return_request.processed_at = datetime.now(timezone.utc)
+        
+        if admin_notes is not None:
+            return_request.admin_notes = admin_notes
+        
+        db.session.commit()
+        
+        return jsonify({
+            'message': 'Return request updated successfully',
+            'id': return_request.id,
+            'status': return_request.status,
+            'admin_notes': return_request.admin_notes
+        }), 200
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error in update_return_request: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': f'Failed to update return request: {str(e)}'}), 500
 
 @app.route('/api/admin/auctions', methods=['GET'])
 @admin_required
@@ -1146,15 +2283,26 @@ def get_all_auctions_admin():
         if auction.bids:
             unique_bidders = {bid.user_id for bid in auction.bids}
         
+        # Get winner name if auction has ended and has a winner
+        winner_name = None
+        if auction.winner_id and auction.winner:
+            winner_name = auction.winner.username
+        
+        # Use auction ID as item code if item_code field doesn't exist
+        # Format: ZUBID-{auction_id}
+        item_code = f"ZUBID-{auction.id:06d}"
+        
         auctions_list.append({
             'id': auction.id,
             'item_name': auction.item_name,
+            'item_code': item_code,
             'seller': auction.seller.username,
             'current_bid': auction.current_bid,
             'status': auction.status,
             'end_time': auction.end_time.isoformat(),
             'bid_count': len(unique_bidders),  # Count unique bidders, not total bids
-            'featured': auction.featured
+            'featured': auction.featured,
+            'winner_name': winner_name
         })
     
     return jsonify({
@@ -1240,15 +2388,19 @@ def create_category_admin():
             return jsonify({'error': 'No JSON data received'}), 400
         
         data = request.json
-        if not data.get('name') or not data.get('name').strip():
+        category_name = sanitize_string(data.get('name', ''), max_length=100)
+        if not category_name:
             return jsonify({'error': 'Category name is required'}), 400
         
-        if Category.query.filter_by(name=data['name'].strip()).first():
+        if Category.query.filter_by(name=category_name).first():
             return jsonify({'error': 'Category already exists'}), 400
         
-        category = Category(name=data['name'].strip(), description=data.get('description', '').strip())
+        category_description = sanitize_string(data.get('description', ''), max_length=500)
+        category = Category(name=category_name, description=category_description)
         db.session.add(category)
         db.session.commit()
+        # Clear categories cache after modification
+        _get_cached_categories.cache_clear()
         return jsonify({'message': 'Category created', 'id': category.id}), 201
     except Exception as e:
         db.session.rollback()
@@ -1282,6 +2434,8 @@ def update_category_admin(category_id):
             category.description = data.get('description', '').strip()
         
         db.session.commit()
+        # Clear categories cache after modification
+        _get_cached_categories.cache_clear()
         return jsonify({'message': 'Category updated successfully'}), 200
     except Exception as e:
         db.session.rollback()
@@ -1305,6 +2459,8 @@ def delete_category_admin(category_id):
         
         db.session.delete(category)
         db.session.commit()
+        # Clear categories cache after modification
+        _get_cached_categories.cache_clear()
         return jsonify({'message': 'Category deleted successfully'}), 200
     except Exception as e:
         db.session.rollback()
@@ -1330,6 +2486,96 @@ def init_db():
         except Exception as e:
             print(f"Note: Could not verify tables: {e}")
         
+        # Check and add market_price column if missing
+        try:
+            from sqlalchemy import inspect, text
+            inspector = inspect(db.engine)
+            columns = [col['name'] for col in inspector.get_columns('auction')]
+            if 'market_price' not in columns:
+                print("Adding market_price column to Auction table...")
+                try:
+                    with db.engine.connect() as conn:
+                        with conn.begin():
+                            # Use REAL for SQLite, FLOAT for others
+                            if 'sqlite' in str(db.engine.url).lower():
+                                conn.execute(text("ALTER TABLE auction ADD COLUMN market_price REAL"))
+                            else:
+                                conn.execute(text("ALTER TABLE auction ADD COLUMN market_price FLOAT"))
+                    print("[OK] market_price column added successfully!")
+                except Exception as e:
+                    print(f"[WARNING] Could not add market_price column automatically: {e}")
+                    print("Please run: python migrate_market_price.py")
+            else:
+                print("[OK] market_price column exists")
+        except Exception as e:
+            print(f"Note: Could not check/add market_price column: {e}")
+        
+        # Ensure ReturnRequest table exists
+        try:
+            inspector = inspect(db.engine)
+            tables = inspector.get_table_names()
+            if 'return_request' not in tables:
+                print("Creating ReturnRequest table...")
+                db.create_all()
+                print("[OK] ReturnRequest table created!")
+            else:
+                print("[OK] ReturnRequest table exists")
+            
+            # Ensure SocialShare and Cashback tables exist
+            if 'social_share' not in tables:
+                print("Creating SocialShare table...")
+                db.create_all()
+                print("[OK] SocialShare table created!")
+            if 'cashback' not in tables:
+                print("Creating Cashback table...")
+                db.create_all()
+                print("[OK] Cashback table created!")
+        except Exception as e:
+            print(f"Note: Could not verify tables: {e}")
+        
+        # Check and add featured_image_url column if missing
+        try:
+            inspector = inspect(db.engine)
+            columns = [col['name'] for col in inspector.get_columns('auction')]
+            if 'featured_image_url' not in columns:
+                print("Adding featured_image_url column to Auction table...")
+                try:
+                    with db.engine.connect() as conn:
+                        with conn.begin():
+                            if 'sqlite' in str(db.engine.url).lower():
+                                conn.execute(text("ALTER TABLE auction ADD COLUMN featured_image_url VARCHAR(500)"))
+                            else:
+                                conn.execute(text("ALTER TABLE auction ADD COLUMN featured_image_url VARCHAR(500)"))
+                    print("[OK] featured_image_url column added successfully!")
+                except Exception as e:
+                    print(f"[WARNING] Could not add featured_image_url column automatically: {e}")
+            else:
+                print("[OK] featured_image_url column exists")
+        except Exception as e:
+            print(f"Note: Could not check/add featured_image_url column: {e}")
+        
+        # Check and add real_price column if missing
+        try:
+            inspector = inspect(db.engine)
+            columns = [col['name'] for col in inspector.get_columns('auction')]
+            if 'real_price' not in columns:
+                print("Adding real_price column to Auction table...")
+                try:
+                    with db.engine.connect() as conn:
+                        with conn.begin():
+                            # Use REAL for SQLite, FLOAT for others
+                            if 'sqlite' in str(db.engine.url).lower():
+                                conn.execute(text("ALTER TABLE auction ADD COLUMN real_price REAL"))
+                            else:
+                                conn.execute(text("ALTER TABLE auction ADD COLUMN real_price FLOAT"))
+                    print("[OK] real_price column added successfully!")
+                except Exception as e:
+                    print(f"[WARNING] Could not add real_price column automatically: {e}")
+            else:
+                print("[OK] real_price column exists")
+        except Exception as e:
+            print(f"Note: Could not check/add real_price column: {e}")
+        
         # Create default categories
         if Category.query.count() == 0:
             categories = [
@@ -1347,24 +2593,40 @@ def init_db():
             db.session.commit()
         
         # Create default admin user if doesn't exist
+        # SECURITY: Only create default admin in development, require env vars in production
         admin = User.query.filter_by(username='admin').first()
         if not admin:
-            admin = User(
-                username='admin',
-                email='admin@zubid.com',
-                password_hash=generate_password_hash('admin123'),
-                id_number='ADMIN001',
-                birth_date=date(1990, 1, 1),  # Default birth date for admin
-                biometric_data=generate_password_hash('admin_biometric_default'),
-                role='admin'
-            )
-            db.session.add(admin)
-            db.session.commit()
-            # Security: Don't log credentials in production
-            if os.getenv('FLASK_ENV') != 'production':
-                print("Default admin user created: username='admin', password='admin123'")
+            admin_username = os.getenv('ADMIN_USERNAME', 'admin' if not is_production else None)
+            admin_password = os.getenv('ADMIN_PASSWORD', 'admin123' if not is_production else None)
+            admin_email = os.getenv('ADMIN_EMAIL', 'admin@zubid.com' if not is_production else None)
+            
+            if is_production:
+                if not admin_username or not admin_password or not admin_email:
+                    raise ValueError(
+                        "Admin user does not exist and required environment variables are missing! "
+                        "In production, you must set ADMIN_USERNAME, ADMIN_PASSWORD, and ADMIN_EMAIL "
+                        "environment variables to create the initial admin user."
+                    )
+            
+            if not admin_username or not admin_password or not admin_email:
+                print("WARNING: Skipping admin user creation. Set ADMIN_USERNAME, ADMIN_PASSWORD, and ADMIN_EMAIL to create admin.")
             else:
-                print("Default admin user created. Please change the default password immediately.")
+                admin = User(
+                    username=admin_username,
+                    email=admin_email,
+                    password_hash=generate_password_hash(admin_password),
+                    id_number=os.getenv('ADMIN_ID_NUMBER', 'ADMIN001'),
+                    birth_date=date(1990, 1, 1),  # Default birth date for admin
+                    role='admin'
+                )
+                db.session.add(admin)
+                db.session.commit()
+                # Security: Never log credentials
+                if not is_production:
+                    print(f"Admin user created: username='{admin_username}'")
+                    print("IMPORTANT: Change the default password immediately!")
+                else:
+                    print("Admin user created. Please change the default password immediately via profile settings.")
         
         # Create sample auctions if none exist
         if Auction.query.count() == 0 and admin:
@@ -1496,6 +2758,13 @@ def get_user_payments():
                 delivery_fee = calculate_delivery_fee(session['user_id'])
                 total_amount = item_price + bid_fee + delivery_fee
                 
+                # Generate QR code if auction doesn't have one
+                if not auction.qr_code_url:
+                    qr_code_url = generate_qr_code(auction.id, auction.item_name, item_price)
+                    if qr_code_url:
+                        auction.qr_code_url = qr_code_url
+                        db.session.flush()
+                
                 # Create invoice
                 invoice = Invoice(
                     auction_id=auction.id,
@@ -1515,7 +2784,8 @@ def get_user_payments():
                 'item_name': auction.item_name,
                 'description': auction.description,
                 'image_url': auction.images[0].url if auction.images else None,
-                'end_time': auction.end_time.isoformat() if auction.end_time else None
+                'end_time': auction.end_time.isoformat() if auction.end_time else None,
+                'qr_code_url': auction.qr_code_url
             }
             
             invoices.append({
@@ -1528,7 +2798,8 @@ def get_user_payments():
                 'payment_method': invoice.payment_method,
                 'payment_status': invoice.payment_status,
                 'created_at': invoice.created_at.isoformat(),
-                'paid_at': invoice.paid_at.isoformat() if invoice.paid_at else None
+                'paid_at': invoice.paid_at.isoformat() if invoice.paid_at else None,
+                'qr_code_url': auction.qr_code_url
             })
         
         return jsonify(invoices), 200
@@ -1556,29 +2827,15 @@ def process_payment(invoice_id):
         data = request.json
         payment_method = data.get('payment_method')
         
-        if payment_method not in ['cash_on_delivery', 'fib']:
-            return jsonify({'error': 'Invalid payment method'}), 400
+        # Supported payment methods
+        supported_methods = ['cash_on_delivery', 'fib', 'stripe', 'paypal']
+        if payment_method not in supported_methods:
+            return jsonify({'error': f'Invalid payment method. Supported: {", ".join(supported_methods)}'}), 400
         
         invoice.payment_method = payment_method
         
-        if payment_method == 'fib':
-            # Process FIB payment (simulate payment gateway)
-            # In production, integrate with actual payment gateway
-            payment_result = process_fib_payment(invoice)
-            if payment_result['success']:
-                invoice.payment_status = 'paid'
-                invoice.paid_at = datetime.now(timezone.utc)
-                db.session.commit()
-                return jsonify({
-                    'message': 'Payment processed successfully',
-                    'invoice_id': invoice.id,
-                    'payment_status': invoice.payment_status
-                }), 200
-            else:
-                invoice.payment_status = 'failed'
-                db.session.commit()
-                return jsonify({'error': payment_result.get('error', 'Payment failed')}), 400
-        else:  # cash_on_delivery
+        # Process payment based on method
+        if payment_method == 'cash_on_delivery':
             invoice.payment_status = 'pending'  # Will be marked as paid when delivered
             db.session.commit()
             return jsonify({
@@ -1587,6 +2844,27 @@ def process_payment(invoice_id):
                 'payment_status': invoice.payment_status,
                 'note': 'Payment will be collected upon delivery'
             }), 200
+        else:
+            # Process online payment (fib, stripe, paypal)
+            payment_result = process_fib_payment(invoice)
+            if payment_result['success']:
+                invoice.payment_status = 'paid'
+                invoice.paid_at = datetime.now(timezone.utc)
+                db.session.commit()
+                return jsonify({
+                    'message': 'Payment processed successfully',
+                    'invoice_id': invoice.id,
+                    'payment_status': invoice.payment_status,
+                    'transaction_id': payment_result.get('transaction_id')
+                }), 200
+            else:
+                invoice.payment_status = 'failed'
+                db.session.commit()
+                return jsonify({
+                    'error': payment_result.get('error', 'Payment failed'),
+                    'invoice_id': invoice.id,
+                    'payment_status': invoice.payment_status
+                }), 400
             
     except Exception as e:
         print(f"Error in process_payment: {str(e)}")
@@ -1595,22 +2873,471 @@ def process_payment(invoice_id):
         db.session.rollback()
         return jsonify({'error': f'Failed to process payment: {str(e)}'}), 500
 
+# Return Request APIs
+@app.route('/api/return-requests', methods=['GET'])
+@login_required
+def get_return_requests():
+    """Get return requests for the current user"""
+    try:
+        return_requests = ReturnRequest.query.filter_by(user_id=session['user_id']).order_by(ReturnRequest.created_at.desc()).all()
+        
+        requests_data = []
+        for req in return_requests:
+            requests_data.append({
+                'id': req.id,
+                'invoice_id': req.invoice_id,
+                'auction_id': req.auction_id,
+                'auction_name': req.auction.item_name if req.auction else None,
+                'reason': req.reason,
+                'description': req.description,
+                'status': req.status,
+                'admin_notes': req.admin_notes,
+                'created_at': req.created_at.isoformat(),
+                'updated_at': req.updated_at.isoformat(),
+                'processed_at': req.processed_at.isoformat() if req.processed_at else None
+            })
+        
+        return jsonify(requests_data), 200
+    except Exception as e:
+        print(f"Error in get_return_requests: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': f'Failed to get return requests: {str(e)}'}), 500
+
+@app.route('/api/return-requests', methods=['POST'])
+@login_required
+def create_return_request():
+    """Create a new return request"""
+    try:
+        if not request.json:
+            return jsonify({'error': 'No JSON data received'}), 400
+        
+        data = request.json
+        invoice_id = data.get('invoice_id')
+        reason = sanitize_string(data.get('reason', ''), max_length=500)
+        description = sanitize_string(data.get('description', ''), max_length=2000)
+        
+        if not invoice_id:
+            return jsonify({'error': 'Invoice ID is required'}), 400
+        if not reason:
+            return jsonify({'error': 'Return reason is required'}), 400
+        
+        # Verify invoice belongs to user
+        invoice = Invoice.query.get_or_404(invoice_id)
+        if invoice.user_id != session['user_id']:
+            return jsonify({'error': 'Unauthorized access'}), 403
+        
+        # Check if invoice is paid
+        if invoice.payment_status != 'paid':
+            return jsonify({'error': 'Can only request return for paid invoices'}), 400
+        
+        # Check if return request already exists for this invoice
+        existing_request = ReturnRequest.query.filter_by(invoice_id=invoice_id, user_id=session['user_id']).first()
+        if existing_request:
+            if existing_request.status in ['pending', 'approved', 'processing']:
+                return jsonify({'error': 'Return request already exists for this invoice'}), 400
+        
+        # Create return request
+        return_request = ReturnRequest(
+            invoice_id=invoice_id,
+            auction_id=invoice.auction_id,
+            user_id=session['user_id'],
+            reason=reason,
+            description=description,
+            status='pending'
+        )
+        db.session.add(return_request)
+        db.session.commit()
+        
+        return jsonify({
+            'message': 'Return request created successfully',
+            'id': return_request.id,
+            'status': return_request.status
+        }), 201
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error in create_return_request: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': f'Failed to create return request: {str(e)}'}), 500
+
+@app.route('/api/return-requests/<int:request_id>', methods=['GET'])
+@login_required
+def get_return_request(request_id):
+    """Get a specific return request"""
+    try:
+        return_request = ReturnRequest.query.get_or_404(request_id)
+        
+        # Verify user owns the request or is admin
+        if return_request.user_id != session['user_id']:
+            # Check if user is admin
+            user = User.query.get(session['user_id'])
+            if not user or user.role != 'admin':
+                return jsonify({'error': 'Unauthorized access'}), 403
+        
+        return jsonify({
+            'id': return_request.id,
+            'invoice_id': return_request.invoice_id,
+            'auction_id': return_request.auction_id,
+            'auction_name': return_request.auction.item_name if return_request.auction else None,
+            'reason': return_request.reason,
+            'description': return_request.description,
+            'status': return_request.status,
+            'admin_notes': return_request.admin_notes,
+            'created_at': return_request.created_at.isoformat(),
+            'updated_at': return_request.updated_at.isoformat(),
+            'processed_at': return_request.processed_at.isoformat() if return_request.processed_at else None
+        }), 200
+    except Exception as e:
+        print(f"Error in get_return_request: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': f'Failed to get return request: {str(e)}'}), 500
+
+@app.route('/api/return-requests/<int:request_id>/cancel', methods=['POST'])
+@login_required
+def cancel_return_request(request_id):
+    """Cancel a return request (user only)"""
+    try:
+        return_request = ReturnRequest.query.get_or_404(request_id)
+        
+        # Verify user owns the request
+        if return_request.user_id != session['user_id']:
+            return jsonify({'error': 'Unauthorized access'}), 403
+        
+        # Only allow cancellation if status is pending
+        if return_request.status != 'pending':
+            return jsonify({'error': f'Cannot cancel return request with status: {return_request.status}'}), 400
+        
+        return_request.status = 'cancelled'
+        return_request.updated_at = datetime.now(timezone.utc)
+        db.session.commit()
+        
+        return jsonify({
+            'message': 'Return request cancelled successfully',
+            'id': return_request.id,
+            'status': return_request.status
+        }), 200
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error in cancel_return_request: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': f'Failed to cancel return request: {str(e)}'}), 500
+
 def process_fib_payment(invoice):
     """Process FIB payment gateway (simulated)"""
-    # In production, integrate with actual FIB payment gateway API
-    # For now, simulate successful payment
+    # Use payment gateway module if available
     try:
-        # Simulate payment processing
-        # In production: Call FIB API here
-        return {'success': True, 'transaction_id': f'FIB-{invoice.id}-{datetime.now().timestamp()}'}
+        from payment_gateways import get_configured_gateway, get_payment_gateway
+        
+        # Try to get configured gateway
+        gateway = get_configured_gateway()
+        
+        if gateway:
+            # Use configured gateway
+            user = invoice.user
+            user_data = {
+                'email': user.email if user else '',
+                'name': user.username if user else '',
+                'id': user.id if user else None
+            }
+            
+            result = gateway.process_payment(
+                amount=invoice.total_amount,
+                currency='IQD',  # Default currency, can be configured
+                invoice_id=invoice.id,
+                user_data=user_data
+            )
+            return result
+        else:
+            # Fallback to FIB simulation if no gateway configured
+            # In production, integrate with actual FIB payment gateway API
+            return {'success': True, 'transaction_id': f'FIB-{invoice.id}-{int(datetime.now().timestamp())}'}
+    except ImportError:
+        # Payment gateway module not available, use simulation
+        return {'success': True, 'transaction_id': f'FIB-{invoice.id}-{int(datetime.now().timestamp())}'}
     except Exception as e:
+        app.logger.error(f"Payment processing error: {str(e)}")
         return {'success': False, 'error': str(e)}
+
+# Social Sharing and Cashback APIs
+@app.route('/api/user/social-share', methods=['POST'])
+@login_required
+def record_social_share():
+    """Record a social media share for cashback tracking"""
+    try:
+        if not request.json:
+            return jsonify({'error': 'No JSON data received'}), 400
+        
+        data = request.json
+        platform = data.get('platform', '').lower().strip()
+        auction_id = data.get('auction_id')
+        
+        # Validate platform
+        if not platform:
+            return jsonify({'error': 'Platform is required'}), 400
+        
+        valid_platforms = ['facebook', 'twitter', 'linkedin', 'whatsapp', 'telegram', 'reddit', 'tiktok', 'instagram', 'snapchat']
+        if platform not in valid_platforms:
+            return jsonify({'error': f'Invalid platform. Must be one of: {", ".join(valid_platforms)}'}), 400
+        
+        # Validate auction_id
+        if auction_id is None:
+            return jsonify({'error': 'auction_id is required'}), 400
+        
+        try:
+            auction_id = int(auction_id)
+        except (ValueError, TypeError):
+            return jsonify({'error': 'Invalid auction_id. Must be a number'}), 400
+        
+        # Get user_id from session
+        if 'user_id' not in session:
+            return jsonify({'error': 'User not authenticated'}), 401
+        
+        user_id = session['user_id']
+        
+        # Validate user exists
+        user = User.query.get(user_id)
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+        
+        # Validate auction exists
+        auction = Auction.query.get(auction_id)
+        if not auction:
+            return jsonify({'error': 'Auction not found'}), 404
+        
+        # Check if user already shared on this platform for this auction
+        existing_share = SocialShare.query.filter_by(
+            user_id=user_id,
+            auction_id=auction_id,
+            platform=platform
+        ).first()
+        
+        if existing_share:
+            total_shares = SocialShare.query.filter_by(user_id=user_id, auction_id=auction_id).count()
+            is_winner = auction.winner_id == user_id and auction.status == 'ended'
+            return jsonify({
+                'message': 'Share already recorded',
+                'shares_count': total_shares,
+                'cashback_eligible': total_shares >= 3 and is_winner,
+                'cashback_created': False
+            }), 200
+        
+        # Create new share record
+        try:
+            social_share = SocialShare(
+                user_id=user_id,
+                auction_id=auction_id,
+                platform=platform,
+                verified=True  # For now, we trust the client. In production, verify via API
+            )
+            db.session.add(social_share)
+            db.session.flush()
+        except Exception as e:
+            db.session.rollback()
+            error_msg = str(e)
+            # Check if it's a unique constraint violation
+            if 'unique' in error_msg.lower() or 'duplicate' in error_msg.lower():
+                # Share already exists, return success
+                total_shares = SocialShare.query.filter_by(user_id=user_id, auction_id=auction_id).count()
+                is_winner = auction.winner_id == user_id and auction.status == 'ended'
+                return jsonify({
+                    'message': 'Share already recorded',
+                    'shares_count': total_shares,
+                    'cashback_eligible': total_shares >= 3 and is_winner,
+                    'cashback_created': False
+                }), 200
+            app.logger.error(f'Error creating social share record: {error_msg}')
+            import traceback
+            app.logger.error(traceback.format_exc())
+            return jsonify({'error': f'Failed to create share record: {error_msg}'}), 500
+        
+        # Count total shares for this user and auction
+        total_shares = SocialShare.query.filter_by(user_id=user_id, auction_id=auction_id).count()
+        
+        # Check if user has won the auction
+        is_winner = auction.winner_id == user_id and auction.status == 'ended'
+        
+        # If user has shared 3 times and is a winner, create cashback
+        cashback_created = False
+        if total_shares >= 3 and is_winner:
+            # Check if cashback already exists
+            existing_cashback = Cashback.query.filter_by(
+                user_id=user_id,
+                auction_id=auction_id,
+                status='pending'
+            ).first()
+            
+            if not existing_cashback:
+                try:
+                    cashback = Cashback(
+                        user_id=user_id,
+                        auction_id=auction_id,
+                        amount=5.0,
+                        status='pending'
+                    )
+                    db.session.add(cashback)
+                    cashback_created = True
+                except Exception as e:
+                    app.logger.error(f'Error creating cashback: {str(e)}')
+                    # Don't fail the share record if cashback creation fails
+                    cashback_created = False
+        
+        try:
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            app.logger.error(f'Error committing social share: {str(e)}')
+            return jsonify({'error': f'Failed to save share: {str(e)}'}), 500
+        
+        return jsonify({
+            'message': 'Share recorded successfully',
+            'shares_count': total_shares,
+            'cashback_eligible': total_shares >= 3 and is_winner,
+            'cashback_created': cashback_created,
+            'remaining_shares': max(0, 3 - total_shares)
+        }), 201
+        
+    except Exception as e:
+        db.session.rollback()
+        import traceback
+        error_trace = traceback.format_exc()
+        app.logger.error(f'Error recording social share: {str(e)}\n{error_trace}')
+        # Return more detailed error in development
+        error_msg = str(e)
+        if app.config.get('DEBUG', False):
+            return jsonify({'error': f'Failed to record share: {error_msg}', 'trace': error_trace}), 500
+        return jsonify({'error': 'Failed to record share. Please try again.'}), 500
+
+@app.route('/api/user/social-shares', methods=['GET'])
+@login_required
+def get_social_shares():
+    """Get social shares for current user"""
+    try:
+        auction_id = request.args.get('auction_id', type=int)
+        user_id = session['user_id']
+        
+        query = SocialShare.query.filter_by(user_id=user_id)
+        if auction_id:
+            query = query.filter_by(auction_id=auction_id)
+        
+        shares = query.all()
+        
+        # Group by auction
+        shares_by_auction = {}
+        for share in shares:
+            key = share.auction_id or 'general'
+            if key not in shares_by_auction:
+                shares_by_auction[key] = []
+            shares_by_auction[key].append({
+                'platform': share.platform,
+                'shared_at': share.shared_at.isoformat(),
+                'verified': share.verified
+            })
+        
+        return jsonify({
+            'shares': shares_by_auction,
+            'total_shares': len(shares)
+        }), 200
+        
+    except Exception as e:
+        app.logger.error(f'Error getting social shares: {str(e)}')
+        return jsonify({'error': f'Failed to get shares: {str(e)}'}), 500
+
+@app.route('/api/user/cashback', methods=['GET'])
+@login_required
+def get_user_cashback():
+    """Get cashback information for current user"""
+    try:
+        user_id = session['user_id']
+        auction_id = request.args.get('auction_id', type=int)
+        
+        query = Cashback.query.filter_by(user_id=user_id)
+        if auction_id:
+            query = query.filter_by(auction_id=auction_id)
+        
+        cashbacks = query.order_by(Cashback.created_at.desc()).all()
+        
+        total_cashback = sum(cb.amount for cb in cashbacks if cb.status == 'processed')
+        pending_cashback = sum(cb.amount for cb in cashbacks if cb.status == 'pending')
+        
+        return jsonify({
+            'cashbacks': [{
+                'id': cb.id,
+                'auction_id': cb.auction_id,
+                'amount': cb.amount,
+                'status': cb.status,
+                'created_at': cb.created_at.isoformat(),
+                'processed_at': cb.processed_at.isoformat() if cb.processed_at else None
+            } for cb in cashbacks],
+            'total_cashback': total_cashback,
+            'pending_cashback': pending_cashback
+        }), 200
+        
+    except Exception as e:
+        app.logger.error(f'Error getting cashback: {str(e)}')
+        return jsonify({'error': f'Failed to get cashback: {str(e)}'}), 500
+
+@app.route('/api/user/cashback/<int:cashback_id>/process', methods=['POST'])
+@login_required
+def process_cashback(cashback_id):
+    """Process cashback (apply to invoice or account balance)"""
+    try:
+        cashback = Cashback.query.get_or_404(cashback_id)
+        
+        # Verify ownership
+        if cashback.user_id != session['user_id']:
+            return jsonify({'error': 'Unauthorized'}), 403
+        
+        if cashback.status != 'pending':
+            return jsonify({'error': f'Cashback already {cashback.status}'}), 400
+        
+        # Process cashback - apply to invoice if exists
+        if cashback.auction_id:
+            invoice = Invoice.query.filter_by(
+                auction_id=cashback.auction_id,
+                user_id=cashback.user_id
+            ).first()
+            
+            if invoice:
+                # Apply cashback to invoice total
+                invoice.total_amount = max(0, invoice.total_amount - cashback.amount)
+                invoice.payment_status = 'pending'  # Reset to pending if needed
+        
+        cashback.status = 'processed'
+        cashback.processed_at = datetime.now(timezone.utc)
+        db.session.commit()
+        
+        return jsonify({
+            'message': 'Cashback processed successfully',
+            'cashback': {
+                'id': cashback.id,
+                'amount': cashback.amount,
+                'status': cashback.status
+            }
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f'Error processing cashback: {str(e)}')
+        return jsonify({'error': f'Failed to process cashback: {str(e)}'}), 500
 
 if __name__ == '__main__':
     init_db()
     
     # Configuration from environment variables
+    # SECURITY: Never run in debug mode in production
+    flask_env = os.getenv('FLASK_ENV', 'development').lower()
+    is_prod = flask_env == 'production'
     debug_mode = os.getenv('FLASK_DEBUG', 'False').lower() == 'true'
+    
+    # Force debug mode OFF in production
+    if is_prod and debug_mode:
+        import warnings
+        warnings.warn("Debug mode is disabled in production for security!", UserWarning)
+        debug_mode = False
+    
     port = int(os.getenv('PORT', '5000'))
     host = os.getenv('HOST', '127.0.0.1')
     
@@ -1619,12 +3346,14 @@ if __name__ == '__main__':
     print("="*50)
     print(f"Server will run on: http://{host}:{port}")
     print(f"API Test: http://{host}:{port}/api/test")
+    print(f"Environment: {flask_env.upper()}")
     print(f"Debug mode: {'ON' if debug_mode else 'OFF'}")
-    print(f"Environment: {os.getenv('FLASK_ENV', 'development')}")
+    if is_prod:
+        print("⚠️  PRODUCTION MODE - Security features enabled")
     print("="*50 + "\n")
     
     try:
-        app.run(debug=debug_mode, port=port, host=host)
+        app.run(debug=debug_mode, port=port, host=host, use_reloader=debug_mode)
     except Exception as e:
         print(f"\n[ERROR] Failed to start server: {e}")
         print("\nPossible issues:")

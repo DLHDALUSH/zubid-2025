@@ -7,7 +7,12 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css?v=20250116-enhanced-enhanced">
+    <!-- Enhanced Utilities -->
+    <script src="utils.js"></script>
+    <script src="enhanced-utils.js"></script>
+    <script src="performance.js"></script>
+    <script src="accessibility.js"></script>
     <!-- Tesseract.js for OCR -->
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1/dist/tesseract.min.js"></script>
 </head>
@@ -21,6 +26,8 @@
             <div class="nav-menu" id="navMenu">
                 <a href="index.html" class="nav-link">Home</a>
                 <a href="auctions.html" class="nav-link">Auctions</a>
+                <a href="how-to-bid.html" class="nav-link">How to Bid</a>
+                <a href="contact-us.html" class="nav-link">Contact Us</a>
                 <a href="my-bids.html" class="nav-link" id="myBidsLink" style="display: none;">My Bids</a>
                 <a href="payments.html" class="nav-link" id="paymentsLink" style="display: none;">Payments</a>
                 <a href="profile.html" class="nav-link">Profile</a>
@@ -46,9 +53,38 @@
                     <div class="auction-images">
                         <div class="main-image">
                             <img id="mainAuctionImage" src="" alt="Auction Item">
+                            <div id="videoContainer" style="display: none; width: 100%; height: 550px; margin-bottom: 1.5rem;">
+                                <iframe id="videoPlayer" style="width: 100%; height: 100%; border-radius: 20px; border: none;" allowfullscreen></iframe>
+                            </div>
                         </div>
                         <div class="image-thumbnails" id="imageThumbnails">
                             <!-- Thumbnails will be loaded here -->
+                        </div>
+                        <div id="videoThumbnail" style="display: none; margin-top: 1rem;">
+                            <button class="btn btn-primary" onclick="showVideo()" style="width: 100%;">
+                                🎥 Play Video
+                            </button>
+                        </div>
+                        <div class="auction-description" style="margin-top: 2rem;">
+                            <div class="description-header" onclick="toggleDescription()" style="cursor: pointer; user-select: none;">
+                                <h3>Description</h3>
+                                <span class="description-toggle-icon" id="descriptionToggleIcon">▼</span>
+                            </div>
+                            <div class="description-content" id="descriptionContent" style="max-height: 150px; overflow: hidden; transition: max-height 0.3s ease;">
+                                <p id="auctionDescription"></p>
+                            </div>
+                            <button class="btn btn-outline btn-small" id="descriptionToggleBtn" onclick="toggleDescription()" style="margin-top: 1rem; width: 100%;">
+                                <span id="descriptionToggleText">Show More</span>
+                            </button>
+                        </div>
+                        <div class="auction-warning" id="auctionWarning" style="display: none; margin-top: 2rem;">
+                            <div class="warning-header">
+                                <span class="warning-icon">⚠️</span>
+                                <h3>Warning</h3>
+                            </div>
+                            <div class="warning-content" id="warningContent">
+                                <!-- Warning content will be loaded here -->
+                            </div>
                         </div>
                     </div>
                     <div class="auction-info">
@@ -70,6 +106,14 @@
                                 <label>Bid Increment</label>
                                 <span id="bidIncrement">$1.00</span>
                             </div>
+                            <div class="stat" id="marketPriceStat" style="display: none;">
+                                <label>Market Price</label>
+                                <span class="market-price" id="marketPrice">$0.00</span>
+                            </div>
+                            <div class="stat" id="realPriceStat" style="display: none;">
+                                <label>Real Price / Buy It Now</label>
+                                <span class="real-price" id="realPrice" style="color: var(--primary-color); font-weight: 700;">$0.00</span>
+                            </div>
                             <div class="stat">
                                 <label>Total Bids</label>
                                 <span id="bidCount">0</span>
@@ -78,10 +122,6 @@
                         <div class="countdown-timer">
                             <label>Time Remaining</label>
                             <div id="countdownTimer" class="timer"></div>
-                        </div>
-                        <div class="auction-description">
-                            <h3>Description</h3>
-                            <p id="auctionDescription"></p>
                         </div>
                     </div>
                 </div>
@@ -286,6 +326,7 @@
 
     <script src="api.js"></script>
     <script src="app.js"></script>
+    <script src="social-share.js"></script>
     <script src="auction-detail.js"></script>
 </body>
 </html>

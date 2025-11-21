@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css?v=20250116-enhanced-enhanced">
 </head>
 <body>
     <!-- Navigation -->
@@ -19,8 +19,11 @@
             <div class="nav-menu" id="navMenu">
                 <a href="index.html" class="nav-link">Home</a>
                 <a href="auctions.html" class="nav-link">Auctions</a>
+                <a href="how-to-bid.html" class="nav-link">How to Bid</a>
+                <a href="contact-us.html" class="nav-link">Contact Us</a>
                 <a href="my-bids.html" class="nav-link active" id="myBidsLink" style="display: none;">My Bids</a>
                 <a href="payments.html" class="nav-link" id="paymentsLink" style="display: none;">Payments</a>
+                <a href="return-requests.html" class="nav-link" id="returnRequestsLink" style="display: none;">Return Requests</a>
                 <a href="profile.html" class="nav-link">Profile</a>
                 <div class="nav-auth" id="navAuth">
                     <button class="btn btn-outline" onclick="showLogin()">Login</button>
@@ -39,7 +42,8 @@
     <section class="auctions-section">
         <div class="container">
             <div class="section-header">
-                <h1>My Bids</h1>
+                <h1>My Winning Bids</h1>
+                <p class="section-subtitle" style="color: var(--text-secondary); margin-top: 0.5rem;">Showing only auctions you've won or are currently winning</p>
             </div>
             
             <div id="loadingIndicator" class="loading">Loading your bids...</div>

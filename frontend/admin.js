@@ -55,7 +55,8 @@ function showToast(message, type = 'info') {
 // Load admin dashboard stats
 async function loadAdminStats() {
     try {
-        const stats = await fetch('http://localhost:5000/api/admin/stats', {
+        const API_BASE = window.API_BASE_URL || 'http://localhost:5000';
+        const stats = await fetch(`${API_BASE}/api/admin/stats`, {
             credentials: 'include'
         });
         
@@ -91,10 +92,15 @@ async function logout() {
 
 // Admin API helpers
 const AdminAPI = {
+    getApiBase: () => {
+        const apiBase = window.API_BASE_URL || 'http://localhost:5000/api';
+        return apiBase.replace('/api', '');
+    },
+    
     getUsers: async (page = 1, search = '') => {
         const params = new URLSearchParams({ page, per_page: 20 });
         if (search) params.append('search', search);
-        const response = await fetch(`http://localhost:5000/api/admin/users?${params}`, {
+        const response = await fetch(`${AdminAPI.getApiBase()}/api/admin/users?${params}`, {
             credentials: 'include'
         });
         if (!response.ok) throw new Error('Failed to fetch users');
@@ -102,7 +108,7 @@ const AdminAPI = {
     },
     
     updateUser: async (userId, data) => {
-        const response = await fetch(`http://localhost:5000/api/admin/users/${userId}`, {
+        const response = await fetch(`${AdminAPI.getApiBase()}/api/admin/users/${userId}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
@@ -116,7 +122,7 @@ const AdminAPI = {
     },
     
     deleteUser: async (userId) => {
-        const response = await fetch(`http://localhost:5000/api/admin/users/${userId}`, {
+        const response = await fetch(`${AdminAPI.getApiBase()}/api/admin/users/${userId}`, {
             method: 'DELETE',
             credentials: 'include'
         });
@@ -144,7 +150,7 @@ const AdminAPI = {
     getAuctions: async (page = 1, status = '') => {
         const params = new URLSearchParams({ page, per_page: 20 });
         if (status) params.append('status', status);
-        const response = await fetch(`http://localhost:5000/api/admin/auctions?${params}`, {
+        const response = await fetch(`${AdminAPI.getApiBase()}/api/admin/auctions?${params}`, {
             credentials: 'include'
         });
         if (!response.ok) throw new Error('Failed to fetch auctions');
@@ -152,7 +158,7 @@ const AdminAPI = {
     },
     
     updateAuction: async (auctionId, data) => {
-        const response = await fetch(`http://localhost:5000/api/admin/auctions/${auctionId}`, {
+        const response = await fetch(`${AdminAPI.getApiBase()}/api/admin/auctions/${auctionId}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
@@ -166,7 +172,7 @@ const AdminAPI = {
     },
     
     deleteAuction: async (auctionId) => {
-        const response = await fetch(`http://localhost:5000/api/admin/auctions/${auctionId}`, {
+        const response = await fetch(`${AdminAPI.getApiBase()}/api/admin/auctions/${auctionId}`, {
             method: 'DELETE',
             credentials: 'include'
         });
@@ -178,7 +184,7 @@ const AdminAPI = {
     },
     
     getStats: async () => {
-        const response = await fetch('http://localhost:5000/api/admin/stats', {
+        const response = await fetch(`${AdminAPI.getApiBase()}/api/admin/stats`, {
             credentials: 'include'
         });
         if (!response.ok) throw new Error('Failed to fetch stats');
@@ -186,7 +192,7 @@ const AdminAPI = {
     },
     
     getUserDetails: async (userId) => {
-        const response = await fetch(`http://localhost:5000/api/admin/users/${userId}`, {
+        const response = await fetch(`${AdminAPI.getApiBase()}/api/admin/users/${userId}`, {
             credentials: 'include'
         });
         if (!response.ok) {

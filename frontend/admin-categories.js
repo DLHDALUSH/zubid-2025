@@ -12,23 +12,64 @@ async function loadCategories() {
         const categories = await CategoryAPI.getAll();
         
         if (categories && categories.length > 0) {
-            tbody.innerHTML = categories.map(cat => `
+            // Escape HTML utility
+            const escapeHtml = (text) => {
+                if (text == null) return '';
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            };
+            
+            tbody.innerHTML = categories.map(cat => {
+                const nameEscaped = escapeHtml(cat.name || '');
+                const descEscaped = escapeHtml(cat.description || '');
+                return `
                 <tr>
                     <td>${cat.id}</td>
-                    <td>${cat.name}</td>
-                    <td>${cat.description || '-'}</td>
+                    <td>${nameEscaped}</td>
+                    <td>${descEscaped || '-'}</td>
                     <td class="actions">
-                        <button class="btn btn-small btn-primary" onclick="editCategory(${cat.id}, '${cat.name.replace(/'/g, "\\'")}', '${(cat.description || '').replace(/'/g, "\\'")}')">Edit</button>
-                        <button class="btn btn-small btn-danger" onclick="deleteCategory(${cat.id})">Delete</button>
+                        <button class="btn btn-small btn-primary edit-category-btn" 
+                                data-category-id="${cat.id}" 
+                                data-name="${nameEscaped}" 
+                                data-description="${descEscaped}">Edit</button>
+                        <button class="btn btn-small btn-danger delete-category-btn" 
+                                data-category-id="${cat.id}">Delete</button>
                     </td>
                 </tr>
-            `).join('');
+            `;
+            }).join('');
+            
+            // Attach event listeners after rendering
+            tbody.querySelectorAll('.edit-category-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const id = parseInt(this.dataset.categoryId);
+                    const name = this.dataset.name;
+                    const description = this.dataset.description;
+                    editCategory(id, name, description);
+                });
+            });
+            
+            tbody.querySelectorAll('.delete-category-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const id = parseInt(this.dataset.categoryId);
+                    deleteCategory(id);
+                });
+            });
         } else {
             tbody.innerHTML = '<tr><td colspan="4">No categories found</td></tr>';
         }
     } catch (error) {
-        console.error('Error loading categories:', error);
-        tbody.innerHTML = `<tr><td colspan="4">Error: ${error.message}</td></tr>`;
+        if (window.utils) window.utils.debugError('Error loading categories:', error);
+        const errorMsg = error.message || 'Unknown error';
+        // Escape error message to prevent XSS
+        const escapeHtml = (text) => {
+            if (text == null) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        };
+        tbody.innerHTML = `<tr><td colspan="4">Error: ${escapeHtml(errorMsg)}</td></tr>`;
         showToast('Error loading categories', 'error');
     }
 }
@@ -40,7 +81,8 @@ async function handleAddCategory(event) {
     const description = document.getElementById('categoryDescription').value;
     
     try {
-        const response = await fetch('http://localhost:5000/api/admin/categories', {
+        const API_BASE = (window.API_BASE_URL || 'http://localhost:5000/api').replace('/api', '');
+        const response = await fetch(`${API_BASE}/api/admin/categories`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
@@ -75,7 +117,8 @@ async function handleUpdateCategory(event) {
     const description = document.getElementById('editCategoryDescription').value;
     
     try {
-        const response = await fetch(`http://localhost:5000/api/admin/categories/${categoryId}`, {
+        const API_BASE = (window.API_BASE_URL || 'http://localhost:5000/api').replace('/api', '');
+        const response = await fetch(`${API_BASE}/api/admin/categories/${categoryId}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
@@ -101,7 +144,8 @@ async function deleteCategory(categoryId) {
     }
     
     try {
-        const response = await fetch(`http://localhost:5000/api/admin/categories/${categoryId}`, {
+        const API_BASE = (window.API_BASE_URL || 'http://localhost:5000/api').replace('/api', '');
+        const response = await fetch(`${API_BASE}/api/admin/categories/${categoryId}`, {
             method: 'DELETE',
             credentials: 'include'
         });

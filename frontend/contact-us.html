@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Us - ZUBID</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css?v=20250116-enhanced-enhanced">
+    <script src="i18n.js"></script>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <h1><a href="index.html" style="text-decoration: none; color: inherit;">ZUBID</a></h1>
+            </div>
+            <div class="nav-menu" id="navMenu">
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="auctions.html" class="nav-link">Auctions</a>
+                <a href="how-to-bid.html" class="nav-link">How to Bid</a>
+                <a href="contact-us.html" class="nav-link active">Contact Us</a>
+                <a href="my-bids.html" class="nav-link" id="myBidsLink" style="display: none;">My Bids</a>
+                <a href="payments.html" class="nav-link" id="paymentsLink" style="display: none;">Payments</a>
+                <a href="return-requests.html" class="nav-link" id="returnRequestsLink" style="display: none;">Return Requests</a>
+                <a href="profile.html" class="nav-link" id="profileLink" style="display: none;">Profile</a>
+                <div class="nav-auth" id="navAuth">
+                    <button class="btn btn-outline" onclick="window.location.href='index.html#login'">Login</button>
+                    <button class="btn btn-primary" onclick="window.location.href='index.html#register'">Sign Up</button>
+                </div>
+                <div class="nav-user" id="navUser" style="display: none;">
+                    <span id="userName"></span>
+                    <button class="btn btn-outline" onclick="logout()">Logout</button>
+                </div>
+            </div>
+            <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
+        </div>
+    </nav>
+
+    <!-- Contact Us Section -->
+    <section class="contact-section" style="padding: 4rem 0; min-height: calc(100vh - 200px);">
+        <div class="container">
+            <div class="section-header" style="text-align: center; margin-bottom: 3rem;">
+                <h1 style="font-size: 2.5rem; margin-bottom: 1rem; background: var(--bg-gradient-warm); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">Contact Us</h1>
+                <p style="font-size: 1.1rem; color: var(--text-secondary); max-width: 600px; margin: 0 auto;">Get in touch with us. We're here to help you with any questions or concerns.</p>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; max-width: 1200px; margin: 0 auto;">
+                <!-- Contact Information -->
+                <div class="contact-info-card" style="background: var(--glass-bg); backdrop-filter: blur(10px); border-radius: 20px; padding: 2.5rem; box-shadow: var(--shadow-lg); border: 1px solid var(--glass-border);">
+                    <h2 style="font-size: 1.8rem; margin-bottom: 1.5rem; color: var(--primary-color);">Get in Touch</h2>
+                    
+                    <div style="margin-bottom: 2rem;">
+                        <div style="display: flex; align-items: start; margin-bottom: 1.5rem;">
+                            <div style="width: 50px; height: 50px; background: var(--bg-gradient-warm); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-right: 1rem; flex-shrink: 0;">
+                                <span style="font-size: 1.5rem;">📧</span>
+                            </div>
+                            <div>
+                                <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem; color: var(--text-color);">Email</h3>
+                                <p style="color: var(--text-secondary); margin: 0;"><a href="mailto:support@zubid.com" style="color: var(--primary-color); text-decoration: none;">support@zubid.com</a></p>
+                                <p style="color: var(--text-secondary); margin: 0.25rem 0 0 0;"><a href="mailto:info@zubid.com" style="color: var(--primary-color); text-decoration: none;">info@zubid.com</a></p>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; align-items: start; margin-bottom: 1.5rem;">
+                            <div style="width: 50px; height: 50px; background: var(--bg-gradient-warm); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-right: 1rem; flex-shrink: 0;">
+                                <span style="font-size: 1.5rem;">📞</span>
+                            </div>
+                            <div>
+                                <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem; color: var(--text-color);">Phone</h3>
+                                <p style="color: var(--text-secondary); margin: 0;"><a href="tel:+1234567890" style="color: var(--primary-color); text-decoration: none;">+1 (234) 567-890</a></p>
+                                <p style="color: var(--text-secondary); margin: 0.25rem 0 0 0; font-size: 0.9rem;">Mon-Fri: 9:00 AM - 6:00 PM</p>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; align-items: start; margin-bottom: 1.5rem;">
+                            <div style="width: 50px; height: 50px; background: var(--bg-gradient-warm); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-right: 1rem; flex-shrink: 0;">
+                                <span style="font-size: 1.5rem;">📍</span>
+                            </div>
+                            <div>
+                                <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem; color: var(--text-color);">Address</h3>
+                                <p style="color: var(--text-secondary); margin: 0; line-height: 1.6;">123 Auction Street<br>Bidding City, BC 12345<br>Country</p>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; align-items: start;">
+                            <div style="width: 50px; height: 50px; background: var(--bg-gradient-warm); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-right: 1rem; flex-shrink: 0;">
+                                <span style="font-size: 1.5rem;">⏰</span>
+                            </div>
+                            <div>
+                                <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem; color: var(--text-color);">Business Hours</h3>
+                                <p style="color: var(--text-secondary); margin: 0; line-height: 1.6;">Monday - Friday: 9:00 AM - 6:00 PM<br>Saturday: 10:00 AM - 4:00 PM<br>Sunday: Closed</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contact Form -->
+                <div class="contact-form-card" style="background: var(--glass-bg); backdrop-filter: blur(10px); border-radius: 20px; padding: 2.5rem; box-shadow: var(--shadow-lg); border: 1px solid var(--glass-border);">
+                    <h2 style="font-size: 1.8rem; margin-bottom: 1.5rem; color: var(--primary-color);">Send us a Message</h2>
+                    
+                    <form id="contactForm" onsubmit="handleContactSubmit(event)" style="display: flex; flex-direction: column; gap: 1.5rem;">
+                        <div>
+                            <label for="contactName" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--text-color);">Name *</label>
+                            <input type="text" id="contactName" name="name" required 
+                                   style="width: 100%; padding: 0.875rem; border: 2px solid var(--border-color); border-radius: 12px; font-size: 1rem; transition: var(--transition-base);"
+                                   onfocus="this.style.borderColor='var(--primary-color)'; this.style.boxShadow='0 0 0 3px rgba(255, 102, 0, 0.1)'"
+                                   onblur="this.style.borderColor='var(--border-color)'; this.style.boxShadow='none'">
+                        </div>
+
+                        <div>
+                            <label for="contactEmail" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--text-color);">Email *</label>
+                            <input type="email" id="contactEmail" name="email" required 
+                                   style="width: 100%; padding: 0.875rem; border: 2px solid var(--border-color); border-radius: 12px; font-size: 1rem; transition: var(--transition-base);"
+                                   onfocus="this.style.borderColor='var(--primary-color)'; this.style.boxShadow='0 0 0 3px rgba(255, 102, 0, 0.1)'"
+                                   onblur="this.style.borderColor='var(--border-color)'; this.style.boxShadow='none'">
+                        </div>
+
+                        <div>
+                            <label for="contactSubject" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--text-color);">Subject *</label>
+                            <select id="contactSubject" name="subject" required 
+                                    style="width: 100%; padding: 0.875rem; border: 2px solid var(--border-color); border-radius: 12px; font-size: 1rem; transition: var(--transition-base); background: white;"
+                                    onfocus="this.style.borderColor='var(--primary-color)'; this.style.boxShadow='0 0 0 3px rgba(255, 102, 0, 0.1)'"
+                                    onblur="this.style.borderColor='var(--border-color)'; this.style.boxShadow='none'">
+                                <option value="">Select a subject</option>
+                                <option value="general">General Inquiry</option>
+                                <option value="support">Technical Support</option>
+                                <option value="bidding">Bidding Questions</option>
+                                <option value="payment">Payment Issues</option>
+                                <option value="account">Account Issues</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="contactMessage" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--text-color);">Message *</label>
+                            <textarea id="contactMessage" name="message" rows="6" required 
+                                      style="width: 100%; padding: 0.875rem; border: 2px solid var(--border-color); border-radius: 12px; font-size: 1rem; font-family: inherit; resize: vertical; transition: var(--transition-base);"
+                                      onfocus="this.style.borderColor='var(--primary-color)'; this.style.boxShadow='0 0 0 3px rgba(255, 102, 0, 0.1)'"
+                                      onblur="this.style.borderColor='var(--border-color)'; this.style.boxShadow='none'"></textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary" 
+                                style="padding: 1rem 2rem; font-size: 1.1rem; font-weight: 600; border-radius: 12px; cursor: pointer; transition: var(--transition-base);"
+                                id="contactSubmitBtn">
+                            Send Message
+                        </button>
+
+                        <div id="contactFormMessage" style="display: none; padding: 1rem; border-radius: 12px; margin-top: 1rem;"></div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast" style="display: none;"></div>
+
+    <script src="api.js"></script>
+    <script src="app.js"></script>
+    <script src="contact-us.js"></script>
+</body>
+</html>
+

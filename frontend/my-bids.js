@@ -52,29 +52,44 @@ async function loadMyBids() {
         if (loadingIndicator) loadingIndicator.style.display = 'none';
         
         if (bids && bids.length > 0) {
-            if (container) {
-                container.style.display = 'block';
-                
-                // Group bids by auction_id and keep only the highest bid per auction
-                const bidsByAuction = {};
-                bids.forEach(bid => {
-                    const auctionId = bid.auction_id;
-                    if (!bidsByAuction[auctionId] || bid.amount > bidsByAuction[auctionId].amount) {
-                        bidsByAuction[auctionId] = bid;
-                    } else if (bid.amount === bidsByAuction[auctionId].amount) {
-                        // If same amount, keep the most recent one
-                        const existingDate = new Date(bidsByAuction[auctionId].timestamp);
-                        const newDate = new Date(bid.timestamp);
-                        if (newDate > existingDate) {
+            // Filter to show only winning bids (won or currently winning)
+            const winningBids = bids.filter(bid => {
+                // For ended auctions: show if user won
+                if (bid.auction_status === 'ended') {
+                    return bid.is_winner === true;
+                }
+                // For active auctions: show if user is currently winning
+                else if (bid.auction_status === 'active') {
+                    return bid.is_winning === true;
+                }
+                // For other statuses, don't show
+                return false;
+            });
+            
+            if (winningBids.length > 0) {
+                if (container) {
+                    container.style.display = 'block';
+                    
+                    // Group bids by auction_id and keep only the highest bid per auction
+                    const bidsByAuction = {};
+                    winningBids.forEach(bid => {
+                        const auctionId = bid.auction_id;
+                        if (!bidsByAuction[auctionId] || bid.amount > bidsByAuction[auctionId].amount) {
                             bidsByAuction[auctionId] = bid;
+                        } else if (bid.amount === bidsByAuction[auctionId].amount) {
+                            // If same amount, keep the most recent one
+                            const existingDate = new Date(bidsByAuction[auctionId].timestamp);
+                            const newDate = new Date(bid.timestamp);
+                            if (newDate > existingDate) {
+                                bidsByAuction[auctionId] = bid;
+                            }
                         }
-                    }
-                });
-                
-                // Convert back to array and sort by timestamp (newest first)
-                const uniqueBids = Object.values(bidsByAuction).sort((a, b) => {
-                    return new Date(b.timestamp) - new Date(a.timestamp);
-                });
+                    });
+                    
+                    // Convert back to array and sort by timestamp (newest first)
+                    const uniqueBids = Object.values(bidsByAuction).sort((a, b) => {
+                        return new Date(b.timestamp) - new Date(a.timestamp);
+                    });
                 
                 container.innerHTML = uniqueBids.map(bid => {
                     // Check if user won (for ended auctions) or is winning (for active auctions)
@@ -126,11 +141,29 @@ async function loadMyBids() {
                         </div>
                     `;
                 }).join('');
+                }
+                if (noBids) noBids.style.display = 'none';
+            } else {
+                // No winning bids
+                if (container) container.style.display = 'none';
+                if (noBids) {
+                    noBids.innerHTML = `
+                        <p style="color: var(--text-secondary); margin-bottom: 1rem; font-size: 1.125rem;">You don't have any winning bids yet.</p>
+                        <p style="color: var(--text-light); margin-bottom: 1.5rem;">Keep bidding to win amazing auctions!</p>
+                        <a href="auctions.html" class="btn btn-primary">Browse Auctions</a>
+                    `;
+                    noBids.style.display = 'block';
+                }
             }
-            if (noBids) noBids.style.display = 'none';
         } else {
             if (container) container.style.display = 'none';
-            if (noBids) noBids.style.display = 'block';
+            if (noBids) {
+                noBids.innerHTML = `
+                    <p style="color: var(--text-secondary); margin-bottom: 1rem; font-size: 1.125rem;">You haven't placed any bids yet.</p>
+                    <a href="auctions.html" class="btn btn-primary">Browse Auctions</a>
+                `;
+                noBids.style.display = 'block';
+            }
         }
     } catch (error) {
         console.error('Error loading my bids:', error);
