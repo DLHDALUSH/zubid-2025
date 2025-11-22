@@ -264,3 +264,42 @@ This project is provided as-is for educational and demonstration purposes.
 
 For issues or questions, please check the code comments or create an issue in the repository.
 
+---
+**Project Index & Developer Quickstart**
+
+- See `PROJECTS_INDEX.md` at repository root for a concise project map and run instructions.
+
+- Quick PowerShell developer steps:
+   - Create & activate venv:
+      ```powershell
+      python -m venv .venv
+      .\.venv\Scripts\Activate.ps1
+      ```
+   - Install backend deps:
+      ```powershell
+      pip install -r backend/requirements.txt
+      ```
+   - Start backend (dev):
+      ```powershell
+      python backend/app.py
+      # or from repo root: .\start-backend.bat
+      ```
+   - Serve frontend (separate terminal):
+      ```powershell
+      cd frontend
+      python -m http.server 8000
+      ```
+
+- Run packaged checks (from `backend/`):
+   - `python test_imports.py` — import/config checks
+   - `python test_backend.py` — quick import/app check
+   - `python test_market_price.py` — schema check for `market_price`
+   - `python test_production.py` — full unittest suite (may fail; see notes below)
+
+Notes from a quick check run:
+- `test_imports.py` and `test_backend.py` succeeded.
+- `test_market_price.py` confirmed the `market_price` column exists.
+- `test_production.py` failed with multiple `IntegrityError` exceptions (`NOT NULL constraint failed: auction.seller_id`).
+   - Likely cause: test setup inserts an `Auction` before the `User` id is available; tests should commit `User` and `Category` first or set the relationship instead of `seller_id`.
+   - I can prepare a PR to adjust the test setup or add helper commits if you'd like.
+
