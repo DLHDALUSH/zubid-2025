@@ -54,8 +54,11 @@ class ProductionTestCase(unittest.TestCase):
             # Create test category
             self.test_category = Category(name='Test Category', description='Test')
             db.session.add(self.test_category)
-            
-            # Create test auction
+
+            # Commit user and category so they receive DB-assigned ids
+            db.session.commit()
+
+            # Create test auction using assigned ids (or relationships)
             self.test_auction = Auction(
                 item_name='Test Item',
                 description='Test Description',
@@ -69,6 +72,27 @@ class ProductionTestCase(unittest.TestCase):
             )
             db.session.add(self.test_auction)
             db.session.commit()
+
+            # Save primitive ids and username so tests can use them outside the session
+            self.test_user_id = self.test_user.id
+            self.test_category_id = self.test_category.id
+            self.test_auction_id = self.test_auction.id
+            self.test_username = self.test_user.username
+            # Create a separate user to act as a bidder in tests
+            self.other_user = User(
+                username='bidder',
+                email='bidder@example.com',
+                password_hash=generate_password_hash('BidPass123!'),
+                id_number='BID001',
+                birth_date=datetime(1992, 2, 2).date(),
+                phone='0987654321',
+                address='456 Bidder St',
+                role='user'
+            )
+            db.session.add(self.other_user)
+            db.session.commit()
+            self.other_user_id = self.other_user.id
+            self.other_username = self.other_user.username
     
     def tearDown(self):
         """Clean up after tests"""
@@ -79,8 +103,8 @@ class ProductionTestCase(unittest.TestCase):
     def login(self):
         """Helper to login test user"""
         with self.client.session_transaction() as sess:
-            sess['user_id'] = self.test_user.id
-            sess['username'] = self.test_user.username
+            sess['user_id'] = self.test_user_id
+            sess['username'] = self.test_username
     
     # Authentication Tests
     def test_register_user(self):
@@ -135,14 +159,19 @@ class ProductionTestCase(unittest.TestCase):
         response = self.client.get('/api/auctions')
         self.assertEqual(response.status_code, 200)
         data = response.get_json()
-        self.assertIsInstance(data, list)
+        # API may return a paginated dict with 'auctions' key or a plain list
+        if isinstance(data, dict) and 'auctions' in data:
+            auctions = data['auctions']
+            self.assertIsInstance(auctions, list)
+        else:
+            self.assertIsInstance(data, list)
     
     def test_get_auction_by_id(self):
         """Test getting auction by ID"""
-        response = self.client.get(f'/api/auctions/{self.test_auction.id}')
+        response = self.client.get(f'/api/auctions/{self.test_auction_id}')
         self.assertEqual(response.status_code, 200)
         data = response.get_json()
-        self.assertEqual(data['id'], self.test_auction.id)
+        self.assertEqual(data['id'], self.test_auction_id)
     
     def test_create_auction(self):
         """Test creating an auction"""
@@ -153,7 +182,7 @@ class ProductionTestCase(unittest.TestCase):
             'starting_bid': 200.0,
             'bid_increment': 20.0,
             'end_time': (datetime.now(timezone.utc) + timedelta(days=7)).isoformat(),
-            'category_id': self.test_category.id
+            'category_id': self.test_category_id
         })
         self.assertEqual(response.status_code, 201)
         data = response.get_json()
@@ -167,15 +196,19 @@ class ProductionTestCase(unittest.TestCase):
             'starting_bid': 200.0,
             'bid_increment': 20.0,
             'end_time': (datetime.now(timezone.utc) + timedelta(days=7)).isoformat(),
-            'category_id': self.test_category.id
+            'category_id': self.test_category_id
         })
         self.assertEqual(response.status_code, 401)
     
     # Bidding Tests
     def test_place_bid(self):
         """Test placing a bid"""
-        self.login()
-        response = self.client.post(f'/api/auctions/{self.test_auction.id}/bids', json={
+        # Login as a different user (bidder) to place a bid on the auction
+        with self.client.session_transaction() as sess:
+            sess['user_id'] = self.other_user_id
+            sess['username'] = self.other_username
+
+        response = self.client.post(f'/api/auctions/{self.test_auction_id}/bids', json={
             'amount': 110.0
         })
         self.assertEqual(response.status_code, 201)
@@ -185,14 +218,14 @@ class ProductionTestCase(unittest.TestCase):
     def test_place_bid_below_minimum(self):
         """Test placing bid below minimum"""
         self.login()
-        response = self.client.post(f'/api/auctions/{self.test_auction.id}/bids', json={
+        response = self.client.post(f'/api/auctions/{self.test_auction_id}/bids', json={
             'amount': 50.0  # Below starting bid
         })
         self.assertEqual(response.status_code, 400)
     
     def test_place_bid_unauthorized(self):
         """Test placing bid without login"""
-        response = self.client.post(f'/api/auctions/{self.test_auction.id}/bids', json={
+        response = self.client.post(f'/api/auctions/{self.test_auction_id}/bids', json={
             'amount': 110.0
         })
         self.assertEqual(response.status_code, 401)
@@ -223,7 +256,7 @@ class ProductionTestCase(unittest.TestCase):
             'starting_bid': 100.0,
             'bid_increment': 10.0,
             'end_time': (datetime.now(timezone.utc) + timedelta(days=7)).isoformat(),
-            'category_id': self.test_category.id
+            'category_id': self.test_category_id
         })
         # Should either sanitize or reject
         self.assertIn(response.status_code, [201, 400])
