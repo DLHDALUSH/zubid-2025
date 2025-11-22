@@ -414,13 +414,18 @@ async function handleRegister(event) {
         // Close modal
         closeModal('registerModal');
         
-        // Show success message
-        showToast('Registration successful! Please login.', 'success');
+        // Show welcome message if available
+        if (data.welcome_message) {
+            showWelcomeMessage(data.welcome_message, data.username);
+        } else {
+            // Fallback to simple success message
+            showToast('Registration successful! Please login.', 'success');
+        }
         
         // Open login modal after a short delay
         setTimeout(() => {
             showLogin();
-        }, 500);
+        }, data.welcome_message ? 3000 : 500);
     } catch (error) {
         debugError('Registration error:', error);
         const errorMsg = error.message || 'Registration failed. Please try again.';
@@ -661,6 +666,51 @@ function showToast(message, type = 'info') {
     setTimeout(() => {
         toast.style.display = 'none';
     }, 3000);
+}
+
+function showWelcomeMessage(welcomeMessage, username) {
+    // Create or get welcome modal
+    let welcomeModal = document.getElementById('welcomeModal');
+    
+    if (!welcomeModal) {
+        // Create welcome modal if it doesn't exist
+        welcomeModal = document.createElement('div');
+        welcomeModal.id = 'welcomeModal';
+        welcomeModal.className = 'modal';
+        welcomeModal.innerHTML = `
+            <div class="modal-content modal-large">
+                <div class="modal-header">
+                    <h2>🎉 Welcome to ZUBID!</h2>
+                    <span class="close" onclick="closeModal('welcomeModal')">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <div class="welcome-message" id="welcomeMessageContent"></div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary" onclick="closeModal('welcomeModal'); showLogin();">
+                        Get Started
+                    </button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(welcomeModal);
+    }
+    
+    // Format the welcome message (preserve line breaks)
+    const messageContent = document.getElementById('welcomeMessageContent');
+    if (messageContent) {
+        // Convert newlines to <br> tags and preserve formatting
+        const formattedMessage = welcomeMessage
+            .replace(/\n\n/g, '</p><p>')
+            .replace(/\n/g, '<br>');
+        messageContent.innerHTML = `<p>${formattedMessage}</p>`;
+    }
+    
+    // Show the modal
+    welcomeModal.style.display = 'block';
+    
+    // Also show a toast notification
+    showToast(`Welcome ${username}! 🎉`, 'success');
 }
 
 // Mobile menu toggle

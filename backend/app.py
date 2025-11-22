@@ -969,8 +969,22 @@ def register():
         
         app.logger.info(f"User registered: {user.username} (ID: {user.id})")
         
+        # Create a personalized welcome message
+        welcome_message = (
+            f"Welcome to ZUBID, {username}! 🎉\n\n"
+            f"We're thrilled to have you join our auction community. "
+            f"Your account has been successfully created and you're all set to start bidding on amazing items.\n\n"
+            f"Here's what you can do:\n"
+            f"• Browse and discover exciting auctions\n"
+            f"• Place bids on items you love\n"
+            f"• Create your own auctions\n"
+            f"• Track your bids and wins\n\n"
+            f"Happy bidding! 🚀"
+        )
+        
         return jsonify({
-            'message': 'User registered successfully', 
+            'message': 'User registered successfully',
+            'welcome_message': welcome_message,
             'user_id': user.id,
             'username': user.username,
             'profile_photo': profile_photo_url

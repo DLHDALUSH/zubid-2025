@@ -2699,6 +2699,40 @@ body::before {
     color: var(--text-color);
 }
 
+/* Welcome Modal */
+.modal-large {
+    max-width: 600px;
+}
+
+.welcome-message {
+    padding: 1.5rem 0;
+    line-height: 1.8;
+    color: var(--text-color);
+}
+
+.welcome-message p {
+    margin-bottom: 1rem;
+    font-size: 1.05rem;
+}
+
+.welcome-message p:last-child {
+    margin-bottom: 0;
+}
+
+.welcome-message strong {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.modal-footer {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+}
+
 /* Toast */
 .toast {
     display: none;
