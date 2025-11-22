@@ -4,10 +4,15 @@
 
 The backend server is currently running on `http://127.0.0.1:5000`
 
+**Last Started:** November 22, 2025
+
 ### Verification:
 - ✅ Server is listening on port 5000
 - ✅ API test endpoint responding: `/api/test`
 - ✅ CSRF token endpoint working: `/api/csrf-token`
+- ✅ Health check endpoint working: `/api/health`
+- ✅ Database connected and healthy
+- ✅ Upload directory exists
 - ✅ CORS configured correctly
 - ✅ Database schema updated (profile_photo column added)
 
