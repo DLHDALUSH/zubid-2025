@@ -1928,6 +1928,143 @@ body::before {
     align-items: center;
     justify-content: center;
     border-radius: 50%;
+}
+
+/* Language Switcher - Enhanced */
+.language-switcher {
+    position: relative;
+    display: inline-block;
+    margin-left: 1rem;
+}
+
+.language-switcher-btn {
+    background: transparent;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    color: var(--text-color);
+    transition: all var(--transition-base);
+    position: relative;
+}
+
+.language-switcher-btn:hover {
+    border-color: var(--primary-color);
+    background: var(--bg-light);
+}
+
+.language-switcher-btn span {
+    font-weight: 600;
+}
+
+/* Loading state for language switcher */
+.language-switcher.loading .language-switcher-btn {
+    opacity: 0.7;
+    cursor: wait;
+}
+
+.language-switcher.loading .language-switcher-btn::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: 8px;
+    width: 12px;
+    height: 12px;
+    margin-top: -6px;
+    border: 2px solid var(--primary-color);
+    border-top: 2px solid transparent;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.language-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 0.5rem;
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: var(--shadow-lg);
+    min-width: 150px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all var(--transition-base);
+    z-index: 1000;
+}
+
+[dir="rtl"] .language-dropdown {
+    right: auto;
+    left: 0;
+}
+
+.language-switcher.active .language-dropdown {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.language-option {
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    transition: background var(--transition-fast);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+}
+
+[dir="rtl"] .language-option {
+    text-align: right;
+}
+
+.language-option:hover {
+    background: var(--bg-light);
+}
+
+.language-option.active {
+    background: var(--primary-color);
+    color: white;
+}
+
+.language-option:first-child {
+    border-radius: 8px 8px 0 0;
+}
+
+.language-option:last-child {
+    border-radius: 0 0 8px 8px;
+}
+
+/* Smooth page transitions */
+body {
+    transition: opacity 0.2s ease-in-out;
+}
+
+body.language-changing {
+    opacity: 0.9;
+}
+
+/* Prevent flash of unstyled content during language change */
+.i18n-loading {
+    visibility: hidden;
+}
+
+.i18n-ready {
+    visibility: visible;
+}
     background: rgba(156, 163, 175, 0.2);
     color: #9ca3af;
     font-size: 0.75rem;

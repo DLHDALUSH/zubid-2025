@@ -1778,6 +1778,212 @@ async function capturePhoto() {
                 captureBtn.innerHTML = '<span id="captureIcon">📸</span> Capture Photo';
             };
             
+            // Check if already loaded
+            if (previewImg.complete) {
+                verifyImage();
+            } else {
+                // Wait for load event
+                previewImg.onload = verifyImage;
+                previewImg.onerror = () => {
+                    debugError('ID Card image failed to load');
+                    showToast('ID Card image failed to load. Please recapture.', 'error');
+                    updateStepStatus('id', false);
+                    capturedIdCardFront = null;
+                    updateIdCardFrontPreview(null);
+                    captureBtn.disabled = false;
+                    captureBtn.innerHTML = '<span id="captureIcon">📸</span> Capture Photo';
+                };
+                
+                // Timeout after 3 seconds
+                setTimeout(() => {
+                    if (!imageVerified) {
+                        verifyImage(); // Final check
+                    }
+                }, 3000);
+            }
+        } else {
+            // If preview element doesn't exist, just validate data
+            if (imageData && imageData.length > 100) {
+                updateStepStatus('id', true);
+                setTimeout(() => {
+                    if (!capturedSelfie) {
+                        showToast('ID Card captured! Now take your selfie', 'success');
+                        startCamera('selfie');
+                    }
+                }, 500);
+            }
+            captureBtn.disabled = false;
+            captureBtn.innerHTML = '<span id="captureIcon">📸</span> Capture Photo';
+        }
+        
+    } else if (currentCaptureMode === 'id') {
+        // Handle single ID card capture mode (used in auctions.html, create-auction.html, etc.)
+        // Validate image data before saving
+        if (!imageData || !imageData.startsWith('data:image/')) {
+            showToast('Failed to capture ID Card. Please try again.', 'error');
+            captureBtn.disabled = false;
+            captureBtn.innerHTML = '<span id="captureIcon">📸</span> Capture Photo';
+            return;
+        }
+        
+        // Save the captured image (use capturedIdCardFront for single ID card mode)
+        capturedIdCardFront = imageData;
+        debugLog('ID Card captured (single mode), data length:', imageData.length);
+        
+        // Update preview - try both preview element IDs for compatibility
+        const idCardPreview = document.getElementById('idCardPreview');
+        if (idCardPreview) {
+            // For pages with single ID preview (auctions.html, create-auction.html, etc.)
+            idCardPreview.src = imageData;
+            if (idCardPreview.parentElement) {
+                idCardPreview.parentElement.style.display = 'block';
+            }
+            const container = document.getElementById('capturedImages');
+            if (container) {
+                container.style.display = 'block';
+            }
+        } else {
+            // Fallback to ID front preview if idCardPreview doesn't exist
+            updateIdCardFrontPreview(imageData);
+        }
+        
+        // Process ID card with OCR
+        setTimeout(async () => {
+            try {
+                showToast('Scanning ID card...', 'info');
+                const extractedData = await processIDCardWithOCR(imageData, 'front');
+                
+                // Auto-fill form fields with extracted data
+                if (extractedData) {
+                    autoFillRegistrationForm(extractedData);
+                }
+            } catch (error) {
+                debugError('OCR processing error:', error);
+                showToast('OCR processing failed. Please enter information manually.', 'error');
+            }
+        }, 100);
+        
+        // Wait for image to load in preview before marking complete
+        const previewImg = idCardPreview || document.getElementById('idCardFrontPreview');
+        if (previewImg) {
+            let imageVerified = false;
+            
+            const verifyImage = () => {
+                if (previewImg.complete && previewImg.naturalWidth > 0) {
+                    imageVerified = true;
+                    debugLog('ID Card image verified as loaded (single mode)');
+                    updateStepStatus('id', true);
+                    
+                    // Move to selfie capture
+                    setTimeout(() => {
+                        if (!capturedSelfie) {
+                            showToast('ID Card captured! Now take your selfie', 'success');
+                            startCamera('selfie');
+                        }
+                    }, 500);
+                } else {
+                    debugWarn('ID Card image not loading properly');
+                }
+                captureBtn.disabled = false;
+                captureBtn.innerHTML = '<span id="captureIcon">📸</span> Capture Photo';
+            };
+            
+            // Check if already loaded
+            if (previewImg.complete) {
+                verifyImage();
+            } else {
+                // Wait for load event
+                previewImg.onload = verifyImage;
+                previewImg.onerror = () => {
+                    debugError('ID Card image failed to load');
+                    showToast('ID Card image failed to load. Please recapture.', 'error');
+                    updateStepStatus('id', false);
+                    capturedIdCardFront = null;
+                    updateIdCardFrontPreview(null);
+                    captureBtn.disabled = false;
+                    captureBtn.innerHTML = '<span id="captureIcon">📸</span> Capture Photo';
+                };
+                
+                // Timeout after 3 seconds
+                setTimeout(() => {
+                    if (!imageVerified) {
+                        verifyImage(); // Final check
+                    }
+                }, 3000);
+            }
+        } else {
+            // If preview element doesn't exist, just validate data
+            if (imageData && imageData.length > 100) {
+                updateStepStatus('id', true);
+                setTimeout(() => {
+                    if (!capturedSelfie) {
+                        showToast('ID Card captured! Now take your selfie', 'success');
+                        startCamera('selfie');
+                    }
+                }, 500);
+            }
+            captureBtn.disabled = false;
+            captureBtn.innerHTML = '<span id="captureIcon">📸</span> Capture Photo';
+        }
+        
+    } else if (currentCaptureMode === 'selfie') {
+        // Validate image data before saving
+        if (!imageData || !imageData.startsWith('data:image/')) {
+            showToast('Failed to capture selfie. Please try again.', 'error');
+            captureBtn.disabled = false;
+            captureBtn.innerHTML = '<span id="captureIcon">📸</span> Capture Photo';
+            return;
+        }
+        
+        // Save the captured image
+        capturedSelfie = imageData;
+        debugLog('Selfie captured, data length:', imageData.length);
+        
+        // Update preview - this will validate and display the image
+        updateSelfiePreview(imageData);
+        
+        // Wait a moment to ensure image loads before processing
+        setTimeout(async () => {
+            // Process selfie image
+            try {
+                showToast('Processing selfie...', 'info');
+                const processedData = await processSelfieImage(imageData);
+                
+                // Auto-fill form fields with extracted data
+                if (processedData) {
+                    autoFillRegistrationForm(processedData);
+                }
+            } catch (error) {
+                debugError('Selfie processing error:', error);
+                showToast('Selfie processing failed. Please enter information manually.', 'error');
+            }
+        }, 100);
+        
+        // Wait for image to load in preview before marking complete
+        const selfiePreviewImg = document.getElementById('selfiePreview');
+        if (selfiePreviewImg) {
+            // Set up image load verification
+            let imageVerified = false;
+            
+            const verifyImage = () => {
+                if (selfiePreviewImg.complete && selfiePreviewImg.naturalWidth > 0) {
+                    imageVerified = true;
+                    debugLog('Selfie image verified as loaded');
+                    updateStepStatus('selfie', true);
+                    
+                    // Finish biometric capture process
+                    finishBiometricCapture();
+                } else {
+                    debugWarn('Selfie image not loading properly');
+                }
+                captureBtn.disabled = false;
+                captureBtn.innerHTML = '<span id="captureIcon">📸</span> Capture Photo';
+            };
+            
+            // Check if already loaded
+                captureBtn.innerHTML = '<span id="captureIcon">📸</span> Capture Photo';
+            };
+            
             if (previewImg.complete) {
                 verifyImage();
             } else {
@@ -2760,4 +2966,5 @@ function resetBiometricUI() {
     
     debugLog('Biometric UI reset complete');
 }
+
 
