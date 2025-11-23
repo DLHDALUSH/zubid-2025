@@ -1987,25 +1987,27 @@ async function capturePhoto() {
         // Validate image data before saving
         if (!imageData || !imageData.startsWith('data:image/')) {
             showToast('Failed to capture selfie. Please try again.', 'error');
-            captureBtn.disabled = false;
-            captureBtn.innerHTML = '<span id="captureIcon">📸</span> Capture Photo';
+            if (captureBtn) {
+                captureBtn.disabled = false;
+                captureBtn.innerHTML = '<span id="captureIcon">📸</span> Capture Photo';
+            }
             return;
         }
-        
+
         // Save the captured image
         capturedSelfie = imageData;
         debugLog('Selfie captured, data length:', imageData.length);
-        
+
         // Update preview - this will validate and display the image
         updateSelfiePreview(imageData);
-        
+
         // Wait a moment to ensure image loads before processing
         setTimeout(async () => {
             // Process selfie image
             try {
                 showToast('Processing selfie...', 'info');
                 const processedData = await processSelfieImage(imageData);
-                
+
                 // Auto-fill form fields with extracted data
                 if (processedData) {
                     autoFillRegistrationForm(processedData);
@@ -2015,94 +2017,66 @@ async function capturePhoto() {
                 showToast('Selfie processing failed. Please enter information manually.', 'error');
             }
         }, 100);
-        
+
         // Wait for image to load in preview before marking complete
         const selfiePreviewImg = document.getElementById('selfiePreview');
         if (selfiePreviewImg) {
             // Set up image load verification
             let imageVerified = false;
-            
+
             const verifyImage = () => {
                 if (selfiePreviewImg.complete && selfiePreviewImg.naturalWidth > 0) {
                     imageVerified = true;
                     debugLog('Selfie image verified as loaded');
                     updateStepStatus('selfie', true);
-                    
+
                     // Finish biometric capture process
                     finishBiometricCapture();
                 } else {
                     debugWarn('Selfie image not loading properly');
                 }
-                captureBtn.disabled = false;
-                captureBtn.innerHTML = '<span id="captureIcon">📸</span> Capture Photo';
-            };
-            
-            // Check if already loaded
-                captureBtn.innerHTML = '<span id="captureIcon">📸</span> Capture Photo';
-            };
-            
-            if (previewImg.complete) {
-                verifyImage();
-            } else {
-                previewImg.onload = verifyImage;
-                previewImg.onerror = () => {
-                    debugError('ID Card image failed to load');
-                    showToast('ID Card image failed to load. Please recapture.', 'error');
-                    updateStepStatus('id', false);
-                    capturedIdCardFront = null;
-                    if (idCardPreview) {
-                        idCardPreview.src = '';
-                        idCardPreview.removeAttribute('src');
-                        if (idCardPreview.parentElement) {
-                            idCardPreview.parentElement.style.display = 'none';
-                        }
-                    }
+
+                if (captureBtn) {
                     captureBtn.disabled = false;
                     captureBtn.innerHTML = '<span id="captureIcon">📸</span> Capture Photo';
+                }
+            };
+
+            if (selfiePreviewImg.complete) {
+                verifyImage();
+            } else {
+                selfiePreviewImg.onload = verifyImage;
+                selfiePreviewImg.onerror = () => {
+                    debugError('Selfie image failed to load');
+                    showToast('Selfie image failed to load. Please recapture.', 'error');
+                    updateStepStatus('selfie', false);
+                    capturedSelfie = null;
+                    updateSelfiePreview(null);
+
+                    if (captureBtn) {
+                        captureBtn.disabled = false;
+                        captureBtn.innerHTML = '<span id="captureIcon">📸</span> Capture Photo';
+                    }
                 };
-                
+
+                // Timeout after 3 seconds
                 setTimeout(() => {
                     if (!imageVerified) {
-                        verifyImage();
+                        verifyImage(); // Final check
                     }
                 }, 3000);
             }
         } else {
             // If preview element doesn't exist, just validate data
             if (imageData && imageData.length > 100) {
-                updateStepStatus('id', true);
-                setTimeout(() => {
-                    if (!capturedSelfie) {
-                        showToast('ID Card captured! Now take your selfie', 'success');
-                        startCamera('selfie');
-                    }
-                }, 500);
+                updateStepStatus('selfie', true);
+                finishBiometricCapture();
             }
-            captureBtn.disabled = false;
-            captureBtn.innerHTML = '<span id="captureIcon">📸</span> Capture Photo';
-        }
-        
-    } else if (currentCaptureMode === 'selfie') {
-        capturedSelfie = imageData;
-        updateSelfiePreview(imageData);
-        updateStepStatus('selfie', true);
-        showToast('Selfie captured!', 'success');
-        
-        // Stop camera and show done button
-        stopCamera();
-        document.getElementById('videoStream').style.display = 'none';
-        document.getElementById('cameraPlaceholder').style.display = 'block';
-        document.getElementById('captureControls').style.display = 'none';
-        
-        // Show done button - check for both two-step and single ID card modes
-        // If capturedIdCardBack is null, we're in single ID card mode (only front captured)
-        // Otherwise, we're in two-step mode (both front and back captured)
-        const allCaptured = capturedIdCardBack === null
-            ? (capturedIdCardFront && capturedSelfie)
-            : (capturedIdCardFront && capturedIdCardBack && capturedSelfie);
-            
-        if (allCaptured) {
-            document.getElementById('cameraActions').style.display = 'block';
+
+            if (captureBtn) {
+                captureBtn.disabled = false;
+                captureBtn.innerHTML = '<span id="captureIcon">📸</span> Capture Photo';
+            }
         }
     }
     

@@ -274,15 +274,32 @@ class User(db.Model):
     phone = db.Column(db.String(20))
     role = db.Column(db.String(20), default='user')  # user, admin
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
-    
+
+    # Enhanced profile fields
+    first_name = db.Column(db.String(50), nullable=True)
+    last_name = db.Column(db.String(50), nullable=True)
+    bio = db.Column(db.Text, nullable=True)  # User biography
+    company = db.Column(db.String(100), nullable=True)  # Company name
+    website = db.Column(db.String(255), nullable=True)  # Personal/company website
+    city = db.Column(db.String(100), nullable=True)
+    country = db.Column(db.String(100), nullable=True)
+    postal_code = db.Column(db.String(20), nullable=True)
+    phone_verified = db.Column(db.Boolean, default=False)
+    email_verified = db.Column(db.Boolean, default=False)
+    is_active = db.Column(db.Boolean, default=True)
+    last_login = db.Column(db.DateTime, nullable=True)
+    login_count = db.Column(db.Integer, default=0)
+
     # Explicitly specify foreign_keys to avoid ambiguity
     auctions = db.relationship('Auction', foreign_keys='Auction.seller_id', backref='seller', lazy=True)
     won_auctions = db.relationship('Auction', foreign_keys='Auction.winner_id', backref='winner', lazy=True)
     bids = db.relationship('Bid', backref='bidder', lazy=True)
-    
+
     # Database indexes for performance optimization
     __table_args__ = (
         Index('idx_user_role_created', 'role', 'created_at'),
+        Index('idx_user_email_verified', 'email_verified'),
+        Index('idx_user_active', 'is_active'),
     )
 
 class Category(db.Model):
@@ -411,9 +428,60 @@ class Cashback(db.Model):
     status = db.Column(db.String(50), default='pending')  # pending, processed, cancelled
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     processed_at = db.Column(db.DateTime, nullable=True)
-    
+
     user = db.relationship('User', backref='cashbacks', lazy=True)
     auction = db.relationship('Auction', backref='cashbacks', lazy=True)
+
+class NavigationMenu(db.Model):
+    """Dynamic navigation menu configuration"""
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    label = db.Column(db.String(100), nullable=False)  # Display label
+    url = db.Column(db.String(500), nullable=True)  # URL for direct links
+    icon = db.Column(db.String(100), nullable=True)  # Icon name or SVG path
+    parent_id = db.Column(db.Integer, db.ForeignKey('navigation_menu.id'), nullable=True)  # For nested menus
+    order = db.Column(db.Integer, default=0)  # Display order
+    is_active = db.Column(db.Boolean, default=True)
+    requires_auth = db.Column(db.Boolean, default=False)  # Show only when logged in
+    requires_role = db.Column(db.String(20), nullable=True)  # Required role (admin, user, etc.)
+    target = db.Column(db.String(20), default='_self')  # _self, _blank, etc.
+    css_class = db.Column(db.String(100), nullable=True)  # Custom CSS class
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+    # Self-referential relationship for nested menus
+    children = db.relationship('NavigationMenu', backref=db.backref('parent', remote_side=[id]), lazy=True)
+
+    # Database indexes for performance
+    __table_args__ = (
+        Index('idx_nav_parent_order', 'parent_id', 'order'),
+        Index('idx_nav_active', 'is_active'),
+    )
+
+class UserPreference(db.Model):
+    """Store user preferences and settings"""
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False, unique=True)
+    theme = db.Column(db.String(20), default='light')  # light, dark, auto
+    language = db.Column(db.String(10), default='en')  # en, ku, ar
+    notifications_enabled = db.Column(db.Boolean, default=True)
+    email_notifications = db.Column(db.Boolean, default=True)
+    bid_alerts = db.Column(db.Boolean, default=True)
+    auction_reminders = db.Column(db.Boolean, default=True)
+    newsletter_subscribed = db.Column(db.Boolean, default=False)
+    currency = db.Column(db.String(10), default='USD')
+    timezone = db.Column(db.String(50), default='UTC')
+    items_per_page = db.Column(db.Integer, default=20)
+    default_view = db.Column(db.String(20), default='grid')  # grid, list
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+    user = db.relationship('User', backref=db.backref('preferences', uselist=False, lazy=True))
+
+    # Database index
+    __table_args__ = (
+        Index('idx_user_pref_user_id', 'user_id'),
+    )
 
 # Authentication decorator
 def login_required(f):
@@ -1005,14 +1073,33 @@ def login():
     
     user = User.query.filter_by(username=data['username']).first()
     if user and check_password_hash(user.password_hash, data['password']):
+        # Check if user is active
+        if not user.is_active:
+            return jsonify({'error': 'Account is deactivated. Please contact support.'}), 403
+
+        # Update login tracking
+        user.last_login = datetime.now(timezone.utc)
+        user.login_count = (user.login_count or 0) + 1
+        db.session.commit()
+
         session['user_id'] = user.id
+
+        # Create default preferences if they don't exist
+        if not user.preferences:
+            preferences = UserPreference(user_id=user.id)
+            db.session.add(preferences)
+            db.session.commit()
+
         return jsonify({
             'message': 'Login successful',
             'user': {
                 'id': user.id,
                 'username': user.username,
                 'email': user.email,
-                'role': user.role
+                'role': user.role,
+                'profile_photo': user.profile_photo,
+                'first_name': user.first_name,
+                'last_name': user.last_name
             }
         }), 200
     return jsonify({'error': 'Invalid credentials'}), 401
@@ -1026,6 +1113,10 @@ def logout():
 @login_required
 def get_profile():
     user = User.query.get(session['user_id'])
+
+    # Get user preferences
+    preferences = user.preferences
+
     return jsonify({
         'id': user.id,
         'username': user.username,
@@ -1035,7 +1126,36 @@ def get_profile():
         'address': user.address,
         'phone': user.phone,
         'role': user.role,
-        'profile_photo': user.profile_photo
+        'profile_photo': user.profile_photo,
+        # Enhanced profile fields
+        'first_name': user.first_name,
+        'last_name': user.last_name,
+        'bio': user.bio,
+        'company': user.company,
+        'website': user.website,
+        'city': user.city,
+        'country': user.country,
+        'postal_code': user.postal_code,
+        'phone_verified': user.phone_verified,
+        'email_verified': user.email_verified,
+        'is_active': user.is_active,
+        'last_login': user.last_login.isoformat() if user.last_login else None,
+        'login_count': user.login_count,
+        'created_at': user.created_at.isoformat() if user.created_at else None,
+        # User preferences
+        'preferences': {
+            'theme': preferences.theme if preferences else 'light',
+            'language': preferences.language if preferences else 'en',
+            'notifications_enabled': preferences.notifications_enabled if preferences else True,
+            'email_notifications': preferences.email_notifications if preferences else True,
+            'bid_alerts': preferences.bid_alerts if preferences else True,
+            'auction_reminders': preferences.auction_reminders if preferences else True,
+            'newsletter_subscribed': preferences.newsletter_subscribed if preferences else False,
+            'currency': preferences.currency if preferences else 'USD',
+            'timezone': preferences.timezone if preferences else 'UTC',
+            'items_per_page': preferences.items_per_page if preferences else 20,
+            'default_view': preferences.default_view if preferences else 'grid'
+        } if preferences else None
     }), 200
 
 @app.route('/api/user/profile', methods=['PUT'])
@@ -1079,7 +1199,28 @@ def update_profile():
             if phone and not validate_phone(phone):
                 return jsonify({'error': 'Invalid phone number format'}), 400
             user.phone = phone
-        
+
+        # Update enhanced profile fields
+        if 'first_name' in data:
+            user.first_name = sanitize_string(data.get('first_name', ''), max_length=50)
+        if 'last_name' in data:
+            user.last_name = sanitize_string(data.get('last_name', ''), max_length=50)
+        if 'bio' in data:
+            user.bio = sanitize_string(data.get('bio', ''), max_length=1000)
+        if 'company' in data:
+            user.company = sanitize_string(data.get('company', ''), max_length=100)
+        if 'website' in data:
+            website = sanitize_string(data.get('website', ''), max_length=255)
+            if website and not (website.startswith('http://') or website.startswith('https://')):
+                return jsonify({'error': 'Website must start with http:// or https://'}), 400
+            user.website = website
+        if 'city' in data:
+            user.city = sanitize_string(data.get('city', ''), max_length=100)
+        if 'country' in data:
+            user.country = sanitize_string(data.get('country', ''), max_length=100)
+        if 'postal_code' in data:
+            user.postal_code = sanitize_string(data.get('postal_code', ''), max_length=20)
+
         # Handle profile photo upload
         if profile_photo_file and profile_photo_file.filename:
             if not allowed_file(profile_photo_file.filename):
@@ -1179,6 +1320,85 @@ def update_profile():
         import traceback
         traceback.print_exc()
         return jsonify({'error': f'Failed to update profile: {str(e)}'}), 500
+
+@app.route('/api/user/profile/photo', methods=['POST'])
+@login_required
+@limiter.limit("10 per minute")
+def upload_profile_photo():
+    """Upload profile photo separately"""
+    try:
+        if 'photo' not in request.files:
+            return jsonify({'error': 'No photo file provided'}), 400
+
+        file = request.files['photo']
+        if file.filename == '':
+            return jsonify({'error': 'No file selected'}), 400
+
+        if not allowed_file(file.filename):
+            return jsonify({'error': 'Invalid file type. Allowed types: PNG, JPG, JPEG, GIF, WEBP'}), 400
+
+        # Check file size
+        try:
+            if hasattr(file, 'content_length') and file.content_length:
+                file_size = file.content_length
+            else:
+                file.seek(0, os.SEEK_END)
+                file_size = file.tell()
+                file.seek(0)
+        except (AttributeError, OSError, IOError):
+            file_size = MAX_IMAGE_SIZE + 1
+
+        if file_size > MAX_IMAGE_SIZE:
+            return jsonify({'error': f'Photo too large. Maximum size: {MAX_IMAGE_SIZE / 1024 / 1024}MB'}), 400
+
+        # Generate secure filename
+        filename = secure_filename(file.filename)
+        if not filename:
+            return jsonify({'error': 'Invalid filename'}), 400
+
+        timestamp = datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')
+        unique_filename = f"profile_{timestamp}_{session['user_id']}_{filename}"
+        filepath = os.path.join(UPLOAD_FOLDER, unique_filename)
+
+        # Security check
+        if not os.path.abspath(filepath).startswith(os.path.abspath(UPLOAD_FOLDER)):
+            return jsonify({'error': 'Invalid file path'}), 400
+
+        # Get user and delete old photo
+        user = User.query.get(session['user_id'])
+        if user.profile_photo:
+            try:
+                old_filename = user.profile_photo.split('/')[-1]
+                old_filepath = os.path.join(UPLOAD_FOLDER, old_filename)
+                if os.path.exists(old_filepath) and os.path.abspath(old_filepath).startswith(os.path.abspath(UPLOAD_FOLDER)):
+                    os.remove(old_filepath)
+            except Exception as e:
+                app.logger.warning(f"Could not delete old profile photo: {str(e)}")
+
+        # Save and resize
+        file.save(filepath)
+        resize_result = resize_image(filepath, max_size=(400, 400), quality=85)
+        if not resize_result:
+            try:
+                os.remove(filepath)
+            except OSError:
+                pass
+            return jsonify({'error': 'Failed to process photo'}), 500
+
+        # Update user
+        profile_photo_url = f"/uploads/{unique_filename}"
+        user.profile_photo = profile_photo_url
+        db.session.commit()
+
+        return jsonify({
+            'message': 'Profile photo uploaded successfully',
+            'profile_photo': profile_photo_url
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f"Error uploading profile photo: {str(e)}")
+        return jsonify({'error': f'Failed to upload photo: {str(e)}'}), 500
 
 # Category APIs
 # Cache categories for 5 minutes (they don't change often)
@@ -2586,7 +2806,91 @@ def init_db():
                 print("[OK] real_price column exists")
         except Exception as e:
             print(f"Note: Could not check/add real_price column: {e}")
-        
+
+        # Check and add additional Auction columns if missing
+        try:
+            inspector = inspect(db.engine)
+            auction_columns = [col['name'] for col in inspector.get_columns('auction')]
+
+            new_auction_columns = {
+                'item_condition': 'VARCHAR(50)',
+                'qr_code_url': 'VARCHAR(500)',
+                'video_url': 'VARCHAR(500)',
+            }
+
+            added_auction_cols = 0
+            for col_name, col_type in new_auction_columns.items():
+                if col_name not in auction_columns:
+                    try:
+                        with db.engine.connect() as conn:
+                            with conn.begin():
+                                conn.execute(text(f"ALTER TABLE auction ADD COLUMN {col_name} {col_type}"))
+                        added_auction_cols += 1
+                    except Exception as e:
+                        print(f"[WARNING] Could not add {col_name} column to Auction table: {e}")
+
+            if added_auction_cols > 0:
+                print(f"[OK] Added {added_auction_cols} new columns to Auction table")
+            else:
+                print("[OK] Auction table columns up to date")
+        except Exception as e:
+            print(f"Note: Could not check/add additional Auction columns: {e}")
+
+        # Check and add new User table columns if missing
+        try:
+            inspector = inspect(db.engine)
+            user_columns = [col['name'] for col in inspector.get_columns('user')]
+
+            new_user_columns = {
+                'profile_photo': 'VARCHAR(500)',
+                'first_name': 'VARCHAR(50)',
+                'last_name': 'VARCHAR(50)',
+                'bio': 'TEXT',
+                'company': 'VARCHAR(100)',
+                'website': 'VARCHAR(255)',
+                'city': 'VARCHAR(100)',
+                'country': 'VARCHAR(100)',
+                'postal_code': 'VARCHAR(20)',
+                'phone_verified': 'BOOLEAN DEFAULT 0',
+                'email_verified': 'BOOLEAN DEFAULT 0',
+                'is_active': 'BOOLEAN DEFAULT 1',
+                'last_login': 'DATETIME',
+                'login_count': 'INTEGER DEFAULT 0'
+            }
+
+            added_count = 0
+            for col_name, col_type in new_user_columns.items():
+                if col_name not in user_columns:
+                    try:
+                        with db.engine.connect() as conn:
+                            with conn.begin():
+                                conn.execute(text(f"ALTER TABLE user ADD COLUMN {col_name} {col_type}"))
+                        added_count += 1
+                    except Exception as e:
+                        print(f"[WARNING] Could not add {col_name} column: {e}")
+
+            if added_count > 0:
+                print(f"[OK] Added {added_count} new columns to User table")
+            else:
+                print("[OK] User table columns up to date")
+        except Exception as e:
+            print(f"Note: Could not check/add User columns: {e}")
+
+        # Ensure NavigationMenu and UserPreference tables exist
+        try:
+            inspector = inspect(db.engine)
+            tables = inspector.get_table_names()
+            if 'navigation_menu' not in tables:
+                print("Creating NavigationMenu table...")
+                db.create_all()
+                print("[OK] NavigationMenu table created!")
+            if 'user_preference' not in tables:
+                print("Creating UserPreference table...")
+                db.create_all()
+                print("[OK] UserPreference table created!")
+        except Exception as e:
+            print(f"Note: Could not verify new tables: {e}")
+
         # Create default categories
         if Category.query.count() == 0:
             categories = [
@@ -2605,7 +2909,25 @@ def init_db():
         
         # Create default admin user if doesn't exist
         # SECURITY: Only create default admin in development, require env vars in production
-        admin = User.query.filter_by(username='admin').first()
+        # Use raw SQL to avoid ORM issues with new columns
+        try:
+            admin = User.query.filter_by(username='admin').first()
+        except Exception as e:
+            print(f"[WARNING] Could not query User table with ORM: {e}")
+            print("[INFO] Attempting to check admin user with raw SQL...")
+            try:
+                with db.engine.connect() as conn:
+                    result = conn.execute(text("SELECT id FROM user WHERE username = 'admin'"))
+                    admin_exists = result.fetchone() is not None
+                if admin_exists:
+                    print("[OK] Admin user already exists")
+                    admin = True  # Set to True to skip creation
+                else:
+                    admin = None
+            except Exception as e2:
+                print(f"[ERROR] Could not check for admin user: {e2}")
+                admin = True  # Assume exists to avoid errors
+
         if not admin:
             admin_username = os.getenv('ADMIN_USERNAME', 'admin' if not is_production else None)
             admin_password = os.getenv('ADMIN_PASSWORD', 'admin123' if not is_production else None)
@@ -2739,7 +3061,120 @@ def init_db():
             
             db.session.commit()
             print("Sample auctions created successfully!")
-        
+
+        # Initialize default navigation menu items if none exist
+        if NavigationMenu.query.count() == 0:
+            print("Creating default navigation menu...")
+
+            # Home
+            home_menu = NavigationMenu(
+                name='home',
+                label='Home',
+                url='index.html',
+                icon='home',
+                order=1,
+                is_active=True,
+                requires_auth=False
+            )
+            db.session.add(home_menu)
+
+            # My Account (parent dropdown - requires auth)
+            my_account_menu = NavigationMenu(
+                name='my_account',
+                label='My Account',
+                url=None,
+                icon='user',
+                order=2,
+                is_active=True,
+                requires_auth=True
+            )
+            db.session.add(my_account_menu)
+            db.session.flush()
+
+            # My Account children
+            profile_menu = NavigationMenu(
+                name='profile',
+                label='Profile',
+                url='profile.html',
+                parent_id=my_account_menu.id,
+                order=1,
+                is_active=True,
+                requires_auth=True
+            )
+            db.session.add(profile_menu)
+
+            my_bids_menu = NavigationMenu(
+                name='my_bids',
+                label='My Bids',
+                url='my-bids.html',
+                parent_id=my_account_menu.id,
+                order=2,
+                is_active=True,
+                requires_auth=True
+            )
+            db.session.add(my_bids_menu)
+
+            payments_menu = NavigationMenu(
+                name='payments',
+                label='Payments',
+                url='payments.html',
+                parent_id=my_account_menu.id,
+                order=3,
+                is_active=True,
+                requires_auth=True
+            )
+            db.session.add(payments_menu)
+
+            return_requests_menu = NavigationMenu(
+                name='return_requests',
+                label='Return Requests',
+                url='return-requests.html',
+                parent_id=my_account_menu.id,
+                order=4,
+                is_active=True,
+                requires_auth=True
+            )
+            db.session.add(return_requests_menu)
+
+            # Info (parent dropdown)
+            info_menu = NavigationMenu(
+                name='info',
+                label='Info',
+                url=None,
+                icon='info',
+                order=3,
+                is_active=True,
+                requires_auth=False
+            )
+            db.session.add(info_menu)
+            db.session.flush()
+
+            # Info children
+            how_to_bid_menu = NavigationMenu(
+                name='how_to_bid',
+                label='How to Bid',
+                url='how-to-bid.html',
+                parent_id=info_menu.id,
+                order=1,
+                is_active=True,
+                requires_auth=False
+            )
+            db.session.add(how_to_bid_menu)
+
+            contact_menu = NavigationMenu(
+                name='contact',
+                label='Contact Us',
+                url='contact-us.html',
+                parent_id=info_menu.id,
+                order=2,
+                is_active=True,
+                requires_auth=False
+            )
+            db.session.add(contact_menu)
+
+            db.session.commit()
+            print("[OK] Default navigation menu created!")
+
         print("Database initialized successfully!")
 
 @app.route('/api/user/payments', methods=['GET'])
@@ -3333,6 +3768,268 @@ def process_cashback(cashback_id):
         db.session.rollback()
         app.logger.error(f'Error processing cashback: {str(e)}')
         return jsonify({'error': f'Failed to process cashback: {str(e)}'}), 500
+
+# User Preferences APIs
+@app.route('/api/user/preferences', methods=['GET'])
+@login_required
+def get_user_preferences():
+    """Get user preferences"""
+    try:
+        user_id = session['user_id']
+        preferences = UserPreference.query.filter_by(user_id=user_id).first()
+
+        if not preferences:
+            # Create default preferences
+            preferences = UserPreference(user_id=user_id)
+            db.session.add(preferences)
+            db.session.commit()
+
+        return jsonify({
+            'theme': preferences.theme,
+            'language': preferences.language,
+            'notifications_enabled': preferences.notifications_enabled,
+            'email_notifications': preferences.email_notifications,
+            'bid_alerts': preferences.bid_alerts,
+            'auction_reminders': preferences.auction_reminders,
+            'newsletter_subscribed': preferences.newsletter_subscribed,
+            'currency': preferences.currency,
+            'timezone': preferences.timezone,
+            'items_per_page': preferences.items_per_page,
+            'default_view': preferences.default_view
+        }), 200
+
+    except Exception as e:
+        app.logger.error(f'Error getting preferences: {str(e)}')
+        return jsonify({'error': f'Failed to get preferences: {str(e)}'}), 500
+
+@app.route('/api/user/preferences', methods=['PUT'])
+@login_required
+def update_user_preferences():
+    """Update user preferences"""
+    try:
+        user_id = session['user_id']
+        data = request.json
+
+        preferences = UserPreference.query.filter_by(user_id=user_id).first()
+        if not preferences:
+            preferences = UserPreference(user_id=user_id)
+            db.session.add(preferences)
+
+        # Update preferences
+        if 'theme' in data:
+            if data['theme'] not in ['light', 'dark', 'auto']:
+                return jsonify({'error': 'Invalid theme value'}), 400
+            preferences.theme = data['theme']
+
+        if 'language' in data:
+            if data['language'] not in ['en', 'ku', 'ar']:
+                return jsonify({'error': 'Invalid language value'}), 400
+            preferences.language = data['language']
+
+        if 'notifications_enabled' in data:
+            preferences.notifications_enabled = bool(data['notifications_enabled'])
+
+        if 'email_notifications' in data:
+            preferences.email_notifications = bool(data['email_notifications'])
+
+        if 'bid_alerts' in data:
+            preferences.bid_alerts = bool(data['bid_alerts'])
+
+        if 'auction_reminders' in data:
+            preferences.auction_reminders = bool(data['auction_reminders'])
+
+        if 'newsletter_subscribed' in data:
+            preferences.newsletter_subscribed = bool(data['newsletter_subscribed'])
+
+        if 'currency' in data:
+            preferences.currency = sanitize_string(data['currency'], max_length=10)
+
+        if 'timezone' in data:
+            preferences.timezone = sanitize_string(data['timezone'], max_length=50)
+
+        if 'items_per_page' in data:
+            items_per_page = int(data['items_per_page'])
+            if items_per_page < 5 or items_per_page > 100:
+                return jsonify({'error': 'Items per page must be between 5 and 100'}), 400
+            preferences.items_per_page = items_per_page
+
+        if 'default_view' in data:
+            if data['default_view'] not in ['grid', 'list']:
+                return jsonify({'error': 'Invalid default view value'}), 400
+            preferences.default_view = data['default_view']
+
+        preferences.updated_at = datetime.now(timezone.utc)
+        db.session.commit()
+
+        return jsonify({'message': 'Preferences updated successfully'}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f'Error updating preferences: {str(e)}')
+        return jsonify({'error': f'Failed to update preferences: {str(e)}'}), 500
+
+# Navigation Menu APIs
+@app.route('/api/navigation/menu', methods=['GET'])
+def get_navigation_menu():
+    """Get navigation menu structure"""
+    try:
+        # Get query parameters
+        include_inactive = request.args.get('include_inactive', 'false').lower() == 'true'
+        user_role = None
+
+        # Check if user is logged in to filter by role
+        if 'user_id' in session:
+            user = User.query.get(session['user_id'])
+            if user:
+                user_role = user.role
+
+        # Build query
+        query = NavigationMenu.query.filter_by(parent_id=None)
+        if not include_inactive:
+            query = query.filter_by(is_active=True)
+
+        # Get top-level menu items
+        menu_items = query.order_by(NavigationMenu.order).all()
+
+        def build_menu_tree(item):
+            """Recursively build menu tree"""
+            # Check if user has access to this menu item
+            if item.requires_auth and 'user_id' not in session:
+                return None
+            if item.requires_role and (not user_role or user_role != item.requires_role):
+                return None
+
+            menu_dict = {
+                'id': item.id,
+                'name': item.name,
+                'label': item.label,
+                'url': item.url,
+                'icon': item.icon,
+                'target': item.target,
+                'css_class': item.css_class,
+                'requires_auth': item.requires_auth,
+                'children': []
+            }
+
+            # Get children
+            children_query = NavigationMenu.query.filter_by(parent_id=item.id)
+            if not include_inactive:
+                children_query = children_query.filter_by(is_active=True)
+
+            children = children_query.order_by(NavigationMenu.order).all()
+            for child in children:
+                child_dict = build_menu_tree(child)
+                if child_dict:  # Only add if user has access
+                    menu_dict['children'].append(child_dict)
+
+            return menu_dict
+
+        # Build menu structure
+        menu_structure = []
+        for item in menu_items:
+            item_dict = build_menu_tree(item)
+            if item_dict:  # Only add if user has access
+                menu_structure.append(item_dict)
+
+        return jsonify({
+            'menu': menu_structure,
+            'user_authenticated': 'user_id' in session,
+            'user_role': user_role
+        }), 200
+
+    except Exception as e:
+        app.logger.error(f'Error getting navigation menu: {str(e)}')
+        return jsonify({'error': f'Failed to get menu: {str(e)}'}), 500
+
+@app.route('/api/navigation/menu', methods=['POST'])
+@login_required
+def create_menu_item():
+    """Create new navigation menu item (admin only)"""
+    try:
+        user = User.query.get(session['user_id'])
+        if user.role != 'admin':
+            return jsonify({'error': 'Admin access required'}), 403
+
+        data = request.json
+        if not data or not data.get('name') or not data.get('label'):
+            return jsonify({'error': 'Name and label are required'}), 400
+
+        menu_item = NavigationMenu(
+            name=sanitize_string(data['name'], max_length=100),
+            label=sanitize_string(data['label'], max_length=100),
+            url=sanitize_string(data.get('url', ''), max_length=500) if data.get('url') else None,
+            icon=sanitize_string(data.get('icon', ''), max_length=100) if data.get('icon') else None,
+            parent_id=data.get('parent_id'),
+            order=data.get('order', 0),
+            is_active=data.get('is_active', True),
+            requires_auth=data.get('requires_auth', False),
+            requires_role=data.get('requires_role'),
+            target=data.get('target', '_self'),
+            css_class=sanitize_string(data.get('css_class', ''), max_length=100) if data.get('css_class') else None
+        )
+
+        db.session.add(menu_item)
+        db.session.commit()
+
+        return jsonify({
+            'message': 'Menu item created successfully',
+            'menu_item': {
+                'id': menu_item.id,
+                'name': menu_item.name,
+                'label': menu_item.label,
+                'url': menu_item.url
+            }
+        }), 201
+
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f'Error creating menu item: {str(e)}')
+        return jsonify({'error': f'Failed to create menu item: {str(e)}'}), 500
+
+@app.route('/api/navigation/menu/<int:menu_id>', methods=['PUT'])
+@login_required
+def update_menu_item(menu_id):
+    """Update navigation menu item (admin only)"""
+    try:
+        user = User.query.get(session['user_id'])
+        if user.role != 'admin':
+            return jsonify({'error': 'Admin access required'}), 403
+
+        menu_item = NavigationMenu.query.get_or_404(menu_id)
+        data = request.json
+
+        if 'name' in data:
+            menu_item.name = sanitize_string(data['name'], max_length=100)
+        if 'label' in data:
+            menu_item.label = sanitize_string(data['label'], max_length=100)
+        if 'url' in data:
+            menu_item.url = sanitize_string(data['url'], max_length=500) if data['url'] else None
+        if 'icon' in data:
+            menu_item.icon = sanitize_string(data['icon'], max_length=100) if data['icon'] else None
+        if 'parent_id' in data:
+            menu_item.parent_id = data['parent_id']
+        if 'order' in data:
+            menu_item.order = data['order']
+        if 'is_active' in data:
+            menu_item.is_active = data['is_active']
+        if 'requires_auth' in data:
+            menu_item.requires_auth = data['requires_auth']
+        if 'requires_role' in data:
+            menu_item.requires_role = data['requires_role']
+        if 'target' in data:
+            menu_item.target = data['target']
+        if 'css_class' in data:
+            menu_item.css_class = sanitize_string(data['css_class'], max_length=100) if data['css_class'] else None
+
+        menu_item.updated_at = datetime.now(timezone.utc)
+        db.session.commit()
+
+        return jsonify({'message': 'Menu item updated successfully'}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f'Error updating menu item: {str(e)}')
+        return jsonify({'error': f'Failed to update menu item: {str(e)}'}), 500
 
 if __name__ == '__main__':
     init_db()
