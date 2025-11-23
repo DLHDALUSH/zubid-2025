@@ -262,29 +262,44 @@ async function checkAuth() {
 function updateNavAuth(isAuthenticated) {
     const navAuth = document.getElementById('navAuth');
     const navUser = document.getElementById('navUser');
-    const myBidsLink = document.getElementById('myBidsLink');
-    const paymentsLink = document.getElementById('paymentsLink');
-    const returnRequestsLink = document.getElementById('returnRequestsLink');
-    
+    const myAccountDropdown = document.getElementById('myAccountDropdown');
+    const userName = document.getElementById('userName');
+    const userAvatar = document.getElementById('userAvatar');
+
     if (navAuth && navUser) {
         if (isAuthenticated) {
             navAuth.style.display = 'none';
-            navUser.style.display = 'flex';
-            // Show My Bids link
-            if (myBidsLink) myBidsLink.style.display = 'inline-block';
-            // Show Payments link
-            if (paymentsLink) paymentsLink.style.display = 'inline-block';
-            // Show Return Requests link
-            if (returnRequestsLink) returnRequestsLink.style.display = 'inline-block';
+            navUser.style.display = 'block';
+
+            // Show My Account dropdown
+            if (myAccountDropdown) {
+                myAccountDropdown.style.display = 'block';
+            }
+
+            // Update user info
+            if (currentUser) {
+                if (userName) {
+                    userName.textContent = currentUser.username || 'User';
+                }
+                if (userAvatar) {
+                    if (currentUser.profile_photo) {
+                        userAvatar.src = currentUser.profile_photo;
+                        userAvatar.style.display = 'block';
+                    } else {
+                        // Use default avatar
+                        userAvatar.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="%23ff6600" stroke-width="2"%3E%3Cpath d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"%3E%3C/path%3E%3Ccircle cx="12" cy="7" r="4"%3E%3C/circle%3E%3C/svg%3E';
+                        userAvatar.style.display = 'block';
+                    }
+                }
+            }
         } else {
             navAuth.style.display = 'flex';
             navUser.style.display = 'none';
-            // Hide My Bids link
-            if (myBidsLink) myBidsLink.style.display = 'none';
-            // Hide Payments link
-            if (paymentsLink) paymentsLink.style.display = 'none';
-            // Hide Return Requests link
-            if (returnRequestsLink) returnRequestsLink.style.display = 'none';
+
+            // Hide My Account dropdown
+            if (myAccountDropdown) {
+                myAccountDropdown.style.display = 'none';
+            }
         }
     }
 }
@@ -716,8 +731,50 @@ function showWelcomeMessage(welcomeMessage, username) {
 // Mobile menu toggle
 function toggleMobileMenu() {
     const navMenu = document.getElementById('navMenu');
+    const toggle = document.querySelector('.mobile-menu-toggle');
     navMenu.classList.toggle('active');
+    toggle.classList.toggle('active');
 }
+
+// Initialize dropdown menus
+document.addEventListener('DOMContentLoaded', () => {
+    // Handle dropdown toggles on mobile
+    const dropdownToggles = document.querySelectorAll('.dropdown-toggle');
+    dropdownToggles.forEach(toggle => {
+        toggle.addEventListener('click', (e) => {
+            if (window.innerWidth <= 768) {
+                e.preventDefault();
+                const dropdown = toggle.closest('.nav-dropdown');
+                dropdown.classList.toggle('active');
+            }
+        });
+    });
+
+    // Handle user menu toggle on mobile
+    const userMenuToggle = document.querySelector('.user-menu-toggle');
+    if (userMenuToggle) {
+        userMenuToggle.addEventListener('click', (e) => {
+            if (window.innerWidth <= 768) {
+                e.preventDefault();
+                const navUser = document.getElementById('navUser');
+                navUser.classList.toggle('active');
+            }
+        });
+    }
+
+    // Close mobile menu when clicking outside
+    document.addEventListener('click', (e) => {
+        const navMenu = document.getElementById('navMenu');
+        const toggle = document.querySelector('.mobile-menu-toggle');
+
+        if (navMenu && toggle && navMenu.classList.contains('active')) {
+            if (!navMenu.contains(e.target) && !toggle.contains(e.target)) {
+                navMenu.classList.remove('active');
+                toggle.classList.remove('active');
+            }
+        }
+    });
+});
 
 // Carousel functions
 let currentSlide = 0;
