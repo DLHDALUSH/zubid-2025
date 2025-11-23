@@ -283,182 +283,246 @@
         </div>
     </div>
 
-    <!-- Register Modal -->
+    <!-- Register Modal - Modern Professional Design -->
     <div class="modal" id="registerModal">
-        <div class="modal-content register-modal">
-            <span class="close" onclick="closeModalAndReset('registerModal')">&times;</span>
-            <div class="modal-header">
-                <div class="header-icon">✨</div>
-                <h2 data-i18n="register.createAccount">Create Your Account</h2>
-                <p class="modal-subtitle" data-i18n="register.subtitle">Join ZUBID to start bidding on amazing auctions</p>
-            </div>
-            <form id="registerForm" onsubmit="handleRegister(event)" enctype="multipart/form-data">
-                <!-- Profile Photo Upload Section -->
-                <div class="form-section photo-section">
-                    <div class="photo-upload-container">
-                        <div class="photo-preview-wrapper">
-                            <div class="photo-preview" id="photoPreview" onclick="document.getElementById('profilePhoto').click()">
-                                <div class="photo-placeholder">
-                                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <div class="modal-content modern-register-modal">
+            <button class="modal-close-btn" onclick="closeModalAndReset('registerModal')">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+
+            <div class="register-container">
+                <!-- Left Side - Branding & Benefits -->
+                <div class="register-sidebar">
+                    <div class="sidebar-content">
+                        <div class="sidebar-logo">
+                            <h1>ZUBID</h1>
+                            <p>Premium Auction Platform</p>
+                        </div>
+
+                        <div class="benefits-list">
+                            <div class="benefit-item">
+                                <div class="benefit-icon">🔒</div>
+                                <div class="benefit-text">
+                                    <h4>Secure & Safe</h4>
+                                    <p>Your data is encrypted and protected</p>
+                                </div>
+                            </div>
+                            <div class="benefit-item">
+                                <div class="benefit-icon">⚡</div>
+                                <div class="benefit-text">
+                                    <h4>Fast & Easy</h4>
+                                    <p>Join in seconds, start bidding instantly</p>
+                                </div>
+                            </div>
+                            <div class="benefit-item">
+                                <div class="benefit-icon">🏆</div>
+                                <div class="benefit-text">
+                                    <h4>Verified Sellers</h4>
+                                    <p>Bid with confidence on verified items</p>
+                                </div>
+                            </div>
+                            <div class="benefit-item">
+                                <div class="benefit-icon">💰</div>
+                                <div class="benefit-text">
+                                    <h4>Best Deals</h4>
+                                    <p>Find amazing auctions at great prices</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="sidebar-stats">
+                            <div class="stat">
+                                <span class="stat-number">50K+</span>
+                                <span class="stat-label">Active Users</span>
+                            </div>
+                            <div class="stat">
+                                <span class="stat-number">100K+</span>
+                                <span class="stat-label">Auctions</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Side - Form -->
+                <div class="register-form-wrapper">
+                    <div class="form-header">
+                        <h2 data-i18n="register.createAccount">Create Your Account</h2>
+                        <p data-i18n="register.subtitle">Join ZUBID to start bidding on amazing auctions</p>
+                    </div>
+
+                    <form id="registerForm" onsubmit="handleRegister(event)" enctype="multipart/form-data">
+                        <!-- Step 1: Basic Info -->
+                        <div class="form-step" id="step1">
+                            <div class="step-header">
+                                <span class="step-number">1</span>
+                                <span class="step-title">Basic Information</span>
+                            </div>
+
+                            <div class="form-group">
+                                <label data-i18n="register.username">Username <span class="required">*</span></label>
+                                <div class="input-wrapper modern-input">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                                         <circle cx="12" cy="7" r="4"></circle>
                                     </svg>
-                                    <span class="photo-placeholder-text">Profile Photo</span>
+                                    <input type="text" id="registerUsername" data-i18n-placeholder="register.usernamePlaceholder" placeholder="Choose a unique username" required>
                                 </div>
-                                <img id="photoPreviewImg" src="" alt="Profile preview" style="display: none;">
-                                <div class="photo-overlay">
-                                    <button type="button" class="photo-remove-btn" id="photoRemoveBtn" onclick="event.stopPropagation(); removePhoto()" style="display: none;">
-                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <line x1="18" y1="6" x2="6" y2="18"></line>
-                                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                                <small data-i18n="register.usernameHint">This will be your display name</small>
+                            </div>
+
+                            <div class="form-group">
+                                <label data-i18n="register.email">Email Address <span class="required">*</span></label>
+                                <div class="input-wrapper modern-input">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+                                        <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+                                    </svg>
+                                    <input type="email" id="registerEmail" data-i18n-placeholder="register.emailPlaceholder" placeholder="your.email@example.com" required>
+                                </div>
+                                <small data-i18n="register.emailHint">We'll never share your email</small>
+                            </div>
+
+                            <div class="form-group">
+                                <label data-i18n="register.password">Password <span class="required">*</span></label>
+                                <div class="input-wrapper modern-input password-input">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                    </svg>
+                                    <input type="password" id="registerPassword" data-i18n-placeholder="register.passwordPlaceholder" placeholder="Create a strong password" required>
+                                    <button type="button" class="password-toggle" onclick="togglePasswordVisibility('registerPassword', this)">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                            <circle cx="12" cy="12" r="3"></circle>
                                         </svg>
                                     </button>
                                 </div>
-                            </div>
-                        </div>
-                        <div class="photo-upload-controls">
-                            <label for="profilePhoto" class="photo-upload-btn">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                    <polyline points="17 8 12 3 7 8"></polyline>
-                                    <line x1="12" y1="3" x2="12" y2="15"></line>
-                                </svg>
-                                <span>Upload Photo</span>
-                            </label>
-                            <input type="file" id="profilePhoto" name="profilePhoto" accept="image/*" style="display: none;" onchange="handlePhotoSelect(event)">
-                            <small class="photo-hint">Optional: Add a profile photo (Max 5MB, JPG/PNG)</small>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="form-section">
-                    <h3 class="section-title">
-                        <span class="section-icon">👤</span>
-                        <span data-i18n="register.accountInfo">Account Information</span>
-                    </h3>
-                    <div class="form-group">
-                        <label data-i18n="register.username">Username <span class="required">*</span></label>
-                        <div class="input-wrapper">
-                            <span class="input-icon">👤</span>
-                            <input type="text" id="registerUsername" data-i18n-placeholder="register.usernamePlaceholder" placeholder="Choose a unique username" required>
-                        </div>
-                        <small data-i18n="register.usernameHint">This will be your display name</small>
-                    </div>
-                    <div class="form-group">
-                        <label data-i18n="register.email">Email <span class="required">*</span></label>
-                        <div class="input-wrapper">
-                            <span class="input-icon">✉️</span>
-                            <input type="email" id="registerEmail" data-i18n-placeholder="register.emailPlaceholder" placeholder="your.email@example.com" required>
-                        </div>
-                        <small data-i18n="register.emailHint">We'll never share your email</small>
-                    </div>
-                    <div class="form-group">
-                        <label data-i18n="register.password">Password <span class="required">*</span></label>
-                        <div class="input-wrapper">
-                            <span class="input-icon">🔒</span>
-                            <input type="password" id="registerPassword" data-i18n-placeholder="register.passwordPlaceholder" placeholder="Create a strong password" required>
-                            <button type="button" class="password-toggle" onclick="togglePasswordVisibility('registerPassword', this)">
-                                <span class="eye-icon">👁️</span>
-                            </button>
-                        </div>
-                        <div class="password-strength" id="passwordStrength"></div>
-                        <div class="password-requirements" id="passwordRequirements" style="display: none;">
-                            <div class="requirement-item" id="req-length">
-                                <span class="requirement-icon">○</span>
-                                <span class="requirement-text">At least 8 characters</span>
-                            </div>
-                            <div class="requirement-item" id="req-lowercase">
-                                <span class="requirement-icon">○</span>
-                                <span class="requirement-text">One lowercase letter</span>
-                            </div>
-                            <div class="requirement-item" id="req-uppercase">
-                                <span class="requirement-icon">○</span>
-                                <span class="requirement-text">One uppercase letter</span>
-                            </div>
-                            <div class="requirement-item" id="req-number">
-                                <span class="requirement-icon">○</span>
-                                <span class="requirement-text">One number</span>
-                            </div>
-                            <div class="requirement-item" id="req-special">
-                                <span class="requirement-icon">○</span>
-                                <span class="requirement-text">One special character (!@#$%^&*()_+-=[]{}|;:,.<>?)</span>
-                            </div>
-                        </div>
-                        <small data-i18n="register.passwordHint">Password must meet all requirements above</small>
-                    </div>
-                </div>
-
-                <div class="form-section">
-                    <h3 class="section-title">
-                        <span class="section-icon">🆔</span>
-                        <span data-i18n="register.identityVerification">Identity Verification</span>
-                    </h3>
-                    <div class="form-group">
-                        <label data-i18n="register.idNumberPassport">ID Number / Passport <span class="required">*</span></label>
-                        <div class="input-wrapper">
-                            <span class="input-icon">🆔</span>
-                            <input type="text" id="registerIdNumber" data-i18n-placeholder="register.idNumberPlaceholder" placeholder="Enter your national ID or passport number" required>
-                        </div>
-                        <small data-i18n="register.idNumberHint">This will be used for identity verification</small>
-                    </div>
-                    <div class="form-group">
-                        <label data-i18n="register.birthDate">Date of Birth <span class="required">*</span></label>
-                        <div class="birthday-selector-wrapper">
-                            <input type="date" id="registerBirthDate" required>
-                            <div class="birthday-selector" onclick="document.getElementById('registerBirthDate').focus(); if (typeof document.getElementById('registerBirthDate').showPicker === 'function') { document.getElementById('registerBirthDate').showPicker(); }">
-                                <div class="birthday-selector-content">
-                                    <div class="birthday-icon-wrapper">
-                                        <span class="birthday-icon">🎂</span>
+                                <div class="password-strength" id="passwordStrength"></div>
+                                <div class="password-requirements" id="passwordRequirements" style="display: none;">
+                                    <div class="requirement-item" id="req-length">
+                                        <span class="requirement-icon">✓</span>
+                                        <span class="requirement-text">At least 8 characters</span>
                                     </div>
-                                    <div class="birthday-text-wrapper">
-                                        <span class="birthday-label" data-i18n="register.selectBirthday">Select Your Birthday</span>
-                                        <span class="birthday-value" id="registerBirthDateText" data-i18n="register.clickToChooseDate">Click to choose date</span>
+                                    <div class="requirement-item" id="req-lowercase">
+                                        <span class="requirement-icon">✓</span>
+                                        <span class="requirement-text">One lowercase letter</span>
                                     </div>
-                                    <div class="birthday-arrow-wrapper">
-                                        <span class="birthday-arrow">▼</span>
+                                    <div class="requirement-item" id="req-uppercase">
+                                        <span class="requirement-icon">✓</span>
+                                        <span class="requirement-text">One uppercase letter</span>
+                                    </div>
+                                    <div class="requirement-item" id="req-number">
+                                        <span class="requirement-icon">✓</span>
+                                        <span class="requirement-text">One number</span>
+                                    </div>
+                                    <div class="requirement-item" id="req-special">
+                                        <span class="requirement-icon">✓</span>
+                                        <span class="requirement-text">One special character</span>
                                     </div>
                                 </div>
+                                <small data-i18n="register.passwordHint">Password must meet all requirements above</small>
                             </div>
                         </div>
-                        <small data-i18n="register.birthDateHint">Your date of birth as shown on your ID card</small>
-                    </div>
-                </div>
 
-                <div class="form-section">
-                    <h3 class="section-title">
-                        <span class="section-icon">📞</span>
-                        <span data-i18n="register.contactInfo">Contact Information</span>
-                    </h3>
-                    <div class="form-group">
-                        <label data-i18n="register.phone">Phone Number <span class="required critical">*</span></label>
-                        <div class="input-wrapper">
-                            <span class="input-icon">📱</span>
-                            <input type="tel" id="registerPhone" data-i18n-placeholder="register.phonePlaceholder" placeholder="+1 234 567 8900" required>
-                        </div>
-                        <small data-i18n="register.phoneHint">We'll use this to contact you about your auctions</small>
-                    </div>
-                    <div class="form-group">
-                        <label data-i18n="register.address">Address <span class="required critical">*</span></label>
-                        <div class="input-wrapper">
-                            <span class="input-icon input-icon-textarea">📍</span>
-                            <textarea id="registerAddress" rows="3" data-i18n-placeholder="register.addressPlaceholder" placeholder="Enter your full address (street, city, state, zip code)" required></textarea>
-                        </div>
-                        <small data-i18n="register.addressHint">Required for auction transactions and shipping</small>
-                    </div>
-                </div>
+                        <!-- Step 2: Identity & Personal Info -->
+                        <div class="form-step" id="step2" style="display: none;">
+                            <div class="step-header">
+                                <span class="step-number">2</span>
+                                <span class="step-title">Identity Verification</span>
+                            </div>
 
-                <div class="form-actions">
-                    <button type="submit" class="btn btn-primary btn-block btn-large submit-btn">
-                        <span class="btn-content">
-                        <span class="btn-text" data-i18n="register.createAccount">Create Account</span>
-                        <span class="btn-icon">🚀</span>
-                    </span>
-                </button>
-                <p class="form-footer">
-                    <span data-i18n="register.alreadyHaveAccount">Already have an account?</span> <a href="#" onclick="event.preventDefault(); closeModal('registerModal'); showLogin();" class="link" data-i18n="register.signIn">Sign in</a>
-                </p>
+                            <div class="form-group">
+                                <label data-i18n="register.idNumberPassport">ID Number / Passport <span class="required">*</span></label>
+                                <div class="input-wrapper modern-input">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <rect x="2" y="5" width="20" height="14" rx="2"></rect>
+                                        <line x1="2" y1="10" x2="22" y2="10"></line>
+                                    </svg>
+                                    <input type="text" id="registerIdNumber" data-i18n-placeholder="register.idNumberPlaceholder" placeholder="Enter your national ID or passport number" required>
+                                </div>
+                                <small data-i18n="register.idNumberHint">This will be used for identity verification</small>
+                            </div>
+
+                            <div class="form-group">
+                                <label data-i18n="register.birthDate">Date of Birth <span class="required">*</span></label>
+                                <div class="input-wrapper modern-input">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                                    </svg>
+                                    <input type="date" id="registerBirthDate" required>
+                                </div>
+                                <small data-i18n="register.birthDateHint">Your date of birth as shown on your ID card</small>
+                            </div>
+                        </div>
+
+                        <!-- Step 3: Contact Info -->
+                        <div class="form-step" id="step3" style="display: none;">
+                            <div class="step-header">
+                                <span class="step-number">3</span>
+                                <span class="step-title">Contact Information</span>
+                            </div>
+
+                            <div class="form-group">
+                                <label data-i18n="register.phone">Phone Number <span class="required">*</span></label>
+                                <div class="input-wrapper modern-input">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                                    </svg>
+                                    <input type="tel" id="registerPhone" data-i18n-placeholder="register.phonePlaceholder" placeholder="+1 234 567 8900" required>
+                                </div>
+                                <small data-i18n="register.phoneHint">We'll use this to contact you about your auctions</small>
+                            </div>
+
+                            <div class="form-group">
+                                <label data-i18n="register.address">Address <span class="required">*</span></label>
+                                <div class="input-wrapper modern-input">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                        <circle cx="12" cy="10" r="3"></circle>
+                                    </svg>
+                                    <textarea id="registerAddress" rows="3" data-i18n-placeholder="register.addressPlaceholder" placeholder="Enter your full address (street, city, state, zip code)" required></textarea>
+                                </div>
+                                <small data-i18n="register.addressHint">Required for auction transactions and shipping</small>
+                            </div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="form-actions modern-actions">
+                            <button type="button" class="btn btn-secondary" id="prevBtn" onclick="previousStep()" style="display: none;">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="19" y1="12" x2="5" y2="12"></line>
+                                    <polyline points="12 19 5 12 12 5"></polyline>
+                                </svg>
+                                Back
+                            </button>
+                            <button type="button" class="btn btn-primary" id="nextBtn" onclick="nextStep()">
+                                Next
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                    <polyline points="12 5 19 12 12 19"></polyline>
+                                </svg>
+                            </button>
+                            <button type="submit" class="btn btn-success" id="submitBtn" style="display: none;">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                                Create Account
+                            </button>
+                        </div>
+
+                        <p class="form-footer">
+                            <span data-i18n="register.alreadyHaveAccount">Already have an account?</span>
+                            <a href="#" onclick="event.preventDefault(); closeModal('registerModal'); showLogin();" class="link" data-i18n="register.signIn">Sign in</a>
+                        </p>
+                    </form>
                 </div>
-            </form>
+            </div>
         </div>
     </div>
 

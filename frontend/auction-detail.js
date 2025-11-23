@@ -62,12 +62,12 @@ function dataUriToBlobUrl(dataUri) {
 // Helper function to convert image URLs
 function convertImageUrl(imageUrl) {
     if (!imageUrl) return SVG_PLACEHOLDER;
-    
+
     const urlString = String(imageUrl).trim();
     if (urlString === '' || urlString === 'null' || urlString === 'undefined') {
         return SVG_PLACEHOLDER;
     }
-    
+
     // Data URIs - convert to blob URL for better browser support
     if (urlString.startsWith('data:image/')) {
         const blobUrl = dataUriToBlobUrl(urlString);
@@ -77,14 +77,24 @@ function convertImageUrl(imageUrl) {
         // Fallback to data URI if conversion fails
         return urlString;
     }
-    
+
     // Absolute URLs - return as-is
     if (urlString.startsWith('http://') || urlString.startsWith('https://')) {
         return urlString;
     }
-    
+
     // Relative URLs - construct full URL
-    const baseUrl = (window.API_BASE_URL || 'http://localhost:5000/api').replace('/api', '');
+    let baseUrl = 'http://localhost:5000';
+    try {
+        if (typeof API_BASE_URL !== 'undefined' && API_BASE_URL) {
+            baseUrl = String(API_BASE_URL).replace('/api', '').replace(/\/$/, '');
+        } else if (typeof window !== 'undefined' && window.API_BASE_URL) {
+            baseUrl = String(window.API_BASE_URL).replace('/api', '').replace(/\/$/, '');
+        }
+    } catch (e) {
+        console.warn('Error parsing API_BASE_URL:', e);
+    }
+
     const relativeUrl = urlString.startsWith('/') ? urlString : '/' + urlString;
     return baseUrl + relativeUrl;
 }

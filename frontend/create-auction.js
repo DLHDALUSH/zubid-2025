@@ -720,12 +720,20 @@ async function handleVideoFileChange(event) {
     // Upload video file using VideoAPI
     try {
         const result = await VideoAPI.upload(file);
-        
-        // Construct full URL
-        const baseUrl = API_BASE_URL.replace('/api', '');
-        const fullUrl = baseUrl + result.url;
+
+        // Construct full URL using unified converter
+        let baseUrl = 'http://localhost:5000';
+        try {
+            if (typeof API_BASE_URL !== 'undefined' && API_BASE_URL) {
+                baseUrl = String(API_BASE_URL).replace('/api', '').replace(/\/$/, '');
+            }
+        } catch (e) {
+            console.warn('Error parsing API_BASE_URL:', e);
+        }
+
+        const fullUrl = baseUrl + (result.url.startsWith('/') ? result.url : '/' + result.url);
         uploadedVideoUrl = fullUrl;
-        
+
         showToast('Video uploaded successfully!', 'success');
     } catch (error) {
         console.error('Error uploading video:', error);
@@ -780,12 +788,20 @@ async function handleFeaturedImageChange(event) {
         // Upload featured image file with high quality flag
         try {
             const result = await ImageAPI.upload(file, true); // Pass true for featured image
-            
-            // Construct full URL
-            const baseUrl = API_BASE_URL.replace('/api', '');
-            const fullUrl = baseUrl + result.url;
+
+            // Construct full URL using unified converter
+            let baseUrl = 'http://localhost:5000';
+            try {
+                if (typeof API_BASE_URL !== 'undefined' && API_BASE_URL) {
+                    baseUrl = String(API_BASE_URL).replace('/api', '').replace(/\/$/, '');
+                }
+            } catch (e) {
+                console.warn('Error parsing API_BASE_URL:', e);
+            }
+
+            const fullUrl = baseUrl + (result.url.startsWith('/') ? result.url : '/' + result.url);
             uploadedFeaturedImageUrl = fullUrl;
-            
+
             showToast('Featured image uploaded successfully with enhanced quality!', 'success');
         } catch (error) {
             console.error('Error uploading featured image:', error);

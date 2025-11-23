@@ -306,11 +306,11 @@ function updateNavAuth(isAuthenticated) {
 
 async function handleLogin(event) {
     event.preventDefault();
-    
+
     // Check if backend is reachable first
     try {
         const API_BASE = (window.API_BASE_URL || 'http://localhost:5000/api').replace('/api', '');
-        const testResponse = await fetch(`${API_BASE}/api/test`);
+        const testResponse = await fetch(`${API_BASE}/api/health`);
         if (!testResponse.ok) {
             throw new Error('Backend server is not responding correctly');
         }
@@ -359,11 +359,11 @@ async function handleLogin(event) {
 
 async function handleRegister(event) {
     event.preventDefault();
-    
+
     // Check if backend is reachable first
     try {
         const API_BASE = (window.API_BASE_URL || 'http://localhost:5000/api').replace('/api', '');
-        const testResponse = await fetch(`${API_BASE}/api/test`);
+        const testResponse = await fetch(`${API_BASE}/api/health`);
         if (!testResponse.ok) {
             throw new Error('Backend server is not responding correctly');
         }
@@ -1302,6 +1302,41 @@ function getImageUrl(imageUrl) {
     // Ensure relative URL starts with /
     const relativeUrl = urlString.startsWith('/') ? urlString : '/' + urlString;
     
+    return baseUrl + relativeUrl;
+}
+
+// Unified image URL converter for all image types (profile, auction, featured)
+function convertImageUrlUnified(imageUrl) {
+    if (!imageUrl) return SVG_PLACEHOLDER_SVG;
+
+    const urlString = String(imageUrl).trim();
+    if (urlString === '' || urlString === 'null' || urlString === 'undefined') {
+        return SVG_PLACEHOLDER_SVG;
+    }
+
+    // Data URIs - return as-is
+    if (urlString.startsWith('data:image/')) {
+        return urlString;
+    }
+
+    // Absolute URLs - return as-is
+    if (urlString.startsWith('http://') || urlString.startsWith('https://')) {
+        return urlString;
+    }
+
+    // Relative URLs - construct full URL
+    let baseUrl = 'http://localhost:5000';
+    try {
+        if (typeof API_BASE_URL !== 'undefined' && API_BASE_URL) {
+            baseUrl = String(API_BASE_URL).replace('/api', '').replace(/\/$/, '');
+        } else if (typeof window !== 'undefined' && window.API_BASE_URL) {
+            baseUrl = String(window.API_BASE_URL).replace('/api', '').replace(/\/$/, '');
+        }
+    } catch (e) {
+        console.warn('Error parsing API_BASE_URL:', e);
+    }
+
+    const relativeUrl = urlString.startsWith('/') ? urlString : '/' + urlString;
     return baseUrl + relativeUrl;
 }
 
@@ -2998,4 +3033,157 @@ function resetBiometricUI() {
     debugLog('Biometric UI reset complete');
 }
 
+// ===== MULTI-STEP FORM FUNCTIONS =====
+let currentStep = 1;
+const totalSteps = 3;
 
+function nextStep() {
+    if (validateStep(currentStep)) {
+        if (currentStep < totalSteps) {
+            document.getElementById(`step${currentStep}`).style.display = 'none';
+            currentStep++;
+            document.getElementById(`step${currentStep}`).style.display = 'block';
+            updateStepButtons();
+            window.scrollTo(0, 0);
+        }
+    }
+}
+
+function previousStep() {
+    if (currentStep > 1) {
+        document.getElementById(`step${currentStep}`).style.display = 'none';
+        currentStep--;
+        document.getElementById(`step${currentStep}`).style.display = 'block';
+        updateStepButtons();
+        window.scrollTo(0, 0);
+    }
+}
+
+function updateStepButtons() {
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const submitBtn = document.getElementById('submitBtn');
+
+    if (currentStep === 1) {
+        prevBtn.style.display = 'none';
+    } else {
+        prevBtn.style.display = 'flex';
+    }
+
+    if (currentStep === totalSteps) {
+        nextBtn.style.display = 'none';
+        submitBtn.style.display = 'flex';
+    } else {
+        nextBtn.style.display = 'flex';
+        submitBtn.style.display = 'none';
+    }
+}
+
+function validateStep(step) {
+    const username = document.getElementById('registerUsername').value.trim();
+    const email = document.getElementById('registerEmail').value.trim();
+    const password = document.getElementById('registerPassword').value;
+    const idNumber = document.getElementById('registerIdNumber').value.trim();
+    const birthDate = document.getElementById('registerBirthDate').value;
+    const phone = document.getElementById('registerPhone').value.trim();
+    const address = document.getElementById('registerAddress').value.trim();
+
+    if (step === 1) {
+        if (!username) {
+            showNotification('Please enter a username', 'error');
+            return false;
+        }
+        if (!email) {
+            showNotification('Please enter an email address', 'error');
+            return false;
+        }
+        if (!isValidEmail(email)) {
+            showNotification('Please enter a valid email address', 'error');
+            return false;
+        }
+        if (!password) {
+            showNotification('Please enter a password', 'error');
+            return false;
+        }
+        if (!isPasswordStrong(password)) {
+            showNotification('Password does not meet all requirements', 'error');
+            return false;
+        }
+        return true;
+    } else if (step === 2) {
+        if (!idNumber) {
+            showNotification('Please enter your ID number or passport', 'error');
+            return false;
+        }
+        if (!birthDate) {
+            showNotification('Please select your date of birth', 'error');
+            return false;
+        }
+        return true;
+    } else if (step === 3) {
+        if (!phone) {
+            showNotification('Please enter your phone number', 'error');
+            return false;
+        }
+        if (!address) {
+            showNotification('Please enter your address', 'error');
+            return false;
+        }
+        return true;
+    }
+    return true;
+}
+
+function isValidEmail(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+}
+
+function isPasswordStrong(password) {
+    const hasLength = password.length >= 8;
+    const hasLower = /[a-z]/.test(password);
+    const hasUpper = /[A-Z]/.test(password);
+    const hasNumber = /[0-9]/.test(password);
+    const hasSpecial = /[!@#$%^&*()_+\-=\[\]{}|;:,.<>?]/.test(password);
+
+    return hasLength && hasLower && hasUpper && hasNumber && hasSpecial;
+}
+
+// Initialize multi-step form on modal open
+function initializeMultiStepForm() {
+    currentStep = 1;
+    document.getElementById('step1').style.display = 'block';
+    document.getElementById('step2').style.display = 'none';
+    document.getElementById('step3').style.display = 'none';
+    updateStepButtons();
+}
+
+// Reset form when modal is closed
+function resetMultiStepForm() {
+    currentStep = 1;
+    document.getElementById('registerForm').reset();
+    document.getElementById('step1').style.display = 'block';
+    document.getElementById('step2').style.display = 'none';
+    document.getElementById('step3').style.display = 'none';
+    updateStepButtons();
+}
+
+// Override showRegister to initialize multi-step form
+const originalShowRegister = window.showRegister;
+window.showRegister = function() {
+    if (originalShowRegister) {
+        originalShowRegister();
+    }
+    initializeMultiStepForm();
+};
+
+// Override closeModalAndReset to reset multi-step form
+const originalCloseModalAndReset = window.closeModalAndReset;
+window.closeModalAndReset = function(modalId) {
+    if (modalId === 'registerModal') {
+        resetMultiStepForm();
+    }
+    if (originalCloseModalAndReset) {
+        originalCloseModalAndReset(modalId);
+    }
+};
