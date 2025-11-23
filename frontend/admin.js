@@ -3,8 +3,12 @@ let currentAdmin = null;
 
 // Check if user is admin on page load
 document.addEventListener('DOMContentLoaded', async () => {
+    // Add a delay to ensure session is properly established
+    // This is important for cross-origin requests with credentials
+    await new Promise(resolve => setTimeout(resolve, 500));
+
     await checkAdminAuth();
-    
+
     // Load dashboard stats if on dashboard
     if (window.location.pathname.includes('admin.html') || window.location.pathname === '/admin.html' || window.location.pathname.includes('index.html')) {
         await loadAdminStats();
@@ -14,25 +18,48 @@ document.addEventListener('DOMContentLoaded', async () => {
 // Check admin authentication
 async function checkAdminAuth() {
     try {
+        console.log('Checking admin authentication...');
         const response = await UserAPI.getProfile();
-        
+        console.log('Profile response:', response);
+
+        if (!response) {
+            console.error('No response from profile endpoint');
+            showToast('Please login to access admin portal', 'error');
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 2000);
+            return;
+        }
+
         if (response.role !== 'admin') {
+            console.error('User role is not admin:', response.role);
             showToast('Access denied. Admin privileges required.', 'error');
             setTimeout(() => {
                 window.location.href = 'index.html';
             }, 2000);
             return;
         }
-        
+
+        console.log('Admin authentication successful');
         currentAdmin = response;
-        
+
         // Update nav
         const adminUserName = document.getElementById('adminUserName');
         if (adminUserName) {
             adminUserName.textContent = response.username;
         }
     } catch (error) {
-        showToast('Please login to access admin portal', 'error');
+        console.error('Admin auth error:', error);
+        console.error('Error message:', error.message);
+        console.error('Error status:', error.status);
+
+        // Check if it's an authentication error
+        if (error.status === 401 || error.message.includes('Authentication required')) {
+            showToast('Please login to access admin portal', 'error');
+        } else {
+            showToast('Error checking admin privileges: ' + error.message, 'error');
+        }
+
         setTimeout(() => {
             window.location.href = 'index.html';
         }, 2000);

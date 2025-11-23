@@ -32,29 +32,29 @@ if (typeof window !== 'undefined') {
 // Helper function for API requests
 async function apiRequest(endpoint, options = {}) {
     const url = `${API_BASE_URL}${endpoint}`;
-    
+
     // Prepare headers
     const headers = {
         'Content-Type': 'application/json',
     };
-    
+
     // Add CSRF token if available and it's a modifying request
     if (csrfToken && options.method && ['POST', 'PUT', 'DELETE', 'PATCH'].includes(options.method.toUpperCase())) {
         headers['X-CSRFToken'] = csrfToken;
     }
-    
+
     const defaultOptions = {
         headers,
         credentials: 'include', // Include cookies for session
     };
 
     const config = { ...defaultOptions, ...options };
-    
+
     // Merge headers properly
     if (options.headers) {
         config.headers = { ...config.headers, ...options.headers };
     }
-    
+
     try {
         // Add timeout to fetch request if not already provided
         let timeoutId;
@@ -63,7 +63,8 @@ async function apiRequest(endpoint, options = {}) {
             timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
             config.signal = controller.signal;
         }
-        
+
+        console.log(`[API] ${options.method || 'GET'} ${endpoint}`, { credentials: config.credentials });
         const response = await fetch(url, config);
         
         if (timeoutId) {

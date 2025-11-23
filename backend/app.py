@@ -54,6 +54,14 @@ if not secret_key:
 app.config['SECRET_KEY'] = secret_key
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URI', 'sqlite:///auction.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# Session configuration for proper cookie handling
+is_https = os.getenv('HTTPS_ENABLED', 'false').lower() == 'true'
+app.config['SESSION_COOKIE_SECURE'] = is_https
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+# Use 'Lax' for development (localhost), 'None' requires Secure=True for production
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax' if not is_https else 'None'
+app.config['PERMANENT_SESSION_LIFETIME'] = 86400  # 24 hours
 # Database connection pooling (only for non-SQLite databases)
 if 'sqlite' not in app.config['SQLALCHEMY_DATABASE_URI'].lower():
     app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
@@ -113,12 +121,22 @@ limiter = Limiter(
 # CORS configuration - restrict origins in production
 cors_origins = os.getenv('CORS_ORIGINS', '*')
 if cors_origins == '*':
-    # Development mode - allow all origins
-    CORS(app, supports_credentials=True, origins="*")
+    # Development mode - allow all origins with credentials
+    # Note: When using credentials, we cannot use wildcard '*' for origins
+    # Instead, we use a custom function to allow all origins
+    CORS(app,
+         supports_credentials=True,
+         origins=["http://localhost:8080", "http://localhost:3000", "http://127.0.0.1:8080", "http://127.0.0.1:3000"],
+         allow_headers=['Content-Type', 'X-CSRFToken'],
+         methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'])
 else:
     # Production mode - restrict to specific origins
     allowed_origins = [origin.strip() for origin in cors_origins.split(',')]
-    CORS(app, supports_credentials=True, origins=allowed_origins)
+    CORS(app,
+         supports_credentials=True,
+         origins=allowed_origins,
+         allow_headers=['Content-Type', 'X-CSRFToken'],
+         methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'])
 
 # Input Validation and Sanitization Helpers
 def sanitize_string(value, max_length=None, allow_html=False):
@@ -609,9 +627,10 @@ def resize_image(image_path, max_size=(1920, 1920), quality=85, is_featured=Fals
                 # Verify image is valid (this will raise an exception if corrupted)
                 img.verify()
         except Exception as verify_error:
-            app.logger.error(f"Image verification failed for {image_path}: {str(verify_error)}")
-            return False
-        
+            # Be more tolerant: log a warning but try to process the image anyway.
+            app.logger.warning(f"Image verification failed for {image_path}: {str(verify_error)}")
+            # Do not return here; a second open below may still succeed for some images.
+
         # Reopen image after verification (verify() closes the file)
         with PILImage.open(image_path) as img:
             original_format = img.format
@@ -1082,6 +1101,7 @@ def login():
         user.login_count = (user.login_count or 0) + 1
         db.session.commit()
 
+        session.permanent = True
         session['user_id'] = user.id
 
         # Create default preferences if they don't exist
