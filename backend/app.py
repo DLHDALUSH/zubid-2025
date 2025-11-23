@@ -16,10 +16,8 @@ import os
 import json
 import logging
 from logging.handlers import RotatingFileHandler
-from PIL import Image
+from PIL import Image as PILImage
 import qrcode
-import io
-import base64
 import html
 import re
 
@@ -540,7 +538,7 @@ def resize_image(image_path, max_size=(1920, 1920), quality=85, is_featured=Fals
         
         # Open and verify image
         try:
-            with Image.open(image_path) as img:
+            with PILImage.open(image_path) as img:
                 # Verify image is valid (this will raise an exception if corrupted)
                 img.verify()
         except Exception as verify_error:
@@ -548,7 +546,7 @@ def resize_image(image_path, max_size=(1920, 1920), quality=85, is_featured=Fals
             return False
         
         # Reopen image after verification (verify() closes the file)
-        with Image.open(image_path) as img:
+        with PILImage.open(image_path) as img:
             original_format = img.format
             original_mode = img.mode
             needs_resize = img.size[0] > max_size[0] or img.size[1] > max_size[1]
@@ -557,14 +555,14 @@ def resize_image(image_path, max_size=(1920, 1920), quality=85, is_featured=Fals
             # Convert to RGB if necessary
             if needs_conversion:
                 if original_mode == 'RGBA':
-                    background = Image.new('RGB', img.size, (255, 255, 255))
+                    background = PILImage.new('RGB', img.size, (255, 255, 255))
                     if img.mode == 'RGBA':
                         background.paste(img, mask=img.split()[3] if len(img.split()) > 3 else None)
                     else:
                         background.paste(img)
                     img = background
                 elif original_mode == 'LA':
-                    background = Image.new('RGB', img.size, (255, 255, 255))
+                    background = PILImage.new('RGB', img.size, (255, 255, 255))
                     background.paste(img)
                     img = background
                 elif original_mode == 'P':
@@ -575,17 +573,17 @@ def resize_image(image_path, max_size=(1920, 1920), quality=85, is_featured=Fals
             if needs_resize:
                 # Use LANCZOS if available, otherwise use ANTIALIAS (for older Pillow versions)
                 try:
-                    img.thumbnail(max_size, Image.Resampling.LANCZOS)
+                    img.thumbnail(max_size, PILImage.Resampling.LANCZOS)
                 except AttributeError:
                     # Fallback for older Pillow versions
-                    img.thumbnail(max_size, Image.LANCZOS)
+                    img.thumbnail(max_size, PILImage.LANCZOS)
             
             # For featured images, resize to optimal dimensions first
             if is_featured:
                 # Featured images: 1920x600 (16:5 aspect ratio) for carousel
                 target_size = (1920, 600)  # Wide format for carousel
                 # Always resize featured images to optimal dimensions
-                img.thumbnail(target_size, Image.Resampling.LANCZOS)
+                img.thumbnail(target_size, PILImage.Resampling.LANCZOS)
                 needs_resize = True  # Mark as resized so it gets saved
             
             # Save if resize or conversion occurred, preserving original format when possible
@@ -1866,7 +1864,7 @@ def place_bid(auction_id):
         other_auto_bids = Bid.query.filter(
             Bid.auction_id == auction_id,
             Bid.user_id != user_id,
-            Bid.is_auto_bid == True,
+            Bid.is_auto_bid,
             Bid.max_auto_bid >= bid_amount + auction.bid_increment
         ).order_by(Bid.max_auto_bid.desc()).all()
         
@@ -3043,7 +3041,7 @@ def process_fib_payment(invoice):
     """Process FIB payment gateway (simulated)"""
     # Use payment gateway module if available
     try:
-        from payment_gateways import get_configured_gateway, get_payment_gateway
+        from payment_gateways import get_configured_gateway
         
         # Try to get configured gateway
         gateway = get_configured_gateway()

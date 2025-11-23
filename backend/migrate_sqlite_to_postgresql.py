@@ -14,14 +14,12 @@ Prerequisites:
 
 import sys
 import os
-from datetime import datetime
 
 # Add backend to path
 sys.path.insert(0, os.path.dirname(__file__))
 
 try:
     from sqlalchemy import create_engine, inspect, text
-    from sqlalchemy.orm import sessionmaker
     import sqlite3
 except ImportError as e:
     print(f"Error: Missing required package: {e}")
@@ -175,7 +173,7 @@ def migrate_database(sqlite_path, postgresql_uri):
             total_migrated += count
         
         print("\n" + "=" * 60)
-        print(f"Migration completed successfully!")
+        print("Migration completed successfully!")
         print(f"Total rows migrated: {total_migrated}")
         print("=" * 60)
         return True

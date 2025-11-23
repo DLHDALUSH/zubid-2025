@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# ruff: noqa: F401
 """Quick test script to check backend issues"""
 import sys
 

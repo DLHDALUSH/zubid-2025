@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# ruff: noqa: F401
 """
 Comprehensive Production Test Suite for ZUBID
 Tests all critical functionality for production deployment

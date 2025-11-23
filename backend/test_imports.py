@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+ # ruff: noqa: F401
 """Test script to verify all backend imports work correctly"""
 
 import sys
