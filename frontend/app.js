@@ -208,7 +208,9 @@ function updateDatePickerDisplay(dateInput) {
 // Authentication functions
 async function checkAuth() {
     try {
+        console.log('[AUTH] Checking authentication...');
         const response = await UserAPI.getProfile();
+        console.log('[AUTH] Auth check successful, user:', response.username, 'role:', response.role);
         currentUser = response;
         updateNavAuth(true);
         if (document.getElementById('userName')) {
@@ -216,6 +218,7 @@ async function checkAuth() {
         }
         // Show admin link if user is admin
         if (response.role === 'admin') {
+            console.log('[AUTH] User is admin, showing admin link');
             const navMenu = document.getElementById('navMenu');
             if (navMenu) {
                 let adminLink = document.getElementById('adminLink');
@@ -225,10 +228,9 @@ async function checkAuth() {
                     adminLink.className = 'nav-link';
                     adminLink.id = 'adminLink';
                     adminLink.textContent = (window.i18n && window.i18n.t) ? window.i18n.t('messages.admin', 'Admin') : 'Admin';
-                    const navUser = document.getElementById('navUser');
-                    if (navUser && navUser.parentNode) {
-                        navMenu.insertBefore(adminLink, navUser);
-                    }
+                    // Safely insert admin link - append to navMenu instead of using insertBefore
+                    // to avoid errors when navUser is not a direct child of navMenu
+                    navMenu.appendChild(adminLink);
                 }
                 adminLink.style.display = 'block';
             }
@@ -238,15 +240,17 @@ async function checkAuth() {
                 adminLink.style.display = 'none';
             }
         }
-        
+
         // Load user-specific sections after authentication
         if (document.getElementById('myAuctionsSection')) {
             loadMyAuctions();
             loadMyBids();
         }
     } catch (error) {
+        console.error('[AUTH] Auth check failed:', error);
         // Silently handle authentication errors (401) - user is just not logged in
         if (error.status === 401 || error.message.includes('Authentication required')) {
+            console.log('[AUTH] User not authenticated (401)');
             updateNavAuth(false);
             currentUser = null;
         } else {
@@ -307,9 +311,12 @@ function updateNavAuth(isAuthenticated) {
 async function handleLogin(event) {
     event.preventDefault();
 
-    // Check if backend is reachable first
-    try {
-        const API_BASE = (window.API_BASE_URL || 'http://localhost:5000/api').replace('/api', '');
+	    // Check if backend is reachable first
+	    try {
+	        // Use the same base URL as the global API configuration, defaulting to localhost:5000
+	        const API_BASE = (typeof API_BASE_URL !== 'undefined' && API_BASE_URL
+	            ? API_BASE_URL
+	            : 'http://localhost:5000/api').replace('/api', '');
         const testResponse = await fetch(`${API_BASE}/api/health`);
         if (!testResponse.ok) {
             throw new Error('Backend server is not responding correctly');
@@ -319,50 +326,63 @@ async function handleLogin(event) {
         debugError('Backend connection error:', error);
         return;
     }
-    
-    const username = document.getElementById('loginUsername').value;
-    const password = document.getElementById('loginPassword').value;
-    
-    const submitBtn = event.target.querySelector('button[type="submit"]');
-    const originalText = submitBtn.textContent;
-    submitBtn.disabled = true;
-    submitBtn.textContent = (window.i18n && window.i18n.t) ? window.i18n.t('auth.loggingIn', 'Logging in...') : 'Logging in...';
-    
-    try {
-        const response = await UserAPI.login(username, password);
-        currentUser = response.user;
-        updateNavAuth(true);
-        if (document.getElementById('userName')) {
-            document.getElementById('userName').textContent = response.user.username;
-        }
-        closeModal('loginModal');
-        const successMsg = (window.i18n && window.i18n.t) ? window.i18n.t('auth.loginSuccess', 'Login successful!') : 'Login successful!';
-        showToast(successMsg, 'success');
-        
-        // Load user-specific sections immediately after login
-        if (document.getElementById('myAuctionsSection')) {
-            loadMyAuctions();
-            loadMyBids();
-        }
-        
-        // Reload page to update UI
-        setTimeout(() => window.location.reload(), 1000);
-    } catch (error) {
-        debugError('Login error:', error);
-        const errorMsg = (window.i18n && window.i18n.t) ? (error.message || window.i18n.t('auth.loginFailed', 'Login failed. Please check your credentials.')) : (error.message || 'Login failed. Please check your credentials.');
-        showToast(errorMsg, 'error');
-    } finally {
-        submitBtn.disabled = false;
-        submitBtn.textContent = originalText;
-    }
+	    
+	    const username = document.getElementById('loginUsername').value;
+	    const password = document.getElementById('loginPassword').value;
+	    
+	    const submitBtn = event.target.querySelector('button[type="submit"]');
+	    const originalText = submitBtn.textContent;
+	    submitBtn.disabled = true;
+	    submitBtn.textContent = (window.i18n && window.i18n.t) ? window.i18n.t('auth.loggingIn', 'Logging in...') : 'Logging in...';
+	    
+	    try {
+	        console.log('[LOGIN] Attempting login for user:', username);
+	        const response = await UserAPI.login(username, password);
+	        console.log('[LOGIN] Login successful, response:', response);
+	        currentUser = response.user;
+	        updateNavAuth(true);
+	        if (document.getElementById('userName')) {
+	            document.getElementById('userName').textContent = response.user.username;
+	        }
+	        closeModal('loginModal');
+	        const successMsg = (window.i18n && window.i18n.t) ? window.i18n.t('auth.loginSuccess', 'Login successful!') : 'Login successful!';
+	        showToast(successMsg, 'success');
+
+	        // Load user-specific sections immediately after login (home page)
+	        if (document.getElementById('myAuctionsSection')) {
+	            loadMyAuctions();
+	            loadMyBids();
+	        }
+
+	        // Re-run auth check to sync navbar and account menus without full reload
+	        try {
+	            console.log('[LOGIN] Running post-login auth check...');
+	            await checkAuth();
+	            console.log('[LOGIN] Post-login auth check successful');
+	        } catch (e) {
+	            console.error('[LOGIN] Post-login auth check failed:', e);
+	            debugError('Post-login auth check failed:', e);
+	        }
+	    } catch (error) {
+	        console.error('[LOGIN] Login error:', error);
+	        debugError('Login error:', error);
+	        const errorMsg = (window.i18n && window.i18n.t) ? (error.message || window.i18n.t('auth.loginFailed', 'Login failed. Please check your credentials.')) : (error.message || 'Login failed. Please check your credentials.');
+	        showToast(errorMsg, 'error');
+	    } finally {
+	        submitBtn.disabled = false;
+	        submitBtn.textContent = originalText;
+	    }
 }
 
 async function handleRegister(event) {
     event.preventDefault();
 
-    // Check if backend is reachable first
-    try {
-        const API_BASE = (window.API_BASE_URL || 'http://localhost:5000/api').replace('/api', '');
+	    // Check if backend is reachable first
+	    try {
+	        // Use the same base URL as the global API configuration, defaulting to localhost:5000
+	        const API_BASE = (typeof API_BASE_URL !== 'undefined' && API_BASE_URL
+	            ? API_BASE_URL
+	            : 'http://localhost:5000/api').replace('/api', '');
         const testResponse = await fetch(`${API_BASE}/api/health`);
         if (!testResponse.ok) {
             throw new Error('Backend server is not responding correctly');
@@ -395,11 +415,11 @@ async function handleRegister(event) {
     formData.append('address', document.getElementById('registerAddress').value);
     formData.append('phone', document.getElementById('registerPhone').value);
     
-    // Add profile photo if selected
-    const photoInput = document.getElementById('profilePhoto');
-    if (photoInput.files && photoInput.files.length > 0) {
-        formData.append('profile_photo', photoInput.files[0]);
-    }
+	    // Add profile photo if selected (if the field exists in the layout)
+	    const photoInput = document.getElementById('profilePhoto');
+	    if (photoInput && photoInput.files && photoInput.files.length > 0) {
+	        formData.append('profile_photo', photoInput.files[0]);
+	    }
     
     // Show loading
     const submitBtn = event.target.querySelector('button[type="submit"]');
@@ -494,17 +514,22 @@ function handlePhotoSelect(event) {
 
 // Remove photo
 function removePhoto() {
-    const photoInput = document.getElementById('profilePhoto');
-    const previewImg = document.getElementById('photoPreviewImg');
-    const placeholder = document.querySelector('.photo-placeholder');
-    const removeBtn = document.getElementById('photoRemoveBtn');
-    
-    photoInput.value = '';
-    previewImg.src = '';
-    previewImg.style.display = 'none';
-    if (placeholder) placeholder.style.display = 'flex';
-    if (removeBtn) removeBtn.style.display = 'none';
-}
+	    // Make this function safe even when the photo fields are not present
+	    const photoInput = document.getElementById('profilePhoto');
+	    const previewImg = document.getElementById('photoPreviewImg');
+	    const placeholder = document.querySelector('.photo-placeholder');
+	    const removeBtn = document.getElementById('photoRemoveBtn');
+	    
+	    if (photoInput) {
+	        photoInput.value = '';
+	    }
+	    if (previewImg) {
+	        previewImg.src = '';
+	        previewImg.style.display = 'none';
+	    }
+	    if (placeholder) placeholder.style.display = 'flex';
+	    if (removeBtn) removeBtn.style.display = 'none';
+	}
 
 async function logout() {
     try {
@@ -671,17 +696,49 @@ window.onclick = function(event) {
     });
 };
 
-// Toast notification
-function showToast(message, type = 'info') {
-    const toast = document.getElementById('toast');
-    toast.textContent = message;
-    toast.className = `toast ${type}`;
-    toast.style.display = 'block';
-    
-    setTimeout(() => {
-        toast.style.display = 'none';
-    }, 3000);
-}
+	// Toast notification
+	function showToast(message, type = 'info') {
+	    const toast = document.getElementById('toast');
+	    if (!toast) {
+	        // Fallback if toast element is missing
+	        if (typeof alert !== 'undefined') {
+	            alert(message);
+	        } else {
+	            console.log(`[${type}]`, message);
+	        }
+	        return;
+	    }
+	    toast.textContent = message;
+	    toast.className = `toast ${type}`;
+	    toast.style.display = 'block';
+	    
+	    setTimeout(() => {
+	        toast.style.display = 'none';
+	    }, 3000);
+	}
+
+	// Generic notification helper used by the multi-step registration form
+	// This was previously undefined, which broke the Sign Up flow.
+	function showNotification(message, type = 'error') {
+	    try {
+	        // Prefer the enhanced ToastManager if available
+	        if (typeof window !== 'undefined' && window.ToastManager && typeof window.ToastManager.show === 'function') {
+	            window.ToastManager.show(message, type);
+	            return;
+	        }
+	    } catch (e) {
+	        // Ignore and fall back
+	    }
+	    
+	    // Fallback to basic toast implementation
+	    if (typeof showToast === 'function') {
+	        showToast(message, type);
+	    } else if (typeof alert !== 'undefined') {
+	        alert(message);
+	    } else {
+	        console.log(`[${type}]`, message);
+	    }
+	}
 
 function showWelcomeMessage(welcomeMessage, username) {
     // Create or get welcome modal
@@ -779,8 +836,15 @@ document.addEventListener('DOMContentLoaded', () => {
 // Carousel functions
 let currentSlide = 0;
 let carouselInterval;
+let isLoadingCarousel = false;
+let isLoadingFeaturedAuctions = false;
 
 async function loadFeaturedCarousel() {
+    if (isLoadingCarousel) {
+        console.log('[CAROUSEL] Already loading, skipping...');
+        return;
+    }
+    isLoadingCarousel = true;
     try {
         const featured = await AuctionAPI.getFeatured();
         const carousel = document.getElementById('featuredCarousel');
@@ -909,6 +973,8 @@ async function loadFeaturedCarousel() {
         startCarousel();
     } catch (error) {
         debugError('Error loading carousel:', error);
+    } finally {
+        isLoadingCarousel = false;
     }
 }
 
@@ -948,12 +1014,17 @@ function startCarousel() {
 
 // Load featured auctions for homepage
 async function loadFeaturedAuctions() {
+    if (isLoadingFeaturedAuctions) {
+        console.log('[FEATURED] Already loading, skipping...');
+        return;
+    }
+    isLoadingFeaturedAuctions = true;
     try {
         const response = await AuctionAPI.getAll({ featured: 'true', status: 'active', per_page: 6 });
         const container = document.getElementById('featuredAuctions');
-        
+
         if (!container) return;
-        
+
         if (response.auctions && response.auctions.length > 0) {
             // Debug logging
             if (window.DEBUG_MODE) {
@@ -962,9 +1033,9 @@ async function loadFeaturedAuctions() {
                     console.log('Auction:', auction.id, auction.item_name, 'image_url:', auction.image_url, 'featured_image_url:', auction.featured_image_url);
                 });
             }
-            
+
             container.innerHTML = response.auctions.map(auction => createAuctionCard(auction)).join('');
-            
+
             // Initialize previous auctions state for change detection
             if (!window.previousFeaturedAuctionsState) {
                 window.previousFeaturedAuctionsState = {};
@@ -976,9 +1047,11 @@ async function loadFeaturedAuctions() {
                     bid_count: auction.bid_count
                 };
             });
-            
-            // Start auto-refresh for featured auctions
-            startFeaturedAuctionsRefresh();
+
+            // Start auto-refresh for featured auctions (only once!)
+            if (!window.featuredRefreshInterval) {
+                startFeaturedAuctionsRefresh();
+            }
         } else {
             const noAuctionsMsg = (window.i18n && window.i18n.t) ? window.i18n.t('messages.noFeaturedAuctions', 'No featured auctions available') : 'No featured auctions available';
             container.innerHTML = '<p>' + noAuctionsMsg + '</p>';
@@ -986,6 +1059,8 @@ async function loadFeaturedAuctions() {
     } catch (error) {
         debugError('Error loading featured auctions:', error);
         console.error('Full error:', error);
+    } finally {
+        isLoadingFeaturedAuctions = false;
     }
 }
 
@@ -3040,22 +3115,32 @@ const totalSteps = 3;
 function nextStep() {
     if (validateStep(currentStep)) {
         if (currentStep < totalSteps) {
-            document.getElementById(`step${currentStep}`).style.display = 'none';
-            currentStep++;
-            document.getElementById(`step${currentStep}`).style.display = 'block';
-            updateStepButtons();
-            window.scrollTo(0, 0);
+            const currentStepEl = document.getElementById(`step${currentStep}`);
+            const nextStepEl = document.getElementById(`step${currentStep + 1}`);
+
+            if (currentStepEl && nextStepEl) {
+                currentStepEl.style.display = 'none';
+                currentStep++;
+                nextStepEl.style.display = 'block';
+                updateStepButtons();
+                window.scrollTo(0, 0);
+            }
         }
     }
 }
 
 function previousStep() {
     if (currentStep > 1) {
-        document.getElementById(`step${currentStep}`).style.display = 'none';
-        currentStep--;
-        document.getElementById(`step${currentStep}`).style.display = 'block';
-        updateStepButtons();
-        window.scrollTo(0, 0);
+        const currentStepEl = document.getElementById(`step${currentStep}`);
+        const prevStepEl = document.getElementById(`step${currentStep - 1}`);
+
+        if (currentStepEl && prevStepEl) {
+            currentStepEl.style.display = 'none';
+            currentStep--;
+            prevStepEl.style.display = 'block';
+            updateStepButtons();
+            window.scrollTo(0, 0);
+        }
     }
 }
 
@@ -3063,6 +3148,12 @@ function updateStepButtons() {
     const prevBtn = document.getElementById('prevBtn');
     const nextBtn = document.getElementById('nextBtn');
     const submitBtn = document.getElementById('submitBtn');
+
+    // Safely check if buttons exist before updating
+    if (!prevBtn || !nextBtn || !submitBtn) {
+        console.warn('Multi-step form buttons not found on this page');
+        return;
+    }
 
     if (currentStep === 1) {
         prevBtn.style.display = 'none';
@@ -3151,20 +3242,41 @@ function isPasswordStrong(password) {
 
 // Initialize multi-step form on modal open
 function initializeMultiStepForm() {
+    const step1 = document.getElementById('step1');
+    const step2 = document.getElementById('step2');
+    const step3 = document.getElementById('step3');
+
+    // Only proceed if all steps exist
+    if (!step1 || !step2 || !step3) {
+        console.warn('Multi-step form elements not found on this page');
+        return;
+    }
+
     currentStep = 1;
-    document.getElementById('step1').style.display = 'block';
-    document.getElementById('step2').style.display = 'none';
-    document.getElementById('step3').style.display = 'none';
+    step1.style.display = 'block';
+    step2.style.display = 'none';
+    step3.style.display = 'none';
     updateStepButtons();
 }
 
 // Reset form when modal is closed
 function resetMultiStepForm() {
+    const step1 = document.getElementById('step1');
+    const step2 = document.getElementById('step2');
+    const step3 = document.getElementById('step3');
+    const registerForm = document.getElementById('registerForm');
+
+    // Only proceed if all steps exist
+    if (!step1 || !step2 || !step3 || !registerForm) {
+        console.warn('Multi-step form elements not found on this page');
+        return;
+    }
+
     currentStep = 1;
-    document.getElementById('registerForm').reset();
-    document.getElementById('step1').style.display = 'block';
-    document.getElementById('step2').style.display = 'none';
-    document.getElementById('step3').style.display = 'none';
+    registerForm.reset();
+    step1.style.display = 'block';
+    step2.style.display = 'none';
+    step3.style.display = 'none';
     updateStepButtons();
 }
 

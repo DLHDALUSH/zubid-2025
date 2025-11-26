@@ -19,51 +19,179 @@
     <script src="i18n.js"></script>
 </head>
 <body>
-    <!-- Navigation -->
-    <nav class="navbar">
-        <div class="container">
-            <div class="nav-brand">
-                <h1>ZUBID</h1>
-            </div>
-            <div class="nav-menu" id="navMenu">
-                <a href="index.html" class="nav-link" data-i18n="nav.home">Home</a>
-                <a href="auctions.html" class="nav-link active" data-i18n="nav.auctions">Auctions</a>
-                <a href="how-to-bid.html" class="nav-link">How to Bid</a>
-                <a href="contact-us.html" class="nav-link">Contact Us</a>
-                <a href="my-bids.html" class="nav-link" id="myBidsLink" style="display: none;" data-i18n="nav.myBids">My Bids</a>
-                <a href="payments.html" class="nav-link" id="paymentsLink" style="display: none;" data-i18n="nav.payments">Payments</a>
-                <a href="return-requests.html" class="nav-link" id="returnRequestsLink" style="display: none;">Return Requests</a>
-                <a href="profile.html" class="nav-link" data-i18n="nav.profile">Profile</a>
-                <!-- Language Switcher -->
-                <div class="language-switcher" id="languageSwitcher">
-                    <button class="language-switcher-btn" onclick="toggleLanguageDropdown()">
-                        <span id="currentLangDisplay">EN</span>
-                        <span>▼</span>
-                    </button>
-                    <div class="language-dropdown" id="languageDropdown">
-                        <div class="language-option active" data-lang="en" onclick="changeLang('en')">
-                            <span>English</span>
-                        </div>
-                        <div class="language-option" data-lang="ku" onclick="changeLang('ku')">
-                            <span>کوردی</span>
-                        </div>
-                        <div class="language-option" data-lang="ar" onclick="changeLang('ar')">
-                            <span>العربية</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="nav-auth" id="navAuth">
-                    <button class="btn btn-outline" onclick="showLogin()" data-i18n="nav.login">Login</button>
-                    <button class="btn btn-primary" onclick="showRegister()" data-i18n="nav.signUp">Sign Up</button>
-                </div>
-                <div class="nav-user" id="navUser" style="display: none;">
-                    <span id="userName"></span>
-                    <button class="btn btn-outline" onclick="logout()" data-i18n="nav.logout">Logout</button>
-                </div>
-            </div>
-            <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
-        </div>
-    </nav>
+	    <!-- Navigation -->
+	    <nav class="navbar">
+	        <div class="nav-container">
+	            <div class="nav-brand">
+	                <a href="index.html">
+	                    <h1>ZUBID</h1>
+	                    <span class="brand-tagline">Premium Auction Platform</span>
+	                </a>
+	            </div>
+
+	            <div class="nav-menu" id="navMenu">
+	                <div class="nav-links">
+	                    <a href="index.html" class="nav-link" data-i18n="nav.home">
+	                        <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+	                            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+	                            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+	                        </svg>
+	                        <span>Home</span>
+	                    </a>
+
+	                    <a href="auctions.html" class="nav-link active" data-i18n="nav.auctions">
+	                        <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+	                            <circle cx="9" cy="21" r="1"></circle>
+	                            <circle cx="20" cy="21" r="1"></circle>
+	                            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+	                        </svg>
+	                        <span>Auctions</span>
+	                    </a>
+
+	                    <!-- My Account Dropdown (shown when logged in) -->
+	                    <div class="nav-dropdown" id="myAccountDropdown" style="display: none;">
+	                        <button class="nav-link dropdown-toggle">
+	                            <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+	                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+	                                <circle cx="12" cy="7" r="4"></circle>
+	                            </svg>
+	                            <span data-i18n="nav.myAccount">My Account</span>
+	                            <svg class="dropdown-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+	                                <polyline points="6 9 12 15 18 9"></polyline>
+	                            </svg>
+	                        </button>
+	                        <div class="dropdown-menu">
+	                            <a href="profile.html" class="dropdown-item">
+	                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+	                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+	                                    <circle cx="12" cy="7" r="4"></circle>
+	                                </svg>
+	                                <span data-i18n="nav.profile">Profile</span>
+	                            </a>
+	                            <a href="my-bids.html" class="dropdown-item">
+	                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+	                                    <polyline points="9 11 12 14 22 4"></polyline>
+	                                    <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+	                                </svg>
+	                                <span data-i18n="nav.myBids">My Bids</span>
+	                            </a>
+	                            <a href="payments.html" class="dropdown-item">
+	                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+	                                    <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+	                                    <line x1="1" y1="10" x2="23" y2="10"></line>
+	                                </svg>
+	                                <span data-i18n="nav.payments">Payments</span>
+	                            </a>
+	                            <a href="return-requests.html" class="dropdown-item">
+	                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+	                                    <polyline points="1 4 1 10 7 10"></polyline>
+	                                    <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+	                                </svg>
+	                                <span>Return Requests</span>
+	                            </a>
+	                        </div>
+	                    </div>
+
+	                    <!-- Info Dropdown -->
+	                    <div class="nav-dropdown">
+	                        <button class="nav-link dropdown-toggle">
+	                            <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+	                                <circle cx="12" cy="12" r="10"></circle>
+	                                <line x1="12" y1="16" x2="12" y2="12"></line>
+	                                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+	                            </svg>
+	                            <span>Info</span>
+	                            <svg class="dropdown-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+	                                <polyline points="6 9 12 15 18 9"></polyline>
+	                            </svg>
+	                        </button>
+	                        <div class="dropdown-menu">
+	                            <a href="how-to-bid.html" class="dropdown-item">
+	                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+	                                    <circle cx="12" cy="12" r="10"></circle>
+	                                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+	                                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+	                                </svg>
+	                                <span>How to Bid</span>
+	                            </a>
+	                            <a href="contact-us.html" class="dropdown-item">
+	                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+	                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+	                                </svg>
+	                                <span>Contact Us</span>
+	                            </a>
+	                        </div>
+	                    </div>
+	                </div>
+
+	                <div class="nav-actions">
+	                    <!-- Language Switcher -->
+	                    <div class="language-switcher" id="languageSwitcher">
+	                        <button class="language-switcher-btn" onclick="toggleLanguageDropdown()">
+	                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+	                                <circle cx="12" cy="12" r="10"></circle>
+	                                <line x1="2" y1="12" x2="22" y2="12"></line>
+	                                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+	                            </svg>
+	                            <span id="currentLangDisplay">EN</span>
+	                        </button>
+	                        <div class="language-dropdown" id="languageDropdown">
+	                            <div class="language-option active" data-lang="en" onclick="changeLang('en')">
+	                                <span>English</span>
+	                            </div>
+	                            <div class="language-option" data-lang="ku" onclick="changeLang('ku')">
+	                                <span>کوردی</span>
+	                            </div>
+	                            <div class="language-option" data-lang="ar" onclick="changeLang('ar')">
+	                                <span>العربية</span>
+	                            </div>
+	                        </div>
+	                    </div>
+
+	                    <!-- Auth Buttons -->
+	                    <div class="nav-auth" id="navAuth">
+	                        <button class="btn btn-outline" onclick="showLogin()" data-i18n="nav.login">Login</button>
+	                        <button class="btn btn-primary" onclick="showRegister()" data-i18n="nav.signUp">Sign Up</button>
+	                    </div>
+
+	                    <!-- User Menu -->
+	                    <div class="nav-user" id="navUser" style="display: none;">
+	                        <div class="user-menu-toggle">
+	                            <img id="userAvatar" src="" alt="User" class="user-avatar">
+	                            <span id="userName"></span>
+	                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+	                                <polyline points="6 9 12 15 18 9"></polyline>
+	                            </svg>
+	                        </div>
+	                        <div class="user-dropdown">
+	                            <a href="profile.html" class="user-dropdown-item">
+	                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+	                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+	                                    <circle cx="12" cy="7" r="4"></circle>
+	                                </svg>
+	                                <span data-i18n="nav.profile">Profile</span>
+	                            </a>
+	                            <div class="dropdown-divider"></div>
+	                            <button class="user-dropdown-item logout-btn" onclick="logout()">
+	                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+	                                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+	                                    <polyline points="16 17 21 12 16 7"></polyline>
+	                                    <line x1="21" y1="12" x2="9" y2="12"></line>
+	                                </svg>
+	                                <span data-i18n="nav.logout">Logout</span>
+	                            </button>
+	                        </div>
+	                    </div>
+	                </div>
+	            </div>
+
+	            <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">
+	                <span></span>
+	                <span></span>
+	                <span></span>
+	            </button>
+	        </div>
+	    </nav>
 
     <!-- Filters and Search -->
     <section class="filters-section">
@@ -153,68 +281,97 @@
                 <p class="modal-subtitle" data-i18n="register.subtitle">Join ZUBID to start bidding on amazing auctions</p>
             </div>
             <form id="registerForm" onsubmit="handleRegister(event)">
-                <div class="form-section">
-                    <h3 class="section-title" data-i18n="register.accountInfo">Account Information</h3>
-                    <div class="form-group">
-                        <label data-i18n="register.username">Username <span class="required">*</span></label>
-                        <input type="text" id="registerUsername" data-i18n-placeholder="register.usernamePlaceholder" placeholder="Choose a unique username" required>
-                        <small data-i18n="register.usernameHint">This will be your display name</small>
+                <!-- Step 1: Basic Info -->
+                <div class="form-step" id="step1">
+                    <div class="step-header">
+                        <span class="step-number">1</span>
+                        <span class="step-title">Basic Information</span>
                     </div>
-                    <div class="form-group">
-                        <label data-i18n="register.email">Email <span class="required">*</span></label>
-                        <input type="email" id="registerEmail" data-i18n-placeholder="register.emailPlaceholder" placeholder="your.email@example.com" required>
-                        <small data-i18n="register.emailHint">We'll never share your email</small>
-                    </div>
-                    <div class="form-group">
-                        <label data-i18n="register.password">Password <span class="required">*</span></label>
-                        <input type="password" id="registerPassword" data-i18n-placeholder="register.passwordPlaceholder" placeholder="Create a strong password" required>
-                        <small data-i18n="register.passwordHintShort">Use at least 8 characters</small>
-                    </div>
-                </div>
-
-                <div class="form-section">
-                    <h3 class="section-title" data-i18n="register.identityVerification">Identity Verification</h3>
-                    <div class="form-group">
-                        <label data-i18n="register.idNumberPassport">ID Number / Passport <span class="required">*</span></label>
-                        <input type="text" id="registerIdNumber" data-i18n-placeholder="register.idNumberPlaceholder" placeholder="Enter your national ID or passport number" required>
-                        <small data-i18n="register.idNumberHint">This will be used for identity verification</small>
-                    </div>
-                    <div class="form-group">
-                        <label data-i18n="register.birthDate">Date of Birth <span class="required">*</span></label>
-                        <div class="date-picker-wrapper">
-                            <input type="date" id="registerBirthDate" required>
-                            <button type="button" class="date-picker-btn" onclick="document.getElementById('registerBirthDate').focus(); if (typeof document.getElementById('registerBirthDate').showPicker === 'function') { document.getElementById('registerBirthDate').showPicker(); }">
-                                <span class="date-picker-icon">📅</span>
-                                <span class="date-picker-text" id="registerBirthDateText" data-i18n="register.selectDateOfBirth">Select your date of birth</span>
-                                <span class="date-picker-arrow">▼</span>
-                            </button>
+                    <div class="form-section">
+                        <h3 class="section-title" data-i18n="register.accountInfo">Account Information</h3>
+                        <div class="form-group">
+                            <label data-i18n="register.username">Username <span class="required">*</span></label>
+                            <input type="text" id="registerUsername" data-i18n-placeholder="register.usernamePlaceholder" placeholder="Choose a unique username" required>
+                            <small data-i18n="register.usernameHint">This will be your display name</small>
                         </div>
-                        <small data-i18n="register.birthDateHint">Your date of birth as shown on your ID card</small>
+                        <div class="form-group">
+                            <label data-i18n="register.email">Email <span class="required">*</span></label>
+                            <input type="email" id="registerEmail" data-i18n-placeholder="register.emailPlaceholder" placeholder="your.email@example.com" required>
+                            <small data-i18n="register.emailHint">We'll never share your email</small>
+                        </div>
+                        <div class="form-group">
+                            <label data-i18n="register.password">Password <span class="required">*</span></label>
+                            <input type="password" id="registerPassword" data-i18n-placeholder="register.passwordPlaceholder" placeholder="Create a strong password" required>
+                            <small data-i18n="register.passwordHintShort">Use at least 8 characters</small>
+                        </div>
                     </div>
                 </div>
 
-                <div class="form-section">
-                    <h3 class="section-title" data-i18n="register.contactInfo">Contact Information</h3>
-                    <div class="form-group critical-field">
-                        <label data-i18n="register.phone">Phone Number <span class="required critical">*</span></label>
-                        <input type="tel" id="registerPhone" data-i18n-placeholder="register.phonePlaceholder" placeholder="+1 234 567 8900" required>
-                        <small data-i18n="register.phoneHint">We'll use this to contact you about your auctions</small>
+                <!-- Step 2: Identity & Personal Info -->
+                <div class="form-step" id="step2" style="display: none;">
+                    <div class="step-header">
+                        <span class="step-number">2</span>
+                        <span class="step-title">Identity Verification</span>
                     </div>
-                    <div class="form-group critical-field">
-                        <label data-i18n="register.address">Address <span class="required critical">*</span></label>
-                        <textarea id="registerAddress" rows="3" data-i18n-placeholder="register.addressPlaceholder" placeholder="Enter your full address (street, city, state, zip code)" required></textarea>
-                        <small data-i18n="register.addressHint">Required for auction transactions and shipping</small>
+                    <div class="form-section">
+                        <h3 class="section-title" data-i18n="register.identityVerification">Identity Verification</h3>
+                        <div class="form-group">
+                            <label data-i18n="register.idNumberPassport">ID Number / Passport <span class="required">*</span></label>
+                            <input type="text" id="registerIdNumber" data-i18n-placeholder="register.idNumberPlaceholder" placeholder="Enter your national ID or passport number" required>
+                            <small data-i18n="register.idNumberHint">This will be used for identity verification</small>
+                        </div>
+                        <div class="form-group">
+                            <label data-i18n="register.birthDate">Date of Birth <span class="required">*</span></label>
+                            <div class="date-picker-wrapper">
+                                <input type="date" id="registerBirthDate" required>
+                                <button type="button" class="date-picker-btn" onclick="document.getElementById('registerBirthDate').focus(); if (typeof document.getElementById('registerBirthDate').showPicker === 'function') { document.getElementById('registerBirthDate').showPicker(); }">
+                                    <span class="date-picker-icon">📅</span>
+                                    <span class="date-picker-text" id="registerBirthDateText" data-i18n="register.selectDateOfBirth">Select your date of birth</span>
+                                    <span class="date-picker-arrow">▼</span>
+                                </button>
+                            </div>
+                            <small data-i18n="register.birthDateHint">Your date of birth as shown on your ID card</small>
+                        </div>
                     </div>
                 </div>
 
-                <div class="form-actions">
-                    <button type="submit" class="btn btn-primary btn-block btn-large">
+                <!-- Step 3: Contact Info -->
+                <div class="form-step" id="step3" style="display: none;">
+                    <div class="step-header">
+                        <span class="step-number">3</span>
+                        <span class="step-title">Contact Information</span>
+                    </div>
+                    <div class="form-section">
+                        <h3 class="section-title" data-i18n="register.contactInfo">Contact Information</h3>
+                        <div class="form-group critical-field">
+                            <label data-i18n="register.phone">Phone Number <span class="required critical">*</span></label>
+                            <input type="tel" id="registerPhone" data-i18n-placeholder="register.phonePlaceholder" placeholder="+1 234 567 8900" required>
+                            <small data-i18n="register.phoneHint">We'll use this to contact you about your auctions</small>
+                        </div>
+                        <div class="form-group critical-field">
+                            <label data-i18n="register.address">Address <span class="required critical">*</span></label>
+                            <textarea id="registerAddress" rows="3" data-i18n-placeholder="register.addressPlaceholder" placeholder="Enter your full address (street, city, state, zip code)" required></textarea>
+                            <small data-i18n="register.addressHint">Required for auction transactions and shipping</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Navigation Buttons -->
+                <div class="form-navigation">
+                    <button type="button" id="prevBtn" class="btn btn-outline" onclick="previousStep()" style="display: none;">
+                        <span data-i18n="register.back">Back</span>
+                    </button>
+                    <button type="button" id="nextBtn" class="btn btn-primary" onclick="nextStep()">
+                        <span data-i18n="register.next">Next</span>
+                    </button>
+                    <button type="submit" id="submitBtn" class="btn btn-primary btn-block" style="display: none;">
                         <span data-i18n="register.createAccount">Create Account</span>
                     </button>
-                    <p class="form-footer">
-                        <span data-i18n="register.alreadyHaveAccount">Already have an account?</span> <a href="#" onclick="event.preventDefault(); closeModal('registerModal'); showLogin();" class="link" data-i18n="register.signIn">Sign in</a>
-                    </p>
                 </div>
+
+                <p class="form-footer">
+                    <span data-i18n="register.alreadyHaveAccount">Already have an account?</span> <a href="#" onclick="event.preventDefault(); closeModal('registerModal'); showLogin();" class="link" data-i18n="register.signIn">Sign in</a>
+                </p>
             </form>
         </div>
     </div>

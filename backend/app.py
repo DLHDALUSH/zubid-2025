@@ -28,7 +28,10 @@ except ImportError:
     # python-dotenv not installed, continue without it
     pass
 
-app = Flask(__name__)
+# Get frontend directory path for serving static files
+frontend_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'frontend')
+
+app = Flask(__name__, static_folder=frontend_dir, static_url_path='')
 
 # Configuration from environment variables with fallbacks for development
 # SECURITY: Require SECRET_KEY in production, fail if not set
@@ -57,10 +60,11 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Session configuration for proper cookie handling
 is_https = os.getenv('HTTPS_ENABLED', 'false').lower() == 'true'
+app.config['SESSION_COOKIE_NAME'] = 'zubid_session'  # Explicit session cookie name
 app.config['SESSION_COOKIE_SECURE'] = is_https
 app.config['SESSION_COOKIE_HTTPONLY'] = True
-# Use 'Lax' for development (localhost), 'None' requires Secure=True for production
-app.config['SESSION_COOKIE_SAMESITE'] = 'Lax' if not is_https else 'None'
+# Use 'Lax' for same-origin requests (frontend served from Flask on port 5000)
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 app.config['PERMANENT_SESSION_LIFETIME'] = 86400  # 24 hours
 # Database connection pooling (only for non-SQLite databases)
 if 'sqlite' not in app.config['SQLALCHEMY_DATABASE_URI'].lower():
@@ -128,6 +132,7 @@ if cors_origins == '*':
          supports_credentials=True,
          origins=["http://localhost:8080", "http://localhost:3000", "http://127.0.0.1:8080", "http://127.0.0.1:3000"],
          allow_headers=['Content-Type', 'X-CSRFToken'],
+         expose_headers=['Set-Cookie'],
          methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'])
 else:
     # Production mode - restrict to specific origins
@@ -136,6 +141,7 @@ else:
          supports_credentials=True,
          origins=allowed_origins,
          allow_headers=['Content-Type', 'X-CSRFToken'],
+         expose_headers=['Set-Cookie'],
          methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'])
 
 # Input Validation and Sanitization Helpers
@@ -505,7 +511,10 @@ class UserPreference(db.Model):
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
+        app.logger.info(f"[AUTH_CHECK] Session data: {dict(session)}")
+        app.logger.info(f"[AUTH_CHECK] Session keys: {list(session.keys())}")
         if 'user_id' not in session:
+            app.logger.warning(f"[AUTH_CHECK] No user_id in session, returning 401")
             return jsonify({'error': 'Authentication required'}), 401
         return f(*args, **kwargs)
     return decorated_function
@@ -1094,6 +1103,7 @@ def login():
     if user and check_password_hash(user.password_hash, data['password']):
         # Check if user is active
         if not user.is_active:
+            app.logger.warning(f"Login attempt for inactive user: {user.username}")
             return jsonify({'error': 'Account is deactivated. Please contact support.'}), 403
 
         # Update login tracking
@@ -1103,6 +1113,8 @@ def login():
 
         session.permanent = True
         session['user_id'] = user.id
+        session.modified = True  # Force Flask to send the Set-Cookie header
+        app.logger.info(f"User {user.username} (ID: {user.id}) logged in. Session ID: {session.get('user_id')}")
 
         # Create default preferences if they don't exist
         if not user.preferences:
@@ -1122,6 +1134,7 @@ def login():
                 'last_name': user.last_name
             }
         }), 200
+    app.logger.warning(f"Failed login attempt for user: {data.get('username')}")
     return jsonify({'error': 'Invalid credentials'}), 401
 
 @app.route('/api/logout', methods=['POST'])
@@ -1132,7 +1145,13 @@ def logout():
 @app.route('/api/user/profile', methods=['GET'])
 @login_required
 def get_profile():
-    user = User.query.get(session['user_id'])
+    user_id = session.get('user_id')
+    app.logger.info(f"get_profile called. Session user_id: {user_id}")
+    user = User.query.get(user_id)
+
+    if not user:
+        app.logger.error(f"User not found for ID: {user_id}")
+        return jsonify({'error': 'User not found'}), 404
 
     # Get user preferences
     preferences = user.preferences
@@ -2970,6 +2989,8 @@ def init_db():
                     password_hash=generate_password_hash(admin_password),
                     id_number=os.getenv('ADMIN_ID_NUMBER', 'ADMIN001'),
                     birth_date=date(1990, 1, 1),  # Default birth date for admin
+                    address='Admin Address',  # Required field
+                    phone='+1-000-0000',  # Required field
                     role='admin'
                 )
                 db.session.add(admin)
@@ -4051,28 +4072,46 @@ def update_menu_item(menu_id):
         app.logger.error(f'Error updating menu item: {str(e)}')
         return jsonify({'error': f'Failed to update menu item: {str(e)}'}), 500
 
+# Serve frontend static files (for same-origin requests to fix cookie issues)
+@app.route('/')
+def serve_index():
+    return send_from_directory(frontend_dir, 'index.html')
+
+@app.route('/<path:filename>')
+def serve_static(filename):
+    # Don't serve API routes as static files
+    if filename.startswith('api/'):
+        return jsonify({'error': 'Not found'}), 404
+    # Try to serve the file from frontend directory
+    try:
+        return send_from_directory(frontend_dir, filename)
+    except:
+        # If file not found, return 404
+        return jsonify({'error': 'File not found'}), 404
+
 if __name__ == '__main__':
     init_db()
-    
+
     # Configuration from environment variables
     # SECURITY: Never run in debug mode in production
     flask_env = os.getenv('FLASK_ENV', 'development').lower()
     is_prod = flask_env == 'production'
     debug_mode = os.getenv('FLASK_DEBUG', 'False').lower() == 'true'
-    
+
     # Force debug mode OFF in production
     if is_prod and debug_mode:
         import warnings
         warnings.warn("Debug mode is disabled in production for security!", UserWarning)
         debug_mode = False
-    
+
     port = int(os.getenv('PORT', '5000'))
     host = os.getenv('HOST', '0.0.0.0')  # Changed to bind to all interfaces
-    
+
     print("\n" + "="*50)
     print("ZUBID Backend Server Starting...")
     print("="*50)
     print(f"Server will run on: http://{host}:{port}")
+    print(f"Frontend: http://{host}:{port}/index.html")
     print(f"API Test: http://{host}:{port}/api/test")
     print(f"Environment: {flask_env.upper()}")
     print(f"Debug mode: {'ON' if debug_mode else 'OFF'}")

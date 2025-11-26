@@ -2318,6 +2318,24 @@ body.language-changing {
     border-top: 3px solid rgba(255, 102, 0, 0.1);
 }
 
+.form-navigation {
+    display: flex;
+    gap: 12px;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid #e0e0e0;
+    justify-content: flex-end;
+}
+
+.form-navigation .btn {
+    flex: 1;
+    max-width: 150px;
+}
+
+.form-navigation .btn-block {
+    max-width: 100%;
+}
+
 .submit-btn {
     width: 100%;
     position: relative;
