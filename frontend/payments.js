@@ -1,5 +1,32 @@
 // Payments page functionality
 
+// ZUBID FIB Account Number for receiving payments
+const ZUBID_FIB_NUMBER = '07715625156';
+
+// Copy FIB number to clipboard
+function copyFibNumber() {
+    const number = ZUBID_FIB_NUMBER;
+    navigator.clipboard.writeText(number).then(() => {
+        if (typeof showToast === 'function') {
+            showToast('FIB number copied to clipboard!', 'success');
+        } else {
+            alert('Copied: ' + number);
+        }
+    }).catch(err => {
+        console.error('Failed to copy:', err);
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = number;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        if (typeof showToast === 'function') {
+            showToast('FIB number copied to clipboard!', 'success');
+        }
+    });
+}
+
 // Wait for app.js to initialize
 document.addEventListener('DOMContentLoaded', async () => {
     // Check authentication
@@ -225,28 +252,32 @@ const PAYMENT_METHODS = [
         name: 'Cash on Delivery',
         icon: '🚚',
         description: 'Pay when you receive',
-        requiresCard: false
+        requiresCard: false,
+        requiresFib: false
     },
     {
         id: 'fib',
         name: 'FIB Bank',
         icon: '🏦',
-        description: 'Direct bank transfer',
-        requiresCard: true
+        description: 'Iraq mobile payment',
+        requiresCard: false,
+        requiresFib: true
     },
     {
         id: 'stripe',
         name: 'Credit/Debit Card',
         icon: '💳',
         description: 'Visa, Mastercard, Amex',
-        requiresCard: true
+        requiresCard: true,
+        requiresFib: false
     },
     {
         id: 'paypal',
         name: 'PayPal',
         icon: '🅿️',
         description: 'Pay with PayPal account',
-        requiresCard: false
+        requiresCard: false,
+        requiresFib: false
     }
 ];
 
@@ -344,30 +375,36 @@ function populatePaymentMethods() {
 
 function selectPaymentMethod(methodId) {
     selectedPaymentMethod = methodId;
-    
+
     // Update UI
     document.querySelectorAll('.payment-method-option').forEach(el => {
         el.classList.remove('selected');
     });
-    
+
     const selectedEl = document.querySelector(`[data-method="${methodId}"]`);
     if (selectedEl) {
         selectedEl.classList.add('selected');
     }
-    
+
     // Show/hide appropriate sections
     const method = PAYMENT_METHODS.find(m => m.id === methodId);
     const formContainer = document.getElementById('paymentFormContainer');
+    const fibFormContainer = document.getElementById('fibFormContainer');
     const codInfo = document.getElementById('cashOnDeliveryInfo');
-    
+
+    // Hide all forms first
+    if (formContainer) formContainer.style.display = 'none';
+    if (fibFormContainer) fibFormContainer.style.display = 'none';
+    if (codInfo) codInfo.style.display = 'none';
+
     if (method.requiresCard) {
         if (formContainer) formContainer.style.display = 'block';
-        if (codInfo) codInfo.style.display = 'none';
-    } else {
-        if (formContainer) formContainer.style.display = 'none';
-        if (codInfo) codInfo.style.display = methodId === 'cash_on_delivery' ? 'block' : 'none';
+    } else if (method.requiresFib) {
+        if (fibFormContainer) fibFormContainer.style.display = 'block';
+    } else if (methodId === 'cash_on_delivery') {
+        if (codInfo) codInfo.style.display = 'block';
     }
-    
+
     // Update submit button text
     const submitBtn = document.getElementById('submitPaymentBtn');
     if (submitBtn) {
@@ -377,6 +414,8 @@ function selectPaymentMethod(methodId) {
                 btnText.textContent = 'Confirm Order';
             } else if (methodId === 'paypal') {
                 btnText.textContent = 'Pay with PayPal';
+            } else if (methodId === 'fib') {
+                btnText.textContent = 'Pay with FIB';
             } else {
                 btnText.textContent = 'Pay Now';
             }
@@ -385,20 +424,37 @@ function selectPaymentMethod(methodId) {
 }
 
 function resetPaymentForm() {
-    // Clear form fields
-    document.getElementById('cardNumber').value = '';
-    document.getElementById('cardExpiry').value = '';
-    document.getElementById('cardCVC').value = '';
-    document.getElementById('cardholderName').value = '';
-    document.getElementById('billingAddress').value = '';
-    
+    // Clear card form fields
+    const cardNumber = document.getElementById('cardNumber');
+    const cardExpiry = document.getElementById('cardExpiry');
+    const cardCVC = document.getElementById('cardCVC');
+    const cardholderName = document.getElementById('cardholderName');
+    const billingAddress = document.getElementById('billingAddress');
+
+    if (cardNumber) cardNumber.value = '';
+    if (cardExpiry) cardExpiry.value = '';
+    if (cardCVC) cardCVC.value = '';
+    if (cardholderName) cardholderName.value = '';
+    if (billingAddress) billingAddress.value = '';
+
+    // Clear FIB form fields
+    const fibName = document.getElementById('fibName');
+    const fibPhone = document.getElementById('fibPhone');
+    if (fibName) fibName.value = '';
+    if (fibPhone) fibPhone.value = '';
+
     // Clear errors
     clearFormErrors();
-    
+
     // Hide form sections
-    document.getElementById('paymentFormContainer').style.display = 'none';
-    document.getElementById('cashOnDeliveryInfo').style.display = 'none';
-    
+    const paymentFormContainer = document.getElementById('paymentFormContainer');
+    const fibFormContainer = document.getElementById('fibFormContainer');
+    const cashOnDeliveryInfo = document.getElementById('cashOnDeliveryInfo');
+
+    if (paymentFormContainer) paymentFormContainer.style.display = 'none';
+    if (fibFormContainer) fibFormContainer.style.display = 'none';
+    if (cashOnDeliveryInfo) cashOnDeliveryInfo.style.display = 'none';
+
     // Reset card brand icon
     const brandIcon = document.getElementById('cardBrandIcon');
     if (brandIcon) {
@@ -573,38 +629,66 @@ async function submitPayment() {
         showToast('No invoice selected', 'error');
         return;
     }
-    
+
     if (!selectedPaymentMethod) {
         showToast('Please select a payment method', 'error');
         return;
     }
-    
-    // Validate card details if required
+
+    // Validate based on payment method
     const method = PAYMENT_METHODS.find(m => m.id === selectedPaymentMethod);
+
+    // Validate FIB details if required
+    if (method.requiresFib) {
+        const fibName = document.getElementById('fibName').value.trim();
+        const fibPhone = document.getElementById('fibPhone').value.trim();
+
+        if (!fibName) {
+            showToast('Please enter your full name', 'error');
+            document.getElementById('fibName').focus();
+            return;
+        }
+
+        if (!fibPhone) {
+            showToast('Please enter your Iraqi phone number', 'error');
+            document.getElementById('fibPhone').focus();
+            return;
+        }
+
+        // Validate Iraqi phone number format (07XX XXX XXXX)
+        const phoneClean = fibPhone.replace(/\s/g, '');
+        if (!/^07[3-9]\d{8}$/.test(phoneClean)) {
+            showToast('Please enter a valid Iraqi phone number (07XX XXX XXXX)', 'error');
+            document.getElementById('fibPhone').focus();
+            return;
+        }
+    }
+
+    // Validate card details if required
     if (method.requiresCard) {
         const cardNumber = document.getElementById('cardNumber').value.replace(/\s/g, '');
         const cardExpiry = document.getElementById('cardExpiry').value;
         const cardCVC = document.getElementById('cardCVC').value;
         const cardholderName = document.getElementById('cardholderName').value.trim();
-        
+
         if (!cardNumber || cardNumber.length < 13) {
             showToast('Please enter a valid card number', 'error');
             document.getElementById('cardNumber').focus();
             return;
         }
-        
+
         if (!cardExpiry || cardExpiry.length < 5) {
             showToast('Please enter card expiry date', 'error');
             document.getElementById('cardExpiry').focus();
             return;
         }
-        
+
         if (!cardCVC || cardCVC.length < 3) {
             showToast('Please enter card CVV', 'error');
             document.getElementById('cardCVC').focus();
             return;
         }
-        
+
         if (!cardholderName) {
             showToast('Please enter cardholder name', 'error');
             document.getElementById('cardholderName').focus();

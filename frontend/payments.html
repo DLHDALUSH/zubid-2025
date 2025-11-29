@@ -214,6 +214,82 @@
                     </div>
                 </div>
 
+                <!-- FIB Bank Form (for Iraqi mobile payment) -->
+                <div class="payment-form-container" id="fibFormContainer" style="display: none;">
+                    <h3 class="payment-section-title">FIB Bank Details</h3>
+
+                    <div class="fib-info-banner">
+                        <span class="fib-icon">🏦</span>
+                        <p>Pay securely using your FIB mobile banking app</p>
+                    </div>
+
+                    <!-- ZUBID Account to receive payment -->
+                    <div class="fib-receive-account">
+                        <div class="receive-label">Send Payment To:</div>
+                        <div class="receive-number-box">
+                            <span class="receive-icon">📲</span>
+                            <span class="receive-number" id="zubidFibNumber">0771 562 5156</span>
+                            <button type="button" class="copy-btn" onclick="copyFibNumber()" title="Copy number">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        <small class="receive-hint">ZUBID Official FIB Account</small>
+                    </div>
+
+                    <!-- Full Name -->
+                    <div class="form-group">
+                        <label for="fibName">
+                            <span>Your Full Name</span>
+                            <span class="required">*</span>
+                        </label>
+                        <div class="input-wrapper">
+                            <span class="input-icon">👤</span>
+                            <input
+                                type="text"
+                                id="fibName"
+                                placeholder="Enter your full name"
+                                autocomplete="name"
+                            />
+                        </div>
+                        <small class="error-message" id="fibNameError"></small>
+                    </div>
+
+                    <!-- Iraqi Phone Number -->
+                    <div class="form-group">
+                        <label for="fibPhone">
+                            <span>Your Iraqi Phone Number</span>
+                            <span class="required">*</span>
+                        </label>
+                        <div class="input-wrapper">
+                            <span class="input-icon">📱</span>
+                            <input
+                                type="tel"
+                                id="fibPhone"
+                                placeholder="07XX XXX XXXX"
+                                maxlength="13"
+                                autocomplete="tel"
+                            />
+                        </div>
+                        <small class="input-hint">Format: 07XX XXX XXXX (e.g., 0750 123 4567)</small>
+                        <small class="error-message" id="fibPhoneError"></small>
+                    </div>
+
+                    <div class="fib-instructions">
+                        <h4>How to pay with FIB:</h4>
+                        <ol>
+                            <li>Open your FIB mobile app</li>
+                            <li>Go to "Send Money"</li>
+                            <li>Enter the ZUBID number: <strong>0771 562 5156</strong></li>
+                            <li>Enter the exact payment amount shown above</li>
+                            <li>Add your invoice number in the notes</li>
+                            <li>Confirm and complete the transfer</li>
+                        </ol>
+                    </div>
+                </div>
+
                 <!-- Cash on Delivery Info -->
                 <div class="payment-info-section" id="cashOnDeliveryInfo" style="display: none;">
                     <div class="info-card">

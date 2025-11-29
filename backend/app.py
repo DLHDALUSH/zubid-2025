@@ -598,8 +598,8 @@ def get_csrf_token():
     """Get CSRF token for forms"""
     return jsonify({'csrf_token': generate_csrf()}), 200
 
-# Image Upload Configuration
-UPLOAD_FOLDER = os.getenv('UPLOAD_FOLDER', 'uploads')
+# Image Upload Configuration - use absolute path based on this file's location
+UPLOAD_FOLDER = os.getenv('UPLOAD_FOLDER', os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads'))
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 ALLOWED_VIDEO_EXTENSIONS = {'mp4', 'webm', 'ogg', 'mov', 'avi', 'mkv', 'm4v'}
 MAX_IMAGE_SIZE = 5 * 1024 * 1024  # 5MB
@@ -4079,8 +4079,8 @@ def serve_index():
 
 @app.route('/<path:filename>')
 def serve_static(filename):
-    # Don't serve API routes as static files
-    if filename.startswith('api/'):
+    # Don't serve API routes or uploads as static files (they have their own routes)
+    if filename.startswith('api/') or filename.startswith('uploads/'):
         return jsonify({'error': 'Not found'}), 404
     # Try to serve the file from frontend directory
     try:

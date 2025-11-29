@@ -267,6 +267,8 @@ function updateNavAuth(isAuthenticated) {
     const navAuth = document.getElementById('navAuth');
     const navUser = document.getElementById('navUser');
     const myAccountDropdown = document.getElementById('myAccountDropdown');
+    const myBidsNavLink = document.getElementById('myBidsNavLink');
+    const paymentsNavLink = document.getElementById('paymentsNavLink');
     const userName = document.getElementById('userName');
     const userAvatar = document.getElementById('userAvatar');
 
@@ -278,6 +280,16 @@ function updateNavAuth(isAuthenticated) {
             // Show My Account dropdown
             if (myAccountDropdown) {
                 myAccountDropdown.style.display = 'block';
+            }
+
+            // Show My Bids link in main nav
+            if (myBidsNavLink) {
+                myBidsNavLink.style.display = 'flex';
+            }
+
+            // Show Payments link in main nav
+            if (paymentsNavLink) {
+                paymentsNavLink.style.display = 'flex';
             }
 
             // Update user info
@@ -303,6 +315,16 @@ function updateNavAuth(isAuthenticated) {
             // Hide My Account dropdown
             if (myAccountDropdown) {
                 myAccountDropdown.style.display = 'none';
+            }
+
+            // Hide My Bids link
+            if (myBidsNavLink) {
+                myBidsNavLink.style.display = 'none';
+            }
+
+            // Hide Payments link
+            if (paymentsNavLink) {
+                paymentsNavLink.style.display = 'none';
             }
         }
     }
@@ -1064,55 +1086,12 @@ async function loadFeaturedAuctions() {
     }
 }
 
-// Auto-refresh featured auctions when prices change or auctions end
+// Auto-refresh featured auctions - DISABLED to prevent flickering
+// Prices will update on page refresh instead
 function startFeaturedAuctionsRefresh() {
-    if (window.featuredRefreshInterval) clearInterval(window.featuredRefreshInterval);
-    
-    window.featuredRefreshInterval = setInterval(async () => {
-        try {
-            const response = await AuctionAPI.getAll({ featured: 'true', status: 'active', per_page: 6 });
-            const container = document.getElementById('featuredAuctions');
-            
-            if (!container) return;
-            
-            // Initialize state if not exists
-            if (!window.previousFeaturedAuctionsState) {
-                window.previousFeaturedAuctionsState = {};
-            }
-            
-            let needsRefresh = false;
-            
-            if (response.auctions && response.auctions.length > 0) {
-                response.auctions.forEach(auction => {
-                    const prevAuction = window.previousFeaturedAuctionsState[auction.id];
-                    
-                    // Check if auction just ended
-                    if (prevAuction && prevAuction.status === 'active' && auction.status === 'ended') {
-                        needsRefresh = true;
-                    }
-                    
-                    // Check if price increased
-                    if (prevAuction && prevAuction.current_bid !== auction.current_bid && auction.current_bid > prevAuction.current_bid) {
-                        needsRefresh = true;
-                    }
-                    
-                    // Store current state
-                    window.previousFeaturedAuctionsState[auction.id] = {
-                        status: auction.status,
-                        current_bid: auction.current_bid,
-                        bid_count: auction.bid_count
-                    };
-                });
-            }
-            
-            // If any auction ended or price changed, refresh the page
-            if (needsRefresh) {
-                window.location.reload();
-            }
-        } catch (error) {
-            debugError('Error checking featured auctions:', error);
-        }
-    }, 5000); // Check every 5 seconds
+    // Disabled - was causing flickering and unnecessary server load
+    // Users can manually refresh or navigate to see updated prices
+    return;
 }
 
 // Load categories
