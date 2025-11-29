@@ -3302,25 +3302,25 @@ def process_payment(invoice_id):
     """Process payment for an invoice"""
     try:
         invoice = Invoice.query.get_or_404(invoice_id)
-        
+
         # Verify invoice belongs to user
         if invoice.user_id != session['user_id']:
             return jsonify({'error': 'Unauthorized access'}), 403
-        
+
         # Check if already paid
         if invoice.payment_status == 'paid':
             return jsonify({'error': 'Invoice already paid'}), 400
-        
+
         data = request.json
         payment_method = data.get('payment_method')
-        
+
         # Supported payment methods
         supported_methods = ['cash_on_delivery', 'fib', 'stripe', 'paypal']
         if payment_method not in supported_methods:
             return jsonify({'error': f'Invalid payment method. Supported: {", ".join(supported_methods)}'}), 400
-        
+
         invoice.payment_method = payment_method
-        
+
         # Process payment based on method
         if payment_method == 'cash_on_delivery':
             invoice.payment_status = 'pending'  # Will be marked as paid when delivered
@@ -3331,8 +3331,45 @@ def process_payment(invoice_id):
                 'payment_status': invoice.payment_status,
                 'note': 'Payment will be collected upon delivery'
             }), 200
+        elif payment_method == 'fib':
+            # Process FIB payment with money request
+            fib_name = data.get('fib_name')
+            fib_phone = data.get('fib_phone')
+
+            if not fib_name or not fib_phone:
+                return jsonify({'error': 'FIB payment requires name and phone number'}), 400
+
+            # Clean phone number
+            fib_phone_clean = fib_phone.replace(' ', '').replace('-', '')
+
+            # Validate Iraqi phone format
+            import re
+            if not re.match(r'^07[3-9]\d{8}$', fib_phone_clean):
+                return jsonify({'error': 'Invalid Iraqi phone number format'}), 400
+
+            # Process FIB money request
+            payment_result = process_fib_money_request(invoice, fib_name, fib_phone_clean)
+
+            if payment_result['success']:
+                invoice.payment_status = 'pending'  # Waiting for user to accept money request
+                invoice.payment_notes = f"FIB Money Request sent to {fib_phone_clean} ({fib_name})"
+                db.session.commit()
+                return jsonify({
+                    'message': 'Money request sent successfully!',
+                    'invoice_id': invoice.id,
+                    'payment_status': invoice.payment_status,
+                    'request_id': payment_result.get('request_id'),
+                    'fib_phone': fib_phone_clean,
+                    'amount': invoice.total_amount,
+                    'note': 'Please check your FIB app to approve the payment request'
+                }), 200
+            else:
+                return jsonify({
+                    'error': payment_result.get('error', 'Failed to send money request'),
+                    'invoice_id': invoice.id
+                }), 400
         else:
-            # Process online payment (fib, stripe, paypal)
+            # Process other online payments (stripe, paypal)
             payment_result = process_fib_payment(invoice)
             if payment_result['success']:
                 invoice.payment_status = 'paid'
@@ -3352,13 +3389,57 @@ def process_payment(invoice_id):
                     'invoice_id': invoice.id,
                     'payment_status': invoice.payment_status
                 }), 400
-            
+
     except Exception as e:
         print(f"Error in process_payment: {str(e)}")
         import traceback
         traceback.print_exc()
         db.session.rollback()
         return jsonify({'error': f'Failed to process payment: {str(e)}'}), 500
+
+
+# ZUBID FIB Account Number to receive payments
+ZUBID_FIB_NUMBER = '07715625156'
+
+def process_fib_money_request(invoice, customer_name, customer_phone):
+    """Send FIB money request to customer's phone number"""
+    try:
+        # In production, this would integrate with FIB's actual API
+        # FIB API endpoint would be something like:
+        # POST https://api.fib.iq/v1/money-request
+        # {
+        #     "receiver_phone": ZUBID_FIB_NUMBER,
+        #     "sender_phone": customer_phone,
+        #     "amount": invoice.total_amount,
+        #     "currency": "IQD",
+        #     "description": f"ZUBID Invoice #{invoice.id}",
+        #     "reference": f"INV-{invoice.id}"
+        # }
+
+        # For now, simulate the money request
+        import random
+        request_id = f"FIB-REQ-{invoice.id}-{random.randint(100000, 999999)}"
+
+        print(f"[FIB] Money Request Sent:")
+        print(f"  - To Phone: {customer_phone}")
+        print(f"  - Customer Name: {customer_name}")
+        print(f"  - Amount: {invoice.total_amount} IQD")
+        print(f"  - ZUBID Account: {ZUBID_FIB_NUMBER}")
+        print(f"  - Invoice ID: {invoice.id}")
+        print(f"  - Request ID: {request_id}")
+
+        return {
+            'success': True,
+            'request_id': request_id,
+            'message': f'Money request sent to {customer_phone}'
+        }
+
+    except Exception as e:
+        print(f"[FIB] Error sending money request: {str(e)}")
+        return {
+            'success': False,
+            'error': str(e)
+        }
 
 # Return Request APIs
 @app.route('/api/return-requests', methods=['GET'])

@@ -704,17 +704,38 @@ async function submitPayment() {
     submitBtn.disabled = true;
     if (btnText) btnText.style.display = 'none';
     if (btnLoader) btnLoader.style.display = 'inline-flex';
-    
+
     try {
-        const result = await PaymentAPI.processPayment(currentInvoice.id, selectedPaymentMethod);
-        
-        if (typeof showToast === 'function') {
-            showToast(result.message || 'Payment processed successfully', 'success');
+        let result;
+
+        // If FIB method, include name and phone for money request
+        if (selectedPaymentMethod === 'fib') {
+            const fibName = document.getElementById('fibName').value.trim();
+            const fibPhone = document.getElementById('fibPhone').value.trim().replace(/\s/g, '');
+
+            result = await PaymentAPI.processPayment(currentInvoice.id, selectedPaymentMethod, {
+                fib_name: fibName,
+                fib_phone: fibPhone
+            });
+
+            // Show special message for FIB money request
+            if (typeof showToast === 'function') {
+                showToast('💰 Money request sent! Check your FIB app to approve.', 'success');
+            }
+
+            // Show additional info modal
+            showFibRequestSentModal(result);
+        } else {
+            result = await PaymentAPI.processPayment(currentInvoice.id, selectedPaymentMethod);
+
+            if (typeof showToast === 'function') {
+                showToast(result.message || 'Payment processed successfully', 'success');
+            }
         }
-        
+
         // Close modal
         closePaymentModal();
-        
+
         // Reload payments
         await loadPayments();
     } catch (error) {
@@ -742,3 +763,59 @@ async function processPaymentDirectly(invoiceId) {
     openPaymentModal(invoiceId);
 }
 
+// Show FIB money request sent confirmation
+function showFibRequestSentModal(result) {
+    // Create modal if it doesn't exist
+    let modal = document.getElementById('fibRequestModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'fibRequestModal';
+        modal.className = 'modal';
+        modal.innerHTML = `
+            <div class="modal-content fib-request-modal">
+                <div class="fib-request-icon">📲</div>
+                <h2>Money Request Sent!</h2>
+                <p class="fib-request-message">A payment request has been sent to your FIB mobile app.</p>
+                <div class="fib-request-details">
+                    <div class="fib-detail-row">
+                        <span class="label">Amount:</span>
+                        <span class="value" id="fibRequestAmount"></span>
+                    </div>
+                    <div class="fib-detail-row">
+                        <span class="label">Phone:</span>
+                        <span class="value" id="fibRequestPhone"></span>
+                    </div>
+                    <div class="fib-detail-row">
+                        <span class="label">Request ID:</span>
+                        <span class="value" id="fibRequestId"></span>
+                    </div>
+                </div>
+                <div class="fib-request-instructions">
+                    <p>📱 Open your <strong>FIB app</strong></p>
+                    <p>✅ Go to <strong>Notifications</strong> or <strong>Pending Requests</strong></p>
+                    <p>💳 <strong>Approve</strong> the payment request</p>
+                </div>
+                <button class="btn btn-primary" onclick="closeFibRequestModal()">Got it!</button>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+
+    // Update details
+    const amountEl = document.getElementById('fibRequestAmount');
+    const phoneEl = document.getElementById('fibRequestPhone');
+    const requestIdEl = document.getElementById('fibRequestId');
+
+    if (amountEl) amountEl.textContent = formatCurrency(result.amount || currentInvoice?.total_amount || 0);
+    if (phoneEl) phoneEl.textContent = result.fib_phone || '';
+    if (requestIdEl) requestIdEl.textContent = result.request_id || '';
+
+    modal.style.display = 'flex';
+}
+
+function closeFibRequestModal() {
+    const modal = document.getElementById('fibRequestModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}

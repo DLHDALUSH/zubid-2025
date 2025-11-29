@@ -238,10 +238,13 @@ const PaymentAPI = {
         return apiRequest('/user/payments');
     },
     
-    processPayment: async (invoiceId, paymentMethod) => {
+    processPayment: async (invoiceId, paymentMethod, extraData = {}) => {
         return apiRequest(`/payments/${invoiceId}/pay`, {
             method: 'POST',
-            body: JSON.stringify({ payment_method: paymentMethod }),
+            body: JSON.stringify({
+                payment_method: paymentMethod,
+                ...extraData
+            }),
         });
     },
 };

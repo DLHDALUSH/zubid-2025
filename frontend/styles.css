@@ -4845,6 +4845,83 @@ body.language-changing {
     font-weight: 700;
 }
 
+/* FIB Request Sent Modal */
+.fib-request-modal {
+    text-align: center;
+    padding: 2.5rem;
+    max-width: 420px;
+}
+
+.fib-request-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    animation: bounce 1s ease infinite;
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+.fib-request-modal h2 {
+    color: #059669;
+    margin-bottom: 0.5rem;
+    font-size: 1.75rem;
+}
+
+.fib-request-message {
+    color: var(--text-secondary);
+    margin-bottom: 1.5rem;
+}
+
+.fib-request-details {
+    background: #f0fdf4;
+    border: 2px solid #86efac;
+    border-radius: 12px;
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.fib-detail-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #bbf7d0;
+}
+
+.fib-detail-row:last-child {
+    border-bottom: none;
+}
+
+.fib-detail-row .label {
+    color: #166534;
+    font-weight: 500;
+}
+
+.fib-detail-row .value {
+    color: #14532d;
+    font-weight: 700;
+    font-family: 'Courier New', monospace;
+}
+
+.fib-request-instructions {
+    background: #fefce8;
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.5rem;
+    text-align: left;
+}
+
+.fib-request-instructions p {
+    margin: 0.5rem 0;
+    color: #713f12;
+    font-size: 0.95rem;
+}
+
+.fib-request-instructions strong {
+    color: #854d0e;
+}
+
 .payment-info-section {
     margin-top: 2rem;
 }
