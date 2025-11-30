@@ -1,0 +1,29 @@
+{
+  "name": "zubid",
+  "version": "1.0.0",
+  "description": "ZUBID - Online Auction Platform",
+  "main": "index.html",
+  "scripts": {
+    "build": "echo No build step needed",
+    "cap:sync": "npx cap sync",
+    "cap:open:android": "npx cap open android",
+    "cap:open:ios": "npx cap open ios",
+    "android": "npx cap sync android && npx cap open android",
+    "ios": "npx cap sync ios && npx cap open ios"
+  },
+  "keywords": [
+    "auction",
+    "pwa",
+    "mobile"
+  ],
+  "author": "ZUBID",
+  "license": "ISC",
+  "dependencies": {
+    "@capacitor/android": "^7.4.4",
+    "@capacitor/cli": "^7.4.4",
+    "@capacitor/core": "^7.4.4"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}

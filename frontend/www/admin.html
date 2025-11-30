@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Portal - ZUBID</title>
+    <link rel="stylesheet" href="styles.css?v=20250116-enhanced-enhanced">
+    <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <h1>ZUBID Admin</h1>
+            </div>
+            <div class="nav-menu">
+                <a href="admin.html" class="nav-link active">Dashboard</a>
+                <a href="admin-users.html" class="nav-link">Users</a>
+                <a href="admin-auctions.html" class="nav-link">Auctions</a>
+                <a href="admin-create-auction.html" class="nav-link">Create Auction</a>
+                <a href="admin-categories.html" class="nav-link">Categories</a>
+                <a href="index.html" class="nav-link">User Portal</a>
+                <div class="nav-user">
+                    <span id="adminUserName"></span>
+                    <button class="btn btn-outline" onclick="logout()">Logout</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Admin Dashboard -->
+    <section class="admin-section">
+        <div class="container">
+            <h1>Admin Dashboard</h1>
+            
+            <!-- Stats Cards -->
+            <div class="stats-grid" id="statsGrid">
+                <div class="stat-card">
+                    <h3>Total Users</h3>
+                    <div class="stat-value" id="totalUsers">-</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Total Admins</h3>
+                    <div class="stat-value" id="totalAdmins">-</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Total Auctions</h3>
+                    <div class="stat-value" id="totalAuctions">-</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Active Auctions</h3>
+                    <div class="stat-value" id="activeAuctions">-</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Ended Auctions</h3>
+                    <div class="stat-value" id="endedAuctions">-</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Total Bids</h3>
+                    <div class="stat-value" id="totalBids">-</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Recent Users (7 days)</h3>
+                    <div class="stat-value" id="recentUsers">-</div>
+                </div>
+            </div>
+            
+            <!-- Quick Actions -->
+            <div class="admin-actions">
+                <h2>Quick Actions</h2>
+                <div class="action-buttons">
+                    <a href="admin-users.html" class="btn btn-primary">Manage Users</a>
+                    <a href="admin-auctions.html" class="btn btn-primary">Manage Auctions</a>
+                    <a href="admin-create-auction.html" class="btn btn-primary">Create Auction</a>
+                    <a href="admin-categories.html" class="btn btn-primary">Manage Categories</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Notification Toast -->
+    <div class="toast" id="toast"></div>
+
+    <script src="api.js"></script>
+    <script src="admin.js"></script>
+</body>
+</html>
+

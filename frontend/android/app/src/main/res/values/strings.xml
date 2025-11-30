@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">ZUBID</string>
+    <string name="title_activity_main">ZUBID</string>
+    <string name="package_name">com.zubid.app</string>
+    <string name="custom_url_scheme">com.zubid.app</string>
+</resources>

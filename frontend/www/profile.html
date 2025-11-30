@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - ZUBID</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css?v=20250116-enhanced-enhanced">
+    <!-- Tesseract.js for OCR -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1/dist/tesseract.min.js"></script>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <h1>ZUBID</h1>
+            </div>
+            <div class="nav-menu" id="navMenu">
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="auctions.html" class="nav-link">Auctions</a>
+                <a href="how-to-bid.html" class="nav-link">How to Bid</a>
+                <a href="contact-us.html" class="nav-link">Contact Us</a>
+                <a href="my-bids.html" class="nav-link" id="myBidsLink" style="display: none;">My Bids</a>
+                <a href="payments.html" class="nav-link" id="paymentsLink" style="display: none;">Payments</a>
+                <a href="return-requests.html" class="nav-link" id="returnRequestsLink" style="display: none;">Return Requests</a>
+                <a href="profile.html" class="nav-link active">Profile</a>
+                <div class="nav-auth" id="navAuth">
+                    <button class="btn btn-outline" onclick="showLogin()">Login</button>
+                    <button class="btn btn-primary" onclick="showRegister()">Sign Up</button>
+                </div>
+                <div class="nav-user" id="navUser" style="display: none;">
+                    <span id="userName"></span>
+                    <button class="btn btn-outline" onclick="logout()">Logout</button>
+                </div>
+            </div>
+            <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
+        </div>
+    </nav>
+
+    <!-- Profile Section -->
+    <section class="profile-section">
+        <div class="container">
+            <div id="profileContent">
+                <div id="loadingIndicator" class="loading">Loading profile...</div>
+                
+                <div id="profileInfo" style="display: none;">
+                    <div class="profile-header">
+                        <h1>My Profile</h1>
+                        <button class="btn btn-primary" onclick="toggleEditMode()" id="editBtn">Edit Profile</button>
+                    </div>
+                    
+                    <div class="profile-card">
+                        <h2>Profile Photo</h2>
+                        <div class="profile-photo-section">
+                            <div class="profile-photo-container">
+                                <img id="profilePhotoDisplay" src="" alt="Profile Photo" class="profile-photo-img">
+                                <div id="profilePhotoPlaceholder" class="profile-photo-placeholder">
+                                    <span class="placeholder-icon">👤</span>
+                                    <span class="placeholder-text">No Photo</span>
+                                </div>
+                            </div>
+                            <div class="profile-photo-actions" id="profilePhotoActions" style="display: none;">
+                                <div class="photo-option-buttons">
+                                    <button type="button" class="btn btn-primary" onclick="openAvatarSelector()">
+                                        🎨 Choose Avatar
+                                    </button>
+                                    <button type="button" class="btn btn-outline" onclick="document.getElementById('profilePhotoInput').click()">
+                                        📷 Upload Photo
+                                    </button>
+                                </div>
+                                <input type="file" id="profilePhotoInput" accept="image/*" style="display: none;" onchange="handleProfilePhotoSelect(event)">
+                                <button type="button" class="btn btn-outline btn-danger" onclick="removeProfilePhoto()" id="removePhotoBtn" style="display: none; margin-top: 0.5rem;">
+                                    🗑️ Remove Photo
+                                </button>
+                            </div>
+                            <div id="profilePhotoPreview" style="display: none; margin-top: 1rem;">
+                                <img id="profilePhotoPreviewImg" src="" alt="Preview" style="max-width: 200px; border-radius: 12px; border: 2px solid var(--primary-color);">
+                                <div style="margin-top: 0.5rem;">
+                                    <button type="button" class="btn btn-primary" onclick="saveProfilePhoto()">✅ Save Photo</button>
+                                    <button type="button" class="btn btn-outline" onclick="cancelProfilePhotoUpload()" style="margin-left: 0.5rem;">Cancel</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Avatar Selector Modal -->
+                    <div id="avatarSelectorModal" class="modal">
+                        <div class="modal-content avatar-modal-content">
+                            <span class="close" onclick="closeAvatarSelector()">&times;</span>
+                            <h2>Choose Your Avatar</h2>
+                            <p class="modal-subtitle">Select an avatar or upload your own photo</p>
+                            
+                            <div class="avatar-selector-tabs">
+                                <button class="avatar-tab active" onclick="switchAvatarTab('preset')" id="presetTab">Preset Avatars</button>
+                                <button class="avatar-tab" onclick="switchAvatarTab('custom')" id="customTab">Custom Upload</button>
+                            </div>
+                            
+                            <div id="presetAvatarsSection" class="avatar-section">
+                                <div class="avatars-grid" id="avatarsGrid">
+                                    <!-- Avatars will be populated by JavaScript -->
+                                </div>
+                            </div>
+                            
+                            <div id="customUploadSection" class="avatar-section" style="display: none;">
+                                <div class="custom-upload-area">
+                                    <input type="file" id="customAvatarInput" accept="image/*" style="display: none;" onchange="handleCustomAvatarSelect(event)">
+                                    <div class="upload-zone" onclick="document.getElementById('customAvatarInput').click()">
+                                        <div class="upload-icon">📷</div>
+                                        <div class="upload-text">Click to upload or drag and drop</div>
+                                        <div class="upload-hint">PNG, JPG, GIF up to 5MB</div>
+                                    </div>
+                                    <div id="customAvatarPreview" style="display: none; margin-top: 1rem; text-align: center;">
+                                        <img id="customAvatarPreviewImg" src="" alt="Preview" style="max-width: 200px; border-radius: 12px; border: 2px solid var(--primary-color);">
+                                        <div style="margin-top: 0.5rem;">
+                                            <button type="button" class="btn btn-primary" onclick="saveCustomAvatar()">✅ Use This Photo</button>
+                                            <button type="button" class="btn btn-outline" onclick="cancelCustomAvatar()" style="margin-left: 0.5rem;">Cancel</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="profile-card">
+                        <h2>Account Information</h2>
+                        <form id="profileForm" onsubmit="handleUpdateProfile(event)">
+                            <div class="form-group">
+                                <label>Username</label>
+                                <input type="text" id="profileUsername" readonly>
+                                <small>Username cannot be changed</small>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Email *</label>
+                                <input type="email" id="profileEmail" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Address</label>
+                                <input type="text" id="profileAddress">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Phone</label>
+                                <input type="tel" id="profilePhone">
+                            </div>
+                            
+                            <div id="profileError" class="error-message"></div>
+                            
+                            <button type="submit" class="btn btn-primary" id="saveBtn" style="display: none;">Save Changes</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Login Modal -->
+    <div class="modal" id="loginModal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('loginModal')">&times;</span>
+            <h2>Login</h2>
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="loginUsername" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="loginPassword" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Login</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Register Modal -->
+    <div class="modal" id="registerModal">
+        <div class="modal-content register-modal">
+            <span class="close" onclick="closeModalAndReset('registerModal')">&times;</span>
+            <div class="modal-header">
+                <h2>Create Your Account</h2>
+                <p class="modal-subtitle">Join ZUBID to start bidding on amazing auctions</p>
+            </div>
+            <form id="registerForm" onsubmit="handleRegister(event)">
+                <div class="form-section">
+                    <h3 class="section-title">Account Information</h3>
+                    <div class="form-group">
+                        <label>Username <span class="required">*</span></label>
+                        <input type="text" id="registerUsername" placeholder="Choose a unique username" required>
+                        <small>This will be your display name</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Email <span class="required">*</span></label>
+                        <input type="email" id="registerEmail" placeholder="your.email@example.com" required>
+                        <small>We'll never share your email</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Password <span class="required">*</span></label>
+                        <input type="password" id="registerPassword" placeholder="Create a strong password" required>
+                        <small>Use at least 8 characters</small>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3 class="section-title">Identity Verification</h3>
+                    <div class="form-group">
+                        <label>ID Number / Passport <span class="required">*</span></label>
+                        <input type="text" id="registerIdNumber" placeholder="Enter your national ID or passport number" required>
+                        <small>This will be used for identity verification</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Date of Birth <span class="required">*</span></label>
+                        <div class="date-picker-wrapper">
+                            <input type="date" id="registerBirthDate" required>
+                            <button type="button" class="date-picker-btn" onclick="document.getElementById('registerBirthDate').focus(); if (typeof document.getElementById('registerBirthDate').showPicker === 'function') { document.getElementById('registerBirthDate').showPicker(); }">
+                                <span class="date-picker-icon">📅</span>
+                                <span class="date-picker-text" id="registerBirthDateText">Select your date of birth</span>
+                                <span class="date-picker-arrow">▼</span>
+                            </button>
+                        </div>
+                        <small>Your date of birth as shown on your ID card</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Biometric Verification <span class="required">*</span></label>
+                        <div id="biometricCapture">
+                            <button type="button" id="captureBiometric" class="btn btn-outline btn-block biometric-btn" onclick="openCameraModal()">
+                                <span id="biometricIcon">📷</span> Scan ID & Take Selfie
+                            </button>
+                            <div id="capturedImages" style="display: none; margin-top: 1rem;">
+                                <div class="captured-image-preview">
+                                    <img id="idCardPreview" alt="ID Card" style="max-width: 100%; border-radius: 8px; margin-bottom: 0.5rem;">
+                                    <small>✅ ID Card Captured</small>
+                                </div>
+                                <div class="captured-image-preview">
+                                    <img id="selfiePreview" alt="Selfie" style="max-width: 100%; border-radius: 8px; margin-bottom: 0.5rem;">
+                                    <small>✅ Selfie Captured</small>
+                                </div>
+                            </div>
+                            <div id="biometricStatus" class="biometric-status"></div>
+                        </div>
+                        <small>Click the button to scan your ID card and take a selfie</small>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3 class="section-title">Contact Information</h3>
+                    <div class="form-group critical-field">
+                        <label>Phone Number <span class="required critical">*</span></label>
+                        <input type="tel" id="registerPhone" placeholder="+1 234 567 8900" required>
+                        <small>We'll use this to contact you about your auctions</small>
+                    </div>
+                    <div class="form-group critical-field">
+                        <label>Address <span class="required critical">*</span></label>
+                        <textarea id="registerAddress" rows="3" placeholder="Enter your full address (street, city, state, zip code)" required></textarea>
+                        <small>Required for auction transactions and shipping</small>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary btn-block btn-large">
+                        <span>Create Account</span>
+                    </button>
+                    <p class="form-footer">
+                        Already have an account? <a href="#" onclick="event.preventDefault(); closeModal('registerModal'); showLogin();" class="link">Sign in</a>
+                    </p>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div class="toast" id="toast"></div>
+
+    <script src="api.js"></script>
+    <script>
+        // Prevent app.js from running on profile page
+        window.skipAppJs = true;
+    </script>
+    <script src="profile.js"></script>
+</body>
+</html>
+

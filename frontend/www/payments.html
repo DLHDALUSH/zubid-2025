@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payments - ZUBID</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css?v=20250116-enhanced-enhanced">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <h1>ZUBID</h1>
+            </div>
+            <div class="nav-menu" id="navMenu">
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="auctions.html" class="nav-link">Auctions</a>
+                <a href="how-to-bid.html" class="nav-link">How to Bid</a>
+                <a href="contact-us.html" class="nav-link">Contact Us</a>
+                <a href="my-bids.html" class="nav-link" id="myBidsLink" style="display: none;">My Bids</a>
+                <a href="payments.html" class="nav-link active" id="paymentsLink" style="display: none;">Payments</a>
+                <a href="return-requests.html" class="nav-link" id="returnRequestsLink" style="display: none;">Return Requests</a>
+                <a href="profile.html" class="nav-link">Profile</a>
+                <div class="nav-auth" id="navAuth">
+                    <button class="btn btn-outline" onclick="showLogin()">Login</button>
+                    <button class="btn btn-primary" onclick="showRegister()">Sign Up</button>
+                </div>
+                <div class="nav-user" id="navUser" style="display: none;">
+                    <span id="userName"></span>
+                    <button class="btn btn-outline" onclick="logout()">Logout</button>
+                </div>
+            </div>
+            <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
+        </div>
+    </nav>
+
+    <!-- Payments Section -->
+    <section class="payments-section">
+        <div class="container">
+            <div class="section-header">
+                <h2>My Payments & Invoices</h2>
+                <p class="section-subtitle">Manage payments for your won auctions</p>
+            </div>
+
+            <!-- Payment Tabs -->
+            <div class="payment-tabs-container">
+                <div class="payment-tabs" id="paymentTabs">
+                    <button class="payment-tab active" data-filter="all" onclick="filterPayments('all')">
+                        <span class="tab-icon">📋</span>
+                        <span class="tab-label">All Payments</span>
+                        <span class="tab-count" id="countAll">0</span>
+                    </button>
+                    <button class="payment-tab" data-filter="pending" onclick="filterPayments('pending')">
+                        <span class="tab-icon">⏳</span>
+                        <span class="tab-label">Pending</span>
+                        <span class="tab-count" id="countPending">0</span>
+                    </button>
+                    <button class="payment-tab" data-filter="paid" onclick="filterPayments('paid')">
+                        <span class="tab-icon">✅</span>
+                        <span class="tab-label">Paid</span>
+                        <span class="tab-count" id="countPaid">0</span>
+                    </button>
+                    <button class="payment-tab" data-filter="failed" onclick="filterPayments('failed')">
+                        <span class="tab-icon">❌</span>
+                        <span class="tab-label">Failed</span>
+                        <span class="tab-count" id="countFailed">0</span>
+                    </button>
+                </div>
+            </div>
+
+            <div id="paymentsLoading" class="loading-container">
+                <div class="loading-spinner"></div>
+                <p>Loading payments...</p>
+            </div>
+
+            <div id="paymentsContainer" style="display: none;">
+                <!-- Invoices will be loaded here -->
+            </div>
+
+            <div id="noPayments" style="display: none;" class="empty-state">
+                <div class="empty-icon">💳</div>
+                <h3>No Payments Yet</h3>
+                <p>You don't have any pending payments. When you win an auction, invoices will appear here.</p>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- Payment Modal -->
+    <div id="paymentModal" class="modal">
+        <div class="payment-modal-content">
+            <span class="close" onclick="closePaymentModal()">&times;</span>
+            
+            <div class="payment-modal-header">
+                <div class="payment-icon">💳</div>
+                <h2>Complete Payment</h2>
+                <p class="payment-subtitle">Choose your preferred payment method</p>
+            </div>
+
+            <div class="payment-modal-body">
+                <!-- Invoice Summary -->
+                <div class="payment-invoice-summary" id="paymentInvoiceSummary">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+
+                <!-- Payment Method Selection -->
+                <div class="payment-methods-section">
+                    <h3 class="payment-section-title">Select Payment Method</h3>
+                    <div class="payment-methods-grid" id="paymentMethodsGrid">
+                        <!-- Payment methods will be populated by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Payment Form (for card payments) -->
+                <div class="payment-form-container" id="paymentFormContainer" style="display: none;">
+                    <h3 class="payment-section-title">Payment Details</h3>
+                    
+                    <!-- Card Number -->
+                    <div class="form-group">
+                        <label for="cardNumber">
+                            <span>Card Number</span>
+                            <span class="required">*</span>
+                        </label>
+                        <div class="input-wrapper">
+                            <span class="input-icon">💳</span>
+                            <input 
+                                type="text" 
+                                id="cardNumber" 
+                                placeholder="1234 5678 9012 3456"
+                                maxlength="19"
+                                autocomplete="cc-number"
+                            />
+                            <div class="card-brand-icon" id="cardBrandIcon"></div>
+                        </div>
+                        <small class="error-message" id="cardNumberError"></small>
+                    </div>
+
+                    <!-- Card Details Row -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="cardExpiry">
+                                <span>Expiry Date</span>
+                                <span class="required">*</span>
+                            </label>
+                            <div class="input-wrapper">
+                                <span class="input-icon">📅</span>
+                                <input 
+                                    type="text" 
+                                    id="cardExpiry" 
+                                    placeholder="MM/YY"
+                                    maxlength="5"
+                                    autocomplete="cc-exp"
+                                />
+                            </div>
+                            <small class="error-message" id="cardExpiryError"></small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="cardCVC">
+                                <span>CVV</span>
+                                <span class="required">*</span>
+                            </label>
+                            <div class="input-wrapper">
+                                <span class="input-icon">🔒</span>
+                                <input 
+                                    type="text" 
+                                    id="cardCVC" 
+                                    placeholder="123"
+                                    maxlength="4"
+                                    autocomplete="cc-csc"
+                                />
+                            </div>
+                            <small class="error-message" id="cardCVCError"></small>
+                        </div>
+                    </div>
+
+                    <!-- Cardholder Name -->
+                    <div class="form-group">
+                        <label for="cardholderName">
+                            <span>Cardholder Name</span>
+                            <span class="required">*</span>
+                        </label>
+                        <div class="input-wrapper">
+                            <span class="input-icon">👤</span>
+                            <input 
+                                type="text" 
+                                id="cardholderName" 
+                                placeholder="John Doe"
+                                autocomplete="cc-name"
+                            />
+                        </div>
+                        <small class="error-message" id="cardholderNameError"></small>
+                    </div>
+
+                    <!-- Billing Address (Optional) -->
+                    <div class="form-group">
+                        <label for="billingAddress">
+                            <span>Billing Address</span>
+                            <span class="optional">(Optional)</span>
+                        </label>
+                        <div class="input-wrapper">
+                            <span class="input-icon">📍</span>
+                            <input 
+                                type="text" 
+                                id="billingAddress" 
+                                placeholder="123 Main Street, City, Country"
+                                autocomplete="street-address"
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FIB Bank Form (for Iraqi mobile payment) -->
+                <div class="payment-form-container" id="fibFormContainer" style="display: none;">
+                    <h3 class="payment-section-title">FIB Bank Details</h3>
+
+                    <div class="fib-info-banner">
+                        <span class="fib-icon">🏦</span>
+                        <p>Pay securely using your FIB mobile banking app</p>
+                    </div>
+
+                    <!-- ZUBID Account to receive payment -->
+                    <div class="fib-receive-account">
+                        <div class="receive-label">Send Payment To:</div>
+                        <div class="receive-number-box">
+                            <span class="receive-icon">📲</span>
+                            <span class="receive-number" id="zubidFibNumber">0771 562 5156</span>
+                            <button type="button" class="copy-btn" onclick="copyFibNumber()" title="Copy number">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        <small class="receive-hint">ZUBID Official FIB Account</small>
+                    </div>
+
+                    <!-- Full Name -->
+                    <div class="form-group">
+                        <label for="fibName">
+                            <span>Your Full Name</span>
+                            <span class="required">*</span>
+                        </label>
+                        <div class="input-wrapper">
+                            <span class="input-icon">👤</span>
+                            <input
+                                type="text"
+                                id="fibName"
+                                placeholder="Enter your full name"
+                                autocomplete="name"
+                            />
+                        </div>
+                        <small class="error-message" id="fibNameError"></small>
+                    </div>
+
+                    <!-- Iraqi Phone Number -->
+                    <div class="form-group">
+                        <label for="fibPhone">
+                            <span>Your Iraqi Phone Number</span>
+                            <span class="required">*</span>
+                        </label>
+                        <div class="input-wrapper">
+                            <span class="input-icon">📱</span>
+                            <input
+                                type="tel"
+                                id="fibPhone"
+                                placeholder="07XX XXX XXXX"
+                                maxlength="13"
+                                autocomplete="tel"
+                            />
+                        </div>
+                        <small class="input-hint">Format: 07XX XXX XXXX (e.g., 0750 123 4567)</small>
+                        <small class="error-message" id="fibPhoneError"></small>
+                    </div>
+
+                    <div class="fib-instructions">
+                        <h4>How to pay with FIB:</h4>
+                        <ol>
+                            <li>Open your FIB mobile app</li>
+                            <li>Go to "Send Money"</li>
+                            <li>Enter the ZUBID number: <strong>0771 562 5156</strong></li>
+                            <li>Enter the exact payment amount shown above</li>
+                            <li>Add your invoice number in the notes</li>
+                            <li>Confirm and complete the transfer</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <!-- Cash on Delivery Info -->
+                <div class="payment-info-section" id="cashOnDeliveryInfo" style="display: none;">
+                    <div class="info-card">
+                        <div class="info-icon">🚚</div>
+                        <div class="info-content">
+                            <h4>Cash on Delivery</h4>
+                            <p>Payment will be collected when your item is delivered. No upfront payment required.</p>
+                            <ul class="info-list">
+                                <li>✓ Secure delivery to your address</li>
+                                <li>✓ Pay when you receive the item</li>
+                                <li>✓ Multiple payment options accepted</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Modal Footer -->
+            <div class="payment-modal-footer">
+                <div class="payment-total-display">
+                    <span class="total-label">Total Amount:</span>
+                    <span class="total-amount" id="paymentTotalAmount">$0.00</span>
+                </div>
+                <div class="payment-actions">
+                    <button class="btn btn-outline" onclick="closePaymentModal()">Cancel</button>
+                    <button class="btn btn-primary" id="submitPaymentBtn" onclick="submitPayment()">
+                        <span class="btn-text">Pay Now</span>
+                        <span class="btn-loader" style="display: none;">
+                            <span class="spinner"></span>
+                        </span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Security Badge -->
+            <div class="payment-security">
+                <span class="security-icon">🔒</span>
+                <span>Secure Payment • SSL Encrypted</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div class="toast" id="toast"></div>
+
+    <script src="api.js"></script>
+    <script src="app.js"></script>
+    <script src="payments.js"></script>
+</body>
+</html>
+
