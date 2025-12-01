@@ -6,11 +6,14 @@ workflows:
     environment:
       java: 17
       node: 18
+      android_signing:
+        - keystore_reference: null
     scripts:
       - name: Install dependencies
         script: |
           cd frontend
           npm install
+          npm install @capacitor/cli @capacitor/core @capacitor/android --save
       - name: Build web assets
         script: |
           cd frontend
@@ -37,8 +40,8 @@ workflows:
       - name: Add Android platform
         script: |
           cd frontend
-          npx cap add android || true
-          npx cap sync android
+          npm exec cap add android || true
+          npm exec cap sync android
       - name: Build Android APK
         script: |
           cd frontend/android
