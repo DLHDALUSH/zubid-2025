@@ -2,46 +2,30 @@ workflows:
   android-build:
     name: Android Build
     max_build_duration: 60
-    instance_type: linux
+    instance_type: linux_x2
     environment:
       java: 17
       node: 20
+      groups:
+        - google_play
     scripts:
       - name: Install dependencies
         script: |
           cd frontend
-          npm install --legacy-peer-deps
-          ls -la node_modules/.bin/
-          ls -la node_modules/@capacitor/cli/bin/ || echo "CLI bin not found"
+          npm install
       - name: Build web assets
         script: |
           cd frontend
           mkdir -p www
-          cp index.html www/ 2>/dev/null || true
-          cp auctions.html www/ 2>/dev/null || true
-          cp my-bids.html www/ 2>/dev/null || true
-          cp payments.html www/ 2>/dev/null || true
-          cp profile.html www/ 2>/dev/null || true
-          cp admin.html www/ 2>/dev/null || true
-          cp styles.css www/ 2>/dev/null || true
-          cp app.js www/ 2>/dev/null || true
-          cp api.js www/ 2>/dev/null || true
-          cp auctions.js www/ 2>/dev/null || true
-          cp payments.js www/ 2>/dev/null || true
-          cp utils.js www/ 2>/dev/null || true
-          cp enhanced-utils.js www/ 2>/dev/null || true
-          cp performance.js www/ 2>/dev/null || true
-          cp accessibility.js www/ 2>/dev/null || true
-          cp i18n.js www/ 2>/dev/null || true
+          cp *.html www/ 2>/dev/null || true
+          cp *.css www/ 2>/dev/null || true
+          cp *.js www/ 2>/dev/null || true
           cp manifest.json www/ 2>/dev/null || true
-          cp sw.js www/ 2>/dev/null || true
           cp -r icons www/ 2>/dev/null || true
-      - name: Add Android platform
+      - name: Sync Capacitor
         script: |
           cd frontend
-          chmod +x ./node_modules/.bin/*
-          node ./node_modules/@capacitor/cli/bin/capacitor.js add android || true
-          node ./node_modules/@capacitor/cli/bin/capacitor.js sync android
+          npx cap sync android
       - name: Build Android APK
         script: |
           cd frontend/android
