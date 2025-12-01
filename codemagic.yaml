@@ -22,10 +22,6 @@ workflows:
           cp *.js www/ 2>/dev/null || true
           cp manifest.json www/ 2>/dev/null || true
           cp -r icons www/ 2>/dev/null || true
-      - name: Sync Capacitor
-        script: |
-          cd frontend
-          node node_modules/@capacitor/cli/dist/index.js sync android
       - name: Build Android APK
         script: |
           cd frontend/android
