@@ -10,9 +10,9 @@ workflows:
       - name: Install dependencies
         script: |
           cd frontend
-          npm install
-          npm install typescript --save-dev
-          npm install @capacitor/cli @capacitor/core @capacitor/android --save
+          npm install --legacy-peer-deps
+          ls -la node_modules/.bin/
+          ls -la node_modules/@capacitor/cli/bin/ || echo "CLI bin not found"
       - name: Build web assets
         script: |
           cd frontend
