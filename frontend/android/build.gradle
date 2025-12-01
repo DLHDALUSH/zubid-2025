@@ -24,6 +24,22 @@ allprojects {
     }
 }
 
+// Force all Android modules (app, capacitor-android, cordova plugins, etc.)
+// to compile with Java 17 so they are compatible with the Codemagic JDK.
+subprojects { subproject ->
+    afterEvaluate { project ->
+        if (project.plugins.hasPlugin('com.android.application') ||
+            project.plugins.hasPlugin('com.android.library')) {
+            project.android {
+                compileOptions {
+                    sourceCompatibility JavaVersion.VERSION_17
+                    targetCompatibility JavaVersion.VERSION_17
+                }
+            }
+        }
+    }
+}
+
 task clean(type: Delete) {
     delete rootProject.buildDir
 }
