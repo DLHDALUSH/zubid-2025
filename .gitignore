@@ -79,3 +79,15 @@ nginx.conf.backup
 *.crt
 !nginx/*.conf.example
 
+# Node.js
+node_modules/
+frontend/node_modules/
+npm-debug.log*
+
+# Mobile builds
+frontend/www/
+frontend/android/
+frontend/ios/
+*.apk
+*.ipa
+*.aab

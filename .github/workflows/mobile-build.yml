@@ -1,0 +1,115 @@
+name: Build Mobile Apps
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  build-android:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm install
+      
+      - name: Build web assets
+        working-directory: frontend
+        run: |
+          mkdir -p www
+          cp index.html auctions.html my-bids.html payments.html profile.html admin.html www/ 2>/dev/null || true
+          cp styles.css app.js api.js auctions.js payments.js www/ 2>/dev/null || true
+          cp utils.js enhanced-utils.js performance.js accessibility.js i18n.js www/ 2>/dev/null || true
+          cp manifest.json sw.js www/ 2>/dev/null || true
+          cp -r icons www/ 2>/dev/null || true
+      
+      - name: Add Android platform
+        working-directory: frontend
+        run: |
+          npx cap add android || true
+          npx cap sync android
+      
+      - name: Build APK
+        working-directory: frontend/android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug
+      
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: zubid-android-apk
+          path: frontend/android/app/build/outputs/apk/debug/*.apk
+
+  build-ios:
+    name: Build iOS App
+    runs-on: macos-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm install
+      
+      - name: Build web assets
+        working-directory: frontend
+        run: |
+          mkdir -p www
+          cp index.html auctions.html my-bids.html payments.html profile.html admin.html www/ 2>/dev/null || true
+          cp styles.css app.js api.js auctions.js payments.js www/ 2>/dev/null || true
+          cp utils.js enhanced-utils.js performance.js accessibility.js i18n.js www/ 2>/dev/null || true
+          cp manifest.json sw.js www/ 2>/dev/null || true
+          cp -r icons www/ 2>/dev/null || true
+      
+      - name: Add iOS platform
+        working-directory: frontend
+        run: |
+          npx cap add ios || true
+          npx cap sync ios
+      
+      - name: Build iOS (Simulator)
+        working-directory: frontend/ios/App
+        run: |
+          xcodebuild build \
+            -workspace App.xcworkspace \
+            -scheme App \
+            -configuration Debug \
+            -destination 'platform=iOS Simulator,name=iPhone 15' \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO
+      
+      - name: Upload iOS Build
+        uses: actions/upload-artifact@v4
+        with:
+          name: zubid-ios-simulator
+          path: frontend/ios/App/build/Build/Products/Debug-iphonesimulator/*.app
+
