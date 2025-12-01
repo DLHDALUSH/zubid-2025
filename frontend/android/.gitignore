@@ -90,7 +90,11 @@ lint/tmp/
 *.hprof
 
 # Cordova plugins for Capacitor
-capacitor-cordova-android-plugins
+# NOTE: We commit the generated `capacitor-cordova-android-plugins` Gradle module
+# so that CI environments (like Codemagic) have the necessary Gradle scripts.
+# If you ever need to regenerate it, run `npx cap sync android` locally and commit
+# the updated files.
+
 
 # Copied web assets
 app/src/main/assets/public

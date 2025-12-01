@@ -86,7 +86,6 @@ npm-debug.log*
 
 # Mobile builds
 frontend/www/
-frontend/android/
 frontend/ios/
 *.apk
 *.ipa
