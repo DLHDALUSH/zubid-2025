@@ -38,8 +38,8 @@ workflows:
       - name: Add Android platform
         script: |
           cd frontend
-          npm exec cap add android || true
-          npm exec cap sync android
+          ./node_modules/.bin/cap add android || true
+          ./node_modules/.bin/cap sync android
       - name: Build Android APK
         script: |
           cd frontend/android
