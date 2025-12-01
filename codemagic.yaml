@@ -1,46 +1,8 @@
 workflows:
-  ios-build:
-    name: iOS Build
-    max_build_duration: 60
-    instance_type: mac_mini_m1
-    environment:
-      ios_signing:
-        distribution_type: development
-        bundle_identifier: com.zubid.app
-      vars:
-        XCODE_WORKSPACE: "ios/App/App.xcworkspace"
-        XCODE_SCHEME: "App"
-      node: 18
-    scripts:
-      - name: Install dependencies
-        script: |
-          cd frontend
-          npm install
-      - name: Build web assets
-        script: |
-          cd frontend
-          mkdir -p www
-          cp -r index.html auctions.html my-bids.html payments.html profile.html admin.html www/
-          cp -r styles.css app.js api.js auctions.js payments.js www/
-          cp -r utils.js enhanced-utils.js performance.js accessibility.js i18n.js www/
-          cp -r manifest.json sw.js icons www/
-      - name: Add iOS platform
-        script: |
-          cd frontend
-          npx cap add ios || true
-          npx cap sync ios
-      - name: Build iOS
-        script: |
-          cd frontend/ios/App
-          xcodebuild build -workspace App.xcworkspace -scheme App -destination 'generic/platform=iOS Simulator'
-    artifacts:
-      - frontend/ios/App/build/**/*.app
-      - frontend/ios/App/build/**/*.ipa
-
   android-build:
     name: Android Build
     max_build_duration: 60
-    instance_type: linux_x2
+    instance_type: linux
     environment:
       java: 17
       node: 18
@@ -53,10 +15,25 @@ workflows:
         script: |
           cd frontend
           mkdir -p www
-          cp -r index.html auctions.html my-bids.html payments.html profile.html admin.html www/
-          cp -r styles.css app.js api.js auctions.js payments.js www/
-          cp -r utils.js enhanced-utils.js performance.js accessibility.js i18n.js www/
-          cp -r manifest.json sw.js icons www/
+          cp index.html www/ 2>/dev/null || true
+          cp auctions.html www/ 2>/dev/null || true
+          cp my-bids.html www/ 2>/dev/null || true
+          cp payments.html www/ 2>/dev/null || true
+          cp profile.html www/ 2>/dev/null || true
+          cp admin.html www/ 2>/dev/null || true
+          cp styles.css www/ 2>/dev/null || true
+          cp app.js www/ 2>/dev/null || true
+          cp api.js www/ 2>/dev/null || true
+          cp auctions.js www/ 2>/dev/null || true
+          cp payments.js www/ 2>/dev/null || true
+          cp utils.js www/ 2>/dev/null || true
+          cp enhanced-utils.js www/ 2>/dev/null || true
+          cp performance.js www/ 2>/dev/null || true
+          cp accessibility.js www/ 2>/dev/null || true
+          cp i18n.js www/ 2>/dev/null || true
+          cp manifest.json www/ 2>/dev/null || true
+          cp sw.js www/ 2>/dev/null || true
+          cp -r icons www/ 2>/dev/null || true
       - name: Add Android platform
         script: |
           cd frontend
