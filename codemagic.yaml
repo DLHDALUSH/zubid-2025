@@ -11,6 +11,7 @@ workflows:
         script: |
           cd frontend
           npm install
+          npm install typescript --save-dev
           npm install @capacitor/cli @capacitor/core @capacitor/android --save
       - name: Build web assets
         script: |
@@ -38,9 +39,8 @@ workflows:
       - name: Add Android platform
         script: |
           cd frontend
-          npm install -g @capacitor/cli
-          cap add android || true
-          cap sync android
+          ./node_modules/.bin/cap add android || true
+          ./node_modules/.bin/cap sync android
       - name: Build Android APK
         script: |
           cd frontend/android
