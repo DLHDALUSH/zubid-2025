@@ -1,0 +1,25 @@
+{
+  "appId": "com.zubid.app",
+  "appName": "ZUBID",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  },
+  "android": {
+    "allowMixedContent": false
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 2000,
+      "launchAutoHide": true,
+      "backgroundColor": "#ff6600",
+      "showSpinner": true,
+      "spinnerColor": "#ffffff",
+      "androidScaleType": "CENTER_CROP"
+    },
+    "StatusBar": {
+      "style": "LIGHT",
+      "backgroundColor": "#ff6600"
+    }
+  }
+}
