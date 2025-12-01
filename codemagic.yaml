@@ -38,9 +38,9 @@ workflows:
       - name: Add Android platform
         script: |
           cd frontend
-          chmod +x node_modules/.bin/*
-          npx cap add android || true
-          npx cap sync android
+          npm install -g @capacitor/cli
+          cap add android || true
+          cap sync android
       - name: Build Android APK
         script: |
           cd frontend/android
