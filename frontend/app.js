@@ -1498,6 +1498,11 @@ function closeCameraModal() {
 }
 
 function resetCameraUI() {
+    // Helper for translations (safe if i18n not loaded yet)
+    const t = (window.i18n && window.i18n.t)
+        ? window.i18n.t
+        : (key, def) => def || key;
+
     // Reset captured image state variables FIRST to prevent stale data
     // This ensures that when the modal is reopened, we start with a clean slate
     // This is critical for finishBiometricCapture() to correctly determine mode
@@ -1513,12 +1518,11 @@ function resetCameraUI() {
     
     // Set initial capture mode and title based on page structure
     let initialMode = 'id_front';
-    let initialTitle = 'Scan ID Card Front';
+    let initialTitle = t('register.scanIdCard', 'Scan ID Card');
     
     if (!hasStepIdFront && hasStepId) {
         // Other pages (auctions.html, create-auction.html, etc.) use single ID mode
         initialMode = 'id';
-        initialTitle = 'Scan ID Card';
     }
     
     // Reset UI state
@@ -2404,6 +2408,11 @@ function updateSelfiePreview(imageData) {
 }
 
 function updateStepStatus(step, completed) {
+    // Helper for translations (safe if i18n not loaded yet)
+    const t = (window.i18n && window.i18n.t)
+        ? window.i18n.t
+        : (key, def) => def || key;
+
     // Map step names to element IDs - support both naming conventions
     // index.html uses: stepIdFront, stepIdBack, stepSelfie
     // Other pages use: stepId, stepSelfie
@@ -2439,10 +2448,10 @@ function updateStepStatus(step, completed) {
         
         if (completed) {
             stepElement.classList.add('completed');
-            statusElement.textContent = '✅ Completed';
+            statusElement.textContent = t('register.doneShort', '✅ Completed');
             statusElement.style.color = 'var(--success-color)';
         } else {
-            statusElement.textContent = 'Pending';
+            statusElement.textContent = t('register.pending', 'Pending');
             statusElement.style.color = '#a0a0c0';
         }
     }
