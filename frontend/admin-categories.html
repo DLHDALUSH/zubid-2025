@@ -8,50 +8,105 @@
     <link rel="stylesheet" href="admin.css">
 </head>
 <body>
-    <!-- Navigation -->
-    <nav class="navbar">
-        <div class="container">
-            <div class="nav-brand">
-                <h1>ZUBID Admin</h1>
-            </div>
-            <div class="nav-menu">
-                <a href="admin.html" class="nav-link">Dashboard</a>
-                <a href="admin-users.html" class="nav-link">Users</a>
-                <a href="admin-auctions.html" class="nav-link">Auctions</a>
-                <a href="admin-create-auction.html" class="nav-link">Create Auction</a>
-                <a href="admin-categories.html" class="nav-link active">Categories</a>
-                <a href="index.html" class="nav-link">User Portal</a>
-                <div class="nav-user">
-                    <span id="adminUserName"></span>
-                    <button class="btn btn-outline" onclick="logout()">Logout</button>
+    <div class="admin-layout">
+        <!-- Mobile Toggle -->
+        <button class="admin-mobile-toggle" onclick="toggleSidebar()">☰</button>
+
+        <!-- Sidebar Navigation -->
+        <aside class="admin-sidebar" id="adminSidebar">
+            <div class="admin-sidebar-header">
+                <div class="admin-logo">
+                    <div class="admin-logo-icon">🏆</div>
+                    <div class="admin-logo-text">
+                        <h1>ZUBID</h1>
+                        <span>Admin Portal</span>
+                    </div>
                 </div>
             </div>
-        </div>
-    </nav>
 
-    <!-- Categories Management -->
-    <section class="admin-section">
-        <div class="container">
-            <h1>Category Management</h1>
-            
-            <!-- Add Category Form -->
-            <div class="admin-form">
-                <h2>Add New Category</h2>
-                <form id="addCategoryForm" onsubmit="handleAddCategory(event)">
-                    <div class="form-group">
-                        <label>Category Name *</label>
-                        <input type="text" id="categoryName" required>
+            <nav class="admin-nav">
+                <div class="admin-nav-section">
+                    <div class="admin-nav-title">Main Menu</div>
+                    <a href="admin.html" class="admin-nav-link">
+                        <span class="icon">📊</span>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="admin-users.html" class="admin-nav-link">
+                        <span class="icon">👥</span>
+                        <span>Users</span>
+                    </a>
+                    <a href="admin-auctions.html" class="admin-nav-link">
+                        <span class="icon">🏷️</span>
+                        <span>Auctions</span>
+                    </a>
+                    <a href="admin-categories.html" class="admin-nav-link active">
+                        <span class="icon">📁</span>
+                        <span>Categories</span>
+                    </a>
+                </div>
+
+                <div class="admin-nav-section">
+                    <div class="admin-nav-title">Actions</div>
+                    <a href="admin-create-auction.html" class="admin-nav-link">
+                        <span class="icon">➕</span>
+                        <span>Create Auction</span>
+                    </a>
+                    <a href="index.html" class="admin-nav-link">
+                        <span class="icon">🌐</span>
+                        <span>User Portal</span>
+                    </a>
+                </div>
+            </nav>
+
+            <div class="admin-sidebar-user">
+                <div class="admin-user-info">
+                    <div class="admin-user-avatar" id="adminAvatar">A</div>
+                    <div class="admin-user-details">
+                        <div class="admin-user-name" id="adminUserName">Admin</div>
+                        <div class="admin-user-role">Administrator</div>
                     </div>
-                    <div class="form-group">
-                        <label>Description</label>
-                        <textarea id="categoryDescription" rows="3"></textarea>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Add Category</button>
-                </form>
+                    <button class="admin-logout-btn" onclick="logout()" title="Logout">🚪</button>
+                </div>
             </div>
-            
-            <!-- Categories List -->
-            <div class="table-container">
+        </aside>
+
+        <!-- Main Content -->
+        <main class="admin-main">
+            <!-- Header -->
+            <div class="admin-header">
+                <div class="admin-header-left">
+                    <h1>📁 Category Management</h1>
+                    <p>Organize and manage auction categories.</p>
+                </div>
+            </div>
+
+            <!-- Add Category Form -->
+            <div class="admin-form-container" style="margin-bottom: 2rem;">
+                <div class="admin-form-header">
+                    <h1>➕ Add New Category</h1>
+                </div>
+                <div class="admin-form-body">
+                    <form id="addCategoryForm" onsubmit="handleAddCategory(event)">
+                        <div class="admin-form-group">
+                            <label>Category Name *</label>
+                            <input type="text" id="categoryName" class="admin-input" required>
+                        </div>
+                        <div class="admin-form-group">
+                            <label>Description</label>
+                            <textarea id="categoryDescription" class="admin-textarea" rows="3"></textarea>
+                        </div>
+                        <button type="submit" class="admin-btn admin-btn-primary">Add Category</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Categories Table Container -->
+            <div class="admin-table-container">
+                <div class="admin-table-header">
+                    <h2>📁 All Categories</h2>
+                </div>
+
+                <!-- Table -->
                 <table class="admin-table">
                     <thead>
                         <tr>
@@ -63,34 +118,40 @@
                     </thead>
                     <tbody id="categoriesTableBody">
                         <tr>
-                            <td colspan="4" class="loading">Loading categories...</td>
+                            <td colspan="4" style="text-align: center; padding: 2rem; color: var(--admin-text-muted);">
+                                Loading categories...
+                            </td>
                         </tr>
                     </tbody>
                 </table>
             </div>
-        </div>
-    </section>
+        </main>
+    </div>
 
     <!-- Edit Category Modal -->
-    <div class="modal" id="editCategoryModal">
-        <div class="modal-content">
-            <span class="close" onclick="closeModal('editCategoryModal')">&times;</span>
-            <h2>Edit Category</h2>
-            <form id="editCategoryForm" onsubmit="handleUpdateCategory(event)">
-                <div class="form-group">
-                    <label>Category Name *</label>
-                    <input type="text" id="editCategoryName" required>
-                </div>
-                <div class="form-group">
-                    <label>Description</label>
-                    <textarea id="editCategoryDescription" rows="3"></textarea>
-                </div>
-                <input type="hidden" id="editCategoryId">
-                <div class="form-actions">
-                    <button type="submit" class="btn btn-primary">Update Category</button>
-                    <button type="button" class="btn btn-outline" onclick="closeModal('editCategoryModal')">Cancel</button>
-                </div>
-            </form>
+    <div class="admin-modal" id="editCategoryModal">
+        <div class="admin-modal-content">
+            <div class="admin-modal-header">
+                <h2>✏️ Edit Category</h2>
+                <button class="admin-modal-close" onclick="closeModal('editCategoryModal')">×</button>
+            </div>
+            <div class="admin-modal-body">
+                <form id="editCategoryForm" onsubmit="handleUpdateCategory(event)">
+                    <div class="admin-form-group">
+                        <label>Category Name *</label>
+                        <input type="text" id="editCategoryName" class="admin-input" required>
+                    </div>
+                    <div class="admin-form-group">
+                        <label>Description</label>
+                        <textarea id="editCategoryDescription" class="admin-textarea" rows="3"></textarea>
+                    </div>
+                    <input type="hidden" id="editCategoryId">
+                    <div class="admin-form-actions">
+                        <button type="submit" class="admin-btn admin-btn-primary">Update Category</button>
+                        <button type="button" class="admin-btn admin-btn-outline" onclick="closeModal('editCategoryModal')">Cancel</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
@@ -100,6 +161,11 @@
     <script src="api.js"></script>
     <script src="admin.js"></script>
     <script src="admin-categories.js"></script>
+    <script>
+        function toggleSidebar() {
+            document.getElementById('adminSidebar').classList.toggle('open');
+        }
+    </script>
 </body>
 </html>
 

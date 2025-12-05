@@ -95,7 +95,9 @@ function editAuction(auctionId, status, featured) {
     document.getElementById('editAuctionId').value = auctionId;
     document.getElementById('editStatus').value = status;
     document.getElementById('editFeatured').checked = featured;
-    document.getElementById('editAuctionModal').style.display = 'block';
+    const modal = document.getElementById('editAuctionModal');
+    modal.classList.add('active');
+    modal.style.display = 'flex';
 }
 
 async function handleUpdateAuction(event) {
@@ -182,7 +184,9 @@ async function loadCategoriesForCreate() {
 }
 
 function openCreateAuctionModal() {
-    document.getElementById('createAuctionModal').style.display = 'block';
+    const modal = document.getElementById('createAuctionModal');
+    modal.classList.add('active');
+    modal.style.display = 'flex';
     loadCategoriesForCreate();
     // Reset form
     document.getElementById('createAuctionForm').reset();
@@ -678,13 +682,18 @@ async function handleCreateAuction(event) {
 }
 
 function closeModal(modalId) {
-    document.getElementById(modalId).style.display = 'none';
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.classList.remove('active');
+        modal.style.display = 'none';
+    }
 }
 
 window.onclick = function(event) {
-    const modals = document.querySelectorAll('.modal');
+    const modals = document.querySelectorAll('.admin-modal, .modal');
     modals.forEach(modal => {
         if (event.target === modal) {
+            modal.classList.remove('active');
             modal.style.display = 'none';
         }
     });

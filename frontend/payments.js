@@ -161,74 +161,259 @@ function filterPayments(filter) {
 function createInvoiceCard(payment) {
     const card = document.createElement('div');
     card.className = 'invoice-card';
-    
-    const statusClass = payment.payment_status === 'paid' ? 'paid' : 
+    card.id = `invoice-${payment.id}`;
+
+    const statusClass = payment.payment_status === 'paid' ? 'paid' :
                        payment.payment_status === 'pending' ? 'pending' : 'failed';
-    
+
+    const createdDate = new Date(payment.created_at);
+    const formattedDate = createdDate.toLocaleDateString('en-US', {
+        year: 'numeric', month: 'short', day: 'numeric'
+    });
+
+    const qrCodeUrl = payment.qr_code_url || payment.auction?.qr_code_url;
+    const shortItemName = payment.auction.item_name.length > 30
+        ? payment.auction.item_name.substring(0, 27) + '...'
+        : payment.auction.item_name;
+
     card.innerHTML = `
+        <!-- Invoice Brand Header -->
+        <div class="invoice-brand-header">
+            <div class="invoice-brand-logo">
+                <div class="logo-icon">🏆</div>
+                <div>
+                    <div class="logo-text">ZUBID</div>
+                    <div class="logo-subtitle">Auction Platform</div>
+                </div>
+            </div>
+            <div class="invoice-number-badge">INV-${String(payment.id).padStart(6, '0')}</div>
+        </div>
+
+        <!-- Invoice Header -->
         <div class="invoice-header">
             <div class="invoice-item-info">
                 ${payment.auction.image_url ? `
-                    <img src="${payment.auction.image_url}" alt="${payment.auction.item_name}" class="invoice-item-image">
-                ` : ''}
+                    <img src="${payment.auction.image_url}" alt="${shortItemName}" class="invoice-item-image">
+                ` : `
+                    <div class="invoice-item-image" style="display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;font-size:1.5rem;">📦</div>
+                `}
                 <div class="invoice-item-details">
-                    <h3>${payment.auction.item_name}</h3>
-                    <p class="invoice-id">Invoice #${payment.id}</p>
-                    <p class="invoice-date">Created: ${new Date(payment.created_at).toLocaleDateString()}</p>
+                    <h3 title="${payment.auction.item_name}">${shortItemName}</h3>
+                    <div class="invoice-meta">
+                        <span class="invoice-id">INV-${String(payment.id).padStart(6, '0')}</span>
+                        <span class="invoice-date">${formattedDate}</span>
+                        <a href="auction-detail.html?id=${payment.auction.id}" class="invoice-auction-link">View Auction</a>
+                    </div>
                 </div>
             </div>
             <div class="invoice-status">
                 <span class="status-badge status-${statusClass}">${getStatusLabel(payment.payment_status)}</span>
+                ${payment.payment_method ? `<span class="invoice-payment-method">${getPaymentMethodIcon(payment.payment_method)} ${getPaymentMethodLabel(payment.payment_method)}</span>` : ''}
             </div>
         </div>
-        
+
+        <!-- Invoice Body -->
         <div class="invoice-body">
-            <div class="invoice-breakdown">
-                <div class="invoice-row">
-                    <span>Item Price:</span>
-                    <span>$${payment.item_price.toFixed(2)}</span>
-                </div>
-                <div class="invoice-row">
-                    <span>Bid Fee (1%):</span>
-                    <span>$${payment.bid_fee.toFixed(2)}</span>
-                </div>
-                <div class="invoice-row">
-                    <span>Delivery Fee:</span>
-                    <span>$${payment.delivery_fee.toFixed(2)}</span>
-                </div>
-                <div class="invoice-row total">
-                    <span>Total Amount:</span>
-                    <span>$${payment.total_amount.toFixed(2)}</span>
-                </div>
-            </div>
-            
-            ${payment.qr_code_url || payment.auction?.qr_code_url ? `
-                <div class="invoice-qr-section">
-                    <h4>Item QR Code</h4>
-                    <div class="qr-code-container">
-                        <img src="${payment.qr_code_url || payment.auction.qr_code_url}" alt="QR Code" class="qr-code-image" />
-                        <p class="qr-code-hint">Scan to view auction details</p>
+            <div class="invoice-content-grid">
+                <!-- Price Breakdown -->
+                <div class="invoice-breakdown">
+                    <div class="invoice-breakdown-header">
+                        <span class="icon">💰</span>
+                        <h4>Price Breakdown</h4>
+                    </div>
+                    <div class="invoice-row">
+                        <span class="label">🏷️ Winning Bid</span>
+                        <span class="value">$${payment.item_price.toFixed(2)}</span>
+                    </div>
+                    <div class="invoice-row">
+                        <span class="label">📊 Fee (1%)</span>
+                        <span class="value">$${payment.bid_fee.toFixed(2)}</span>
+                    </div>
+                    <div class="invoice-row">
+                        <span class="label">🚚 Delivery</span>
+                        <span class="value">$${payment.delivery_fee.toFixed(2)}</span>
+                    </div>
+                    <div class="invoice-row total">
+                        <span class="label">Total</span>
+                        <span class="value">$${payment.total_amount.toFixed(2)}</span>
                     </div>
                 </div>
-            ` : ''}
-            
-            ${payment.payment_status === 'pending' ? `
-                <div class="invoice-actions">
-                    <button class="btn btn-primary" onclick='openPaymentModal(${payment.id})'>
-                        💳 Pay Now
-                    </button>
-                </div>
-            ` : ''}
-            
-            ${payment.payment_status === 'paid' ? `
-                <div class="invoice-paid-info">
-                    <p>✅ Paid on ${payment.paid_at ? new Date(payment.paid_at).toLocaleDateString() : 'N/A'}</p>
-                </div>
-            ` : ''}
+
+                <!-- QR Code Section -->
+                ${qrCodeUrl ? `
+                    <div class="invoice-qr-section">
+                        <div class="qr-section-header">
+                            <span class="icon">📱</span>
+                            <h4>Product QR</h4>
+                        </div>
+                        <div class="qr-code-wrapper">
+                            <div class="qr-code-container">
+                                <img src="${qrCodeUrl}" alt="QR Code" class="qr-code-image" />
+                            </div>
+                        </div>
+                        <div class="qr-product-info">
+                            <div class="qr-product-name" title="${payment.auction.item_name}">${shortItemName}</div>
+                            <p class="qr-code-hint">Scan to verify</p>
+                        </div>
+                    </div>
+                ` : `
+                    <div class="invoice-qr-section">
+                        <div class="qr-section-header">
+                            <span class="icon">📱</span>
+                            <h4>Product QR</h4>
+                        </div>
+                        <div style="padding:1rem;color:#64748b;text-align:center;">
+                            <span style="font-size:1.5rem;">🔄</span>
+                            <p style="margin-top:0.25rem;font-size:0.6rem;">Generating...</p>
+                        </div>
+                    </div>
+                `}
+            </div>
+        </div>
+
+        <!-- Invoice Actions Bar -->
+        <div class="invoice-actions-bar">
+            <div class="invoice-actions">
+                ${payment.payment_status === 'pending' ? `<button class="invoice-action-btn primary" onclick='openPaymentModal(${payment.id})'>💳 Pay</button>` : ''}
+                <button class="invoice-action-btn print" onclick="printInvoice(${payment.id})">🖨️ Print</button>
+                <button class="invoice-action-btn secondary" onclick="downloadInvoice(${payment.id})">📥 PDF</button>
+            </div>
+            ${payment.payment_status === 'paid' ? `<div class="invoice-paid-info">Paid ${payment.paid_at ? new Date(payment.paid_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''}</div>` : ''}
+        </div>
+
+        <!-- Invoice Footer -->
+        <div class="invoice-footer">
+            <div class="invoice-footer-left">
+                <span>🔒 Secure</span>
+                <span>•</span>
+                <span>Auction #${payment.auction.id}</span>
+            </div>
+            <div class="invoice-footer-right">
+                <span class="invoice-watermark">ZUBID © ${new Date().getFullYear()}</span>
+            </div>
         </div>
     `;
-    
+
     return card;
+}
+
+// Get payment method icon
+function getPaymentMethodIcon(method) {
+    const icons = {
+        'cash_on_delivery': '💵',
+        'fib': '🏦',
+        'card': '💳',
+        'fastpay': '⚡'
+    };
+    return icons[method] || '💰';
+}
+
+// Get payment method label
+function getPaymentMethodLabel(method) {
+    const labels = {
+        'cash_on_delivery': 'Cash on Delivery',
+        'fib': 'FIB Bank',
+        'card': 'Credit Card',
+        'fastpay': 'FastPay'
+    };
+    return labels[method] || method;
+}
+
+// Print Invoice Function - Optimized for Half A4 Paper
+function printInvoice(invoiceId) {
+    const invoiceCard = document.getElementById(`invoice-${invoiceId}`);
+    if (!invoiceCard) {
+        showToast('Invoice not found', 'error');
+        return;
+    }
+
+    // Create print window
+    const printWindow = window.open('', '_blank');
+
+    // Get the styles
+    const styles = Array.from(document.styleSheets)
+        .map(sheet => {
+            try {
+                return Array.from(sheet.cssRules).map(rule => rule.cssText).join('');
+            } catch (e) {
+                return '';
+            }
+        })
+        .join('');
+
+    // Create print content optimized for half A4
+    printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Invoice #${invoiceId} - ZUBID</title>
+            <style>
+                ${styles}
+                * { box-sizing: border-box; }
+                body {
+                    margin: 0;
+                    padding: 5mm;
+                    background: white;
+                    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                }
+                .invoice-card {
+                    width: 148mm !important;
+                    max-width: 148mm !important;
+                    margin: 0 auto;
+                    box-shadow: none !important;
+                    border: 1px solid #e2e8f0 !important;
+                }
+                .invoice-actions-bar {
+                    display: none !important;
+                }
+                @media print {
+                    @page {
+                        size: A5 portrait;
+                        margin: 5mm;
+                    }
+                    body {
+                        margin: 0;
+                        padding: 0;
+                        -webkit-print-color-adjust: exact;
+                        print-color-adjust: exact;
+                    }
+                    .invoice-card {
+                        border: 1px solid #cbd5e1 !important;
+                        width: 100% !important;
+                        max-width: 100% !important;
+                    }
+                    .invoice-brand-header,
+                    .invoice-qr-section,
+                    .status-badge,
+                    .invoice-breakdown,
+                    .qr-code-wrapper {
+                        -webkit-print-color-adjust: exact;
+                        print-color-adjust: exact;
+                    }
+                }
+            </style>
+        </head>
+        <body>
+            ${invoiceCard.outerHTML}
+            <script>
+                window.onload = function() {
+                    setTimeout(function() {
+                        window.print();
+                        window.close();
+                    }, 500);
+                };
+            </script>
+        </body>
+        </html>
+    `);
+
+    printWindow.document.close();
+}
+
+// Download Invoice as PDF
+function downloadInvoice(invoiceId) {
+    showToast('📥 Opening print dialog - select "Save as PDF"', 'info');
+    setTimeout(() => printInvoice(invoiceId), 300);
 }
 
 function getStatusLabel(status) {

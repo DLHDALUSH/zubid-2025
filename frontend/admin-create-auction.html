@@ -10,146 +10,174 @@
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 </head>
 <body>
-    <!-- Navigation -->
-    <nav class="navbar">
-        <div class="container">
-            <div class="nav-brand">
-                <h1>ZUBID Admin</h1>
-            </div>
-            <div class="nav-menu">
-                <a href="admin.html" class="nav-link">Dashboard</a>
-                <a href="admin-users.html" class="nav-link">Users</a>
-                <a href="admin-auctions.html" class="nav-link">Auctions</a>
-                <a href="admin-create-auction.html" class="nav-link active">Create Auction</a>
-                <a href="admin-categories.html" class="nav-link">Categories</a>
-                <a href="index.html" class="nav-link">User Portal</a>
-                <div class="nav-user">
-                    <span id="adminUserName"></span>
-                    <button class="btn btn-outline" onclick="logout()">Logout</button>
-                </div>
-            </div>
-        </div>
-    </nav>
+    <div class="admin-layout">
+        <!-- Mobile Toggle -->
+        <button class="admin-mobile-toggle" onclick="toggleSidebar()">☰</button>
 
-    <!-- Create Auction Form -->
-    <section class="admin-section">
-        <div class="container">
-            <div class="admin-form">
-                <h1>Create New Auction</h1>
-                
-                <!-- QR Code Scanner Section -->
-                <div class="qr-scanner-section">
-                    <div class="qr-scanner-header">
-                        <h3>📱 Scan Item QR Code</h3>
-                        <p class="qr-scanner-hint">Scan a QR code to auto-fill auction details</p>
-                    </div>
-                    <div class="qr-scanner-container">
-                        <div id="qr-reader" style="width: 100%; max-width: 400px; margin: 0 auto;"></div>
-                        <div id="qr-reader-results" style="display: none; margin-top: 1rem; padding: 1rem; background: rgba(16, 185, 129, 0.1); border-radius: 8px; color: #10b981;">
-                            <p><strong>✓ QR Code Scanned Successfully!</strong></p>
-                            <p id="qr-scanned-data"></p>
-                        </div>
-                        <button type="button" class="btn btn-outline" id="startQrScanner" onclick="startQRScanner()" style="margin-top: 1rem;">
-                            <span>📷 Start Scanner</span>
-                        </button>
-                        <button type="button" class="btn btn-outline" id="stopQrScanner" onclick="stopQRScanner()" style="margin-top: 1rem; display: none;">
-                            <span>⏹️ Stop Scanner</span>
-                        </button>
+        <!-- Sidebar Navigation -->
+        <aside class="admin-sidebar" id="adminSidebar">
+            <div class="admin-sidebar-header">
+                <div class="admin-logo">
+                    <div class="admin-logo-icon">🏆</div>
+                    <div class="admin-logo-text">
+                        <h1>ZUBID</h1>
+                        <span>Admin Portal</span>
                     </div>
                 </div>
-                
-                <form id="createAuctionForm" onsubmit="handleCreateAuction(event)">
-                    <div class="form-group">
-                        <label for="itemName">Item Name *</label>
-                        <input type="text" id="itemName" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="description">Description *</label>
-                        <textarea id="description" rows="6" required></textarea>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="itemCondition">Item Condition *</label>
-                        <select id="itemCondition" required>
-                            <option value="">Select Condition</option>
-                            <option value="new">New</option>
-                            <option value="like_new">Like New</option>
-                            <option value="excellent">Excellent</option>
-                            <option value="very_good">Very Good</option>
-                            <option value="good">Good</option>
-                            <option value="fair">Fair</option>
-                            <option value="poor">Poor</option>
-                            <option value="for_parts">For Parts / Not Working</option>
-                        </select>
-                        <small>Select the condition of the item</small>
-                    </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="category">Category *</label>
-                            <select id="category" required>
-                                <option value="">Select Category</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="startingBid">Starting Bid ($) *</label>
-                            <input type="number" id="startingBid" step="0.01" min="0" required>
-                        </div>
-                    </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="bidIncrement">Bid Increment ($) *</label>
-                            <input type="number" id="bidIncrement" step="0.01" min="0.01" value="1.00" required>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="endTime">End Date & Time *</label>
-                            <input type="datetime-local" id="endTime" required>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>
-                            <input type="checkbox" id="featured">
-                            Feature this auction on homepage
-                        </label>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="images">Upload Images</label>
-                        <input type="file" id="images" accept="image/*" multiple onchange="previewUploadedImages(event)">
-                        <small>Select one or more images for the auction (optional)</small>
-                        <div id="imagePreviewContainer" style="margin-top: 1rem; display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 0.5rem;"></div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="imageUrls">Or Enter Image URLs (one per line)</label>
-                        <textarea id="imageUrls" rows="4" placeholder="Enter image URLs, one per line&#10;https://example.com/image1.jpg&#10;https://example.com/image2.jpg"></textarea>
-                        <small>You can add image URLs instead of uploading files</small>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="videoUrl">🎥 Video URL (Optional)</label>
-                        <input type="url" id="videoUrl" placeholder="https://www.youtube.com/watch?v=... or https://vimeo.com/... or direct video URL">
-                        <small>Enter a YouTube, Vimeo, or direct video URL. Examples:<br>
-                        • YouTube: https://www.youtube.com/watch?v=VIDEO_ID<br>
-                        • Vimeo: https://vimeo.com/VIDEO_ID<br>
-                        • Direct: https://example.com/video.mp4</small>
-                    </div>
-                    
-                    <div id="formError" class="error-message"></div>
-                    
-                    <div class="form-actions">
-                        <button type="submit" class="btn btn-primary">Create Auction</button>
-                        <button type="button" class="btn btn-outline" onclick="resetForm()">Reset</button>
-                    </div>
-                </form>
             </div>
-        </div>
-    </section>
+
+            <nav class="admin-nav">
+                <div class="admin-nav-section">
+                    <div class="admin-nav-title">Main Menu</div>
+                    <a href="admin.html" class="admin-nav-link">
+                        <span class="icon">📊</span>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="admin-users.html" class="admin-nav-link">
+                        <span class="icon">👥</span>
+                        <span>Users</span>
+                    </a>
+                    <a href="admin-auctions.html" class="admin-nav-link">
+                        <span class="icon">🏷️</span>
+                        <span>Auctions</span>
+                    </a>
+                    <a href="admin-categories.html" class="admin-nav-link">
+                        <span class="icon">📁</span>
+                        <span>Categories</span>
+                    </a>
+                </div>
+
+                <div class="admin-nav-section">
+                    <div class="admin-nav-title">Actions</div>
+                    <a href="admin-create-auction.html" class="admin-nav-link active">
+                        <span class="icon">➕</span>
+                        <span>Create Auction</span>
+                    </a>
+                    <a href="index.html" class="admin-nav-link">
+                        <span class="icon">🌐</span>
+                        <span>User Portal</span>
+                    </a>
+                </div>
+            </nav>
+
+            <div class="admin-sidebar-user">
+                <div class="admin-user-info">
+                    <div class="admin-user-avatar" id="adminAvatar">A</div>
+                    <div class="admin-user-details">
+                        <div class="admin-user-name" id="adminUserName">Admin</div>
+                        <div class="admin-user-role">Administrator</div>
+                    </div>
+                    <button class="admin-logout-btn" onclick="logout()" title="Logout">🚪</button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="admin-main">
+            <!-- Header -->
+            <div class="admin-header">
+                <div class="admin-header-left">
+                    <h1>➕ Create New Auction</h1>
+                    <p>Fill in the details below to create a new auction listing.</p>
+                </div>
+            </div>
+
+            <!-- Create Auction Form -->
+            <div class="admin-form-container">
+                <div class="admin-form-header">
+                    <h1>🏷️ Auction Details</h1>
+                </div>
+                <div class="admin-form-body">
+                    <form id="createAuctionForm" onsubmit="handleCreateAuction(event)">
+                        <div class="admin-form-group">
+                            <label for="itemName">Item Name *</label>
+                            <input type="text" id="itemName" class="admin-input" required>
+                        </div>
+
+                        <div class="admin-form-group">
+                            <label for="description">Description *</label>
+                            <textarea id="description" class="admin-textarea" rows="6" required></textarea>
+                        </div>
+
+                        <div class="admin-form-group">
+                            <label for="itemCondition">Item Condition *</label>
+                            <select id="itemCondition" class="admin-select" required>
+                                <option value="">Select Condition</option>
+                                <option value="new">New</option>
+                                <option value="like_new">Like New</option>
+                                <option value="excellent">Excellent</option>
+                                <option value="very_good">Very Good</option>
+                                <option value="good">Good</option>
+                                <option value="fair">Fair</option>
+                                <option value="poor">Poor</option>
+                                <option value="for_parts">For Parts / Not Working</option>
+                            </select>
+                            <small>Select the condition of the item</small>
+                        </div>
+
+                        <div class="admin-form-row">
+                            <div class="admin-form-group">
+                                <label for="category">Category *</label>
+                                <select id="category" class="admin-select" required>
+                                    <option value="">Select Category</option>
+                                </select>
+                            </div>
+
+                            <div class="admin-form-group">
+                                <label for="startingBid">Starting Bid ($) *</label>
+                                <input type="number" id="startingBid" class="admin-input" step="0.01" min="0" required>
+                            </div>
+                        </div>
+
+                        <div class="admin-form-row">
+                            <div class="admin-form-group">
+                                <label for="bidIncrement">Bid Increment ($) *</label>
+                                <input type="number" id="bidIncrement" class="admin-input" step="0.01" min="0.01" value="1.00" required>
+                            </div>
+
+                            <div class="admin-form-group">
+                                <label for="endTime">End Date & Time *</label>
+                                <input type="datetime-local" id="endTime" class="admin-input" required>
+                            </div>
+                        </div>
+
+                        <div class="admin-form-group">
+                            <label class="admin-checkbox-label">
+                                <input type="checkbox" id="featured">
+                                Feature this auction on homepage
+                            </label>
+                        </div>
+
+                        <div class="admin-form-group">
+                            <label for="images">Upload Images</label>
+                            <input type="file" id="images" class="admin-input" accept="image/*" multiple onchange="previewUploadedImages(event)">
+                            <small>Select one or more images for the auction (optional)</small>
+                            <div id="imagePreviewContainer" style="margin-top: 1rem; display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 0.5rem;"></div>
+                        </div>
+
+                        <div class="admin-form-group">
+                            <label for="imageUrls">Or Enter Image URLs (one per line)</label>
+                            <textarea id="imageUrls" class="admin-textarea" rows="4" placeholder="Enter image URLs, one per line&#10;https://example.com/image1.jpg&#10;https://example.com/image2.jpg"></textarea>
+                            <small>You can add image URLs instead of uploading files</small>
+                        </div>
+
+                        <div class="admin-form-group">
+                            <label for="videoUrl">🎥 Video URL (Optional)</label>
+                            <input type="url" id="videoUrl" class="admin-input" placeholder="https://www.youtube.com/watch?v=... or https://vimeo.com/...">
+                            <small>Enter a YouTube, Vimeo, or direct video URL</small>
+                        </div>
+
+                        <div id="formError" class="error-message" style="color: var(--admin-danger);"></div>
+
+                        <div class="admin-form-actions">
+                            <button type="submit" class="admin-btn admin-btn-primary">Create Auction</button>
+                            <button type="button" class="admin-btn admin-btn-outline" onclick="resetForm()">Reset</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
 
     <!-- Notification Toast -->
     <div class="toast" id="toast"></div>
@@ -157,6 +185,11 @@
     <script src="api.js"></script>
     <script src="admin.js"></script>
     <script src="admin-create-auction.js"></script>
+    <script>
+        function toggleSidebar() {
+            document.getElementById('adminSidebar').classList.toggle('open');
+        }
+    </script>
 </body>
 </html>
 

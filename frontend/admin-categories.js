@@ -106,7 +106,9 @@ function editCategory(categoryId, name, description) {
     document.getElementById('editCategoryId').value = categoryId;
     document.getElementById('editCategoryName').value = name;
     document.getElementById('editCategoryDescription').value = description;
-    document.getElementById('editCategoryModal').style.display = 'block';
+    const modal = document.getElementById('editCategoryModal');
+    modal.classList.add('active');
+    modal.style.display = 'flex';
 }
 
 async function handleUpdateCategory(event) {
@@ -163,13 +165,18 @@ async function deleteCategory(categoryId) {
 }
 
 function closeModal(modalId) {
-    document.getElementById(modalId).style.display = 'none';
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.classList.remove('active');
+        modal.style.display = 'none';
+    }
 }
 
 window.onclick = function(event) {
-    const modals = document.querySelectorAll('.modal');
+    const modals = document.querySelectorAll('.admin-modal, .modal');
     modals.forEach(modal => {
         if (event.target === modal) {
+            modal.classList.remove('active');
             modal.style.display = 'none';
         }
     });

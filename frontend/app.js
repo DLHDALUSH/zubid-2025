@@ -269,6 +269,7 @@ function updateNavAuth(isAuthenticated) {
     const myAccountDropdown = document.getElementById('myAccountDropdown');
     const myBidsNavLink = document.getElementById('myBidsNavLink');
     const paymentsNavLink = document.getElementById('paymentsNavLink');
+    const notificationsWrapper = document.getElementById('notificationsWrapper');
     const userName = document.getElementById('userName');
     const userAvatar = document.getElementById('userAvatar');
 
@@ -290,6 +291,11 @@ function updateNavAuth(isAuthenticated) {
             // Show Payments link in main nav
             if (paymentsNavLink) {
                 paymentsNavLink.style.display = 'flex';
+            }
+
+            // Show notifications
+            if (notificationsWrapper) {
+                notificationsWrapper.style.display = 'block';
             }
 
             // Update user info
@@ -325,6 +331,11 @@ function updateNavAuth(isAuthenticated) {
             // Hide Payments link
             if (paymentsNavLink) {
                 paymentsNavLink.style.display = 'none';
+            }
+
+            // Hide notifications
+            if (notificationsWrapper) {
+                notificationsWrapper.style.display = 'none';
             }
         }
     }

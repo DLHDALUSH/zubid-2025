@@ -71,8 +71,10 @@ async function editUser(userId) {
         document.getElementById('editUsername').value = user.username;
         document.getElementById('editEmail').value = user.email;
         document.getElementById('editRole').value = user.role;
-        
-        document.getElementById('editUserModal').style.display = 'block';
+
+        const modal = document.getElementById('editUserModal');
+        modal.classList.add('active');
+        modal.style.display = 'flex';
     } catch (error) {
         showToast('Error loading user details', 'error');
     }
@@ -106,7 +108,8 @@ async function deleteUser(userId) {
     // Show confirmation modal
     const modal = document.getElementById('deleteConfirmModal');
     if (modal) {
-        modal.style.display = 'block';
+        modal.classList.add('active');
+        modal.style.display = 'flex';
     } else {
         // Fallback to default confirm if modal doesn't exist
         if (confirm('Are you sure you want to delete this account? This action cannot be undone.')) {
@@ -118,6 +121,7 @@ async function deleteUser(userId) {
 function closeDeleteConfirmModal() {
     const modal = document.getElementById('deleteConfirmModal');
     if (modal) {
+        modal.classList.remove('active');
         modal.style.display = 'none';
     }
     pendingDeleteUserId = null;
@@ -179,17 +183,22 @@ function renderPagination(data, containerId) {
 }
 
 function closeModal(modalId) {
-    document.getElementById(modalId).style.display = 'none';
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.classList.remove('active');
+        modal.style.display = 'none';
+    }
 }
 
 // Close modal when clicking outside
 window.onclick = function(event) {
-    const modals = document.querySelectorAll('.modal');
+    const modals = document.querySelectorAll('.admin-modal, .modal');
     modals.forEach(modal => {
         if (event.target === modal) {
             if (modal.id === 'deleteConfirmModal') {
                 closeDeleteConfirmModal();
             } else {
+                modal.classList.remove('active');
                 modal.style.display = 'none';
             }
         }
