@@ -315,23 +315,56 @@ function displayAuctionDetail(auction) {
     document.getElementById('bidCount').textContent = auction.bid_count || 0;
     
     // Set market price if available
+    console.log('Market Price from API:', auction.market_price);
+    console.log('Real Price from API:', auction.real_price);
+
     const marketPriceStat = document.getElementById('marketPriceStat');
     const marketPriceEl = document.getElementById('marketPrice');
-    if (auction.market_price) {
-        marketPriceEl.textContent = `$${auction.market_price.toFixed(2)}`;
-        marketPriceStat.style.display = 'block';
-    } else {
-        marketPriceStat.style.display = 'none';
+    if (marketPriceStat && marketPriceEl) {
+        if (auction.market_price && auction.market_price > 0) {
+            marketPriceEl.textContent = `$${parseFloat(auction.market_price).toFixed(2)}`;
+            marketPriceStat.style.display = 'block';
+            console.log('Market Price displayed:', auction.market_price);
+        } else {
+            marketPriceStat.style.display = 'none';
+        }
     }
-    
+
     // Set real price (Buy It Now) if available
     const realPriceStat = document.getElementById('realPriceStat');
     const realPriceEl = document.getElementById('realPrice');
-    if (auction.real_price) {
-        realPriceEl.textContent = `$${auction.real_price.toFixed(2)}`;
-        realPriceStat.style.display = 'block';
+    const buyNowSection = document.getElementById('buyNowSection');
+    const buyNowPriceEl = document.getElementById('buyNowPrice');
+
+    console.log('Real Price elements found:', { stat: !!realPriceStat, el: !!realPriceEl, buyNow: !!buyNowSection });
+    console.log('Real Price value:', auction.real_price, 'Type:', typeof auction.real_price);
+
+    const realPriceValue = parseFloat(auction.real_price) || 0;
+
+    if (realPriceStat && realPriceEl) {
+        if (realPriceValue > 0) {
+            realPriceEl.textContent = `$${realPriceValue.toFixed(2)}`;
+            realPriceStat.style.display = 'block';
+            realPriceStat.style.visibility = 'visible';
+            realPriceStat.style.opacity = '1';
+            console.log('✅ Real Price displayed:', realPriceValue);
+        } else {
+            realPriceStat.style.display = 'none';
+            console.log('❌ Real Price hidden - value is 0 or null');
+        }
     } else {
-        realPriceStat.style.display = 'none';
+        console.log('❌ Real Price elements NOT found in DOM');
+    }
+
+    // Show Buy Now section if real price exists and auction is active
+    if (buyNowSection && buyNowPriceEl && realPriceValue > 0 && auction.status === 'active') {
+        buyNowPriceEl.textContent = `$${realPriceValue.toFixed(2)}`;
+        buyNowSection.style.display = 'block';
+        // Store the real price for use in buyNow function
+        window.currentAuctionRealPrice = realPriceValue;
+        console.log('✅ Buy Now section displayed with price:', realPriceValue);
+    } else if (buyNowSection) {
+        buyNowSection.style.display = 'none';
     }
     
     // Set warning section
@@ -648,6 +681,86 @@ function toggleAutoBid() {
     } else {
         autoBidAmount.style.display = 'none';
         autoBidInfo.style.display = 'none';
+    }
+}
+
+// Buy Now - Purchase at real price instantly
+async function buyNow() {
+    if (!currentUser) {
+        showToast('Please login to purchase this item', 'error');
+        showLogin();
+        return;
+    }
+
+    if (!auctionData || !window.currentAuctionRealPrice) {
+        showToast('Unable to process purchase. Please refresh the page.', 'error');
+        return;
+    }
+
+    const realPrice = window.currentAuctionRealPrice;
+
+    // Confirm purchase
+    const confirmed = confirm(`Are you sure you want to buy this item for $${realPrice.toFixed(2)}?\n\nThis will immediately end the auction and you will be the winner.`);
+
+    if (!confirmed) {
+        return;
+    }
+
+    try {
+        // Disable button during processing
+        const buyNowBtn = document.querySelector('.btn-buy-now');
+        if (buyNowBtn) {
+            buyNowBtn.disabled = true;
+            buyNowBtn.innerHTML = '<span class="btn-icon">⏳</span><span class="btn-text">Processing...</span>';
+        }
+
+        const response = await fetch(`${window.API_BASE_URL || 'http://localhost:5000/api'}/auctions/${auctionData.id}/buy-now`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            showToast('🎉 Congratulations! You purchased this item!', 'success');
+
+            // Hide buy now section
+            const buyNowSection = document.getElementById('buyNowSection');
+            if (buyNowSection) {
+                buyNowSection.style.display = 'none';
+            }
+
+            // Refresh auction details
+            await loadAuctionDetail();
+
+            // Show payment redirect option
+            setTimeout(() => {
+                if (confirm('Would you like to go to payments to complete your purchase?')) {
+                    window.location.href = 'payments.html';
+                }
+            }, 1000);
+        } else {
+            showToast(data.error || 'Failed to complete purchase', 'error');
+
+            // Re-enable button
+            if (buyNowBtn) {
+                buyNowBtn.disabled = false;
+                buyNowBtn.innerHTML = '<span class="btn-icon">💰</span><span class="btn-text">Buy Now</span>';
+            }
+        }
+    } catch (error) {
+        console.error('Error processing buy now:', error);
+        showToast('Error processing purchase. Please try again.', 'error');
+
+        // Re-enable button
+        const buyNowBtn = document.querySelector('.btn-buy-now');
+        if (buyNowBtn) {
+            buyNowBtn.disabled = false;
+            buyNowBtn.innerHTML = '<span class="btn-icon">💰</span><span class="btn-text">Buy Now</span>';
+        }
     }
 }
 

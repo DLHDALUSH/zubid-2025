@@ -491,6 +491,11 @@ function createAuctionCard(auction) {
                         <span>${bidCountText}</span>
                     </div>
                 </div>
+                ${auction.market_price || auction.real_price ? `
+                <div class="auction-prices">
+                    ${auction.market_price ? `<span class="market-price-tag">Market: <s>$${parseFloat(auction.market_price).toFixed(2)}</s></span>` : ''}
+                    ${auction.real_price ? `<span class="real-price-tag">Buy Now: $${parseFloat(auction.real_price).toFixed(2)}</span>` : ''}
+                </div>` : ''}
                 <div class="auction-meta">
                     <small class="category-name">${escapeHtml(auction.category_name || 'Uncategorized')}</small>
                 </div>

@@ -1101,11 +1101,9 @@ body::after {
     bottom: 0;
     left: 0;
     right: 0;
-    background: linear-gradient(to top, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.7), transparent);
+    background: linear-gradient(to top, rgba(15, 23, 42, 0.9) 0%, rgba(15, 23, 42, 0.6) 50%, transparent 100%);
     color: white;
-    padding: 3rem 2rem 2rem;
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    padding: 2rem 2rem 1.5rem;
 }
 
 .carousel-overlay h2 {
@@ -1544,10 +1542,240 @@ body::after {
     filter: drop-shadow(0 0 4px var(--primary-glow));
 }
 
+/* Market Price styling */
+.stat .market-price {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #10b981;
+    text-decoration: line-through;
+    opacity: 0.8;
+}
+
+/* Real Price / Buy It Now styling */
+.stat .real-price {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--primary-color);
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Real Price Stat Box - Make it stand out */
+.real-price-stat {
+    background: linear-gradient(135deg, rgba(255, 102, 0, 0.1), rgba(251, 191, 36, 0.1));
+    border: 2px solid rgba(255, 102, 0, 0.3);
+    border-radius: 12px;
+    padding: 0.75rem 1rem !important;
+    margin-top: 0.5rem;
+}
+
+.real-price-stat label {
+    color: var(--primary-color) !important;
+    font-weight: 600 !important;
+}
+
+/* Buy Now Section */
+.buy-now-section {
+    margin-bottom: 1.5rem;
+}
+
+.buy-now-card {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border-radius: 20px;
+    padding: 1.5rem;
+    border: 2px solid rgba(255, 102, 0, 0.3);
+    box-shadow: 0 10px 40px rgba(255, 102, 0, 0.15);
+    position: relative;
+    overflow: hidden;
+}
+
+.buy-now-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255, 102, 0, 0.1) 0%, transparent 70%);
+    animation: buyNowPulse 3s ease-in-out infinite;
+}
+
+@keyframes buyNowPulse {
+    0%, 100% { transform: scale(1); opacity: 0.5; }
+    50% { transform: scale(1.1); opacity: 0.8; }
+}
+
+.buy-now-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    position: relative;
+    z-index: 1;
+}
+
+.buy-now-icon {
+    font-size: 1.5rem;
+    animation: flashIcon 1.5s ease-in-out infinite;
+}
+
+@keyframes flashIcon {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.7; transform: scale(1.1); }
+}
+
+.buy-now-header h3 {
+    margin: 0;
+    color: #fff;
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+.buy-now-content {
+    position: relative;
+    z-index: 1;
+}
+
+.buy-now-description {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.9rem;
+    margin: 0 0 1rem;
+}
+
+.buy-now-price {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 16px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.buy-now-price .price-label {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 0.25rem;
+}
+
+.buy-now-price .price-value {
+    font-size: 2.5rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #ff6600, #fbbf24);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.btn-buy-now {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 1rem 2rem;
+    background: linear-gradient(135deg, #ff6600 0%, #fbbf24 100%);
+    border: none;
+    border-radius: 14px;
+    color: #fff;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 20px rgba(255, 102, 0, 0.4);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.btn-buy-now:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 30px rgba(255, 102, 0, 0.5);
+}
+
+.btn-buy-now:active {
+    transform: translateY(-1px);
+}
+
+.btn-buy-now:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.btn-buy-now .btn-icon {
+    font-size: 1.25rem;
+}
+
+.buy-now-note {
+    text-align: center;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.8rem;
+    margin: 0.75rem 0 0;
+}
+
+/* Section Divider */
+.section-divider {
+    display: flex;
+    align-items: center;
+    margin: 1.5rem 0;
+}
+
+.section-divider::before,
+.section-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 102, 0, 0.3), transparent);
+}
+
+.section-divider span {
+    padding: 0 1rem;
+    color: rgba(255, 102, 0, 0.6);
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
 .time-left {
     color: var(--warning-color);
     font-weight: 700;
     font-size: 1.125rem;
+}
+
+/* Auction Card Price Tags */
+.auction-prices {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px dashed var(--border-color);
+}
+
+.market-price-tag {
+    font-size: 0.75rem;
+    color: #6b7280;
+    background: #f3f4f6;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+}
+
+.market-price-tag s {
+    color: #ef4444;
+}
+
+.real-price-tag {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #ffffff;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
 }
 
 /* Filters Section */
@@ -5483,6 +5711,75 @@ body.language-changing {
     font-size: 0.95rem;
 }
 
+/* Cashback Styles on Invoice */
+.invoice-row.cashback {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.05));
+    margin: 0.25rem -0.5rem;
+    padding: 0.5rem;
+    border-radius: 8px;
+    border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.invoice-row.cashback .label {
+    color: #10b981;
+    font-weight: 600;
+}
+
+.cashback-value {
+    color: #10b981 !important;
+    font-weight: 700 !important;
+}
+
+.invoice-row.pending-cashback {
+    background: linear-gradient(135deg, rgba(255, 102, 0, 0.1), rgba(251, 191, 36, 0.05));
+    margin: 0.25rem -0.5rem;
+    padding: 0.5rem;
+    border-radius: 8px;
+    border: 1px dashed rgba(255, 102, 0, 0.4);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.invoice-row.pending-cashback:hover {
+    background: linear-gradient(135deg, rgba(255, 102, 0, 0.15), rgba(251, 191, 36, 0.1));
+    border-color: rgba(255, 102, 0, 0.6);
+}
+
+.invoice-row.pending-cashback .label {
+    color: #ff6600;
+    font-weight: 600;
+}
+
+.pending-cashback-value {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.pending-cashback-value .cashback-amount {
+    color: #ff6600;
+    font-weight: 700;
+}
+
+.apply-cashback-btn {
+    background: linear-gradient(135deg, #ff6600, #fbbf24);
+    border: none;
+    color: #fff;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.apply-cashback-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 2px 10px rgba(255, 102, 0, 0.4);
+}
+
 /* QR Code Section - Compact */
 .invoice-qr-section {
     background: white;
@@ -5569,14 +5866,73 @@ body.language-changing {
     max-width: 100px;
 }
 
+.qr-auction-id {
+    font-size: 0.5rem;
+    color: #6366f1;
+    font-weight: 500;
+    margin-bottom: 0.125rem;
+}
+
 .qr-code-hint {
     color: #64748b;
-    font-size: 0.55rem;
+    font-size: 0.5rem;
     margin: 0;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 0.2rem;
+}
+
+.qr-error-placeholder {
+    width: 80px;
+    height: 80px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: #f1f5f9;
+    border-radius: 6px;
+    color: #64748b;
+}
+
+.qr-error-placeholder span {
+    font-size: 1.5rem;
+    opacity: 0.5;
+}
+
+.qr-error-placeholder small {
+    font-size: 0.5rem;
+    margin-top: 0.25rem;
+}
+
+.qr-code-placeholder {
+    padding: 1rem;
+    color: #64748b;
+    text-align: center;
+}
+
+.qr-loading-icon {
+    font-size: 1.5rem;
+    display: block;
+    margin-bottom: 0.5rem;
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+.qr-loading-text {
+    font-size: 0.65rem;
+    font-weight: 600;
+    margin: 0 0 0.25rem 0;
+    color: #475569;
+}
+
+.qr-code-placeholder small {
+    font-size: 0.55rem;
+    color: #94a3b8;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
 }
 
 .qr-code-hint::before {
@@ -5787,6 +6143,632 @@ body.language-changing {
         flex-direction: column;
         gap: 0.5rem;
         text-align: center;
+    }
+}
+
+/* ============================================
+   PREMIUM INVOICE CARD - NEW DESIGN
+   ============================================ */
+
+.premium-invoice-card {
+    background: linear-gradient(145deg, #1a1a2e 0%, #16213e 100%);
+    border-radius: 20px;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(99, 102, 241, 0.1);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    max-width: 600px;
+}
+
+.premium-invoice-card::before {
+    content: '';
+    display: block;
+    height: 4px;
+    background: linear-gradient(90deg, #6366f1, #8b5cf6, #ec4899, #6366f1);
+    background-size: 300% 100%;
+    animation: gradientShift 4s ease infinite;
+}
+
+/* Premium Invoice Header */
+.premium-invoice-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.25rem;
+    background: rgba(255, 255, 255, 0.03);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.invoice-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.brand-icon {
+    font-size: 1.5rem;
+    filter: drop-shadow(0 2px 8px rgba(99, 102, 241, 0.5));
+}
+
+.brand-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.brand-name {
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 800;
+    letter-spacing: 1px;
+}
+
+.brand-tag {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.invoice-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(99, 102, 241, 0.15);
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    padding: 0.5rem 0.85rem;
+    border-radius: 20px;
+}
+
+.badge-icon {
+    font-size: 0.85rem;
+}
+
+.badge-text {
+    color: #a5b4fc;
+    font-size: 0.8rem;
+    font-weight: 600;
+    font-family: 'SF Mono', monospace;
+}
+
+/* Product Showcase Section */
+.product-showcase {
+    display: flex;
+    gap: 1.25rem;
+    padding: 1.25rem;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.product-image-wrapper {
+    width: 140px;
+    height: 140px;
+    border-radius: 16px;
+    overflow: hidden;
+    position: relative;
+    flex-shrink: 0;
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+}
+
+.product-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.product-image-wrapper:hover .product-image {
+    transform: scale(1.1);
+}
+
+.product-image-fallback {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+}
+
+.fallback-icon {
+    font-size: 3rem;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+}
+
+.image-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 0.5rem;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.product-image-wrapper:hover .image-overlay {
+    opacity: 1;
+}
+
+.view-auction-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+    font-size: 0.7rem;
+    padding: 0.4rem 0.6rem;
+    border-radius: 8px;
+    text-decoration: none;
+    backdrop-filter: blur(4px);
+}
+
+.view-auction-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* Product Details */
+.product-details {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.product-name {
+    color: #fff;
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin: 0 0 0.75rem 0;
+    line-height: 1.3;
+}
+
+.product-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 0.85rem;
+}
+
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.8rem;
+}
+
+.meta-icon {
+    font-size: 0.85rem;
+}
+
+.status-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.premium-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.4rem 0.85rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.premium-status-badge .status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+.premium-status-badge.status-pending {
+    background: rgba(245, 158, 11, 0.15);
+    color: #fbbf24;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.premium-status-badge.status-pending .status-dot {
+    background: #fbbf24;
+}
+
+.premium-status-badge.status-paid {
+    background: rgba(34, 197, 94, 0.15);
+    color: #22c55e;
+    border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.premium-status-badge.status-paid .status-dot {
+    background: #22c55e;
+}
+
+.premium-status-badge.status-failed {
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.premium-status-badge.status-failed .status-dot {
+    background: #ef4444;
+}
+
+.payment-method-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    background: rgba(255, 255, 255, 0.05);
+    color: rgba(255, 255, 255, 0.7);
+    padding: 0.35rem 0.7rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+}
+
+/* Premium Price Section */
+.premium-price-section {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 1rem;
+    padding: 1.25rem;
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.price-breakdown-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 14px;
+    padding: 1rem;
+}
+
+.breakdown-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.85rem;
+    padding-bottom: 0.65rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.header-icon {
+    font-size: 1rem;
+}
+
+.breakdown-header h4 {
+    color: #fff;
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.breakdown-items {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.breakdown-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.4rem 0;
+}
+
+.row-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.8rem;
+}
+
+.row-icon {
+    font-size: 0.85rem;
+    opacity: 0.8;
+}
+
+.row-value {
+    color: #fff;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.breakdown-row.cashback-row {
+    background: rgba(34, 197, 94, 0.1);
+    margin: 0 -0.5rem;
+    padding: 0.5rem;
+    border-radius: 8px;
+}
+
+.breakdown-row.cashback-row .row-value {
+    color: #22c55e;
+}
+
+.breakdown-row.pending-row {
+    background: rgba(245, 158, 11, 0.1);
+    margin: 0 -0.5rem;
+    padding: 0.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.breakdown-row.pending-row:hover {
+    background: rgba(245, 158, 11, 0.2);
+}
+
+.breakdown-row.pending-row .row-value {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #fbbf24;
+}
+
+.apply-btn {
+    background: #fbbf24;
+    color: #000;
+    border: none;
+    padding: 0.25rem 0.5rem;
+    border-radius: 6px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    cursor: pointer;
+    text-transform: uppercase;
+}
+
+.breakdown-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 2px solid rgba(99, 102, 241, 0.3);
+}
+
+.total-label {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.total-value {
+    color: #22c55e;
+    font-size: 1.35rem;
+    font-weight: 800;
+}
+
+/* QR Code Card */
+.qr-code-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 14px;
+    padding: 0.85rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 130px;
+}
+
+.qr-header {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-bottom: 0.65rem;
+}
+
+.qr-icon {
+    font-size: 0.9rem;
+}
+
+.qr-title {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.qr-image-container {
+    width: 90px;
+    height: 90px;
+    background: #fff;
+    border-radius: 10px;
+    padding: 6px;
+    margin-bottom: 0.5rem;
+}
+
+.qr-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.qr-fallback {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #6366f1;
+}
+
+.qr-hint {
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 0.6rem;
+    text-align: center;
+    margin: 0;
+}
+
+.qr-generating {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 1rem;
+}
+
+.generating-icon {
+    font-size: 1.5rem;
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+.qr-generating small {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.7rem;
+}
+
+/* Premium Actions Bar */
+.premium-actions-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.25rem;
+    background: rgba(255, 255, 255, 0.02);
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.action-buttons {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.action-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.6rem 1rem;
+    border-radius: 10px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+}
+
+.action-btn .btn-icon {
+    font-size: 0.9rem;
+}
+
+.action-btn.pay-btn {
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    color: #fff;
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+}
+
+.action-btn.pay-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
+}
+
+.action-btn.print-btn,
+.action-btn.download-btn {
+    background: rgba(255, 255, 255, 0.05);
+    color: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.action-btn.print-btn:hover,
+.action-btn.download-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+.paid-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: rgba(34, 197, 94, 0.15);
+    color: #22c55e;
+    padding: 0.5rem 0.85rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+/* Premium Invoice Footer */
+.premium-invoice-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1.25rem;
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.footer-security {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.75rem;
+}
+
+.footer-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.footer-brand .brand-text {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+.footer-brand .year {
+    color: rgba(255, 255, 255, 0.3);
+    font-size: 0.7rem;
+}
+
+/* Responsive Premium Invoice */
+@media (max-width: 640px) {
+    .premium-invoice-card {
+        max-width: 100%;
+    }
+
+    .product-showcase {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .product-image-wrapper {
+        width: 180px;
+        height: 180px;
+    }
+
+    .product-meta {
+        justify-content: center;
+    }
+
+    .status-row {
+        justify-content: center;
+    }
+
+    .premium-price-section {
+        grid-template-columns: 1fr;
+    }
+
+    .qr-code-card {
+        width: 100%;
+        flex-direction: row;
+        justify-content: center;
+        gap: 1rem;
+    }
+
+    .qr-header {
+        margin-bottom: 0;
+    }
+
+    .premium-actions-bar {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .action-buttons {
+        width: 100%;
+        justify-content: center;
     }
 }
 
@@ -6665,6 +7647,884 @@ body.language-changing {
     
     .payment-actions .btn {
         flex: 1;
+    }
+}
+
+/* ============================================
+   PREMIUM PAYMENT MODAL STYLES
+   ============================================ */
+
+/* Premium Modal Container */
+.premium-modal {
+    backdrop-filter: blur(8px);
+    overflow-y: auto !important;
+}
+
+.premium-payment-modal {
+    background: linear-gradient(145deg, #1a1a2e 0%, #16213e 50%, #0f0f23 100%) !important;
+    border: 1px solid rgba(99, 102, 241, 0.3) !important;
+    box-shadow:
+        0 25px 80px rgba(0, 0, 0, 0.5),
+        0 0 60px rgba(99, 102, 241, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+    max-width: 580px;
+    max-height: 90vh;
+    overflow-y: auto;
+    margin: 2vh auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.premium-payment-modal .payment-modal-body {
+    flex: 1;
+    overflow-y: auto;
+    max-height: 55vh;
+}
+
+.premium-payment-modal::before {
+    background: linear-gradient(90deg, #6366f1, #8b5cf6, #ec4899, #6366f1) !important;
+    height: 3px;
+    animation: gradientShift 4s ease infinite;
+}
+
+/* Premium Header - Compact */
+.premium-header {
+    background: linear-gradient(180deg, rgba(99, 102, 241, 0.1) 0%, transparent 100%);
+    border-bottom: 1px solid rgba(99, 102, 241, 0.2) !important;
+    padding: 1rem 1.5rem !important;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    text-align: left;
+}
+
+.payment-header-icon {
+    position: relative;
+    display: inline-block;
+    margin-bottom: 0;
+    flex-shrink: 0;
+}
+
+.icon-glow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 50px;
+    height: 50px;
+    background: radial-gradient(circle, rgba(99, 102, 241, 0.4) 0%, transparent 70%);
+    border-radius: 50%;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+.payment-icon-large {
+    font-size: 2rem;
+    position: relative;
+    z-index: 1;
+    filter: drop-shadow(0 4px 20px rgba(99, 102, 241, 0.5));
+}
+
+.premium-header h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 0.15rem;
+    letter-spacing: -0.5px;
+}
+
+.premium-header .payment-subtitle {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.8rem;
+}
+
+/* Premium Invoice Summary */
+.premium-invoice-summary {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+/* Premium Section */
+.premium-section {
+    margin-bottom: 1.5rem;
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.section-icon {
+    font-size: 1.25rem;
+}
+
+.premium-section .payment-section-title {
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+/* Premium Payment Methods Grid */
+.premium-payment-methods-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+/* Premium Payment Card */
+.premium-payment-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 2px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 1.25rem;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.premium-payment-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, transparent 50%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.premium-payment-card:hover {
+    border-color: rgba(99, 102, 241, 0.4);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(99, 102, 241, 0.15);
+}
+
+.premium-payment-card:hover::before {
+    opacity: 1;
+}
+
+.premium-payment-card.selected {
+    border-color: #6366f1;
+    background: rgba(99, 102, 241, 0.1);
+    box-shadow: 0 0 30px rgba(99, 102, 241, 0.2);
+}
+
+.premium-payment-card.popular {
+    border-color: rgba(234, 179, 8, 0.4);
+}
+
+.premium-payment-card.popular.selected {
+    border-color: #eab308;
+    box-shadow: 0 0 30px rgba(234, 179, 8, 0.2);
+}
+
+/* Popular Badge */
+.popular-badge {
+    position: absolute;
+    top: -1px;
+    right: 20px;
+    background: linear-gradient(135deg, #eab308, #f59e0b);
+    color: #000;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0.35rem 0.75rem;
+    border-radius: 0 0 8px 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Payment Card Header */
+.payment-card-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    position: relative;
+    z-index: 1;
+}
+
+.payment-method-icon-wrapper {
+    width: 50px;
+    height: 50px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.premium-payment-card .payment-method-icon {
+    font-size: 1.75rem;
+}
+
+.payment-method-info {
+    flex: 1;
+}
+
+.premium-payment-card .payment-method-name {
+    color: #fff;
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+}
+
+.premium-payment-card .payment-method-description {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.85rem;
+}
+
+/* Check Circle */
+.payment-check-circle {
+    width: 28px;
+    height: 28px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+}
+
+.payment-check-circle svg {
+    width: 14px;
+    height: 14px;
+    opacity: 0;
+    transform: scale(0);
+    transition: all 0.3s ease;
+    color: #fff;
+}
+
+.premium-payment-card.selected .payment-check-circle {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    border-color: transparent;
+}
+
+.premium-payment-card.selected .payment-check-circle svg {
+    opacity: 1;
+    transform: scale(1);
+}
+
+/* Payment Features */
+.payment-features {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    position: relative;
+    z-index: 1;
+}
+
+.feature-tag {
+    background: rgba(99, 102, 241, 0.15);
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.75rem;
+    padding: 0.35rem 0.75rem;
+    border-radius: 20px;
+    border: 1px solid rgba(99, 102, 241, 0.2);
+}
+
+/* Premium FIB Form Container */
+.premium-form-container {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin-top: 1rem;
+}
+
+.premium-form-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.form-header-icon {
+    font-size: 2rem;
+}
+
+.form-header-text h3 {
+    color: #fff;
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin: 0 0 0.25rem 0;
+}
+
+.form-header-text p {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.85rem;
+    margin: 0;
+}
+
+/* Premium FIB Banner */
+.premium-fib-banner {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(139, 92, 246, 0.1) 100%);
+    border: 1px solid rgba(99, 102, 241, 0.25);
+    border-radius: 12px;
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+}
+
+.fib-banner-icon {
+    width: 45px;
+    height: 45px;
+    background: rgba(99, 102, 241, 0.2);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+}
+
+.fib-banner-content h4 {
+    color: #fff;
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin: 0 0 0.25rem 0;
+}
+
+.fib-banner-content p {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.8rem;
+    margin: 0;
+}
+
+/* Premium Receive Card */
+.premium-receive-card {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%);
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    border-radius: 12px;
+    padding: 1.25rem;
+    margin-bottom: 1.25rem;
+}
+
+.receive-card-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.85rem;
+    margin-bottom: 0.75rem;
+}
+
+.label-icon {
+    font-size: 1rem;
+}
+
+.receive-number-display {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.75rem;
+}
+
+.number-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.country-flag {
+    font-size: 1.25rem;
+}
+
+.receive-number-display .receive-number {
+    color: #22c55e;
+    font-size: 1.25rem;
+    font-weight: 700;
+    font-family: 'SF Mono', 'Monaco', monospace;
+    letter-spacing: 1px;
+}
+
+.premium-copy-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(34, 197, 94, 0.2);
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    color: #22c55e;
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.premium-copy-btn:hover {
+    background: rgba(34, 197, 94, 0.3);
+    transform: scale(1.02);
+}
+
+.receive-card-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #22c55e;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.receive-card-badge span {
+    background: #22c55e;
+    color: #000;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.65rem;
+}
+
+/* Premium Form Fields */
+.premium-form-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+}
+
+.premium-form-group label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.9rem;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
+.required-star {
+    color: #ef4444;
+}
+
+.premium-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.input-prefix {
+    position: absolute;
+    left: 1rem;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.premium-input {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 0.85rem 1rem;
+    color: #fff;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+}
+
+.premium-input.with-prefix {
+    padding-left: 3.5rem;
+}
+
+.premium-input:focus {
+    outline: none;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+.premium-input::placeholder {
+    color: rgba(255, 255, 255, 0.3);
+}
+
+.premium-form-group .input-hint {
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 0.75rem;
+    margin-top: 0.35rem;
+}
+
+/* Premium Instructions */
+.premium-instructions {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+    padding: 1rem;
+}
+
+.instructions-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.instructions-icon {
+    font-size: 1rem;
+}
+
+.instructions-header h4 {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.instructions-steps {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+}
+
+.step-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 8px;
+}
+
+.step-number {
+    width: 22px;
+    height: 22px;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: 700;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.step-text {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.8rem;
+}
+
+.step-text strong {
+    color: #22c55e;
+}
+
+/* Premium COD Section */
+.premium-cod-section {
+    margin-top: 1rem;
+}
+
+.premium-cod-card {
+    background: linear-gradient(135deg, rgba(234, 179, 8, 0.1) 0%, rgba(245, 158, 11, 0.05) 100%);
+    border: 1px solid rgba(234, 179, 8, 0.25);
+    border-radius: 16px;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    margin-bottom: 1rem;
+}
+
+.cod-icon-wrapper {
+    position: relative;
+}
+
+.cod-icon-bg {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 60px;
+    height: 60px;
+    background: radial-gradient(circle, rgba(234, 179, 8, 0.3) 0%, transparent 70%);
+    border-radius: 50%;
+}
+
+.cod-icon {
+    font-size: 2.5rem;
+    position: relative;
+    z-index: 1;
+}
+
+.cod-content h4 {
+    color: #fff;
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin: 0 0 0.35rem 0;
+}
+
+.cod-content p {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+/* COD Features */
+.cod-features {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.cod-feature {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+    padding: 1rem;
+}
+
+.cod-feature .feature-icon {
+    font-size: 1.5rem;
+}
+
+.cod-feature .feature-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.cod-feature .feature-text strong {
+    color: #fff;
+    font-size: 0.9rem;
+    margin-bottom: 0.15rem;
+}
+
+.cod-feature .feature-text span {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.8rem;
+}
+
+/* COD Note */
+.cod-note {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: rgba(99, 102, 241, 0.1);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    border-radius: 10px;
+    padding: 0.85rem 1rem;
+}
+
+.note-icon {
+    font-size: 1.25rem;
+}
+
+.cod-note p {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.85rem;
+    margin: 0;
+}
+
+/* Premium Modal Footer - Compact */
+.premium-modal-footer {
+    background: linear-gradient(180deg, rgba(99, 102, 241, 0.05) 0%, rgba(0, 0, 0, 0.2) 100%);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 0.75rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.footer-total-section {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.total-label-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.total-icon {
+    font-size: 0.9rem;
+}
+
+.premium-modal-footer .total-label {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.8rem;
+}
+
+.total-amount-wrapper {
+    display: flex;
+    align-items: baseline;
+    gap: 0.15rem;
+}
+
+.currency-symbol {
+    color: #22c55e;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.premium-modal-footer .total-amount {
+    color: #22c55e;
+    font-size: 1.25rem;
+    font-weight: 800;
+}
+
+/* Premium Actions */
+.premium-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.premium-btn {
+    padding: 0.6rem 1.25rem;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.cancel-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.cancel-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+.submit-btn {
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    border: none;
+    color: #fff;
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+}
+
+.submit-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 25px rgba(99, 102, 241, 0.5);
+}
+
+.btn-arrow {
+    transition: transform 0.2s ease;
+}
+
+.submit-btn:hover .btn-arrow {
+    transform: translateX(3px);
+}
+
+.premium-spinner {
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+}
+
+/* Premium Security Badge */
+.premium-security-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 1rem 2rem;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 0 0 20px 20px;
+}
+
+.security-icons {
+    display: flex;
+    gap: 0.35rem;
+}
+
+.premium-security-badge .security-icon {
+    font-size: 1rem;
+}
+
+.security-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.security-main {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.security-sub {
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 0.75rem;
+}
+
+/* Premium Payment Modal Responsive */
+@media (max-width: 640px) {
+    .premium-payment-modal {
+        margin: 2% auto;
+        max-width: 95%;
+    }
+
+    .premium-header {
+        padding: 2rem 1.5rem 1.5rem !important;
+    }
+
+    .payment-modal-body {
+        padding: 1.25rem !important;
+    }
+
+    .premium-modal-footer {
+        flex-direction: column;
+        padding: 1.25rem;
+    }
+
+    .footer-total-section {
+        width: 100%;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .premium-actions {
+        width: 100%;
+    }
+
+    .premium-btn {
+        flex: 1;
+        justify-content: center;
+    }
+
+    .instructions-steps {
+        grid-template-columns: 1fr;
+    }
+
+    .premium-payment-card {
+        padding: 1rem;
+    }
+
+    .payment-method-icon-wrapper {
+        width: 42px;
+        height: 42px;
     }
 }
 
@@ -7734,5 +9594,509 @@ textarea.valid {
 
     .navbar {
         padding-top: env(safe-area-inset-top);
+    }
+}
+
+/* ============================================
+   PREMIUM CASHBACK MODAL STYLES
+   ============================================ */
+.cashback-modal {
+    animation: fadeIn 0.3s ease;
+}
+
+.cashback-modal.active .cashback-modal-content {
+    animation: slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(30px) scale(0.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.cashback-modal-content {
+    background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+    border-radius: 28px;
+    max-width: 480px;
+    width: 100%;
+    padding: 2rem;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 25px 80px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1);
+    border: 2px solid transparent;
+    background-clip: padding-box;
+}
+
+.cashback-modal-content::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #ff6600, #fbbf24, #10b981, #6366f1);
+}
+
+.cashback-close-btn {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+}
+
+.cashback-close-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: rotate(90deg);
+}
+
+/* Confetti */
+.cashback-confetti {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.confetti-piece {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    top: -20px;
+    opacity: 0;
+    animation: confettiFall 5s ease-in-out infinite;
+}
+
+@keyframes confettiFall {
+    0% { opacity: 1; top: -20px; transform: rotate(0deg) translateX(0); }
+    100% { opacity: 0; top: 100%; transform: rotate(720deg) translateX(100px); }
+}
+
+/* Header */
+.cashback-header {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.cashback-trophy {
+    font-size: 4rem;
+    animation: bounce 1s ease infinite;
+    filter: drop-shadow(0 0 20px rgba(255, 193, 7, 0.5));
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+.cashback-title {
+    font-size: 2rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #fbbf24, #ff6600);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin: 0.5rem 0 0.25rem;
+}
+
+.cashback-subtitle {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 1.1rem;
+    margin: 0;
+}
+
+.cashback-auction-name {
+    color: #fff;
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    display: inline-block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Offer Card */
+.cashback-offer-card {
+    background: linear-gradient(135deg, rgba(255, 102, 0, 0.2), rgba(251, 191, 36, 0.1));
+    border: 1px solid rgba(255, 102, 0, 0.3);
+    border-radius: 20px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.cashback-offer-badge {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: linear-gradient(135deg, #ff6600, #fbbf24);
+    color: #000;
+    font-size: 0.65rem;
+    font-weight: 800;
+    padding: 0.35rem 1rem;
+    border-radius: 0 18px 0 12px;
+    letter-spacing: 0.5px;
+}
+
+.cashback-amount-container {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 0.25rem;
+    margin-bottom: 0.75rem;
+}
+
+.cashback-currency {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #fbbf24;
+}
+
+.cashback-amount {
+    font-size: 4rem;
+    font-weight: 900;
+    background: linear-gradient(135deg, #fbbf24, #ff6600);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1;
+    text-shadow: 0 0 40px rgba(255, 102, 0, 0.5);
+}
+
+.cashback-label {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #fbbf24;
+    letter-spacing: 2px;
+}
+
+.cashback-description {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.95rem;
+    text-align: center;
+    margin: 0 0 1rem;
+    line-height: 1.6;
+}
+
+.cashback-description strong {
+    color: #fff;
+}
+
+/* Progress Section */
+.cashback-progress-section {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 12px;
+    padding: 1rem;
+}
+
+.cashback-progress-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+}
+
+.cashback-progress-label {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.85rem;
+}
+
+.cashback-progress-count {
+    color: #fbbf24;
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+
+.cashback-progress-bar {
+    height: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+}
+
+.cashback-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #ff6600, #fbbf24);
+    border-radius: 10px;
+    width: 0%;
+    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+}
+
+.cashback-progress-glow {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+    animation: progressGlow 2s ease-in-out infinite;
+}
+
+@keyframes progressGlow {
+    0%, 100% { transform: translateX(-100%); }
+    50% { transform: translateX(100%); }
+}
+
+/* Share Section */
+.cashback-share-section {
+    margin-bottom: 1.5rem;
+}
+
+.cashback-share-title {
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 600;
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+.cashback-share-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.75rem;
+}
+
+/* Premium Share Buttons */
+.cashback-share-btn {
+    position: relative;
+    border: none;
+    border-radius: 16px;
+    padding: 0;
+    cursor: pointer;
+    overflow: hidden;
+    aspect-ratio: 1;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.cashback-share-btn:hover {
+    transform: translateY(-4px) scale(1.05);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.cashback-share-btn:active {
+    transform: translateY(-2px) scale(1.02);
+}
+
+.share-btn-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.cashback-share-btn:hover .share-btn-bg {
+    opacity: 1;
+}
+
+.share-btn-content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    padding: 0.75rem;
+    gap: 0.35rem;
+}
+
+.share-btn-icon {
+    width: 32px;
+    height: 32px;
+    transition: transform 0.3s ease;
+}
+
+.share-btn-icon svg {
+    width: 100%;
+    height: 100%;
+}
+
+.cashback-share-btn:hover .share-btn-icon {
+    transform: scale(1.1);
+}
+
+.share-btn-name {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.8);
+    transition: color 0.3s ease;
+}
+
+.cashback-share-btn:hover .share-btn-name {
+    color: #fff;
+}
+
+.share-btn-check {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    width: 40px;
+    height: 40px;
+    background: #10b981;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 1.25rem;
+    font-weight: bold;
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    z-index: 2;
+}
+
+.cashback-share-btn.shared .share-btn-check {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+}
+
+.cashback-share-btn.shared .share-btn-content {
+    opacity: 0.3;
+}
+
+.cashback-share-btn.shared {
+    pointer-events: none;
+    border-color: #10b981;
+}
+
+/* Success Status */
+.cashback-success {
+    display: none;
+    align-items: center;
+    gap: 1rem;
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(16, 185, 129, 0.1));
+    border: 1px solid rgba(16, 185, 129, 0.4);
+    border-radius: 16px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.5rem;
+    animation: successPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.cashback-success.show {
+    display: flex;
+}
+
+@keyframes successPop {
+    0% { opacity: 0; transform: scale(0.8); }
+    100% { opacity: 1; transform: scale(1); }
+}
+
+.cashback-success-icon {
+    width: 48px;
+    height: 48px;
+    background: #10b981;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 1.5rem;
+    font-weight: bold;
+    flex-shrink: 0;
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.5);
+}
+
+.cashback-success-content h4 {
+    color: #10b981;
+    font-size: 1.1rem;
+    margin: 0 0 0.25rem;
+}
+
+.cashback-success-content p {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+/* Footer Actions */
+.cashback-footer {
+    display: flex;
+    gap: 1rem;
+}
+
+.cashback-btn-secondary {
+    flex: 1;
+    padding: 1rem;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    background: transparent;
+    color: rgba(255, 255, 255, 0.7);
+    border-radius: 14px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.cashback-btn-secondary:hover {
+    border-color: rgba(255, 255, 255, 0.4);
+    color: #fff;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.cashback-btn-primary {
+    flex: 1;
+    padding: 1rem;
+    border: none;
+    background: linear-gradient(135deg, #ff6600, #fbbf24);
+    color: #000;
+    border-radius: 14px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 20px rgba(255, 102, 0, 0.4);
+}
+
+.cashback-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 30px rgba(255, 102, 0, 0.5);
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+    .cashback-modal-content {
+        padding: 1.5rem;
+        border-radius: 24px 24px 0 0;
+        position: fixed;
+        bottom: 0;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+    .cashback-share-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .cashback-amount {
+        font-size: 3rem;
+    }
+
+    .cashback-title {
+        font-size: 1.5rem;
     }
 }

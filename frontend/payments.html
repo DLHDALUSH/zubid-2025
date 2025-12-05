@@ -281,244 +281,246 @@
     </section>
 
 
-    <!-- Payment Modal -->
-    <div id="paymentModal" class="modal">
-        <div class="payment-modal-content">
-            <span class="close" onclick="closePaymentModal()">&times;</span>
-            
-            <div class="payment-modal-header">
-                <div class="payment-icon">💳</div>
-                <h2>Complete Payment</h2>
-                <p class="payment-subtitle">Choose your preferred payment method</p>
+    <!-- Premium Payment Modal -->
+    <div id="paymentModal" class="modal premium-modal">
+        <div class="payment-modal-content premium-payment-modal">
+            <button class="modal-close-btn" onclick="closePaymentModal()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+
+            <div class="payment-modal-header premium-header">
+                <div class="payment-header-icon">
+                    <div class="icon-glow"></div>
+                    <span class="payment-icon-large">💎</span>
+                </div>
+                <h2>Complete Your Purchase</h2>
+                <p class="payment-subtitle">Select your preferred payment method below</p>
             </div>
 
             <div class="payment-modal-body">
-                <!-- Invoice Summary -->
-                <div class="payment-invoice-summary" id="paymentInvoiceSummary">
+                <!-- Invoice Summary - Premium Card -->
+                <div class="premium-invoice-summary" id="paymentInvoiceSummary">
                     <!-- Will be populated by JavaScript -->
                 </div>
 
-                <!-- Payment Method Selection -->
-                <div class="payment-methods-section">
-                    <h3 class="payment-section-title">Select Payment Method</h3>
-                    <div class="payment-methods-grid" id="paymentMethodsGrid">
+                <!-- Payment Method Selection - Premium Cards -->
+                <div class="payment-methods-section premium-section">
+                    <div class="section-header">
+                        <span class="section-icon">💳</span>
+                        <h3 class="payment-section-title">Choose Payment Method</h3>
+                    </div>
+                    <div class="premium-payment-methods-grid" id="paymentMethodsGrid">
                         <!-- Payment methods will be populated by JavaScript -->
                     </div>
                 </div>
 
-                <!-- Payment Form (for card payments) -->
+                <!-- Card payment form - hidden, kept for compatibility -->
                 <div class="payment-form-container" id="paymentFormContainer" style="display: none;">
-                    <h3 class="payment-section-title">Payment Details</h3>
-                    
-                    <!-- Card Number -->
-                    <div class="form-group">
-                        <label for="cardNumber">
-                            <span>Card Number</span>
-                            <span class="required">*</span>
-                        </label>
-                        <div class="input-wrapper">
-                            <span class="input-icon">💳</span>
-                            <input 
-                                type="text" 
-                                id="cardNumber" 
-                                placeholder="1234 5678 9012 3456"
-                                maxlength="19"
-                                autocomplete="cc-number"
-                            />
-                            <div class="card-brand-icon" id="cardBrandIcon"></div>
-                        </div>
-                        <small class="error-message" id="cardNumberError"></small>
-                    </div>
-
-                    <!-- Card Details Row -->
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="cardExpiry">
-                                <span>Expiry Date</span>
-                                <span class="required">*</span>
-                            </label>
-                            <div class="input-wrapper">
-                                <span class="input-icon">📅</span>
-                                <input 
-                                    type="text" 
-                                    id="cardExpiry" 
-                                    placeholder="MM/YY"
-                                    maxlength="5"
-                                    autocomplete="cc-exp"
-                                />
-                            </div>
-                            <small class="error-message" id="cardExpiryError"></small>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="cardCVC">
-                                <span>CVV</span>
-                                <span class="required">*</span>
-                            </label>
-                            <div class="input-wrapper">
-                                <span class="input-icon">🔒</span>
-                                <input 
-                                    type="text" 
-                                    id="cardCVC" 
-                                    placeholder="123"
-                                    maxlength="4"
-                                    autocomplete="cc-csc"
-                                />
-                            </div>
-                            <small class="error-message" id="cardCVCError"></small>
-                        </div>
-                    </div>
-
-                    <!-- Cardholder Name -->
-                    <div class="form-group">
-                        <label for="cardholderName">
-                            <span>Cardholder Name</span>
-                            <span class="required">*</span>
-                        </label>
-                        <div class="input-wrapper">
-                            <span class="input-icon">👤</span>
-                            <input 
-                                type="text" 
-                                id="cardholderName" 
-                                placeholder="John Doe"
-                                autocomplete="cc-name"
-                            />
-                        </div>
-                        <small class="error-message" id="cardholderNameError"></small>
-                    </div>
-
-                    <!-- Billing Address (Optional) -->
-                    <div class="form-group">
-                        <label for="billingAddress">
-                            <span>Billing Address</span>
-                            <span class="optional">(Optional)</span>
-                        </label>
-                        <div class="input-wrapper">
-                            <span class="input-icon">📍</span>
-                            <input 
-                                type="text" 
-                                id="billingAddress" 
-                                placeholder="123 Main Street, City, Country"
-                                autocomplete="street-address"
-                            />
-                        </div>
-                    </div>
+                    <input type="hidden" id="cardNumber" />
+                    <input type="hidden" id="cardExpiry" />
+                    <input type="hidden" id="cardCVC" />
+                    <input type="hidden" id="cardholderName" />
+                    <input type="hidden" id="billingAddress" />
+                    <div id="cardBrandIcon" style="display:none;"></div>
                 </div>
 
-                <!-- FIB Bank Form (for Iraqi mobile payment) -->
-                <div class="payment-form-container" id="fibFormContainer" style="display: none;">
-                    <h3 class="payment-section-title">FIB Bank Details</h3>
-
-                    <div class="fib-info-banner">
-                        <span class="fib-icon">🏦</span>
-                        <p>Pay securely using your FIB mobile banking app</p>
+                <!-- Premium FIB Bank Form -->
+                <div class="premium-form-container" id="fibFormContainer" style="display: none;">
+                    <div class="premium-form-header">
+                        <div class="form-header-icon">🏦</div>
+                        <div class="form-header-text">
+                            <h3>FIB Bank Transfer</h3>
+                            <p>Fast & secure Iraqi mobile banking</p>
+                        </div>
                     </div>
 
-                    <!-- ZUBID Account to receive payment -->
-                    <div class="fib-receive-account">
-                        <div class="receive-label">Send Payment To:</div>
-                        <div class="receive-number-box">
-                            <span class="receive-icon">📲</span>
-                            <span class="receive-number" id="zubidFibNumber">0771 562 5156</span>
-                            <button type="button" class="copy-btn" onclick="copyFibNumber()" title="Copy number">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <div class="premium-fib-banner">
+                        <div class="fib-banner-icon">
+                            <span>📲</span>
+                        </div>
+                        <div class="fib-banner-content">
+                            <h4>Pay via FIB Mobile App</h4>
+                            <p>Quick, secure bank transfer directly from your phone</p>
+                        </div>
+                    </div>
+
+                    <!-- Premium ZUBID Account Card -->
+                    <div class="premium-receive-card">
+                        <div class="receive-card-label">
+                            <span class="label-icon">🎯</span>
+                            <span>Send Payment To ZUBID Account</span>
+                        </div>
+                        <div class="receive-number-display">
+                            <div class="number-wrapper">
+                                <span class="country-flag">🇮🇶</span>
+                                <span class="receive-number" id="zubidFibNumber">0771 562 5156</span>
+                            </div>
+                            <button type="button" class="premium-copy-btn" onclick="copyFibNumber()" title="Copy number">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                                     <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
                                 </svg>
+                                <span>Copy</span>
                             </button>
                         </div>
-                        <small class="receive-hint">ZUBID Official FIB Account</small>
-                    </div>
-
-                    <!-- Full Name -->
-                    <div class="form-group">
-                        <label for="fibName">
-                            <span>Your Full Name</span>
-                            <span class="required">*</span>
-                        </label>
-                        <div class="input-wrapper">
-                            <span class="input-icon">👤</span>
-                            <input
-                                type="text"
-                                id="fibName"
-                                placeholder="Enter your full name"
-                                autocomplete="name"
-                            />
+                        <div class="receive-card-badge">
+                            <span>✓</span> ZUBID Official Account
                         </div>
-                        <small class="error-message" id="fibNameError"></small>
                     </div>
 
-                    <!-- Iraqi Phone Number -->
-                    <div class="form-group">
-                        <label for="fibPhone">
-                            <span>Your Iraqi Phone Number</span>
-                            <span class="required">*</span>
-                        </label>
-                        <div class="input-wrapper">
-                            <span class="input-icon">📱</span>
-                            <input
-                                type="tel"
-                                id="fibPhone"
-                                placeholder="07XX XXX XXXX"
-                                maxlength="13"
-                                autocomplete="tel"
-                            />
+                    <!-- Premium Form Fields -->
+                    <div class="premium-form-fields">
+                        <div class="premium-form-group">
+                            <label for="fibName">
+                                <span class="label-icon">👤</span>
+                                <span>Full Name</span>
+                                <span class="required-star">*</span>
+                            </label>
+                            <div class="premium-input-wrapper">
+                                <input
+                                    type="text"
+                                    id="fibName"
+                                    placeholder="Enter your full name"
+                                    autocomplete="name"
+                                    class="premium-input"
+                                />
+                            </div>
+                            <small class="error-message" id="fibNameError"></small>
                         </div>
-                        <small class="input-hint">Format: 07XX XXX XXXX (e.g., 0750 123 4567)</small>
-                        <small class="error-message" id="fibPhoneError"></small>
+
+                        <div class="premium-form-group">
+                            <label for="fibPhone">
+                                <span class="label-icon">📱</span>
+                                <span>Phone Number</span>
+                                <span class="required-star">*</span>
+                            </label>
+                            <div class="premium-input-wrapper">
+                                <span class="input-prefix">+964</span>
+                                <input
+                                    type="tel"
+                                    id="fibPhone"
+                                    placeholder="7XX XXX XXXX"
+                                    maxlength="13"
+                                    autocomplete="tel"
+                                    class="premium-input with-prefix"
+                                />
+                            </div>
+                            <small class="input-hint">Iraqi mobile number linked to FIB</small>
+                            <small class="error-message" id="fibPhoneError"></small>
+                        </div>
                     </div>
 
-                    <div class="fib-instructions">
-                        <h4>How to pay with FIB:</h4>
-                        <ol>
-                            <li>Open your FIB mobile app</li>
-                            <li>Go to "Send Money"</li>
-                            <li>Enter the ZUBID number: <strong>0771 562 5156</strong></li>
-                            <li>Enter the exact payment amount shown above</li>
-                            <li>Add your invoice number in the notes</li>
-                            <li>Confirm and complete the transfer</li>
-                        </ol>
+                    <!-- Premium Instructions -->
+                    <div class="premium-instructions">
+                        <div class="instructions-header">
+                            <span class="instructions-icon">📋</span>
+                            <h4>Quick Payment Steps</h4>
+                        </div>
+                        <div class="instructions-steps">
+                            <div class="step-item">
+                                <span class="step-number">1</span>
+                                <span class="step-text">Open FIB mobile app</span>
+                            </div>
+                            <div class="step-item">
+                                <span class="step-number">2</span>
+                                <span class="step-text">Tap "Send Money"</span>
+                            </div>
+                            <div class="step-item">
+                                <span class="step-number">3</span>
+                                <span class="step-text">Enter <strong>0771 562 5156</strong></span>
+                            </div>
+                            <div class="step-item">
+                                <span class="step-number">4</span>
+                                <span class="step-text">Confirm & complete transfer</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Cash on Delivery Info -->
-                <div class="payment-info-section" id="cashOnDeliveryInfo" style="display: none;">
-                    <div class="info-card">
-                        <div class="info-icon">🚚</div>
-                        <div class="info-content">
-                            <h4>Cash on Delivery</h4>
-                            <p>Payment will be collected when your item is delivered. No upfront payment required.</p>
-                            <ul class="info-list">
-                                <li>✓ Secure delivery to your address</li>
-                                <li>✓ Pay when you receive the item</li>
-                                <li>✓ Multiple payment options accepted</li>
-                            </ul>
+                <!-- Premium Cash on Delivery Info -->
+                <div class="premium-cod-section" id="cashOnDeliveryInfo" style="display: none;">
+                    <div class="premium-cod-card">
+                        <div class="cod-icon-wrapper">
+                            <div class="cod-icon-bg"></div>
+                            <span class="cod-icon">🚚</span>
                         </div>
+                        <div class="cod-content">
+                            <h4>Cash on Delivery</h4>
+                            <p>Pay conveniently when your item arrives at your doorstep</p>
+                        </div>
+                    </div>
+
+                    <div class="cod-features">
+                        <div class="cod-feature">
+                            <span class="feature-icon">🏠</span>
+                            <div class="feature-text">
+                                <strong>Delivery to Your Door</strong>
+                                <span>We'll bring it right to you</span>
+                            </div>
+                        </div>
+                        <div class="cod-feature">
+                            <span class="feature-icon">👁️</span>
+                            <div class="feature-text">
+                                <strong>Inspect Before Paying</strong>
+                                <span>Verify your item first</span>
+                            </div>
+                        </div>
+                        <div class="cod-feature">
+                            <span class="feature-icon">💵</span>
+                            <div class="feature-text">
+                                <strong>Cash or Card Accepted</strong>
+                                <span>Multiple payment options</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="cod-note">
+                        <span class="note-icon">💡</span>
+                        <p>Please have the exact amount ready for a smooth delivery experience</p>
                     </div>
                 </div>
             </div>
 
-            <!-- Payment Modal Footer -->
-            <div class="payment-modal-footer">
-                <div class="payment-total-display">
-                    <span class="total-label">Total Amount:</span>
-                    <span class="total-amount" id="paymentTotalAmount">$0.00</span>
+            <!-- Premium Payment Modal Footer -->
+            <div class="premium-modal-footer">
+                <div class="footer-total-section">
+                    <div class="total-label-wrapper">
+                        <span class="total-icon">💰</span>
+                        <span class="total-label">Total Amount</span>
+                    </div>
+                    <div class="total-amount-wrapper">
+                        <span class="currency-symbol">$</span>
+                        <span class="total-amount" id="paymentTotalAmount">0.00</span>
+                    </div>
                 </div>
-                <div class="payment-actions">
-                    <button class="btn btn-outline" onclick="closePaymentModal()">Cancel</button>
-                    <button class="btn btn-primary" id="submitPaymentBtn" onclick="submitPayment()">
-                        <span class="btn-text">Pay Now</span>
+
+                <div class="premium-actions">
+                    <button class="premium-btn cancel-btn" onclick="closePaymentModal()">
+                        <span>Cancel</span>
+                    </button>
+                    <button class="premium-btn submit-btn" id="submitPaymentBtn" onclick="submitPayment()">
+                        <span class="btn-text">Complete Payment</span>
                         <span class="btn-loader" style="display: none;">
-                            <span class="spinner"></span>
+                            <span class="premium-spinner"></span>
                         </span>
+                        <span class="btn-arrow">→</span>
                     </button>
                 </div>
             </div>
 
-            <!-- Security Badge -->
-            <div class="payment-security">
-                <span class="security-icon">🔒</span>
-                <span>Secure Payment • SSL Encrypted</span>
+            <!-- Premium Security Badge -->
+            <div class="premium-security-badge">
+                <div class="security-icons">
+                    <span class="security-icon">🔒</span>
+                    <span class="security-icon">🛡️</span>
+                </div>
+                <div class="security-text">
+                    <span class="security-main">100% Secure Payment</span>
+                    <span class="security-sub">SSL Encrypted • Bank-Level Security</span>
+                </div>
             </div>
         </div>
     </div>

@@ -136,6 +136,20 @@
                             </div>
 
                             <div class="admin-form-group">
+                                <label for="marketPrice">Market Price ($)</label>
+                                <input type="number" id="marketPrice" class="admin-input" step="0.01" min="0" placeholder="Optional - retail/market value">
+                                <small>Enter the retail or market price of the item (optional)</small>
+                            </div>
+                        </div>
+
+                        <div class="admin-form-row">
+                            <div class="admin-form-group">
+                                <label for="realPrice">Real Price / Buy It Now ($)</label>
+                                <input type="number" id="realPrice" class="admin-input" step="0.01" min="0" placeholder="Fixed price to buy immediately">
+                                <small>Set a fixed "Buy It Now" price (optional)</small>
+                            </div>
+
+                            <div class="admin-form-group">
                                 <label for="endTime">End Date & Time *</label>
                                 <input type="datetime-local" id="endTime" class="admin-input" required>
                             </div>

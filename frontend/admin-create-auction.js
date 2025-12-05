@@ -654,6 +654,10 @@ async function handleCreateAuction(event) {
     const category = document.getElementById('category').value;
     const startingBid = parseFloat(document.getElementById('startingBid').value);
     const bidIncrement = parseFloat(document.getElementById('bidIncrement').value);
+    const marketPriceEl = document.getElementById('marketPrice');
+    const realPriceEl = document.getElementById('realPrice');
+    const marketPrice = marketPriceEl && marketPriceEl.value ? parseFloat(marketPriceEl.value) : null;
+    const realPrice = realPriceEl && realPriceEl.value ? parseFloat(realPriceEl.value) : null;
     const endTime = document.getElementById('endTime').value;
     const featured = document.getElementById('featured').checked;
     const imageUrlsText = document.getElementById('imageUrls').value;
@@ -709,6 +713,8 @@ async function handleCreateAuction(event) {
             category_id: parseInt(category),
             starting_bid: startingBid,
             bid_increment: bidIncrement,
+            market_price: marketPrice,
+            real_price: realPrice,
             end_time: endTimeISO,
             featured: featured,
             images: images,

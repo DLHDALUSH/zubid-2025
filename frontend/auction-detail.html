@@ -302,9 +302,9 @@
                                 <label>Market Price</label>
                                 <span class="market-price" id="marketPrice">$0.00</span>
                             </div>
-                            <div class="stat" id="realPriceStat" style="display: none;">
-                                <label>Real Price / Buy It Now</label>
-                                <span class="real-price" id="realPrice" style="color: var(--primary-color); font-weight: 700;">$0.00</span>
+                            <div class="stat real-price-stat" id="realPriceStat" style="display: none;">
+                                <label>💰 Real Price / Buy It Now</label>
+                                <span class="real-price" id="realPrice">$0.00</span>
                             </div>
                             <div class="stat">
                                 <label>Total Bids</label>
@@ -318,6 +318,31 @@
                     </div>
                 </div>
                 
+                <!-- Buy It Now Section -->
+                <div class="buy-now-section" id="buyNowSection" style="display: none;">
+                    <div class="buy-now-card">
+                        <div class="buy-now-header">
+                            <span class="buy-now-icon">⚡</span>
+                            <h3>Buy It Now</h3>
+                        </div>
+                        <div class="buy-now-content">
+                            <p class="buy-now-description">Skip the bidding and get this item instantly!</p>
+                            <div class="buy-now-price">
+                                <span class="price-label">Instant Price</span>
+                                <span class="price-value" id="buyNowPrice">$0.00</span>
+                            </div>
+                            <button class="btn-buy-now" onclick="buyNow()">
+                                <span class="btn-icon">💰</span>
+                                <span class="btn-text">Buy Now</span>
+                            </button>
+                            <p class="buy-now-note">🔒 Secure instant purchase</p>
+                        </div>
+                    </div>
+                    <div class="section-divider">
+                        <span>OR</span>
+                    </div>
+                </div>
+
                 <!-- Bidding Section -->
                 <div class="bidding-section">
                     <h2>Place a Bid</h2>

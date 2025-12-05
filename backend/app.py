@@ -400,12 +400,13 @@ class Invoice(db.Model):
     item_price = db.Column(db.Float, nullable=False)  # Winning bid amount
     bid_fee = db.Column(db.Float, nullable=False)  # 1% of item price
     delivery_fee = db.Column(db.Float, nullable=False, default=0.0)
+    cashback_amount = db.Column(db.Float, nullable=False, default=0.0)  # Cashback discount applied
     total_amount = db.Column(db.Float, nullable=False)
     payment_method = db.Column(db.String(50))  # 'cash_on_delivery' or 'fib'
     payment_status = db.Column(db.String(50), default='pending')  # pending, paid, failed, cancelled
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     paid_at = db.Column(db.DateTime, nullable=True)
-    
+
     auction = db.relationship('Auction', backref='invoice', lazy=True)
     user = db.relationship('User', backref='invoices', lazy=True)
 
@@ -2172,6 +2173,88 @@ def place_bid(auction_id):
         error_message = 'Failed to place bid' if is_production else f'Failed to place bid: {str(e)}'
         return jsonify({'error': error_message}), 500
 
+@app.route('/api/auctions/<int:auction_id>/buy-now', methods=['POST'])
+@login_required
+def buy_now(auction_id):
+    """Buy It Now - Purchase item at real price instantly"""
+    try:
+        user_id = session['user_id']
+
+        # Lock the auction row to prevent race conditions
+        auction = db.session.query(Auction).filter_by(id=auction_id).with_for_update().first()
+        if not auction:
+            return jsonify({'error': 'Auction not found'}), 404
+
+        if auction.status != 'active':
+            db.session.rollback()
+            return jsonify({'error': 'Auction is not active'}), 400
+
+        # Check if auction has a real price (Buy It Now price)
+        if not auction.real_price or auction.real_price <= 0:
+            db.session.rollback()
+            return jsonify({'error': 'This auction does not have a Buy It Now option'}), 400
+
+        now = datetime.now(timezone.utc)
+        end_time = ensure_timezone_aware(auction.end_time)
+        if end_time and end_time < now:
+            auction.status = 'ended'
+            db.session.commit()
+            return jsonify({'error': 'Auction has ended'}), 400
+
+        if auction.seller_id == user_id:
+            db.session.rollback()
+            return jsonify({'error': 'Cannot buy your own auction item'}), 400
+
+        # Create a bid at the real price
+        buy_now_bid = Bid(
+            auction_id=auction_id,
+            user_id=user_id,
+            amount=auction.real_price,
+            is_auto_bid=False,
+            max_auto_bid=None
+        )
+        db.session.add(buy_now_bid)
+
+        # Update auction - end it immediately with buyer as winner
+        auction.current_bid = auction.real_price
+        auction.status = 'ended'
+        auction.winner_id = user_id
+        auction.end_time = now  # End immediately
+
+        # Create invoice for the purchase
+        bid_fee = auction.real_price * 0.01  # 1% fee
+        delivery_fee = calculate_delivery_fee(user_id)
+        total_amount = auction.real_price + bid_fee + delivery_fee
+
+        # Check if invoice already exists
+        existing_invoice = Invoice.query.filter_by(auction_id=auction.id, user_id=user_id).first()
+        if not existing_invoice:
+            invoice = Invoice(
+                auction_id=auction.id,
+                user_id=user_id,
+                item_price=auction.real_price,
+                bid_fee=bid_fee,
+                delivery_fee=delivery_fee,
+                total_amount=total_amount,
+                payment_status='pending'
+            )
+            db.session.add(invoice)
+
+        db.session.commit()
+
+        return jsonify({
+            'message': 'Purchase successful! You bought this item.',
+            'auction_id': auction.id,
+            'purchase_price': auction.real_price,
+            'total_with_fees': total_amount
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f"Error in buy now: {str(e)}", exc_info=True)
+        error_message = 'Failed to process purchase' if is_production else f'Failed to process purchase: {str(e)}'
+        return jsonify({'error': error_message}), 500
+
 @app.route('/api/user/bids', methods=['GET'])
 @login_required
 def get_user_bids():
@@ -2846,6 +2929,27 @@ def init_db():
         except Exception as e:
             print(f"Note: Could not check/add real_price column: {e}")
 
+        # Check and add cashback_amount column to Invoice table if missing
+        try:
+            inspector = inspect(db.engine)
+            invoice_columns = [col['name'] for col in inspector.get_columns('invoice')]
+            if 'cashback_amount' not in invoice_columns:
+                print("Adding cashback_amount column to Invoice table...")
+                try:
+                    with db.engine.connect() as conn:
+                        with conn.begin():
+                            if 'sqlite' in str(db.engine.url).lower():
+                                conn.execute(text("ALTER TABLE invoice ADD COLUMN cashback_amount REAL DEFAULT 0"))
+                            else:
+                                conn.execute(text("ALTER TABLE invoice ADD COLUMN cashback_amount FLOAT DEFAULT 0"))
+                    print("[OK] cashback_amount column added successfully!")
+                except Exception as e:
+                    print(f"[WARNING] Could not add cashback_amount column automatically: {e}")
+            else:
+                print("[OK] cashback_amount column exists in Invoice table")
+        except Exception as e:
+            print(f"Note: Could not check/add cashback_amount column: {e}")
+
         # Check and add additional Auction columns if missing
         try:
             inspector = inspect(db.engine)
@@ -3275,12 +3379,21 @@ def get_user_payments():
                 'qr_code_url': auction.qr_code_url
             }
             
+            # Check for pending cashback that can be applied
+            pending_cashback = Cashback.query.filter_by(
+                user_id=session['user_id'],
+                auction_id=auction.id,
+                status='pending'
+            ).first()
+
             invoices.append({
                 'id': invoice.id,
                 'auction': auction_data,
                 'item_price': invoice.item_price,
                 'bid_fee': invoice.bid_fee,
                 'delivery_fee': invoice.delivery_fee,
+                'cashback_amount': invoice.cashback_amount or 0,
+                'pending_cashback': pending_cashback.amount if pending_cashback else 0,
                 'total_amount': invoice.total_amount,
                 'payment_method': invoice.payment_method,
                 'payment_status': invoice.payment_status,
@@ -3867,12 +3980,12 @@ def process_cashback(cashback_id):
                 auction_id=cashback.auction_id,
                 user_id=cashback.user_id
             ).first()
-            
+
             if invoice:
-                # Apply cashback to invoice total
+                # Apply cashback to invoice total and track the amount
+                invoice.cashback_amount = (invoice.cashback_amount or 0) + cashback.amount
                 invoice.total_amount = max(0, invoice.total_amount - cashback.amount)
-                invoice.payment_status = 'pending'  # Reset to pending if needed
-        
+
         cashback.status = 'processed'
         cashback.processed_at = datetime.now(timezone.utc)
         db.session.commit()
