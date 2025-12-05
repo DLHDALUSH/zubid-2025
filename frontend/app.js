@@ -346,10 +346,7 @@ async function handleLogin(event) {
 
 	    // Check if backend is reachable first
 	    try {
-	        // Use the same base URL as the global API configuration, defaulting to localhost:5000
-	        const API_BASE = (typeof API_BASE_URL !== 'undefined' && API_BASE_URL
-	            ? API_BASE_URL
-	            : 'http://localhost:5000/api').replace('/api', '');
+	        const API_BASE = window.API_BASE || (typeof API_BASE_URL !== 'undefined' ? API_BASE_URL.replace('/api', '') : window.location.origin);
         const testResponse = await fetch(`${API_BASE}/api/health`);
         if (!testResponse.ok) {
             throw new Error('Backend server is not responding correctly');
@@ -412,10 +409,7 @@ async function handleRegister(event) {
 
 	    // Check if backend is reachable first
 	    try {
-	        // Use the same base URL as the global API configuration, defaulting to localhost:5000
-	        const API_BASE = (typeof API_BASE_URL !== 'undefined' && API_BASE_URL
-	            ? API_BASE_URL
-	            : 'http://localhost:5000/api').replace('/api', '');
+	        const API_BASE = window.API_BASE || (typeof API_BASE_URL !== 'undefined' ? API_BASE_URL.replace('/api', '') : window.location.origin);
         const testResponse = await fetch(`${API_BASE}/api/health`);
         if (!testResponse.ok) {
             throw new Error('Backend server is not responding correctly');
@@ -425,7 +419,7 @@ async function handleRegister(event) {
         debugError('Backend connection error:', error);
         return;
     }
-    
+
     // Validate password before submission
     const password = document.getElementById('registerPassword').value;
     const passwordValidation = validatePassword(password);
@@ -1352,21 +1346,9 @@ function getImageUrl(imageUrl) {
         }
     }
     
-    // Handle relative URLs - get base URL from API_BASE_URL or default
-    let baseUrl = 'http://localhost:5000';
-    try {
-        if (typeof API_BASE_URL !== 'undefined' && API_BASE_URL) {
-            baseUrl = String(API_BASE_URL).replace('/api', '').replace(/\/$/, '');
-        } else if (typeof window !== 'undefined' && window.API_BASE_URL) {
-            baseUrl = String(window.API_BASE_URL).replace('/api', '').replace(/\/$/, '');
-        }
-    } catch (e) {
-        console.warn('Could not determine base URL, using default:', e);
-    }
-    
-    // Ensure relative URL starts with /
+    // Handle relative URLs - get base URL from window.API_BASE or origin
+    const baseUrl = window.API_BASE || (window.location.hostname === 'localhost' ? 'http://localhost:5000' : window.location.origin);
     const relativeUrl = urlString.startsWith('/') ? urlString : '/' + urlString;
-    
     return baseUrl + relativeUrl;
 }
 
@@ -1390,17 +1372,7 @@ function convertImageUrlUnified(imageUrl) {
     }
 
     // Relative URLs - construct full URL
-    let baseUrl = 'http://localhost:5000';
-    try {
-        if (typeof API_BASE_URL !== 'undefined' && API_BASE_URL) {
-            baseUrl = String(API_BASE_URL).replace('/api', '').replace(/\/$/, '');
-        } else if (typeof window !== 'undefined' && window.API_BASE_URL) {
-            baseUrl = String(window.API_BASE_URL).replace('/api', '').replace(/\/$/, '');
-        }
-    } catch (e) {
-        console.warn('Error parsing API_BASE_URL:', e);
-    }
-
+    const baseUrl = window.API_BASE || (window.location.hostname === 'localhost' ? 'http://localhost:5000' : window.location.origin);
     const relativeUrl = urlString.startsWith('/') ? urlString : '/' + urlString;
     return baseUrl + relativeUrl;
 }

@@ -1118,15 +1118,7 @@ async function handleVideoFileChange(event) {
         const result = await VideoAPI.upload(file);
 
         // Construct full URL using unified converter
-        let baseUrl = 'http://localhost:5000';
-        try {
-            if (typeof API_BASE_URL !== 'undefined' && API_BASE_URL) {
-                baseUrl = String(API_BASE_URL).replace('/api', '').replace(/\/$/, '');
-            }
-        } catch (e) {
-            console.warn('Error parsing API_BASE_URL:', e);
-        }
-
+        const baseUrl = window.API_BASE || (window.location.hostname === 'localhost' ? 'http://localhost:5000' : window.location.origin);
         const fullUrl = baseUrl + (result.url.startsWith('/') ? result.url : '/' + result.url);
         uploadedVideoUrl = fullUrl;
 

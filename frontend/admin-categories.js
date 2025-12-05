@@ -81,7 +81,7 @@ async function handleAddCategory(event) {
     const description = document.getElementById('categoryDescription').value;
     
     try {
-        const API_BASE = (window.API_BASE_URL || 'http://localhost:5000/api').replace('/api', '');
+        const API_BASE = window.API_BASE || (window.location.hostname === 'localhost' ? 'http://localhost:5000' : window.location.origin);
         const response = await fetch(`${API_BASE}/api/admin/categories`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -119,7 +119,7 @@ async function handleUpdateCategory(event) {
     const description = document.getElementById('editCategoryDescription').value;
     
     try {
-        const API_BASE = (window.API_BASE_URL || 'http://localhost:5000/api').replace('/api', '');
+        const API_BASE = window.API_BASE || (window.location.hostname === 'localhost' ? 'http://localhost:5000' : window.location.origin);
         const response = await fetch(`${API_BASE}/api/admin/categories/${categoryId}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
@@ -146,7 +146,7 @@ async function deleteCategory(categoryId) {
     }
     
     try {
-        const API_BASE = (window.API_BASE_URL || 'http://localhost:5000/api').replace('/api', '');
+        const API_BASE = window.API_BASE || (window.location.hostname === 'localhost' ? 'http://localhost:5000' : window.location.origin);
         const response = await fetch(`${API_BASE}/api/admin/categories/${categoryId}`, {
             method: 'DELETE',
             credentials: 'include'

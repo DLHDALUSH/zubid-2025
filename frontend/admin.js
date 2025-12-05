@@ -82,7 +82,7 @@ function showToast(message, type = 'info') {
 // Load admin dashboard stats
 async function loadAdminStats() {
     try {
-        const API_BASE = window.API_BASE_URL || 'http://localhost:5000';
+        const API_BASE = window.API_BASE || (window.location.hostname === 'localhost' ? 'http://localhost:5000' : window.location.origin);
         const stats = await fetch(`${API_BASE}/api/admin/stats`, {
             credentials: 'include'
         });
@@ -120,8 +120,7 @@ async function logout() {
 // Admin API helpers
 const AdminAPI = {
     getApiBase: () => {
-        const apiBase = window.API_BASE_URL || 'http://localhost:5000/api';
-        return apiBase.replace('/api', '');
+        return window.API_BASE || (window.location.hostname === 'localhost' ? 'http://localhost:5000' : window.location.origin);
     },
     
     getUsers: async (page = 1, search = '') => {

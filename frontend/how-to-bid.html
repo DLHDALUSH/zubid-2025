@@ -241,12 +241,15 @@
     <section class="how-to-bid-section" style="padding: 4rem 0; min-height: calc(100vh - 200px);">
         <div class="container">
             <div class="section-header" style="text-align: center; margin-bottom: 4rem;">
-	                <h1 data-i18n="messages.howToBid" style="font-size: 2.5rem; margin-bottom: 1rem; background: var(--bg-gradient-warm); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">How to Bid</h1>
-	                <p data-i18n="howToBidPage.intro" style="font-size: 1.1rem; color: var(--text-secondary); max-width: 700px; margin: 0 auto;">Learn how to participate in auctions and place winning bids on ZUBID. Follow these simple steps to get started.</p>
+                <h1 data-i18n="howToBidPage.pageTitle" style="font-size: 2.5rem; margin-bottom: 1rem; background: var(--bg-gradient-warm); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">How to Use ZUBID</h1>
+                <p data-i18n="howToBidPage.intro" style="font-size: 1.1rem; color: var(--text-secondary); max-width: 700px; margin: 0 auto;">Learn how to use ZUBID - your complete guide to bidding, selling, and managing your account on our premier auction platform.</p>
             </div>
 
             <div style="max-width: 1000px; margin: 0 auto;">
-                <!-- Step-by-Step Guide -->
+                <!-- Getting Started Section -->
+                <h2 data-i18n="howToBidPage.gettingStartedTitle" style="font-size: 2rem; margin-bottom: 2rem; color: var(--primary-color); display: flex; align-items: center; gap: 0.5rem;">
+                    <span>🚀</span> Getting Started
+                </h2>
                 <div class="steps-container" style="display: flex; flex-direction: column; gap: 2rem; margin-bottom: 4rem;">
                     <!-- Step 1 -->
                     <div class="step-card" style="background: var(--glass-bg); backdrop-filter: blur(10px); border-radius: 20px; padding: 2.5rem; box-shadow: var(--shadow-lg); border: 1px solid var(--glass-border); display: flex; gap: 2rem; align-items: start;">
@@ -301,23 +304,31 @@
                         </div>
                     </div>
 
+                </div>
+
+                <!-- Bidding Section -->
+                <h2 data-i18n="howToBidPage.biddingTitle" style="font-size: 2rem; margin-bottom: 2rem; margin-top: 3rem; color: var(--primary-color); display: flex; align-items: center; gap: 0.5rem;">
+                    <span>🎯</span> How to Bid
+                </h2>
+                <div class="steps-container" style="display: flex; flex-direction: column; gap: 2rem; margin-bottom: 4rem;">
                     <!-- Step 4 -->
                     <div class="step-card" style="background: var(--glass-bg); backdrop-filter: blur(10px); border-radius: 20px; padding: 2.5rem; box-shadow: var(--shadow-lg); border: 1px solid var(--glass-border); display: flex; gap: 2rem; align-items: start;">
                         <div class="step-number" style="width: 60px; height: 60px; background: var(--bg-gradient-warm); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 1.8rem; font-weight: 700; color: white; box-shadow: var(--shadow-primary);">
                             4
                         </div>
-	                        <div class="step-content" style="flex: 1;">
-	                            <h2 data-i18n="howToBidPage.step4Title" style="font-size: 1.5rem; margin-bottom: 1rem; color: var(--primary-color);">Place Your Bid</h2>
-	                            <p data-i18n="howToBidPage.step4Text" style="color: var(--text-secondary); line-height: 1.8; margin-bottom: 1rem;">When you're ready to bid:</p>
-	                            <ul style="color: var(--text-secondary); line-height: 1.8; margin-left: 1.5rem; margin-bottom: 1rem;">
-	                                <li data-i18n="howToBidPage.step4Item1">Enter your bid amount (must be at least the minimum bid)</li>
-	                                <li data-i18n="howToBidPage.step4Item2">Optionally enable auto-bid with a maximum limit</li>
-	                                <li data-i18n="howToBidPage.step4Item3">Click "Place Bid" to submit</li>
-	                                <li data-i18n="howToBidPage.step4Item4">Watch real-time updates as others bid</li>
-	                            </ul>
-	                            <div style="background: rgba(255, 102, 0, 0.1); padding: 1rem; border-radius: 12px; margin-top: 1rem; border-left: 4px solid var(--primary-color);">
-	                                <p style="color: var(--text-color); margin: 0; font-weight: 500;"><span>💡 </span><span data-i18n="howToBidPage.step4Tip">Tip: Use auto-bid to automatically increase your bid up to your maximum limit when others outbid you.</span></p>
-	                            </div>
+                        <div class="step-content" style="flex: 1;">
+                            <h2 data-i18n="howToBidPage.step4Title" style="font-size: 1.5rem; margin-bottom: 1rem; color: var(--primary-color);">Place Your Bid</h2>
+                            <p data-i18n="howToBidPage.step4Text" style="color: var(--text-secondary); line-height: 1.8; margin-bottom: 1rem;">When you're ready to bid:</p>
+                            <ul style="color: var(--text-secondary); line-height: 1.8; margin-left: 1.5rem; margin-bottom: 1rem;">
+                                <li data-i18n="howToBidPage.step4Item1">Enter your bid amount (must meet minimum bid)</li>
+                                <li data-i18n="howToBidPage.step4Item2">Enable auto-bid to compete automatically up to your max limit</li>
+                                <li data-i18n="howToBidPage.step4Item3">Click "Place Bid" to submit</li>
+                                <li data-i18n="howToBidPage.step4Item4">Watch real-time updates as others bid</li>
+                                <li data-i18n="howToBidPage.step4Item5">Get instant notifications when outbid</li>
+                            </ul>
+                            <div style="background: rgba(255, 102, 0, 0.1); padding: 1rem; border-radius: 12px; margin-top: 1rem; border-left: 4px solid var(--primary-color);">
+                                <p style="color: var(--text-color); margin: 0; font-weight: 500;"><span>💡 </span><span data-i18n="howToBidPage.step4Tip">Pro Tip: Use auto-bid to automatically increase your bid up to your set limit when outbid. This way you won't miss auctions even when you're away!</span></p>
+                            </div>
                         </div>
                     </div>
 
@@ -326,89 +337,234 @@
                         <div class="step-number" style="width: 60px; height: 60px; background: var(--bg-gradient-warm); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 1.8rem; font-weight: 700; color: white; box-shadow: var(--shadow-primary);">
                             5
                         </div>
-	                        <div class="step-content" style="flex: 1;">
-	                            <h2 data-i18n="howToBidPage.step5Title" style="font-size: 1.5rem; margin-bottom: 1rem; color: var(--primary-color);">Win and Pay</h2>
-	                            <p data-i18n="howToBidPage.step5Text" style="color: var(--text-secondary); line-height: 1.8; margin-bottom: 1rem;">If you win the auction:</p>
-	                            <ul style="color: var(--text-secondary); line-height: 1.8; margin-left: 1.5rem; margin-bottom: 1rem;">
-	                                <li data-i18n="howToBidPage.step5Item1">You'll receive a notification when the auction ends</li>
-	                                <li data-i18n="howToBidPage.step5Item2">An invoice will be generated automatically</li>
-	                                <li data-i18n="howToBidPage.step5Item3">Complete payment through your preferred method</li>
-	                                <li data-i18n="howToBidPage.step5Item4">Arrange for delivery or pickup</li>
-	                            </ul>
+                        <div class="step-content" style="flex: 1;">
+                            <h2 data-i18n="howToBidPage.step5Title" style="font-size: 1.5rem; margin-bottom: 1rem; color: var(--primary-color);">Win and Pay</h2>
+                            <p data-i18n="howToBidPage.step5Text" style="color: var(--text-secondary); line-height: 1.8; margin-bottom: 1rem;">If you win the auction:</p>
+                            <ul style="color: var(--text-secondary); line-height: 1.8; margin-left: 1.5rem; margin-bottom: 1rem;">
+                                <li data-i18n="howToBidPage.step5Item1">Get instant notification when the auction ends</li>
+                                <li data-i18n="howToBidPage.step5Item2">An invoice will be generated automatically</li>
+                                <li data-i18n="howToBidPage.step5Item3">Complete payment via secure methods</li>
+                                <li data-i18n="howToBidPage.step5Item4">Track your order and coordinate delivery</li>
+                                <li data-i18n="howToBidPage.step5Item5">Leave a rating after receiving your item</li>
+                            </ul>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Selling Section -->
+                <h2 data-i18n="howToBidPage.sellingTitle" style="font-size: 2rem; margin-bottom: 2rem; margin-top: 3rem; color: var(--primary-color); display: flex; align-items: center; gap: 0.5rem;">
+                    <span>💰</span> How to Sell
+                </h2>
+                <div class="steps-container" style="display: flex; flex-direction: column; gap: 2rem; margin-bottom: 4rem;">
+                    <!-- Sell Step 1 -->
+                    <div class="step-card" style="background: var(--glass-bg); backdrop-filter: blur(10px); border-radius: 20px; padding: 2.5rem; box-shadow: var(--shadow-lg); border: 1px solid var(--glass-border); display: flex; gap: 2rem; align-items: start;">
+                        <div class="step-number" style="width: 60px; height: 60px; background: linear-gradient(135deg, #10b981, #059669); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 1.8rem; font-weight: 700; color: white;">1</div>
+                        <div class="step-content" style="flex: 1;">
+                            <h2 data-i18n="howToBidPage.sellStep1Title" style="font-size: 1.5rem; margin-bottom: 1rem; color: #10b981;">Create an Auction</h2>
+                            <p data-i18n="howToBidPage.sellStep1Text" style="color: var(--text-secondary); line-height: 1.8; margin-bottom: 1rem;">List your items for auction:</p>
+                            <ul style="color: var(--text-secondary); line-height: 1.8; margin-left: 1.5rem;">
+                                <li data-i18n="howToBidPage.sellStep1Item1">Go to "My Account" > "Create Auction"</li>
+                                <li data-i18n="howToBidPage.sellStep1Item2">Upload high-quality photos of your item</li>
+                                <li data-i18n="howToBidPage.sellStep1Item3">Write a detailed description</li>
+                                <li data-i18n="howToBidPage.sellStep1Item4">Set starting price and auction duration</li>
+                                <li data-i18n="howToBidPage.sellStep1Item5">Choose the appropriate category</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <!-- Sell Step 2 -->
+                    <div class="step-card" style="background: var(--glass-bg); backdrop-filter: blur(10px); border-radius: 20px; padding: 2.5rem; box-shadow: var(--shadow-lg); border: 1px solid var(--glass-border); display: flex; gap: 2rem; align-items: start;">
+                        <div class="step-number" style="width: 60px; height: 60px; background: linear-gradient(135deg, #10b981, #059669); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 1.8rem; font-weight: 700; color: white;">2</div>
+                        <div class="step-content" style="flex: 1;">
+                            <h2 data-i18n="howToBidPage.sellStep2Title" style="font-size: 1.5rem; margin-bottom: 1rem; color: #10b981;">Manage Your Auctions</h2>
+                            <p data-i18n="howToBidPage.sellStep2Text" style="color: var(--text-secondary); line-height: 1.8; margin-bottom: 1rem;">Monitor your listings:</p>
+                            <ul style="color: var(--text-secondary); line-height: 1.8; margin-left: 1.5rem;">
+                                <li data-i18n="howToBidPage.sellStep2Item1">View all your auctions in "My Auctions"</li>
+                                <li data-i18n="howToBidPage.sellStep2Item2">Track bids and bidder activity</li>
+                                <li data-i18n="howToBidPage.sellStep2Item3">Edit auction details if needed</li>
+                                <li data-i18n="howToBidPage.sellStep2Item4">Respond to buyer questions</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <!-- Sell Step 3 -->
+                    <div class="step-card" style="background: var(--glass-bg); backdrop-filter: blur(10px); border-radius: 20px; padding: 2.5rem; box-shadow: var(--shadow-lg); border: 1px solid var(--glass-border); display: flex; gap: 2rem; align-items: start;">
+                        <div class="step-number" style="width: 60px; height: 60px; background: linear-gradient(135deg, #10b981, #059669); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 1.8rem; font-weight: 700; color: white;">3</div>
+                        <div class="step-content" style="flex: 1;">
+                            <h2 data-i18n="howToBidPage.sellStep3Title" style="font-size: 1.5rem; margin-bottom: 1rem; color: #10b981;">Complete the Sale</h2>
+                            <p data-i18n="howToBidPage.sellStep3Text" style="color: var(--text-secondary); line-height: 1.8; margin-bottom: 1rem;">After your auction ends:</p>
+                            <ul style="color: var(--text-secondary); line-height: 1.8; margin-left: 1.5rem;">
+                                <li data-i18n="howToBidPage.sellStep3Item1">Contact the winning bidder</li>
+                                <li data-i18n="howToBidPage.sellStep3Item2">Coordinate payment receipt</li>
+                                <li data-i18n="howToBidPage.sellStep3Item3">Ship item or arrange pickup</li>
+                                <li data-i18n="howToBidPage.sellStep3Item4">Mark as delivered when complete</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Account Management Section -->
+                <h2 data-i18n="howToBidPage.accountTitle" style="font-size: 2rem; margin-bottom: 2rem; margin-top: 3rem; color: var(--primary-color); display: flex; align-items: center; gap: 0.5rem;">
+                    <span>👤</span> Managing Your Account
+                </h2>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem; margin-bottom: 4rem;">
+                    <!-- Profile -->
+                    <div class="feature-card" style="background: var(--glass-bg); backdrop-filter: blur(10px); border-radius: 20px; padding: 2rem; box-shadow: var(--shadow-lg); border: 1px solid var(--glass-border);">
+                        <h3 data-i18n="howToBidPage.profileTitle" style="font-size: 1.3rem; margin-bottom: 1rem; color: var(--primary-color);">👤 Your Profile</h3>
+                        <p data-i18n="howToBidPage.profileText" style="color: var(--text-secondary); line-height: 1.6; margin-bottom: 1rem; font-size: 0.95rem;">Customize your profile and manage settings:</p>
+                        <ul style="color: var(--text-secondary); line-height: 1.8; margin-left: 1rem; font-size: 0.9rem;">
+                            <li data-i18n="howToBidPage.profileItem1">Update profile picture and personal info</li>
+                            <li data-i18n="howToBidPage.profileItem2">Change password securely</li>
+                            <li data-i18n="howToBidPage.profileItem3">View your bidding history</li>
+                        </ul>
+                    </div>
+                    <!-- My Bids -->
+                    <div class="feature-card" style="background: var(--glass-bg); backdrop-filter: blur(10px); border-radius: 20px; padding: 2rem; box-shadow: var(--shadow-lg); border: 1px solid var(--glass-border);">
+                        <h3 data-i18n="howToBidPage.myBidsTitle" style="font-size: 1.3rem; margin-bottom: 1rem; color: var(--primary-color);">📋 My Bids</h3>
+                        <p data-i18n="howToBidPage.myBidsText" style="color: var(--text-secondary); line-height: 1.6; margin-bottom: 1rem; font-size: 0.95rem;">Track all your bidding activity:</p>
+                        <ul style="color: var(--text-secondary); line-height: 1.8; margin-left: 1rem; font-size: 0.9rem;">
+                            <li data-i18n="howToBidPage.myBidsItem1">View active bids on ongoing auctions</li>
+                            <li data-i18n="howToBidPage.myBidsItem2">See auctions you've won</li>
+                            <li data-i18n="howToBidPage.myBidsItem3">Check outbid notifications</li>
+                        </ul>
+                    </div>
+                    <!-- Payments -->
+                    <div class="feature-card" style="background: var(--glass-bg); backdrop-filter: blur(10px); border-radius: 20px; padding: 2rem; box-shadow: var(--shadow-lg); border: 1px solid var(--glass-border);">
+                        <h3 data-i18n="howToBidPage.paymentsTitle" style="font-size: 1.3rem; margin-bottom: 1rem; color: var(--primary-color);">💳 Payments</h3>
+                        <p data-i18n="howToBidPage.paymentsText" style="color: var(--text-secondary); line-height: 1.6; margin-bottom: 1rem; font-size: 0.95rem;">Manage your financial transactions:</p>
+                        <ul style="color: var(--text-secondary); line-height: 1.8; margin-left: 1rem; font-size: 0.9rem;">
+                            <li data-i18n="howToBidPage.paymentsItem1">View pending and completed payments</li>
+                            <li data-i18n="howToBidPage.paymentsItem2">Download invoices and receipts</li>
+                            <li data-i18n="howToBidPage.paymentsItem3">Track payment history</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- App Features Section -->
+                <h2 data-i18n="howToBidPage.featuresTitle" style="font-size: 2rem; margin-bottom: 2rem; margin-top: 3rem; color: var(--primary-color); display: flex; align-items: center; gap: 0.5rem;">
+                    <span>⚙️</span> App Features
+                </h2>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem; margin-bottom: 4rem;">
+                    <!-- Language -->
+                    <div class="feature-card" style="background: var(--glass-bg); backdrop-filter: blur(10px); border-radius: 20px; padding: 2rem; box-shadow: var(--shadow-lg); border: 1px solid var(--glass-border);">
+                        <h3 data-i18n="howToBidPage.languageTitle" style="font-size: 1.3rem; margin-bottom: 1rem; color: var(--primary-color);">🌐 Language Selection</h3>
+                        <p data-i18n="howToBidPage.languageText" style="color: var(--text-secondary); line-height: 1.6; margin-bottom: 1rem; font-size: 0.95rem;">ZUBID supports multiple languages:</p>
+                        <ul style="color: var(--text-secondary); line-height: 1.8; margin-left: 1rem; font-size: 0.9rem;">
+                            <li data-i18n="howToBidPage.languageItem1">Click the globe icon (🌐) in the navbar</li>
+                            <li data-i18n="howToBidPage.languageItem2">Choose from English, Kurdish, or Arabic</li>
+                            <li data-i18n="howToBidPage.languageItem3">The entire app switches to your language</li>
+                        </ul>
+                    </div>
+                    <!-- Theme -->
+                    <div class="feature-card" style="background: var(--glass-bg); backdrop-filter: blur(10px); border-radius: 20px; padding: 2rem; box-shadow: var(--shadow-lg); border: 1px solid var(--glass-border);">
+                        <h3 data-i18n="howToBidPage.themeTitle" style="font-size: 1.3rem; margin-bottom: 1rem; color: var(--primary-color);">🌙 Dark/Light Mode</h3>
+                        <p data-i18n="howToBidPage.themeText" style="color: var(--text-secondary); line-height: 1.6; margin-bottom: 1rem; font-size: 0.95rem;">Switch between visual themes:</p>
+                        <ul style="color: var(--text-secondary); line-height: 1.8; margin-left: 1rem; font-size: 0.9rem;">
+                            <li data-i18n="howToBidPage.themeItem1">Click the sun/moon icon in the navbar</li>
+                            <li data-i18n="howToBidPage.themeItem2">Dark mode is easier on eyes at night</li>
+                            <li data-i18n="howToBidPage.themeItem3">Your preference is saved automatically</li>
+                        </ul>
+                    </div>
+                    <!-- Notifications -->
+                    <div class="feature-card" style="background: var(--glass-bg); backdrop-filter: blur(10px); border-radius: 20px; padding: 2rem; box-shadow: var(--shadow-lg); border: 1px solid var(--glass-border);">
+                        <h3 data-i18n="howToBidPage.notificationsTitle" style="font-size: 1.3rem; margin-bottom: 1rem; color: var(--primary-color);">🔔 Notifications</h3>
+                        <p data-i18n="howToBidPage.notificationsText" style="color: var(--text-secondary); line-height: 1.6; margin-bottom: 1rem; font-size: 0.95rem;">Stay updated on auction activity:</p>
+                        <ul style="color: var(--text-secondary); line-height: 1.8; margin-left: 1rem; font-size: 0.9rem;">
+                            <li data-i18n="howToBidPage.notificationsItem1">Get notified when outbid</li>
+                            <li data-i18n="howToBidPage.notificationsItem2">Alerts when watched auctions end soon</li>
+                            <li data-i18n="howToBidPage.notificationsItem3">Instant notification when you win</li>
+                        </ul>
                     </div>
                 </div>
 
                 <!-- Tips and FAQ Section -->
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 4rem;">
                     <!-- Bidding Tips -->
-	                    <div class="tips-card" style="background: var(--glass-bg); backdrop-filter: blur(10px); border-radius: 20px; padding: 2.5rem; box-shadow: var(--shadow-lg); border: 1px solid var(--glass-border);">
-	                        <h2 style="font-size: 1.8rem; margin-bottom: 1.5rem; color: var(--primary-color); display: flex; align-items: center; gap: 0.5rem;">
-	                            <span>💡</span>
-	                            <span data-i18n="howToBidPage.tipsTitle">Bidding Tips</span>
-	                        </h2>
+                    <div class="tips-card" style="background: var(--glass-bg); backdrop-filter: blur(10px); border-radius: 20px; padding: 2.5rem; box-shadow: var(--shadow-lg); border: 1px solid var(--glass-border);">
+                        <h2 style="font-size: 1.8rem; margin-bottom: 1.5rem; color: var(--primary-color); display: flex; align-items: center; gap: 0.5rem;">
+                            <span>💡</span>
+                            <span data-i18n="howToBidPage.tipsTitle">Bidding Tips</span>
+                        </h2>
                         <ul style="color: var(--text-secondary); line-height: 2; list-style: none; padding: 0;">
-	                            <li style="margin-bottom: 1rem; padding-left: 1.5rem; position: relative;">
-	                                <span style="position: absolute; left: 0; color: var(--primary-color);">✓</span>
-	                                <span data-i18n="howToBidPage.tipsItem1">Set a maximum budget before bidding</span>
-	                            </li>
-	                            <li style="margin-bottom: 1rem; padding-left: 1.5rem; position: relative;">
-	                                <span style="position: absolute; left: 0; color: var(--primary-color);">✓</span>
-	                                <span data-i18n="howToBidPage.tipsItem2">Use auto-bid to stay competitive automatically</span>
-	                            </li>
-	                            <li style="margin-bottom: 1rem; padding-left: 1.5rem; position: relative;">
-	                                <span style="position: absolute; left: 0; color: var(--primary-color);">✓</span>
-	                                <span data-i18n="howToBidPage.tipsItem3">Read item descriptions carefully</span>
-	                            </li>
-	                            <li style="margin-bottom: 1rem; padding-left: 1.5rem; position: relative;">
-	                                <span style="position: absolute; left: 0; color: var(--primary-color);">✓</span>
-	                                <span data-i18n="howToBidPage.tipsItem4">Check seller ratings and reviews</span>
-	                            </li>
-	                            <li style="margin-bottom: 1rem; padding-left: 1.5rem; position: relative;">
-	                                <span style="position: absolute; left: 0; color: var(--primary-color);">✓</span>
-	                                <span data-i18n="howToBidPage.tipsItem5">Watch the countdown timer closely</span>
-	                            </li>
-	                            <li style="padding-left: 1.5rem; position: relative;">
-	                                <span style="position: absolute; left: 0; color: var(--primary-color);">✓</span>
-	                                <span data-i18n="howToBidPage.tipsItem6">Bid early to avoid last-minute rush</span>
-	                            </li>
+                            <li style="margin-bottom: 1rem; padding-left: 1.5rem; position: relative;">
+                                <span style="position: absolute; left: 0; color: var(--primary-color);">✓</span>
+                                <span data-i18n="howToBidPage.tipsItem1">Set a maximum budget before starting to bid</span>
+                            </li>
+                            <li style="margin-bottom: 1rem; padding-left: 1.5rem; position: relative;">
+                                <span style="position: absolute; left: 0; color: var(--primary-color);">✓</span>
+                                <span data-i18n="howToBidPage.tipsItem2">Use auto-bid to stay competitive automatically</span>
+                            </li>
+                            <li style="margin-bottom: 1rem; padding-left: 1.5rem; position: relative;">
+                                <span style="position: absolute; left: 0; color: var(--primary-color);">✓</span>
+                                <span data-i18n="howToBidPage.tipsItem3">Read item descriptions and view all photos carefully</span>
+                            </li>
+                            <li style="margin-bottom: 1rem; padding-left: 1.5rem; position: relative;">
+                                <span style="position: absolute; left: 0; color: var(--primary-color);">✓</span>
+                                <span data-i18n="howToBidPage.tipsItem4">Check seller ratings and past transactions</span>
+                            </li>
+                            <li style="margin-bottom: 1rem; padding-left: 1.5rem; position: relative;">
+                                <span style="position: absolute; left: 0; color: var(--primary-color);">✓</span>
+                                <span data-i18n="howToBidPage.tipsItem5">Watch the countdown - last-minute bidding gets intense!</span>
+                            </li>
+                            <li style="margin-bottom: 1rem; padding-left: 1.5rem; position: relative;">
+                                <span style="position: absolute; left: 0; color: var(--primary-color);">✓</span>
+                                <span data-i18n="howToBidPage.tipsItem6">Bid early to show serious interest</span>
+                            </li>
+                            <li style="padding-left: 1.5rem; position: relative;">
+                                <span style="position: absolute; left: 0; color: var(--primary-color);">✓</span>
+                                <span data-i18n="howToBidPage.tipsItem7">Enable notifications to never miss an update</span>
+                            </li>
                         </ul>
                     </div>
 
                     <!-- FAQ -->
-	                    <div class="faq-card" style="background: var(--glass-bg); backdrop-filter: blur(10px); border-radius: 20px; padding: 2.5rem; box-shadow: var(--shadow-lg); border: 1px solid var(--glass-border);">
-	                        <h2 style="font-size: 1.8rem; margin-bottom: 1.5rem; color: var(--primary-color); display: flex; align-items: center; gap: 0.5rem;">
-	                            <span>❓</span>
-	                            <span data-i18n="howToBidPage.faqTitle">Frequently Asked Questions</span>
-	                        </h2>
-                        <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                    <div class="faq-card" style="background: var(--glass-bg); backdrop-filter: blur(10px); border-radius: 20px; padding: 2.5rem; box-shadow: var(--shadow-lg); border: 1px solid var(--glass-border);">
+                        <h2 style="font-size: 1.8rem; margin-bottom: 1.5rem; color: var(--primary-color); display: flex; align-items: center; gap: 0.5rem;">
+                            <span>❓</span>
+                            <span data-i18n="howToBidPage.faqTitle">Frequently Asked Questions</span>
+                        </h2>
+                        <div style="display: flex; flex-direction: column; gap: 1.2rem; max-height: 500px; overflow-y: auto;">
                             <div>
-	                                <h3 data-i18n="howToBidPage.faqQ1" style="font-size: 1.1rem; margin-bottom: 0.5rem; color: var(--text-color);">Can I retract a bid?</h3>
-	                                <p data-i18n="howToBidPage.faqA1" style="color: var(--text-secondary); line-height: 1.6; margin: 0;">Bids are final and cannot be retracted. Please bid carefully and only place bids you're committed to.</p>
+                                <h3 data-i18n="howToBidPage.faqQ1" style="font-size: 1rem; margin-bottom: 0.3rem; color: var(--text-color);">Can I cancel or retract a bid?</h3>
+                                <p data-i18n="howToBidPage.faqA1" style="color: var(--text-secondary); line-height: 1.5; margin: 0; font-size: 0.9rem;">Bids are binding and cannot be retracted. Please bid carefully and only place bids you're committed to honoring.</p>
                             </div>
                             <div>
-	                                <h3 data-i18n="howToBidPage.faqQ2" style="font-size: 1.1rem; margin-bottom: 0.5rem; color: var(--text-color);">What happens if I'm outbid?</h3>
-	                                <p data-i18n="howToBidPage.faqA2" style="color: var(--text-secondary); line-height: 1.6; margin: 0;">You'll receive a notification. If you have auto-bid enabled, it will automatically place a higher bid up to your maximum limit.</p>
+                                <h3 data-i18n="howToBidPage.faqQ2" style="font-size: 1rem; margin-bottom: 0.3rem; color: var(--text-color);">What happens if I'm outbid?</h3>
+                                <p data-i18n="howToBidPage.faqA2" style="color: var(--text-secondary); line-height: 1.5; margin: 0; font-size: 0.9rem;">You'll receive an instant notification. If auto-bid is enabled, it will automatically place a higher bid up to your max limit.</p>
                             </div>
                             <div>
-	                                <h3 data-i18n="howToBidPage.faqQ3" style="font-size: 1.1rem; margin-bottom: 0.5rem; color: var(--text-color);">How does auto-bid work?</h3>
-	                                <p data-i18n="howToBidPage.faqA3" style="color: var(--text-secondary); line-height: 1.6; margin: 0;">Auto-bid automatically increases your bid when others outbid you, up to your specified maximum amount.</p>
+                                <h3 data-i18n="howToBidPage.faqQ3" style="font-size: 1rem; margin-bottom: 0.3rem; color: var(--text-color);">How does auto-bid work?</h3>
+                                <p data-i18n="howToBidPage.faqA3" style="color: var(--text-secondary); line-height: 1.5; margin: 0; font-size: 0.9rem;">Auto-bid automatically increases your bid by the minimum increment when outbid, up to your set maximum. It's like having a bidding assistant!</p>
                             </div>
                             <div>
-	                                <h3 data-i18n="howToBidPage.faqQ4" style="font-size: 1.1rem; margin-bottom: 0.5rem; color: var(--text-color);">What are the fees?</h3>
-	                                <p data-i18n="howToBidPage.faqA4" style="color: var(--text-secondary); line-height: 1.6; margin: 0;">There's a 1% bid fee on winning bids, plus delivery fees based on your location.</p>
+                                <h3 data-i18n="howToBidPage.faqQ4" style="font-size: 1rem; margin-bottom: 0.3rem; color: var(--text-color);">What are the fees?</h3>
+                                <p data-i18n="howToBidPage.faqA4" style="color: var(--text-secondary); line-height: 1.5; margin: 0; font-size: 0.9rem;">Buyers pay a small 1% service fee on winning bids. Sellers may have listing fees depending on account type.</p>
+                            </div>
+                            <div>
+                                <h3 data-i18n="howToBidPage.faqQ5" style="font-size: 1rem; margin-bottom: 0.3rem; color: var(--text-color);">How do I contact a seller?</h3>
+                                <p data-i18n="howToBidPage.faqA5" style="color: var(--text-secondary); line-height: 1.5; margin: 0; font-size: 0.9rem;">You can view seller information on the auction page. After winning, you'll receive the seller's contact details.</p>
+                            </div>
+                            <div>
+                                <h3 data-i18n="howToBidPage.faqQ6" style="font-size: 1rem; margin-bottom: 0.3rem; color: var(--text-color);">What if I don't receive my item?</h3>
+                                <p data-i18n="howToBidPage.faqA6" style="color: var(--text-secondary); line-height: 1.5; margin: 0; font-size: 0.9rem;">Use the Return Request feature in your account. Our support team will help resolve any issues.</p>
+                            </div>
+                            <div>
+                                <h3 data-i18n="howToBidPage.faqQ7" style="font-size: 1rem; margin-bottom: 0.3rem; color: var(--text-color);">How do I change the language?</h3>
+                                <p data-i18n="howToBidPage.faqA7" style="color: var(--text-secondary); line-height: 1.5; margin: 0; font-size: 0.9rem;">Click the globe icon (🌐) in the top navigation bar and select your preferred language.</p>
+                            </div>
+                            <div>
+                                <h3 data-i18n="howToBidPage.faqQ8" style="font-size: 1rem; margin-bottom: 0.3rem; color: var(--text-color);">Is my payment information secure?</h3>
+                                <p data-i18n="howToBidPage.faqA8" style="color: var(--text-secondary); line-height: 1.5; margin: 0; font-size: 0.9rem;">Yes, all transactions are secured with industry-standard encryption. We never store your full payment details.</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Call to Action -->
-	                <div style="text-align: center; margin-top: 4rem; padding: 3rem; background: var(--bg-gradient-warm); border-radius: 20px; box-shadow: var(--shadow-lg);">
-	                    <h2 data-i18n="howToBidPage.ctaTitle" style="font-size: 2rem; margin-bottom: 1rem; color: white;">Ready to Start Bidding?</h2>
-	                    <p data-i18n="howToBidPage.ctaText" style="font-size: 1.2rem; margin-bottom: 2rem; color: rgba(255, 255, 255, 0.9);">Join thousands of bidders and discover amazing deals!</p>
+                <div style="text-align: center; margin-top: 4rem; padding: 3rem; background: var(--bg-gradient-warm); border-radius: 20px; box-shadow: var(--shadow-lg);">
+                    <h2 data-i18n="howToBidPage.ctaTitle" style="font-size: 2rem; margin-bottom: 1rem; color: white;">Ready to Get Started?</h2>
+                    <p data-i18n="howToBidPage.ctaText" style="font-size: 1.2rem; margin-bottom: 2rem; color: rgba(255, 255, 255, 0.9);">Join thousands of buyers and sellers on ZUBID today!</p>
                     <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
-	                        <a href="index.html#register" class="btn" data-i18n="howToBidPage.ctaPrimary" style="background: white; color: var(--primary-color); padding: 1rem 2rem; font-size: 1.1rem; font-weight: 600; border-radius: 12px; text-decoration: none; display: inline-block; transition: var(--transition-base); box-shadow: var(--shadow-md);">Sign Up Now</a>
-	                        <a href="auctions.html" class="btn btn-outline" data-i18n="howToBidPage.ctaSecondary" style="background: transparent; border: 2px solid white; color: white; padding: 1rem 2rem; font-size: 1.1rem; font-weight: 600; border-radius: 12px; text-decoration: none; display: inline-block; transition: var(--transition-base);">Browse Auctions</a>
+                        <a href="index.html#register" class="btn" data-i18n="howToBidPage.ctaPrimary" style="background: white; color: var(--primary-color); padding: 1rem 2rem; font-size: 1.1rem; font-weight: 600; border-radius: 12px; text-decoration: none; display: inline-block; transition: var(--transition-base); box-shadow: var(--shadow-md);">Create Account</a>
+                        <a href="auctions.html" class="btn btn-outline" data-i18n="howToBidPage.ctaSecondary" style="background: transparent; border: 2px solid white; color: white; padding: 1rem 2rem; font-size: 1.1rem; font-weight: 600; border-radius: 12px; text-decoration: none; display: inline-block; transition: var(--transition-base);">Browse Auctions</a>
                     </div>
                 </div>
             </div>
@@ -418,6 +574,7 @@
     <!-- Toast Notification -->
     <div id="toast" class="toast" style="display: none;"></div>
 
+    <script src="config.production.js"></script>
     <script src="api.js"></script>
     <script src="app.js"></script>
     <script src="how-to-bid.js"></script>

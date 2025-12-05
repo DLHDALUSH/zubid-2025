@@ -84,17 +84,7 @@ function convertImageUrl(imageUrl) {
     }
 
     // Relative URLs - construct full URL
-    let baseUrl = 'http://localhost:5000';
-    try {
-        if (typeof API_BASE_URL !== 'undefined' && API_BASE_URL) {
-            baseUrl = String(API_BASE_URL).replace('/api', '').replace(/\/$/, '');
-        } else if (typeof window !== 'undefined' && window.API_BASE_URL) {
-            baseUrl = String(window.API_BASE_URL).replace('/api', '').replace(/\/$/, '');
-        }
-    } catch (e) {
-        console.warn('Error parsing API_BASE_URL:', e);
-    }
-
+    const baseUrl = window.API_BASE || (window.location.hostname === 'localhost' ? 'http://localhost:5000' : window.location.origin);
     const relativeUrl = urlString.startsWith('/') ? urlString : '/' + urlString;
     return baseUrl + relativeUrl;
 }
@@ -537,7 +527,7 @@ function convertToEmbedUrl(url) {
     // Check if it's a local upload (starts with /uploads/)
     if (url.startsWith('/uploads/')) {
         // Construct full URL for local videos
-        const baseUrl = (window.API_BASE_URL || 'http://localhost:5000/api').replace('/api', '');
+        const baseUrl = window.API_BASE || (window.location.hostname === 'localhost' ? 'http://localhost:5000' : window.location.origin);
         return baseUrl + url;
     }
     
@@ -576,7 +566,7 @@ function convertToEmbedUrl(url) {
             return url;
         }
         // If relative URL, construct full URL
-        const baseUrl = (window.API_BASE_URL || 'http://localhost:5000/api').replace('/api', '');
+        const baseUrl = window.API_BASE || (window.location.hostname === 'localhost' ? 'http://localhost:5000' : window.location.origin);
         return baseUrl + (url.startsWith('/') ? url : '/' + url);
     }
     
@@ -714,7 +704,7 @@ async function buyNow() {
             buyNowBtn.innerHTML = '<span class="btn-icon">⏳</span><span class="btn-text">Processing...</span>';
         }
 
-        const response = await fetch(`${window.API_BASE_URL || 'http://localhost:5000/api'}/auctions/${auctionData.id}/buy-now`, {
+        const response = await fetch(`${window.API_BASE_URL || (window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : window.location.origin + '/api')}/auctions/${auctionData.id}/buy-now`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

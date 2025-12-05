@@ -19,41 +19,41 @@
                     <div class="admin-logo-icon">🏆</div>
                     <div class="admin-logo-text">
                         <h1>ZUBID</h1>
-                        <span>Admin Portal</span>
+                        <span data-i18n="admin.title">Admin Portal</span>
                     </div>
                 </div>
             </div>
 
             <nav class="admin-nav">
                 <div class="admin-nav-section">
-                    <div class="admin-nav-title">Main Menu</div>
+                    <div class="admin-nav-title" data-i18n="admin.dashboard">Main Menu</div>
                     <a href="admin.html" class="admin-nav-link active">
                         <span class="icon">📊</span>
-                        <span>Dashboard</span>
+                        <span data-i18n="admin.dashboard">Dashboard</span>
                     </a>
                     <a href="admin-users.html" class="admin-nav-link">
                         <span class="icon">👥</span>
-                        <span>Users</span>
+                        <span data-i18n="admin.users">Users</span>
                     </a>
                     <a href="admin-auctions.html" class="admin-nav-link">
                         <span class="icon">🏷️</span>
-                        <span>Auctions</span>
+                        <span data-i18n="admin.auctions">Auctions</span>
                     </a>
                     <a href="admin-categories.html" class="admin-nav-link">
                         <span class="icon">📁</span>
-                        <span>Categories</span>
+                        <span data-i18n="admin.categories">Categories</span>
                     </a>
                 </div>
 
                 <div class="admin-nav-section">
-                    <div class="admin-nav-title">Actions</div>
+                    <div class="admin-nav-title" data-i18n="common.actions">Actions</div>
                     <a href="admin-create-auction.html" class="admin-nav-link">
                         <span class="icon">➕</span>
-                        <span>Create Auction</span>
+                        <span data-i18n="admin.createAuction">Create Auction</span>
                     </a>
                     <a href="index.html" class="admin-nav-link">
                         <span class="icon">🌐</span>
-                        <span>User Portal</span>
+                        <span data-i18n="nav.home">User Portal</span>
                     </a>
                 </div>
             </nav>
@@ -63,7 +63,7 @@
                     <div class="admin-user-avatar" id="adminAvatar">A</div>
                     <div class="admin-user-details">
                         <div class="admin-user-name" id="adminUserName">Admin</div>
-                        <div class="admin-user-role">Administrator</div>
+                        <div class="admin-user-role" data-i18n="admin.title">Administrator</div>
                     </div>
                     <button class="admin-logout-btn" onclick="logout()" title="Logout">🚪</button>
                 </div>
@@ -75,8 +75,8 @@
             <!-- Header -->
             <div class="admin-header">
                 <div class="admin-header-left">
-                    <h1>📊 Dashboard</h1>
-                    <p>Welcome back! Here's what's happening with your platform.</p>
+                    <h1>📊 <span data-i18n="admin.dashboard">Dashboard</span></h1>
+                    <p data-i18n="messages.welcome">Welcome back! Here's what's happening with your platform.</p>
                 </div>
                 <div class="admin-header-right">
                     <span style="color: var(--admin-text-muted); font-size: 0.85rem;">
@@ -93,7 +93,7 @@
                         <div class="admin-stat-trend up">↑ Active</div>
                     </div>
                     <div class="admin-stat-value" id="totalUsers">-</div>
-                    <div class="admin-stat-label">Total Users</div>
+                    <div class="admin-stat-label" data-i18n="admin.totalUsers">Total Users</div>
                 </div>
 
                 <div class="admin-stat-card admins">
@@ -101,7 +101,7 @@
                         <div class="admin-stat-icon">🛡️</div>
                     </div>
                     <div class="admin-stat-value" id="totalAdmins">-</div>
-                    <div class="admin-stat-label">Administrators</div>
+                    <div class="admin-stat-label" data-i18n="admin.totalAdmins">Administrators</div>
                 </div>
 
                 <div class="admin-stat-card auctions">
@@ -109,7 +109,7 @@
                         <div class="admin-stat-icon">🏷️</div>
                     </div>
                     <div class="admin-stat-value" id="totalAuctions">-</div>
-                    <div class="admin-stat-label">Total Auctions</div>
+                    <div class="admin-stat-label" data-i18n="admin.totalAuctions">Total Auctions</div>
                 </div>
 
                 <div class="admin-stat-card active">
@@ -118,7 +118,7 @@
                         <div class="admin-stat-trend up">Live</div>
                     </div>
                     <div class="admin-stat-value" id="activeAuctions">-</div>
-                    <div class="admin-stat-label">Active Auctions</div>
+                    <div class="admin-stat-label" data-i18n="admin.activeAuctions">Active Auctions</div>
                 </div>
 
                 <div class="admin-stat-card ended">
@@ -126,7 +126,7 @@
                         <div class="admin-stat-icon">🏁</div>
                     </div>
                     <div class="admin-stat-value" id="endedAuctions">-</div>
-                    <div class="admin-stat-label">Ended Auctions</div>
+                    <div class="admin-stat-label" data-i18n="admin.endedAuctions">Ended Auctions</div>
                 </div>
 
                 <div class="admin-stat-card bids">
@@ -134,7 +134,7 @@
                         <div class="admin-stat-icon">💰</div>
                     </div>
                     <div class="admin-stat-value" id="totalBids">-</div>
-                    <div class="admin-stat-label">Total Bids</div>
+                    <div class="admin-stat-label" data-i18n="admin.totalBids">Total Bids</div>
                 </div>
 
                 <div class="admin-stat-card recent">
@@ -143,31 +143,31 @@
                         <div class="admin-stat-trend up">+New</div>
                     </div>
                     <div class="admin-stat-value" id="recentUsers">-</div>
-                    <div class="admin-stat-label">New Users (7 days)</div>
+                    <div class="admin-stat-label" data-i18n="admin.recentUsers">New Users (7 days)</div>
                 </div>
             </div>
 
             <!-- Quick Actions -->
             <div class="admin-quick-actions">
                 <div class="admin-section-header">
-                    <h2>⚡ Quick Actions</h2>
+                    <h2>⚡ <span data-i18n="common.actions">Quick Actions</span></h2>
                 </div>
                 <div class="admin-action-grid">
                     <a href="admin-users.html" class="admin-action-card">
                         <div class="icon">👥</div>
-                        <div class="text">Manage Users</div>
+                        <div class="text" data-i18n="admin.manageUsers">Manage Users</div>
                     </a>
                     <a href="admin-auctions.html" class="admin-action-card">
                         <div class="icon">🏷️</div>
-                        <div class="text">Manage Auctions</div>
+                        <div class="text" data-i18n="admin.manageAuctions">Manage Auctions</div>
                     </a>
                     <a href="admin-create-auction.html" class="admin-action-card">
                         <div class="icon">➕</div>
-                        <div class="text">Create Auction</div>
+                        <div class="text" data-i18n="admin.createAuction">Create Auction</div>
                     </a>
                     <a href="admin-categories.html" class="admin-action-card">
                         <div class="icon">📁</div>
-                        <div class="text">Manage Categories</div>
+                        <div class="text" data-i18n="admin.manageCategories">Manage Categories</div>
                     </a>
                 </div>
             </div>
@@ -177,6 +177,8 @@
     <!-- Notification Toast -->
     <div class="toast" id="toast"></div>
 
+    <script src="config.production.js"></script>
+    <script src="i18n.js"></script>
     <script src="api.js"></script>
     <script src="admin.js"></script>
     <script>
