@@ -25,15 +25,15 @@ allprojects {
 }
 
 // Force all Android modules (app, capacitor-android, cordova plugins, etc.)
-// to compile with Java 21 so they are compatible with the Codemagic JDK.
+// to compile with Java 25 for JDK 25 compatibility.
 subprojects { subproject ->
     afterEvaluate { project ->
         if (project.plugins.hasPlugin('com.android.application') ||
             project.plugins.hasPlugin('com.android.library')) {
             project.android {
                 compileOptions {
-                    sourceCompatibility JavaVersion.VERSION_21
-                    targetCompatibility JavaVersion.VERSION_21
+                    sourceCompatibility JavaVersion.VERSION_25
+                    targetCompatibility JavaVersion.VERSION_25
                 }
             }
         }
