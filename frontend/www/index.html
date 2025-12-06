@@ -700,5 +700,72 @@
             deferredPrompt = null;
         });
     </script>
+
+    <!-- Premium Mobile Bottom Navigation -->
+    <nav class="mobile-bottom-nav" id="mobileBottomNav">
+        <div class="mobile-bottom-nav-container">
+            <a href="index.html" class="mobile-nav-item active ripple" data-page="home">
+                <span class="mobile-nav-icon">🏠</span>
+                <span class="mobile-nav-label">Home</span>
+            </a>
+            <a href="auctions.html" class="mobile-nav-item ripple" data-page="auctions">
+                <span class="mobile-nav-icon">🔨</span>
+                <span class="mobile-nav-label">Auctions</span>
+            </a>
+            <a href="#" class="mobile-nav-item mobile-nav-action ripple" id="mobileSearchBtn">
+                <span class="mobile-nav-icon">🔍</span>
+            </a>
+            <a href="profile.html" class="mobile-nav-item ripple" data-page="profile">
+                <span class="mobile-nav-icon">👤</span>
+                <span class="mobile-nav-label">Profile</span>
+                <span class="mobile-nav-badge" id="profileBadge" style="display: none;">1</span>
+            </a>
+            <a href="#" class="mobile-nav-item ripple" id="mobileMenuBtn">
+                <span class="mobile-nav-icon">☰</span>
+                <span class="mobile-nav-label">Menu</span>
+            </a>
+        </div>
+    </nav>
+
+    <script>
+        // Mobile Bottom Navigation Active State
+        (function() {
+            const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+            const navItems = document.querySelectorAll('.mobile-nav-item[data-page]');
+
+            navItems.forEach(item => {
+                item.classList.remove('active');
+                const page = item.getAttribute('data-page');
+                if ((page === 'home' && (currentPage === 'index.html' || currentPage === '')) ||
+                    (page === 'auctions' && currentPage === 'auctions.html') ||
+                    (page === 'profile' && currentPage === 'profile.html')) {
+                    item.classList.add('active');
+                }
+            });
+
+            // Mobile search button
+            const searchBtn = document.getElementById('mobileSearchBtn');
+            if (searchBtn) {
+                searchBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const searchInput = document.querySelector('.search-bar input, .hero-search input');
+                    if (searchInput) {
+                        searchInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        setTimeout(() => searchInput.focus(), 300);
+                    }
+                });
+            }
+
+            // Mobile menu button
+            const menuBtn = document.getElementById('mobileMenuBtn');
+            if (menuBtn) {
+                menuBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const mobileMenuToggle = document.querySelector('.mobile-menu-toggle');
+                    if (mobileMenuToggle) mobileMenuToggle.click();
+                });
+            }
+        })();
+    </script>
 </body>
 </html>

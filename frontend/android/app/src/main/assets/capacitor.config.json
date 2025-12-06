@@ -11,7 +11,12 @@
 	"android": {
 		"allowMixedContent": false,
 		"useLegacyBridge": false,
-		"webContentsDebuggingEnabled": false
+		"webContentsDebuggingEnabled": false,
+		"backgroundColor": "#ffffff",
+		"overrideUserAgent": "ZUBID-Android/1.0",
+		"appendUserAgent": "ZUBID-Mobile",
+		"initialFocus": true,
+		"hardwareBackButton": true
 	},
 	"ios": {
 		"contentInset": "automatic",
@@ -19,29 +24,35 @@
 		"scheme": "ZUBID",
 		"scrollEnabled": true,
 		"limitsNavigationsToAppBoundDomains": false,
-		"webContentsDebuggingEnabled": false
+		"webContentsDebuggingEnabled": false,
+		"backgroundColor": "#ffffff"
 	},
 	"plugins": {
 		"SplashScreen": {
-			"launchShowDuration": 2000,
+			"launchShowDuration": 1500,
 			"launchAutoHide": true,
-			"backgroundColor": "#ff6600",
+			"backgroundColor": "#f97316",
 			"showSpinner": true,
 			"spinnerColor": "#ffffff",
 			"androidScaleType": "CENTER_CROP",
 			"iosSpinnerStyle": "large",
-			"launchFadeOutDuration": 300,
+			"launchFadeOutDuration": 500,
 			"splashFullScreen": true,
-			"splashImmersive": true
+			"splashImmersive": true,
+			"androidSplashResourceName": "splash"
 		},
 		"StatusBar": {
 			"style": "LIGHT",
-			"backgroundColor": "#ff6600",
+			"backgroundColor": "#f97316",
 			"overlaysWebView": false
 		},
 		"Keyboard": {
 			"resize": "body",
-			"resizeOnFullScreen": true
+			"resizeOnFullScreen": true,
+			"style": "LIGHT"
+		},
+		"Haptics": {
+			"selectionChanged": true
 		},
 		"PushNotifications": {
 			"presentationOptions": [
@@ -49,6 +60,13 @@
 				"sound",
 				"alert"
 			]
+		},
+		"Camera": {
+			"presentationStyle": "fullscreen",
+			"saveToGallery": true
+		},
+		"App": {
+			"launchUrl": "zubid://"
 		}
 	}
 }

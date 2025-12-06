@@ -541,11 +541,76 @@
     <!-- Notification Toast -->
     <div class="toast" id="toast"></div>
 
+    <!-- Premium Mobile Bottom Navigation -->
+    <nav class="mobile-bottom-nav" id="mobileBottomNav">
+        <div class="mobile-bottom-nav-container">
+            <a href="index.html" class="mobile-nav-item ripple" data-page="home">
+                <span class="mobile-nav-icon">🏠</span>
+                <span class="mobile-nav-label">Home</span>
+            </a>
+            <a href="auctions.html" class="mobile-nav-item active ripple" data-page="auctions">
+                <span class="mobile-nav-icon">🔨</span>
+                <span class="mobile-nav-label">Auctions</span>
+            </a>
+            <a href="#" class="mobile-nav-item mobile-nav-action ripple" id="mobileBidBtn">
+                <span class="mobile-nav-icon">💰</span>
+            </a>
+            <a href="profile.html" class="mobile-nav-item ripple" data-page="profile">
+                <span class="mobile-nav-icon">👤</span>
+                <span class="mobile-nav-label">Profile</span>
+            </a>
+            <a href="#" class="mobile-nav-item ripple" id="mobileShareBtn">
+                <span class="mobile-nav-icon">📤</span>
+                <span class="mobile-nav-label">Share</span>
+            </a>
+        </div>
+    </nav>
+
     <script src="config.production.js"></script>
     <script src="api.js"></script>
     <script src="app.js"></script>
     <script src="social-share.js"></script>
     <script src="auction-detail.js"></script>
+
+    <script>
+        // Mobile Bottom Navigation for Auction Detail
+        (function() {
+            const bidBtn = document.getElementById('mobileBidBtn');
+            if (bidBtn) {
+                bidBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const bidInput = document.querySelector('#bidAmount, .bid-input');
+                    if (bidInput) {
+                        bidInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        setTimeout(() => bidInput.focus(), 300);
+                    }
+                });
+            }
+
+            const shareBtn = document.getElementById('mobileShareBtn');
+            if (shareBtn) {
+                shareBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    if (navigator.share) {
+                        navigator.share({
+                            title: document.title,
+                            url: window.location.href
+                        }).catch(() => {});
+                    } else {
+                        // Fallback: copy to clipboard
+                        navigator.clipboard.writeText(window.location.href).then(() => {
+                            const toast = document.getElementById('toast');
+                            if (toast) {
+                                toast.textContent = 'Link copied to clipboard!';
+                                toast.classList.add('show');
+                                setTimeout(() => toast.classList.remove('show'), 3000);
+                            }
+                        });
+                    }
+                });
+            }
+        })();
+    </script>
 </body>
 </html>
 

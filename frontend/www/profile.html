@@ -466,6 +466,31 @@
     <!-- Notification Toast -->
     <div class="toast" id="toast"></div>
 
+    <!-- Premium Mobile Bottom Navigation -->
+    <nav class="mobile-bottom-nav" id="mobileBottomNav">
+        <div class="mobile-bottom-nav-container">
+            <a href="index.html" class="mobile-nav-item ripple" data-page="home">
+                <span class="mobile-nav-icon">🏠</span>
+                <span class="mobile-nav-label">Home</span>
+            </a>
+            <a href="auctions.html" class="mobile-nav-item ripple" data-page="auctions">
+                <span class="mobile-nav-icon">🔨</span>
+                <span class="mobile-nav-label">Auctions</span>
+            </a>
+            <a href="#" class="mobile-nav-item mobile-nav-action ripple" id="mobileSearchBtn">
+                <span class="mobile-nav-icon">🔍</span>
+            </a>
+            <a href="profile.html" class="mobile-nav-item active ripple" data-page="profile">
+                <span class="mobile-nav-icon">👤</span>
+                <span class="mobile-nav-label">Profile</span>
+            </a>
+            <a href="#" class="mobile-nav-item ripple" id="mobileMenuBtn">
+                <span class="mobile-nav-icon">☰</span>
+                <span class="mobile-nav-label">Menu</span>
+            </a>
+        </div>
+    </nav>
+
     <script src="config.production.js"></script>
     <script src="api.js"></script>
     <script>
@@ -473,6 +498,28 @@
         window.skipAppJs = true;
     </script>
     <script src="profile.js"></script>
+
+    <script>
+        // Mobile Bottom Navigation
+        (function() {
+            const searchBtn = document.getElementById('mobileSearchBtn');
+            if (searchBtn) {
+                searchBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    window.location.href = 'auctions.html';
+                });
+            }
+
+            const menuBtn = document.getElementById('mobileMenuBtn');
+            if (menuBtn) {
+                menuBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const mobileMenuToggle = document.querySelector('.mobile-menu-toggle');
+                    if (mobileMenuToggle) mobileMenuToggle.click();
+                });
+            }
+        })();
+    </script>
 </body>
 </html>
 
