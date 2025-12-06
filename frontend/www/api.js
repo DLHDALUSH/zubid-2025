@@ -1,7 +1,14 @@
 // API Configuration
-// Can be configured via window.API_BASE_URL or defaults to localhost:5000
-// To configure: Add <script>window.API_BASE_URL = 'http://your-api-url/api';</script> before this script
-const API_BASE_URL = window.API_BASE_URL || 'http://localhost:5000/api';
+// Can be configured via window.API_BASE_URL or defaults to current origin
+// For production: Set window.API_BASE_URL before loading this script
+// Example: <script>window.API_BASE_URL = 'https://api.yourdomain.com/api';</script>
+const API_BASE_URL = window.API_BASE_URL || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? 'http://localhost:5000/api'
+    : window.location.origin + '/api');
+
+// Export base URL without /api suffix for image URLs
+const API_BASE = API_BASE_URL.replace('/api', '');
+window.API_BASE = API_BASE; // Make available globally
 
 // CSRF Token Management
 let csrfToken = null;
@@ -127,7 +134,7 @@ async function apiRequest(endpoint, options = {}) {
         
         // More specific error messages
         if (error.name === 'TypeError' && error.message.includes('fetch')) {
-            throw new Error('Cannot connect to server. Make sure the backend is running on http://localhost:5000');
+            throw new Error('Cannot connect to server. Please check your internet connection and try again.');
         }
         
         if (error.message.includes('CORS')) {

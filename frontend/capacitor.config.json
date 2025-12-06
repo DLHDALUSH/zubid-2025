@@ -2,11 +2,21 @@
   "appId": "com.zubid.app",
   "appName": "ZUBID",
   "webDir": "www",
+  "bundledWebRuntime": false,
   "server": {
-    "androidScheme": "https"
+    "androidScheme": "https",
+    "iosScheme": "capacitor",
+    "hostname": "zubid.app"
   },
   "android": {
-    "allowMixedContent": false
+    "allowMixedContent": false,
+    "useLegacyBridge": false
+  },
+  "ios": {
+    "contentInset": "automatic",
+    "allowsLinkPreview": true,
+    "scheme": "ZUBID",
+    "scrollEnabled": true
   },
   "plugins": {
     "SplashScreen": {
@@ -15,11 +25,23 @@
       "backgroundColor": "#ff6600",
       "showSpinner": true,
       "spinnerColor": "#ffffff",
-      "androidScaleType": "CENTER_CROP"
+      "androidScaleType": "CENTER_CROP",
+      "iosSpinnerStyle": "large",
+      "launchFadeOutDuration": 300,
+      "splashFullScreen": true,
+      "splashImmersive": true
     },
     "StatusBar": {
       "style": "LIGHT",
-      "backgroundColor": "#ff6600"
+      "backgroundColor": "#ff6600",
+      "overlaysWebView": false
+    },
+    "Keyboard": {
+      "resize": "body",
+      "resizeOnFullScreen": true
+    },
+    "PushNotifications": {
+      "presentationOptions": ["badge", "sound", "alert"]
     }
   }
 }

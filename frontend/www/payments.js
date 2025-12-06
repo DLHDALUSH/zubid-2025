@@ -3,6 +3,23 @@
 // ZUBID FIB Account Number for receiving payments
 const ZUBID_FIB_NUMBER = '07715625156';
 
+// USD to IQD exchange rate
+const USD_TO_IQD_RATE = 1410;
+
+// Format currency - supports USD and IQD
+function formatCurrency(amount, currency = 'USD') {
+    if (currency === 'IQD') {
+        const iqd = Math.round(amount * USD_TO_IQD_RATE);
+        return iqd.toLocaleString('en-US') + ' IQD';
+    }
+    return '$' + parseFloat(amount).toFixed(2);
+}
+
+// Convert USD to IQD
+function convertToIQD(usdAmount) {
+    return Math.round(usdAmount * USD_TO_IQD_RATE);
+}
+
 // Copy FIB number to clipboard
 function copyFibNumber() {
     const number = ZUBID_FIB_NUMBER;
@@ -160,75 +177,348 @@ function filterPayments(filter) {
 
 function createInvoiceCard(payment) {
     const card = document.createElement('div');
-    card.className = 'invoice-card';
-    
-    const statusClass = payment.payment_status === 'paid' ? 'paid' : 
+    card.className = 'premium-invoice-card';
+    card.id = `invoice-${payment.id}`;
+
+    const statusClass = payment.payment_status === 'paid' ? 'paid' :
                        payment.payment_status === 'pending' ? 'pending' : 'failed';
-    
+
+    const createdDate = new Date(payment.created_at);
+    const formattedDate = createdDate.toLocaleDateString('en-US', {
+        year: 'numeric', month: 'short', day: 'numeric'
+    });
+
+    // Helper function to construct full URL for relative paths
+    const getFullUrl = (url) => {
+        if (!url) return null;
+        if (url.startsWith('http') || url.startsWith('data:')) return url;
+        // Prepend base URL for relative paths
+        let baseUrl = 'http://localhost:5000';
+        if (typeof API_BASE_URL !== 'undefined' && API_BASE_URL) {
+            baseUrl = API_BASE_URL.replace('/api', '').replace(/\/$/, '');
+        } else if (window.API_BASE_URL) {
+            baseUrl = window.API_BASE_URL.replace('/api', '').replace(/\/$/, '');
+        }
+        return baseUrl + url;
+    };
+
+    // Get QR code URL
+    let qrCodeUrl = getFullUrl(payment.qr_code_url || payment.auction?.qr_code_url);
+
+    // Get Product Image URL - Fixed!
+    let productImageUrl = getFullUrl(payment.auction?.image_url);
+
+    const shortItemName = payment.auction.item_name.length > 30
+        ? payment.auction.item_name.substring(0, 27) + '...'
+        : payment.auction.item_name;
+
     card.innerHTML = `
-        <div class="invoice-header">
-            <div class="invoice-item-info">
-                ${payment.auction.image_url ? `
-                    <img src="${payment.auction.image_url}" alt="${payment.auction.item_name}" class="invoice-item-image">
-                ` : ''}
-                <div class="invoice-item-details">
-                    <h3>${payment.auction.item_name}</h3>
-                    <p class="invoice-id">Invoice #${payment.id}</p>
-                    <p class="invoice-date">Created: ${new Date(payment.created_at).toLocaleDateString()}</p>
+        <!-- Premium Invoice Header -->
+        <div class="premium-invoice-header">
+            <div class="invoice-brand">
+                <div class="brand-icon">💎</div>
+                <div class="brand-info">
+                    <span class="brand-name">ZUBID</span>
+                    <span class="brand-tag">Premium Auction</span>
                 </div>
             </div>
-            <div class="invoice-status">
-                <span class="status-badge status-${statusClass}">${getStatusLabel(payment.payment_status)}</span>
+            <div class="invoice-badge">
+                <span class="badge-icon">📋</span>
+                <span class="badge-text">INV-${String(payment.id).padStart(6, '0')}</span>
             </div>
         </div>
-        
-        <div class="invoice-body">
-            <div class="invoice-breakdown">
-                <div class="invoice-row">
-                    <span>Item Price:</span>
-                    <span>$${payment.item_price.toFixed(2)}</span>
-                </div>
-                <div class="invoice-row">
-                    <span>Bid Fee (1%):</span>
-                    <span>$${payment.bid_fee.toFixed(2)}</span>
-                </div>
-                <div class="invoice-row">
-                    <span>Delivery Fee:</span>
-                    <span>$${payment.delivery_fee.toFixed(2)}</span>
-                </div>
-                <div class="invoice-row total">
-                    <span>Total Amount:</span>
-                    <span>$${payment.total_amount.toFixed(2)}</span>
+
+        <!-- Product Showcase Section -->
+        <div class="product-showcase">
+            <div class="product-image-wrapper">
+                ${productImageUrl ? `
+                    <img src="${productImageUrl}" alt="${shortItemName}" class="product-image" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                    <div class="product-image-fallback" style="display:none;">
+                        <span class="fallback-icon">📦</span>
+                    </div>
+                ` : `
+                    <div class="product-image-fallback">
+                        <span class="fallback-icon">📦</span>
+                    </div>
+                `}
+                <div class="image-overlay">
+                    <a href="auction-detail.html?id=${payment.auction.id}" class="view-auction-btn">
+                        <span>👁️</span> View Auction
+                    </a>
                 </div>
             </div>
-            
-            ${payment.qr_code_url || payment.auction?.qr_code_url ? `
-                <div class="invoice-qr-section">
-                    <h4>Item QR Code</h4>
-                    <div class="qr-code-container">
-                        <img src="${payment.qr_code_url || payment.auction.qr_code_url}" alt="QR Code" class="qr-code-image" />
-                        <p class="qr-code-hint">Scan to view auction details</p>
+            <div class="product-details">
+                <h3 class="product-name" title="${payment.auction.item_name}">${shortItemName}</h3>
+                <div class="product-meta">
+                    <span class="meta-item">
+                        <span class="meta-icon">📅</span>
+                        <span>${formattedDate}</span>
+                    </span>
+                    <span class="meta-item">
+                        <span class="meta-icon">🏷️</span>
+                        <span>Auction #${payment.auction.id}</span>
+                    </span>
+                </div>
+                <div class="status-row">
+                    <span class="premium-status-badge status-${statusClass}">
+                        <span class="status-dot"></span>
+                        ${getStatusLabel(payment.payment_status)}
+                    </span>
+                    ${payment.payment_method ? `
+                        <span class="payment-method-tag">
+                            ${getPaymentMethodIcon(payment.payment_method)} ${getPaymentMethodLabel(payment.payment_method)}
+                        </span>
+                    ` : ''}
+                </div>
+            </div>
+        </div>
+
+        <!-- Premium Price Section -->
+        <div class="premium-price-section">
+            <div class="price-breakdown-card">
+                <div class="breakdown-header">
+                    <span class="header-icon">💰</span>
+                    <h4>Price Breakdown</h4>
+                </div>
+                <div class="breakdown-items">
+                    <div class="breakdown-row">
+                        <span class="row-label">
+                            <span class="row-icon">🏆</span>
+                            Winning Bid
+                        </span>
+                        <span class="row-value">$${payment.item_price.toFixed(2)}</span>
                     </div>
+                    <div class="breakdown-row">
+                        <span class="row-label">
+                            <span class="row-icon">📊</span>
+                            Platform Fee (1%)
+                        </span>
+                        <span class="row-value">$${payment.bid_fee.toFixed(2)}</span>
+                    </div>
+                    <div class="breakdown-row">
+                        <span class="row-label">
+                            <span class="row-icon">🚚</span>
+                            Delivery Fee
+                        </span>
+                        <span class="row-value">$${payment.delivery_fee.toFixed(2)}</span>
+                    </div>
+                    ${payment.cashback_amount > 0 ? `
+                    <div class="breakdown-row cashback-row">
+                        <span class="row-label">
+                            <span class="row-icon">🎁</span>
+                            Cashback Applied
+                        </span>
+                        <span class="row-value cashback-value">-$${payment.cashback_amount.toFixed(2)}</span>
+                    </div>
+                    ` : ''}
+                    ${payment.pending_cashback > 0 ? `
+                    <div class="breakdown-row pending-row" onclick="applyCashback(${payment.id}, ${payment.auction.id})">
+                        <span class="row-label">
+                            <span class="row-icon">💵</span>
+                            Available Cashback
+                        </span>
+                        <span class="row-value pending-value">
+                            -$${payment.pending_cashback.toFixed(2)}
+                            <button class="apply-btn">Apply</button>
+                        </span>
+                    </div>
+                    ` : ''}
                 </div>
-            ` : ''}
-            
-            ${payment.payment_status === 'pending' ? `
-                <div class="invoice-actions">
-                    <button class="btn btn-primary" onclick='openPaymentModal(${payment.id})'>
-                        💳 Pay Now
+                <div class="breakdown-total">
+                    <span class="total-label">Total Amount</span>
+                    <span class="total-value">$${payment.total_amount.toFixed(2)}</span>
+                </div>
+            </div>
+
+            <!-- QR Code Card -->
+            <div class="qr-code-card">
+                <div class="qr-header">
+                    <span class="qr-icon">📱</span>
+                    <span class="qr-title">Product QR</span>
+                </div>
+                ${qrCodeUrl ? `
+                    <div class="qr-image-container">
+                        <img src="${qrCodeUrl}" alt="QR Code" class="qr-image" onerror="this.parentElement.innerHTML='<div class=qr-fallback><span>📱</span><small>QR unavailable</small></div>';" />
+                    </div>
+                    <p class="qr-hint">Scan to verify authenticity</p>
+                ` : `
+                    <div class="qr-generating">
+                        <span class="generating-icon">⏳</span>
+                        <small>Generating...</small>
+                    </div>
+                `}
+            </div>
+        </div>
+
+        <!-- Premium Actions Bar -->
+        <div class="premium-actions-bar">
+            <div class="action-buttons">
+                ${payment.payment_status === 'pending' ? `
+                    <button class="action-btn pay-btn" onclick='openPaymentModal(${payment.id})'>
+                        <span class="btn-icon">💳</span>
+                        <span class="btn-text">Pay Now</span>
                     </button>
-                </div>
-            ` : ''}
-            
+                ` : ''}
+                <button class="action-btn print-btn" onclick="printInvoice(${payment.id})">
+                    <span class="btn-icon">🖨️</span>
+                    <span class="btn-text">Print</span>
+                </button>
+                <button class="action-btn download-btn" onclick="downloadInvoice(${payment.id})">
+                    <span class="btn-icon">📥</span>
+                    <span class="btn-text">PDF</span>
+                </button>
+            </div>
             ${payment.payment_status === 'paid' ? `
-                <div class="invoice-paid-info">
-                    <p>✅ Paid on ${payment.paid_at ? new Date(payment.paid_at).toLocaleDateString() : 'N/A'}</p>
+                <div class="paid-badge">
+                    <span class="paid-icon">✅</span>
+                    <span class="paid-text">Paid ${payment.paid_at ? new Date(payment.paid_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''}</span>
                 </div>
             ` : ''}
+        </div>
+
+        <!-- Premium Footer -->
+        <div class="premium-invoice-footer">
+            <div class="footer-security">
+                <span class="security-icon">🔒</span>
+                <span>Secure Transaction</span>
+            </div>
+            <div class="footer-brand">
+                <span class="brand-text">ZUBID</span>
+                <span class="year">© ${new Date().getFullYear()}</span>
+            </div>
         </div>
     `;
-    
+
     return card;
+}
+
+// Get payment method icon
+function getPaymentMethodIcon(method) {
+    const icons = {
+        'cash_on_delivery': '💵',
+        'fib': '🏦',
+        'card': '💳',
+        'fastpay': '⚡'
+    };
+    return icons[method] || '💰';
+}
+
+// Get payment method label
+function getPaymentMethodLabel(method) {
+    const labels = {
+        'cash_on_delivery': 'Cash on Delivery',
+        'fib': 'FIB Bank',
+        'card': 'Credit Card',
+        'fastpay': 'FastPay'
+    };
+    return labels[method] || method;
+}
+
+// Print Invoice Function - Optimized for Half A4 Paper
+function printInvoice(invoiceId) {
+    const invoiceCard = document.getElementById(`invoice-${invoiceId}`);
+    if (!invoiceCard) {
+        showToast('Invoice not found', 'error');
+        return;
+    }
+
+    // Create print window
+    const printWindow = window.open('', '_blank');
+
+    // Get the styles
+    const styles = Array.from(document.styleSheets)
+        .map(sheet => {
+            try {
+                return Array.from(sheet.cssRules).map(rule => rule.cssText).join('');
+            } catch (e) {
+                return '';
+            }
+        })
+        .join('');
+
+    // Create print content optimized for half A4
+    printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Invoice #${invoiceId} - ZUBID</title>
+            <style>
+                ${styles}
+                * { box-sizing: border-box; }
+                body {
+                    margin: 0;
+                    padding: 5mm;
+                    background: white;
+                    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                }
+                .invoice-card {
+                    width: 148mm !important;
+                    max-width: 148mm !important;
+                    margin: 0 auto;
+                    box-shadow: none !important;
+                    border: 1px solid #e2e8f0 !important;
+                }
+                .invoice-actions-bar {
+                    display: none !important;
+                }
+                @media print {
+                    @page {
+                        size: A5 portrait;
+                        margin: 5mm;
+                    }
+                    body {
+                        margin: 0;
+                        padding: 0;
+                        -webkit-print-color-adjust: exact;
+                        print-color-adjust: exact;
+                    }
+                    .invoice-card {
+                        border: 1px solid #cbd5e1 !important;
+                        width: 100% !important;
+                        max-width: 100% !important;
+                    }
+                    .invoice-brand-header,
+                    .invoice-qr-section,
+                    .status-badge,
+                    .invoice-breakdown,
+                    .qr-code-wrapper {
+                        -webkit-print-color-adjust: exact;
+                        print-color-adjust: exact;
+                    }
+                    .qr-code-image {
+                        width: 100px !important;
+                        height: 100px !important;
+                    }
+                    .qr-product-info {
+                        background: #f8fafc !important;
+                    }
+                    .qr-auction-id {
+                        color: #4f46e5 !important;
+                    }
+                }
+            </style>
+        </head>
+        <body>
+            ${invoiceCard.outerHTML}
+            <script>
+                window.onload = function() {
+                    setTimeout(function() {
+                        window.print();
+                        window.close();
+                    }, 500);
+                };
+            </script>
+        </body>
+        </html>
+    `);
+
+    printWindow.document.close();
+}
+
+// Download Invoice as PDF
+function downloadInvoice(invoiceId) {
+    showToast('📥 Opening print dialog - select "Save as PDF"', 'info');
+    setTimeout(() => printInvoice(invoiceId), 300);
 }
 
 function getStatusLabel(status) {
@@ -245,39 +535,27 @@ function getStatusLabel(status) {
 let currentInvoice = null;
 let selectedPaymentMethod = null;
 
-// Payment Methods Configuration
+// Payment Methods Configuration - Premium Iraq-focused options
 const PAYMENT_METHODS = [
     {
         id: 'cash_on_delivery',
         name: 'Cash on Delivery',
-        icon: '🚚',
-        description: 'Pay when you receive',
+        icon: '💵',
+        description: 'Pay cash when your item arrives',
+        features: ['No upfront payment', 'Verify before paying', 'Secure delivery'],
         requiresCard: false,
-        requiresFib: false
+        requiresFib: false,
+        popular: true
     },
     {
         id: 'fib',
-        name: 'FIB Bank',
+        name: 'FIB Bank Transfer',
         icon: '🏦',
-        description: 'Iraq mobile payment',
+        description: 'Fast & secure Iraqi banking',
+        features: ['Instant confirmation', 'FIB mobile app', 'Bank-level security'],
         requiresCard: false,
-        requiresFib: true
-    },
-    {
-        id: 'stripe',
-        name: 'Credit/Debit Card',
-        icon: '💳',
-        description: 'Visa, Mastercard, Amex',
-        requiresCard: true,
-        requiresFib: false
-    },
-    {
-        id: 'paypal',
-        name: 'PayPal',
-        icon: '🅿️',
-        description: 'Pay with PayPal account',
-        requiresCard: false,
-        requiresFib: false
+        requiresFib: true,
+        popular: false
     }
 ];
 
@@ -363,12 +641,27 @@ function populateInvoiceSummary(invoice) {
 function populatePaymentMethods() {
     const gridEl = document.getElementById('paymentMethodsGrid');
     if (!gridEl) return;
-    
+
     gridEl.innerHTML = PAYMENT_METHODS.map(method => `
-        <div class="payment-method-option" onclick="selectPaymentMethod('${method.id}')" data-method="${method.id}">
-            <span class="payment-method-icon">${method.icon}</span>
-            <div class="payment-method-name">${method.name}</div>
-            <div class="payment-method-description">${method.description}</div>
+        <div class="premium-payment-card ${method.popular ? 'popular' : ''}" onclick="selectPaymentMethod('${method.id}')" data-method="${method.id}">
+            ${method.popular ? '<div class="popular-badge">⭐ Most Popular</div>' : ''}
+            <div class="payment-card-header">
+                <div class="payment-method-icon-wrapper">
+                    <span class="payment-method-icon">${method.icon}</span>
+                </div>
+                <div class="payment-method-info">
+                    <div class="payment-method-name">${method.name}</div>
+                    <div class="payment-method-description">${method.description}</div>
+                </div>
+                <div class="payment-check-circle">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                </div>
+            </div>
+            <div class="payment-features">
+                ${method.features.map(f => `<span class="feature-tag">✓ ${f}</span>`).join('')}
+            </div>
         </div>
     `).join('');
 }
@@ -376,8 +669,8 @@ function populatePaymentMethods() {
 function selectPaymentMethod(methodId) {
     selectedPaymentMethod = methodId;
 
-    // Update UI
-    document.querySelectorAll('.payment-method-option').forEach(el => {
+    // Update UI - support both old and new premium card classes
+    document.querySelectorAll('.payment-method-option, .premium-payment-card').forEach(el => {
         el.classList.remove('selected');
     });
 
@@ -411,14 +704,29 @@ function selectPaymentMethod(methodId) {
         const btnText = submitBtn.querySelector('.btn-text');
         if (btnText) {
             if (methodId === 'cash_on_delivery') {
-                btnText.textContent = 'Confirm Order';
-            } else if (methodId === 'paypal') {
-                btnText.textContent = 'Pay with PayPal';
+                btnText.textContent = '✓ Confirm Order';
             } else if (methodId === 'fib') {
-                btnText.textContent = 'Pay with FIB';
+                btnText.textContent = '🏦 Pay with FIB';
             } else {
-                btnText.textContent = 'Pay Now';
+                btnText.textContent = 'Complete Payment';
             }
+        }
+    }
+
+    // Update total amount display based on payment method (IQD for FIB)
+    if (currentInvoice) {
+        const totalEl = document.getElementById('paymentTotalAmount');
+        const currencyEl = document.querySelector('.currency-symbol');
+
+        if (methodId === 'fib') {
+            // Show in IQD for FIB
+            const iqd = convertToIQD(currentInvoice.total_amount);
+            if (totalEl) totalEl.textContent = iqd.toLocaleString('en-US');
+            if (currencyEl) currencyEl.textContent = 'IQD';
+        } else {
+            // Show in USD for other methods
+            if (totalEl) totalEl.textContent = currentInvoice.total_amount.toFixed(2);
+            if (currencyEl) currencyEl.textContent = '$';
         }
     }
 }
@@ -801,12 +1109,13 @@ function showFibRequestSentModal(result) {
         document.body.appendChild(modal);
     }
 
-    // Update details
+    // Update details - Always show IQD for FIB payments
     const amountEl = document.getElementById('fibRequestAmount');
     const phoneEl = document.getElementById('fibRequestPhone');
     const requestIdEl = document.getElementById('fibRequestId');
 
-    if (amountEl) amountEl.textContent = formatCurrency(result.amount || currentInvoice?.total_amount || 0);
+    const amount = result.amount || currentInvoice?.total_amount || 0;
+    if (amountEl) amountEl.textContent = formatCurrency(amount, 'IQD');
     if (phoneEl) phoneEl.textContent = result.fib_phone || '';
     if (requestIdEl) requestIdEl.textContent = result.request_id || '';
 
@@ -817,5 +1126,48 @@ function closeFibRequestModal() {
     const modal = document.getElementById('fibRequestModal');
     if (modal) {
         modal.style.display = 'none';
+    }
+}
+
+// Apply pending cashback to invoice
+async function applyCashback(invoiceId, auctionId) {
+    try {
+        // First get the pending cashback for this auction
+        const cashbackResponse = await fetch(`${window.API_BASE_URL || 'http://localhost:5000/api'}/user/cashback?auction_id=${auctionId}`, {
+            credentials: 'include'
+        });
+
+        if (!cashbackResponse.ok) {
+            throw new Error('Failed to get cashback info');
+        }
+
+        const cashbackData = await cashbackResponse.json();
+        const pendingCashback = cashbackData.cashbacks.find(c => c.status === 'pending' && c.auction_id === auctionId);
+
+        if (!pendingCashback) {
+            showToast('No pending cashback found', 'error');
+            return;
+        }
+
+        // Process the cashback
+        const processResponse = await fetch(`${window.API_BASE_URL || 'http://localhost:5000/api'}/user/cashback/${pendingCashback.id}/process`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        });
+
+        if (processResponse.ok) {
+            showToast('🎉 $5 Cashback applied to your invoice!', 'success');
+            // Refresh the payments list
+            loadPayments();
+        } else {
+            const error = await processResponse.json();
+            showToast(error.error || 'Failed to apply cashback', 'error');
+        }
+    } catch (error) {
+        console.error('Error applying cashback:', error);
+        showToast('Error applying cashback. Please try again.', 'error');
     }
 }

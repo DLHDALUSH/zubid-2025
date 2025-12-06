@@ -269,6 +269,7 @@ function updateNavAuth(isAuthenticated) {
     const myAccountDropdown = document.getElementById('myAccountDropdown');
     const myBidsNavLink = document.getElementById('myBidsNavLink');
     const paymentsNavLink = document.getElementById('paymentsNavLink');
+    const notificationsWrapper = document.getElementById('notificationsWrapper');
     const userName = document.getElementById('userName');
     const userAvatar = document.getElementById('userAvatar');
 
@@ -290,6 +291,11 @@ function updateNavAuth(isAuthenticated) {
             // Show Payments link in main nav
             if (paymentsNavLink) {
                 paymentsNavLink.style.display = 'flex';
+            }
+
+            // Show notifications
+            if (notificationsWrapper) {
+                notificationsWrapper.style.display = 'block';
             }
 
             // Update user info
@@ -326,6 +332,11 @@ function updateNavAuth(isAuthenticated) {
             if (paymentsNavLink) {
                 paymentsNavLink.style.display = 'none';
             }
+
+            // Hide notifications
+            if (notificationsWrapper) {
+                notificationsWrapper.style.display = 'none';
+            }
         }
     }
 }
@@ -335,10 +346,7 @@ async function handleLogin(event) {
 
 	    // Check if backend is reachable first
 	    try {
-	        // Use the same base URL as the global API configuration, defaulting to localhost:5000
-	        const API_BASE = (typeof API_BASE_URL !== 'undefined' && API_BASE_URL
-	            ? API_BASE_URL
-	            : 'http://localhost:5000/api').replace('/api', '');
+	        const API_BASE = window.API_BASE || (typeof API_BASE_URL !== 'undefined' ? API_BASE_URL.replace('/api', '') : window.location.origin);
         const testResponse = await fetch(`${API_BASE}/api/health`);
         if (!testResponse.ok) {
             throw new Error('Backend server is not responding correctly');
@@ -401,10 +409,7 @@ async function handleRegister(event) {
 
 	    // Check if backend is reachable first
 	    try {
-	        // Use the same base URL as the global API configuration, defaulting to localhost:5000
-	        const API_BASE = (typeof API_BASE_URL !== 'undefined' && API_BASE_URL
-	            ? API_BASE_URL
-	            : 'http://localhost:5000/api').replace('/api', '');
+	        const API_BASE = window.API_BASE || (typeof API_BASE_URL !== 'undefined' ? API_BASE_URL.replace('/api', '') : window.location.origin);
         const testResponse = await fetch(`${API_BASE}/api/health`);
         if (!testResponse.ok) {
             throw new Error('Backend server is not responding correctly');
@@ -414,7 +419,7 @@ async function handleRegister(event) {
         debugError('Backend connection error:', error);
         return;
     }
-    
+
     // Validate password before submission
     const password = document.getElementById('registerPassword').value;
     const passwordValidation = validatePassword(password);
@@ -1341,21 +1346,9 @@ function getImageUrl(imageUrl) {
         }
     }
     
-    // Handle relative URLs - get base URL from API_BASE_URL or default
-    let baseUrl = 'http://localhost:5000';
-    try {
-        if (typeof API_BASE_URL !== 'undefined' && API_BASE_URL) {
-            baseUrl = String(API_BASE_URL).replace('/api', '').replace(/\/$/, '');
-        } else if (typeof window !== 'undefined' && window.API_BASE_URL) {
-            baseUrl = String(window.API_BASE_URL).replace('/api', '').replace(/\/$/, '');
-        }
-    } catch (e) {
-        console.warn('Could not determine base URL, using default:', e);
-    }
-    
-    // Ensure relative URL starts with /
+    // Handle relative URLs - get base URL from window.API_BASE or origin
+    const baseUrl = window.API_BASE || (window.location.hostname === 'localhost' ? 'http://localhost:5000' : window.location.origin);
     const relativeUrl = urlString.startsWith('/') ? urlString : '/' + urlString;
-    
     return baseUrl + relativeUrl;
 }
 
@@ -1379,17 +1372,7 @@ function convertImageUrlUnified(imageUrl) {
     }
 
     // Relative URLs - construct full URL
-    let baseUrl = 'http://localhost:5000';
-    try {
-        if (typeof API_BASE_URL !== 'undefined' && API_BASE_URL) {
-            baseUrl = String(API_BASE_URL).replace('/api', '').replace(/\/$/, '');
-        } else if (typeof window !== 'undefined' && window.API_BASE_URL) {
-            baseUrl = String(window.API_BASE_URL).replace('/api', '').replace(/\/$/, '');
-        }
-    } catch (e) {
-        console.warn('Error parsing API_BASE_URL:', e);
-    }
-
+    const baseUrl = window.API_BASE || (window.location.hostname === 'localhost' ? 'http://localhost:5000' : window.location.origin);
     const relativeUrl = urlString.startsWith('/') ? urlString : '/' + urlString;
     return baseUrl + relativeUrl;
 }
@@ -1498,6 +1481,11 @@ function closeCameraModal() {
 }
 
 function resetCameraUI() {
+    // Helper for translations (safe if i18n not loaded yet)
+    const t = (window.i18n && window.i18n.t)
+        ? window.i18n.t
+        : (key, def) => def || key;
+
     // Reset captured image state variables FIRST to prevent stale data
     // This ensures that when the modal is reopened, we start with a clean slate
     // This is critical for finishBiometricCapture() to correctly determine mode
@@ -1513,12 +1501,11 @@ function resetCameraUI() {
     
     // Set initial capture mode and title based on page structure
     let initialMode = 'id_front';
-    let initialTitle = 'Scan ID Card Front';
+    let initialTitle = t('register.scanIdCard', 'Scan ID Card');
     
     if (!hasStepIdFront && hasStepId) {
         // Other pages (auctions.html, create-auction.html, etc.) use single ID mode
         initialMode = 'id';
-        initialTitle = 'Scan ID Card';
     }
     
     // Reset UI state
@@ -2404,6 +2391,11 @@ function updateSelfiePreview(imageData) {
 }
 
 function updateStepStatus(step, completed) {
+    // Helper for translations (safe if i18n not loaded yet)
+    const t = (window.i18n && window.i18n.t)
+        ? window.i18n.t
+        : (key, def) => def || key;
+
     // Map step names to element IDs - support both naming conventions
     // index.html uses: stepIdFront, stepIdBack, stepSelfie
     // Other pages use: stepId, stepSelfie
@@ -2439,10 +2431,10 @@ function updateStepStatus(step, completed) {
         
         if (completed) {
             stepElement.classList.add('completed');
-            statusElement.textContent = '✅ Completed';
+            statusElement.textContent = t('register.doneShort', '✅ Completed');
             statusElement.style.color = 'var(--success-color)';
         } else {
-            statusElement.textContent = 'Pending';
+            statusElement.textContent = t('register.pending', 'Pending');
             statusElement.style.color = '#a0a0c0';
         }
     }

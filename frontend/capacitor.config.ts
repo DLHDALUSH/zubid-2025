@@ -2,7 +2,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 // Set to true for development (connects to local backend)
 // Set to false for production APK build
-const isDevelopment = true;
+const isDevelopment = false;
 
 // Your production backend URL (change this when you deploy)
 const PRODUCTION_API_URL = 'https://your-backend-domain.com';
@@ -11,6 +11,7 @@ const config: CapacitorConfig = {
   appId: 'com.zubid.app',
   appName: 'ZUBID',
   webDir: 'www',
+  bundledWebRuntime: false,
   server: isDevelopment ? {
     // Development: connects to local backend
     // 10.0.2.2 is Android emulator's localhost
@@ -19,19 +20,26 @@ const config: CapacitorConfig = {
     cleartext: true
   } : {
     // Production: load from bundled files
-    androidScheme: 'https'
+    androidScheme: 'https',
+    iosScheme: 'capacitor',
+    hostname: 'zubid.app'
   },
   android: {
     buildOptions: {
       keystorePath: undefined,
       keystoreAlias: undefined
     },
-    allowMixedContent: isDevelopment
+    allowMixedContent: isDevelopment,
+    useLegacyBridge: false,
+    webContentsDebuggingEnabled: isDevelopment
   },
   ios: {
     contentInset: 'automatic',
     allowsLinkPreview: true,
-    scheme: 'ZUBID'
+    scheme: 'ZUBID',
+    scrollEnabled: true,
+    limitsNavigationsToAppBoundDomains: false,
+    webContentsDebuggingEnabled: isDevelopment
   },
   plugins: {
     SplashScreen: {
@@ -40,11 +48,23 @@ const config: CapacitorConfig = {
       backgroundColor: '#ff6600',
       showSpinner: true,
       spinnerColor: '#ffffff',
-      androidScaleType: 'CENTER_CROP'
+      androidScaleType: 'CENTER_CROP',
+      iosSpinnerStyle: 'large',
+      launchFadeOutDuration: 300,
+      splashFullScreen: true,
+      splashImmersive: true
     },
     StatusBar: {
       style: 'LIGHT',
-      backgroundColor: '#ff6600'
+      backgroundColor: '#ff6600',
+      overlaysWebView: false
+    },
+    Keyboard: {
+      resize: 'body',
+      resizeOnFullScreen: true
+    },
+    PushNotifications: {
+      presentationOptions: ['badge', 'sound', 'alert']
     }
   }
 };

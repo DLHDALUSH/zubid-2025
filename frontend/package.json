@@ -1,27 +1,44 @@
 {
   "name": "zubid",
   "version": "1.0.0",
-  "description": "ZUBID - Online Auction Platform",
+  "description": "ZUBID - Online Auction Platform for Android and iOS",
   "main": "index.html",
   "scripts": {
-    "build": "echo No build step needed",
-    "cap:sync": "npx cap sync",
-    "cap:open:android": "npx cap open android",
-    "cap:open:ios": "npx cap open ios",
-    "android": "npx cap sync android && npx cap open android",
-    "ios": "npx cap sync ios && npx cap open ios"
+    "build": "powershell -ExecutionPolicy Bypass -File build.ps1",
+    "sync": "npx cap sync",
+    "sync:android": "npx cap sync android",
+    "sync:ios": "npx cap sync ios",
+    "open:android": "npx cap open android",
+    "open:ios": "npx cap open ios",
+    "android": "npm run build && npx cap sync android && npx cap open android",
+    "ios": "npm run build && npx cap sync ios && npx cap open ios",
+    "android:run": "npm run build && npx cap run android",
+    "ios:run": "npm run build && npx cap run ios",
+    "update": "npm run build && npx cap sync"
   },
   "keywords": [
     "auction",
     "pwa",
-    "mobile"
+    "mobile",
+    "android",
+    "ios",
+    "capacitor"
   ],
   "author": "ZUBID",
   "license": "ISC",
   "dependencies": {
     "@capacitor/android": "^7.4.4",
+    "@capacitor/app": "^7.1.0",
+    "@capacitor/camera": "^7.0.2",
     "@capacitor/cli": "^7.4.4",
-    "@capacitor/core": "^7.4.4"
+    "@capacitor/core": "^7.4.4",
+    "@capacitor/haptics": "^7.0.2",
+    "@capacitor/ios": "^7.4.4",
+    "@capacitor/keyboard": "^7.0.3",
+    "@capacitor/push-notifications": "^7.0.3",
+    "@capacitor/share": "^7.0.2",
+    "@capacitor/splash-screen": "^7.0.3",
+    "@capacitor/status-bar": "^7.0.3"
   },
   "devDependencies": {
     "typescript": "^5.9.3"

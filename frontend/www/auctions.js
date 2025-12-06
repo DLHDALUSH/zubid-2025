@@ -1,5 +1,6 @@
 // Auctions page functionality
 let currentPage = 1;
+// Note: currentView is declared in app.js (global scope)
 let filters = {
     search: '',
     category_id: '',
@@ -285,10 +286,12 @@ async function loadAuctions(page = 1, showLoading = true) {
         if (response.auctions && response.auctions.length > 0) {
             if (container) {
                 // Show container
-                container.style.display = 'block';
-                container.style.opacity = '1'; // Ensure visible
-                
+                container.style.display = 'grid';
+                container.style.opacity = '1';
+                container.style.visibility = 'visible';
+
                 const view = currentView || 'grid';
+
                 if (view === 'grid') {
                     container.className = 'auctions-grid';
                     container.innerHTML = response.auctions.map(auction => createAuctionCard(auction)).join('');
@@ -296,16 +299,6 @@ async function loadAuctions(page = 1, showLoading = true) {
                     container.className = 'auctions-list';
                     container.innerHTML = response.auctions.map(auction => createAuctionListItem(auction)).join('');
                 }
-                
-                // Ensure container is visible
-                container.style.display = 'block';
-                
-                // Add fade-in animation
-                container.style.opacity = '0';
-                setTimeout(() => {
-                    container.style.transition = 'opacity 0.3s';
-                    container.style.opacity = '1';
-                }, 10);
             }
             renderPagination(response);
             if (noResults) noResults.style.display = 'none';
@@ -364,63 +357,33 @@ async function loadAuctions(page = 1, showLoading = true) {
 }
 
 // SVG Placeholder Data URI (always works, no external dependency)
-// Note: SVG_PLACEHOLDER_SVG is already declared in app.js, so we don't redeclare it here
-// Only declare SVG_PLACEHOLDER_LIST which is specific to this file
-const SVG_PLACEHOLDER_LIST = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjE1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZmY2NjAwIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIyMCIgZmlsbD0iI2ZmZmZmZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg==';
+const PLACEHOLDER_IMAGE = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZmY2NjAwIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIyNCIgZmlsbD0iI2ZmZmZmZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg==';
 
 // Get and normalize image URL
-function getImageUrl(imageUrl) {
-    // Check for null, undefined, or empty string (handle both null and string "null")
-    if (imageUrl === null || imageUrl === undefined || imageUrl === 'null' || imageUrl === 'undefined') {
-        return SVG_PLACEHOLDER_SVG;
+function getAuctionImageUrl(imageUrl) {
+    // Check for null, undefined, or empty string
+    if (!imageUrl || imageUrl === 'null' || imageUrl === 'undefined') {
+        return PLACEHOLDER_IMAGE;
     }
-    
-    // Convert to string and check if empty
+
     const urlString = String(imageUrl).trim();
     if (urlString === '' || urlString === 'null' || urlString === 'undefined') {
-        return SVG_PLACEHOLDER_SVG;
+        return PLACEHOLDER_IMAGE;
     }
-    
-    // Validate data:image URLs - check if they're complete
+
+    // Data URIs - return as-is if valid
     if (urlString.startsWith('data:image/')) {
-        // Check if data URI is complete (has base64 data after comma)
-        const parts = urlString.split(',');
-        if (parts.length < 2 || parts[1].length < 10) {
-            // Incomplete or invalid data URI
-            console.warn('Invalid or incomplete data URI detected:', urlString.substring(0, 50));
-            return SVG_PLACEHOLDER_SVG;
-        }
         return urlString;
     }
-    
-    // If already absolute URL (http/https), validate it
+
+    // HTTP URLs - return as-is
     if (urlString.startsWith('http://') || urlString.startsWith('https://')) {
-        // Basic URL validation
-        try {
-            new URL(urlString);
-            return urlString;
-        } catch (e) {
-            console.warn('Invalid URL:', urlString);
-            return SVG_PLACEHOLDER_SVG;
-        }
+        return urlString;
     }
-    
-    // Handle relative URLs - get base URL from API_BASE_URL or default
-    let baseUrl = 'http://localhost:5000';
-    try {
-        if (typeof API_BASE_URL !== 'undefined' && API_BASE_URL) {
-            baseUrl = String(API_BASE_URL).replace('/api', '').replace(/\/$/, '');
-        } else if (typeof window !== 'undefined' && window.API_BASE_URL) {
-            baseUrl = String(window.API_BASE_URL).replace('/api', '').replace(/\/$/, '');
-        }
-    } catch (e) {
-        console.warn('Could not determine base URL, using default:', e);
-    }
-    
-    // Ensure relative URL starts with /
-    const relativeUrl = urlString.startsWith('/') ? urlString : '/' + urlString;
-    
-    return baseUrl + relativeUrl;
+
+    // Relative URLs - prepend base URL (use global API_BASE from api.js)
+    const baseUrl = window.API_BASE || (window.location.hostname === 'localhost' ? 'http://localhost:5000' : window.location.origin);
+    return baseUrl + (urlString.startsWith('/') ? urlString : '/' + urlString);
 }
 
 // Helper function to truncate text
@@ -446,29 +409,18 @@ function createAuctionCard(auction) {
         return div.innerHTML;
     };
     
-    // Get normalized image URL - Use featured_image_url if available for featured auctions
-    const imageToUse = (auction.featured && auction.featured_image_url) ? auction.featured_image_url : auction.image_url;
-    let imageUrl = getImageUrl(imageToUse);
-    
-    // Final safety check - ensure we NEVER have an empty src
-    if (!imageUrl || imageUrl === null || imageUrl === undefined || String(imageUrl).trim() === '' || String(imageUrl) === 'undefined' || String(imageUrl) === 'null') {
-        imageUrl = SVG_PLACEHOLDER_SVG;
-    }
-    
+    // Get image URL
+    const imageUrl = getAuctionImageUrl(auction.image_url);
+
     return `
-        <div class="auction-card ${isEndingSoon ? 'ending-soon' : ''}" 
+        <div class="auction-card ${isEndingSoon ? 'ending-soon' : ''}"
              onclick="window.location.href='auction-detail.html?id=${auction.id}'"
              data-auction-id="${auction.id}"
              data-time-left="${auction.time_left || 0}">
             <div class="auction-image">
-                <img data-src="${imageUrl || SVG_PLACEHOLDER_SVG}" 
-                     src="${SVG_PLACEHOLDER_SVG}"
-                     alt="${escapeHtml(auction.item_name || 'Auction item')}"
-                     loading="lazy" 
-                     alt="${escapeHtml(auction.item_name || 'Auction')}"
-                     loading="lazy"
-                     style="display: block; width: 100%; height: 100%; object-fit: cover;"
-                     onerror="console.error('Image error:', this.src.substring(0, 100)); if (!this.src.includes('data:image/svg+xml')) { this.src='${SVG_PLACEHOLDER_SVG}'; }">
+                <img src="${imageUrl}"
+                     style="width: 100%; height: 200px; object-fit: cover; display: block;"
+                     onerror="this.onerror=null; this.src='${PLACEHOLDER_IMAGE}';">
                 <span class="status-badge ${statusClass}">${auction.status}</span>
                 ${featuredBadge}
                 ${isEndingSoon ? '<span class="ending-soon-badge">⏰ Ending Soon</span>' : ''}
@@ -491,6 +443,11 @@ function createAuctionCard(auction) {
                         <span>${bidCountText}</span>
                     </div>
                 </div>
+                ${auction.market_price || auction.real_price ? `
+                <div class="auction-prices">
+                    ${auction.market_price ? `<span class="market-price-tag">Market: <s>$${parseFloat(auction.market_price).toFixed(2)}</s></span>` : ''}
+                    ${auction.real_price ? `<span class="real-price-tag">Buy Now: $${parseFloat(auction.real_price).toFixed(2)}</span>` : ''}
+                </div>` : ''}
                 <div class="auction-meta">
                     <small class="category-name">${escapeHtml(auction.category_name || 'Uncategorized')}</small>
                 </div>
@@ -513,29 +470,15 @@ function createAuctionListItem(auction) {
         return div.innerHTML;
     };
     
-    // Get normalized image URL - Use featured_image_url if available for featured auctions
-    const imageToUse = (auction.featured && auction.featured_image_url) ? auction.featured_image_url : auction.image_url;
-    let imageUrl = getImageUrl(imageToUse);
-    if (imageUrl && imageUrl.includes('placeholder.com')) {
-        imageUrl = imageUrl.replace('300x200', '200x150');
-    }
-    
-    // Final safety check - ensure we NEVER have an empty src
-    if (!imageUrl || imageUrl === null || imageUrl === undefined || String(imageUrl).trim() === '' || String(imageUrl) === 'undefined' || String(imageUrl) === 'null') {
-        imageUrl = SVG_PLACEHOLDER_LIST;
-    }
-    
+    // Get image URL
+    const imageUrl = getAuctionImageUrl(auction.image_url);
+
     return `
         <div class="auction-list-item" onclick="window.location.href='auction-detail.html?id=${auction.id}'">
             <div class="auction-list-image">
-                <img data-src="${imageUrl || SVG_PLACEHOLDER_LIST}" 
-                     src="${SVG_PLACEHOLDER_LIST}"
+                <img src="${imageUrl}"
                      alt="${escapeHtml(auction.item_name || 'Auction item')}"
-                     loading="lazy" 
-                     alt="${escapeHtml(auction.item_name || 'Auction')}"
-                     loading="lazy"
-                     style="display: block; width: 100%; height: 100%; object-fit: cover;"
-                     onerror="console.error('Image error:', this.src.substring(0, 100)); if (!this.src.includes('data:image/svg+xml')) { this.src='${SVG_PLACEHOLDER_LIST}'; }">
+                     onerror="this.src='${PLACEHOLDER_IMAGE}'">
                 ${(auction.video_url && typeof auction.video_url === 'string' && auction.video_url.trim() !== '') ? '<button class="video-button" onclick="event.stopPropagation(); window.location.href=\'auction-detail.html?id=' + auction.id + '#video\'" title="Watch Video"><span class="video-icon">🎥</span> Video</button>' : ''}
             </div>
             <div class="auction-list-content">

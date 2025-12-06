@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- ZUBID Brand Colors -->
+    <color name="colorPrimary">#FF6600</color>
+    <color name="colorPrimaryDark">#E55A00</color>
+    <color name="colorAccent">#FF8533</color>
+    
+    <!-- Splash Screen -->
+    <color name="splashBackground">#FF6600</color>
+    <color name="splashText">#FFFFFF</color>
+    
+    <!-- Status Bar -->
+    <color name="statusBarColor">#FF6600</color>
+    
+    <!-- General UI Colors -->
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+    <color name="gray">#808080</color>
+    <color name="lightGray">#F5F5F5</color>
+    <color name="darkGray">#333333</color>
+    
+    <!-- Success/Error Colors -->
+    <color name="success">#28A745</color>
+    <color name="warning">#FFC107</color>
+    <color name="error">#DC3545</color>
+    <color name="info">#17A2B8</color>
+</resources>
+
