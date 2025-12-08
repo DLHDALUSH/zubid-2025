@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/nav_home"
+        android:icon="@drawable/ic_home"
+        android:title="Home" />
+
+    <item
+        android:id="@+id/nav_bids"
+        android:icon="@drawable/ic_gavel"
+        android:title="Bids" />
+
+    <item
+        android:id="@+id/nav_wishlist"
+        android:icon="@drawable/ic_heart"
+        android:title="Wishlist" />
+
+    <item
+        android:id="@+id/nav_wons"
+        android:icon="@drawable/ic_trophy"
+        android:title="Wons" />
+
+    <item
+        android:id="@+id/nav_notifications"
+        android:icon="@drawable/ic_bell"
+        android:title="Notification" />
+
+</menu>
+
