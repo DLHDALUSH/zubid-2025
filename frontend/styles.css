@@ -161,16 +161,18 @@ body {
     height: 18px;
 }
 
-/* Hide desktop nav elements on mobile */
-.nav-brand,
-.nav-menu,
-.nav-links,
-.nav-actions,
-.nav-auth,
-.nav-user,
-.nav-dropdown,
-.brand-tagline {
-    display: none !important;
+/* Hide desktop nav elements on mobile only */
+@media (max-width: 768px) {
+    .nav-brand,
+    .nav-menu,
+    .nav-links,
+    .nav-actions,
+    .nav-auth,
+    .nav-user,
+    .nav-dropdown,
+    .brand-tagline {
+        display: none !important;
+    }
 }
 
 /* ===========================================
@@ -11458,9 +11460,10 @@ textarea.valid {
 /* ===========================================
    ZUBID DARK AUCTION APP - MOBILE OVERRIDE
    Complete redesign to match reference app
+   Only applies to screens <= 768px
    =========================================== */
 
-/* Force dark theme always */
+/* Force dark theme always (applies to all screens) */
 html, body {
     background: #0d0d0d !important;
     color: #ffffff !important;
@@ -11472,8 +11475,11 @@ body::after {
 }
 
 /* ===========================================
-   HEADER REDESIGN
+   MOBILE-ONLY STYLES (max-width: 768px)
    =========================================== */
+@media (max-width: 768px) {
+
+/* HEADER REDESIGN - Mobile */
 .navbar {
     background: #1a1a1a !important;
     backdrop-filter: none !important;
@@ -11501,7 +11507,7 @@ body::after {
     max-width: 100% !important;
 }
 
-/* Hide all desktop nav elements */
+/* Hide all desktop nav elements on mobile */
 .nav-brand,
 .nav-menu,
 .nav-links,
@@ -11800,6 +11806,8 @@ body::after {
     padding: 6px 12px !important;
     border-radius: 20px !important;
 }
+
+} /* END of MOBILE-ONLY STYLES media query */
 
 /* ===========================================
    BOTTOM NAVIGATION - REDESIGNED (Mobile Only)
