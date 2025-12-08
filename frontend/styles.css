@@ -11802,21 +11802,23 @@ body::after {
 }
 
 /* ===========================================
-   BOTTOM NAVIGATION - REDESIGNED
+   BOTTOM NAVIGATION - REDESIGNED (Mobile Only)
    =========================================== */
-.mobile-bottom-nav {
-    display: block !important;
-    position: fixed !important;
-    bottom: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    background: #1a1a1a !important;
-    border-top: 1px solid #2a2a2a !important;
-    z-index: 9999 !important;
-    padding: 0 !important;
-    padding-bottom: env(safe-area-inset-bottom, 0px) !important;
-    height: auto !important;
-    box-shadow: none !important;
+@media (max-width: 768px) {
+    .mobile-bottom-nav {
+        display: block !important;
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        background: #1a1a1a !important;
+        border-top: 1px solid #2a2a2a !important;
+        z-index: 9999 !important;
+        padding: 0 !important;
+        padding-bottom: env(safe-area-inset-bottom, 0px) !important;
+        height: auto !important;
+        box-shadow: none !important;
+    }
 }
 
 .mobile-bottom-nav::before,
@@ -12051,7 +12053,7 @@ body {
     right: 0;
     z-index: 1001;
     background: #1a1a1a;
-    display: flex;
+    display: none; /* Hidden by default, shown on mobile via media query */
     align-items: center;
     gap: 12px;
     padding: 10px 12px;
@@ -12106,14 +12108,48 @@ body {
     color: #666 !important;
 }
 
-/* Hide desktop navbar on mobile */
-.desktop-only {
-    display: none !important;
+/* Desktop vs Mobile Layout */
+/* Show desktop navbar on larger screens */
+@media (min-width: 769px) {
+    .desktop-only {
+        display: flex !important;
+    }
+
+    .mobile-header {
+        display: none !important;
+    }
+
+    .mobile-bottom-nav {
+        display: none !important;
+    }
+
+    body {
+        padding-bottom: 0 !important;
+    }
+
+    .hero {
+        padding-top: 80px !important;
+    }
 }
 
-/* Adjust hero section for new header */
-.hero {
-    padding-top: calc(56px + env(safe-area-inset-top, 0px) + 12px) !important;
+/* Hide desktop navbar on mobile */
+@media (max-width: 768px) {
+    .desktop-only {
+        display: none !important;
+    }
+
+    .mobile-header {
+        display: flex !important;
+    }
+
+    .mobile-bottom-nav {
+        display: block !important;
+    }
+
+    /* Adjust hero section for new header */
+    .hero {
+        padding-top: calc(56px + env(safe-area-inset-top, 0px) + 12px) !important;
+    }
 }
 
 /* ===========================================

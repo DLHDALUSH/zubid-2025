@@ -5,6 +5,9 @@ Tests navigation menu, user preferences, and enhanced profiles
 
 import sys
 import os
+
+# Change to the backend directory so database path is resolved correctly
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from app import app, db, User, NavigationMenu, UserPreference
@@ -13,6 +16,8 @@ from datetime import datetime, timezone
 def test_enhanced_features():
     """Test all enhanced features"""
     with app.app_context():
+        # Ensure tables exist
+        db.create_all()
         print("\n" + "="*60)
         print("Testing Enhanced Backend Features")
         print("="*60 + "\n")
