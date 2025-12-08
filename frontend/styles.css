@@ -1,6 +1,6 @@
 /* ===========================================
-   ZUBID DARK AUCTION APP - Mobile First Design
-   Modern Dark Theme with Coral/Orange Accents
+   ZUBID AUCTION APP - Mobile First Design
+   Light Theme Default with Coral/Orange Accents
    =========================================== */
 
 * {
@@ -10,12 +10,12 @@
 }
 
 :root {
-    /* Dark Theme Colors */
-    --bg-primary: #0d0d0d;
-    --bg-secondary: #1a1a1a;
-    --bg-card: #1e1e1e;
-    --bg-card-hover: #252525;
-    --bg-input: #2a2a2a;
+    /* Light Theme Colors (Default) */
+    --bg-primary: #f8f9fa;
+    --bg-secondary: #ffffff;
+    --bg-card: #ffffff;
+    --bg-card-hover: #f0f0f0;
+    --bg-input: #f5f5f5;
 
     /* Accent Colors */
     --coral: #ff6b6b;
@@ -28,9 +28,9 @@
     --yellow: #f1c40f;
 
     /* Text Colors */
-    --text-primary: #ffffff;
-    --text-secondary: #b0b0b0;
-    --text-muted: #666666;
+    --text-primary: #1a1a1a;
+    --text-secondary: #666666;
+    --text-muted: #999999;
 
     /* Timer Badge */
     --timer-bg: #ff6b6b;
@@ -61,6 +61,18 @@
 
     /* Transitions */
     --transition: 0.2s ease;
+}
+
+/* Dark Theme Override */
+[data-theme="dark"] {
+    --bg-primary: #0d0d0d;
+    --bg-secondary: #1a1a1a;
+    --bg-card: #1e1e1e;
+    --bg-card-hover: #252525;
+    --bg-input: #2a2a2a;
+    --text-primary: #ffffff;
+    --text-secondary: #b0b0b0;
+    --text-muted: #666666;
 }
 
 /* Base Styles */
@@ -11458,16 +11470,10 @@ textarea.valid {
 .stagger-animation > *:nth-child(6) { animation-delay: 0.3s; }
 
 /* ===========================================
-   ZUBID DARK AUCTION APP - MOBILE OVERRIDE
+   ZUBID AUCTION APP - MOBILE OVERRIDE
    Complete redesign to match reference app
    Only applies to screens <= 768px
    =========================================== */
-
-/* Force dark theme always (applies to all screens) */
-html, body {
-    background: #0d0d0d !important;
-    color: #ffffff !important;
-}
 
 body::before,
 body::after {
