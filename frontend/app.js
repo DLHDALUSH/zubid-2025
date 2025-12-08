@@ -696,10 +696,6 @@ async function logout() {
     }
 }
 
-function closeModal(modalId) {
-    document.getElementById(modalId).style.display = 'none';
-}
-
 // Close modal and reset form for registration modal
 function closeModalAndReset(modalId) {
     if (modalId === 'registerModal') {

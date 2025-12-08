@@ -4266,6 +4266,11 @@ def update_menu_item(menu_id):
         app.logger.error(f'Error updating menu item: {str(e)}')
         return jsonify({'error': f'Failed to update menu item: {str(e)}'}), 500
 
+# Serve favicon.ico
+@app.route('/favicon.ico')
+def serve_favicon():
+    return send_from_directory(os.path.join(frontend_dir, 'icons'), 'icon-96x96.png', mimetype='image/png')
+
 # Serve frontend static files (for same-origin requests to fix cookie issues)
 @app.route('/')
 def serve_index():

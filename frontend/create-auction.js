@@ -648,10 +648,6 @@ let uploadedImageData = []; // Array of {url, file, previewUrl, index, previewDi
 let uploadedVideoUrl = null;
 let uploadedVideoFile = null;
 
-// Store uploaded video
-let uploadedVideoUrl = null;
-let uploadedVideoFile = null;
-
 // Handle image file selection
 async function handleImageFilesChange(event) {
     const files = Array.from(event.target.files);
