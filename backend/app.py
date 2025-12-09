@@ -313,14 +313,14 @@ setup_logging()
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=True)  # Optional
     password_hash = db.Column(db.String(255), nullable=False)
     id_number = db.Column(db.String(50), unique=True, nullable=False)  # National ID or Passport
     birth_date = db.Column(db.Date)  # Date of birth
     biometric_data = db.Column(db.Text, nullable=True)  # Deprecated: kept for backward compatibility
     profile_photo = db.Column(db.String(500), nullable=True)  # Profile photo URL
-    address = db.Column(db.String(255))
-    phone = db.Column(db.String(20))
+    address = db.Column(db.String(255), nullable=True)  # Optional
+    phone = db.Column(db.String(20), nullable=True)  # Optional
     role = db.Column(db.String(20), default='user')  # user, admin
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
@@ -955,17 +955,16 @@ def register():
         username = sanitize_string(form_data.get('username', ''), max_length=80)
         if not username:
             return jsonify({'error': 'Username is required'}), 400
-        
+
+        # Email is optional - validate format only if provided
         email = sanitize_string(form_data.get('email', ''), max_length=255).lower()
-        if not email:
-            return jsonify({'error': 'Email is required'}), 400
-        if not validate_email(email):
+        if email and not validate_email(email):
             return jsonify({'error': 'Invalid email format'}), 400
-        
+
         password = form_data.get('password', '')
         if not password:
             return jsonify({'error': 'Password is required'}), 400
-        
+
         # Validate password meets standard requirements
         password_errors = []
         if len(password) < 8:
@@ -978,35 +977,33 @@ def register():
             password_errors.append('Password must contain at least one number')
         if not any(c in '!@#$%^&*()_+-=[]{}|;:,.<>?' for c in password):
             password_errors.append('Password must contain at least one special character')
-        
+
         if password_errors:
             return jsonify({'error': 'Password does not meet requirements: ' + '; '.join(password_errors)}), 400
-        
+
         id_number = sanitize_string(form_data.get('id_number', ''), max_length=50)
         if not id_number:
             return jsonify({'error': 'ID Number is required'}), 400
-        
+
         if not form_data.get('birth_date'):
             return jsonify({'error': 'Date of Birth is required'}), 400
-        
+
+        # Phone is optional - validate format only if provided
         phone = sanitize_string(form_data.get('phone', ''), max_length=20)
-        if not phone:
-            return jsonify({'error': 'Phone number is required'}), 400
-        if not validate_phone(phone):
+        if phone and not validate_phone(phone):
             return jsonify({'error': 'Invalid phone number format'}), 400
-        
+
+        # Address is optional - validate length only if provided
         address = sanitize_string(form_data.get('address', ''), max_length=255)
-        if not address:
-            return jsonify({'error': 'Address is required'}), 400
-        if len(address) < 5:
+        if address and len(address) < 5:
             return jsonify({'error': 'Address must be at least 5 characters long'}), 400
-        
+
         # Check if username already exists
         if User.query.filter_by(username=username).first():
             return jsonify({'error': 'Username already exists'}), 400
-        
-        # Check if email already exists
-        if User.query.filter_by(email=email).first():
+
+        # Check if email already exists (only if email provided)
+        if email and User.query.filter_by(email=email).first():
             return jsonify({'error': 'Email already exists'}), 400
         
         # Check if ID number already exists
