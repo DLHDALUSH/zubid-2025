@@ -182,13 +182,38 @@ def validate_email(email):
     return bool(re.match(pattern, email.strip()))
 
 def validate_phone(phone):
-    """Validate phone number format"""
+    """Validate phone number format - supports Iraqi phone numbers"""
     if not phone or not isinstance(phone, str):
         return False
-    # Remove common separators
+    # Remove common separators and spaces
     cleaned = re.sub(r'[\s\-\(\)]', '', phone)
-    # Check if it's all digits and reasonable length
-    return cleaned.isdigit() and 8 <= len(cleaned) <= 20
+
+    # Iraqi phone number patterns:
+    # +964 7XX XXX XXXX (with country code)
+    # 00964 7XX XXX XXXX (with international prefix)
+    # 07XX XXX XXXX (local format with leading 0)
+    # 7XX XXX XXXX (without leading 0)
+
+    # Remove country code if present
+    if cleaned.startswith('+964'):
+        cleaned = cleaned[4:]
+    elif cleaned.startswith('00964'):
+        cleaned = cleaned[5:]
+    elif cleaned.startswith('964'):
+        cleaned = cleaned[3:]
+
+    # Remove leading 0 if present
+    if cleaned.startswith('0'):
+        cleaned = cleaned[1:]
+
+    # Iraqi mobile numbers should start with 7 and be 10 digits total
+    # Valid prefixes: 750, 751, 770, 771, 780, 781, 782, 783, 784, 785, 790, etc.
+    if cleaned.startswith('7') and len(cleaned) == 10 and cleaned.isdigit():
+        return True
+
+    # Also accept general international format (7-15 digits) for flexibility
+    cleaned_full = re.sub(r'[\s\-\(\)\+]', '', phone)
+    return cleaned_full.isdigit() and 7 <= len(cleaned_full) <= 15
 
 def sanitize_filename(filename):
     """Sanitize filename to prevent path traversal"""
@@ -2480,35 +2505,56 @@ def delete_user(user_id):
         user = User.query.get(user_id)
         if not user:
             return jsonify({'error': 'User not found'}), 404
-        
+
         # Prevent deleting admin users
         if user.role == 'admin':
             return jsonify({'error': 'Cannot delete admin users'}), 403
-        
-        # Step 1: Delete all bids made by this user (must be done first to avoid foreign key constraint)
-        # This includes bids on auctions they created and bids on other auctions
-        bids = Bid.query.filter_by(user_id=user_id).all()
-        for bid in bids:
-            db.session.delete(bid)
-        
-        # Step 2: Handle auctions where user is the seller
-        # Delete images and auctions they created
-        # Optimize: Use eager loading to avoid N+1 queries
+
+        # Step 1: Delete user preferences
+        UserPreference.query.filter_by(user_id=user_id).delete()
+
+        # Step 2: Delete cashbacks
+        Cashback.query.filter_by(user_id=user_id).delete()
+
+        # Step 3: Delete social shares
+        SocialShare.query.filter_by(user_id=user_id).delete()
+
+        # Step 4: Delete return requests
+        ReturnRequest.query.filter_by(user_id=user_id).delete()
+
+        # Step 5: Delete invoices
+        Invoice.query.filter_by(user_id=user_id).delete()
+
+        # Step 6: Delete all bids made by this user (must be done before auctions)
+        Bid.query.filter_by(user_id=user_id).delete()
+
+        # Step 7: Handle auctions where user is the seller
+        # First delete bids on those auctions, then images, then auctions
         auctions_as_seller = Auction.query.filter_by(seller_id=user_id).options(
             selectinload(Auction.images)
         ).all()
         for seller_auction in auctions_as_seller:
-            # Delete all images for these auctions (already loaded via eager loading)
+            # Delete bids on this auction
+            Bid.query.filter_by(auction_id=seller_auction.id).delete()
+            # Delete invoices for this auction
+            Invoice.query.filter_by(auction_id=seller_auction.id).delete()
+            # Delete return requests for this auction
+            ReturnRequest.query.filter_by(auction_id=seller_auction.id).delete()
+            # Delete social shares for this auction
+            SocialShare.query.filter_by(auction_id=seller_auction.id).delete()
+            # Delete cashbacks for this auction
+            Cashback.query.filter_by(auction_id=seller_auction.id).delete()
+            # Delete all images for these auctions
             for image in seller_auction.images:
                 db.session.delete(image)
             # Delete the auction
             db.session.delete(seller_auction)
-        
-        # Step 3: Handle auctions where user is the winner (set winner_id to None)
+
+        # Step 8: Handle auctions where user is the winner (set winner_id to None)
         auctions_as_winner = Auction.query.filter_by(winner_id=user_id).all()
         for auction in auctions_as_winner:
             auction.winner_id = None
-        
+
         # Now delete the user
         db.session.delete(user)
         db.session.commit()

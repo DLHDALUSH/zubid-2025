@@ -102,7 +102,7 @@ const translations = {
             emailPlaceholder: 'your.email@example.com',
             passwordPlaceholder: 'Create a strong password',
             idNumberPlaceholder: 'Enter your national ID or passport number',
-            phonePlaceholder: '+1 234 567 8900',
+            phonePlaceholder: '07501234567',
             addressPlaceholder: 'Enter your full address (street, city, state, zip code)',
             usernameHint: 'This will be your display name',
             emailHint: 'We\'ll never share your email',
