@@ -1,73 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- ZUBID Light Theme Colors (Default) -->
-    <color name="bg_primary">#FFFFFF</color>
-    <color name="bg_secondary">#F5F5F5</color>
-    <color name="bg_card">#FFFFFF</color>
-    <color name="bg_card_hover">#F0F0F0</color>
-    <color name="bg_input">#F5F5F5</color>
-
-    <!-- Primary Brand Colors - Orange Theme -->
-    <color name="primary">#FF6600</color>
-    <color name="primary_dark">#E55A00</color>
-    <color name="primary_light">#FF8533</color>
-    <color name="secondary">#FBBB24</color>
-
-    <!-- Legacy coral (keeping for compatibility) -->
-    <color name="coral">#FF6600</color>
-    <color name="coral_dark">#E55A00</color>
-    <color name="coral_light">#FF8533</color>
-
-    <!-- Accent Colors -->
-    <color name="teal">#4ECDC4</color>
-    <color name="purple">#9B59B6</color>
-    <color name="blue">#3498DB</color>
-    <color name="green">#2ECC71</color>
-    <color name="yellow">#F1C40F</color>
-    <color name="price_bg">#F0F0F0</color>
-
-    <!-- Text Colors (Light Theme) -->
-    <color name="white">#FFFFFF</color>
-    <color name="text_primary">#1A1A1A</color>
-    <color name="text_secondary">#666666</color>
-    <color name="text_muted">#999999</color>
-
-    <!-- System Colors -->
+    <!-- ZUBID Brand Colors -->
     <color name="colorPrimary">#FF6600</color>
     <color name="colorPrimaryDark">#E55A00</color>
-    <color name="colorAccent">#FF6600</color>
-
-    <!-- Status Bar (Light) -->
-    <color name="statusBarColor">#FFFFFF</color>
-
+    <color name="colorAccent">#FF8533</color>
+    
+    <!-- Splash Screen -->
+    <color name="splashBackground">#FF6600</color>
+    <color name="splashText">#FFFFFF</color>
+    
+    <!-- Status Bar -->
+    <color name="statusBarColor">#FF6600</color>
+    
     <!-- General UI Colors -->
+    <color name="white">#FFFFFF</color>
     <color name="black">#000000</color>
     <color name="gray">#808080</color>
-    <color name="border_color">#E0E0E0</color>
-    <color name="divider">#E5E5E5</color>
-
-    <!-- Status Colors -->
-    <color name="success">#2ECC71</color>
-    <color name="warning">#F1C40F</color>
-    <color name="error">#E74C3C</color>
-    <color name="info">#3498DB</color>
-
-    <!-- Payment Method Colors -->
-    <color name="stripe_purple">#635BFF</color>
-    <color name="fib_blue">#0066CC</color>
-    <color name="cod_green">#27AE60</color>
-
-    <!-- Gradient Colors -->
-    <color name="gradient_start">#FF6600</color>
-    <color name="gradient_end">#FBBB24</color>
-
-    <!-- Chat Message Colors -->
-    <color name="message_sent_bg">#FF6600</color>
-    <color name="message_received_bg">#F0F0F0</color>
-    <color name="message_sent_text">#FFFFFF</color>
-    <color name="message_received_text">#1A1A1A</color>
-
-    <!-- Card Colors -->
-    <color name="card_background">#FFFFFF</color>
+    <color name="lightGray">#F5F5F5</color>
+    <color name="darkGray">#333333</color>
+    
+    <!-- Success/Error Colors -->
+    <color name="success">#28A745</color>
+    <color name="warning">#FFC107</color>
+    <color name="error">#DC3545</color>
+    <color name="info">#17A2B8</color>
 </resources>
 

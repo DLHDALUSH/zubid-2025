@@ -153,62 +153,28 @@ const UserAPI = {
             body: JSON.stringify(userData),
         });
     },
-
+    
     login: async (username, password) => {
         return apiRequest('/login', {
             method: 'POST',
             body: JSON.stringify({ username, password }),
         });
     },
-
+    
     logout: async () => {
         return apiRequest('/logout', {
             method: 'POST',
         });
     },
-
+    
     getProfile: async () => {
         return apiRequest('/user/profile');
     },
-
+    
     updateProfile: async (userData) => {
         return apiRequest('/user/profile', {
             method: 'PUT',
             body: JSON.stringify(userData),
-        });
-    },
-
-    changePassword: async (currentPassword, newPassword) => {
-        return apiRequest('/user/change-password', {
-            method: 'POST',
-            body: JSON.stringify({
-                current_password: currentPassword,
-                new_password: newPassword
-            }),
-        });
-    },
-
-    forgotPassword: async (identifier, type = 'email') => {
-        const body = type === 'phone' ? { phone: identifier } : { email: identifier };
-        return apiRequest('/forgot-password', {
-            method: 'POST',
-            body: JSON.stringify(body),
-        });
-    },
-
-    resetPassword: async (identifier, token, newPassword, type = 'email') => {
-        const body = {
-            token,
-            new_password: newPassword
-        };
-        if (type === 'phone') {
-            body.phone = identifier;
-        } else {
-            body.email = identifier;
-        }
-        return apiRequest('/reset-password', {
-            method: 'POST',
-            body: JSON.stringify(body),
         });
     },
 };

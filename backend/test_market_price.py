@@ -4,8 +4,6 @@
 import sys
 import os
 
-# Change to the backend directory so database path is resolved correctly
-os.chdir(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.dirname(__file__))
 
 from app import app, db
@@ -15,9 +13,6 @@ def test_market_price():
     """Test that market_price column exists"""
     with app.app_context():
         try:
-            # Ensure tables exist
-            db.create_all()
-
             inspector = inspect(db.engine)
             columns = [col['name'] for col in inspector.get_columns('auction')]
             

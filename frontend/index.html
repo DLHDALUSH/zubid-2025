@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ZUBID - Modern Auction Platform</title>
 
     <!-- PWA Meta Tags -->
@@ -33,39 +33,23 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css?v=20251208-light-theme">
+    <link rel="stylesheet" href="styles.css?v=20250116-enhanced-enhanced-fixed">
     <!-- Tesseract.js for OCR -->
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1/dist/tesseract.min.js"></script>
     <!-- Enhanced Utilities -->
-    <script src="utils.js?v=20251208"></script>
-    <script src="enhanced-utils.js?v=20251208"></script>
-    <script src="performance.js?v=20251208"></script>
-    <script src="accessibility.js?v=20251208"></script>
+    <script src="utils.js"></script>
+    <script src="enhanced-utils.js"></script>
+    <script src="performance.js"></script>
+    <script src="accessibility.js"></script>
     <!-- i18n Translation System -->
-    <script src="i18n.js?v=20251208"></script>
+    <script src="i18n.js"></script>
     <!-- Theme & Notifications -->
-    <script src="theme.js?v=20251208"></script>
-    <script src="notifications.js?v=20251208"></script>
+    <script src="theme.js"></script>
+    <script src="notifications.js"></script>
 </head>
 <body>
-    <!-- Mobile Header with Search -->
-    <header class="mobile-header">
-        <button class="hamburger-btn" id="hamburgerBtn">
-            <span></span>
-            <span></span>
-            <span></span>
-        </button>
-        <div class="header-search-wrapper">
-            <svg class="search-icon-header" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="11" cy="11" r="8"></circle>
-                <path d="m21 21-4.35-4.35"></path>
-            </svg>
-            <input type="text" class="header-search-input" placeholder="Browse categories">
-        </div>
-    </header>
-
-    <!-- Navigation (hidden on mobile) -->
-    <nav class="navbar desktop-only">
+    <!-- Navigation -->
+    <nav class="navbar">
         <div class="nav-container">
             <div class="nav-brand">
                 <a href="index.html">
@@ -385,80 +369,6 @@
                     <input type="password" id="loginPassword" data-i18n-placeholder="auth.password" placeholder="Password" required>
                 </div>
                 <button type="submit" class="btn btn-primary btn-block" data-i18n="auth.login">Login</button>
-                <p class="form-footer" style="text-align: center; margin-top: 1rem;">
-                    <a href="#" onclick="event.preventDefault(); closeModal('loginModal'); openModal('forgotPasswordModal');" class="link">Forgot Password?</a>
-                </p>
-            </form>
-        </div>
-    </div>
-
-    <!-- Forgot Password Modal -->
-    <div class="modal" id="forgotPasswordModal">
-        <div class="modal-content">
-            <span class="close" onclick="closeModal('forgotPasswordModal')">&times;</span>
-            <h2>🔑 Forgot Password</h2>
-            <p style="margin-bottom: 1rem; color: var(--text-secondary);">Enter your email address OR phone number to receive a reset code.</p>
-            <form id="forgotPasswordForm" onsubmit="handleForgotPassword(event)">
-                <div class="form-group">
-                    <label>Reset Method</label>
-                    <div class="reset-method-toggle" style="display: flex; gap: 1rem; margin-bottom: 1rem;">
-                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                            <input type="radio" name="resetMethod" value="email" checked onchange="toggleResetMethod('email')">
-                            📧 Email
-                        </label>
-                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                            <input type="radio" name="resetMethod" value="phone" onchange="toggleResetMethod('phone')">
-                            📱 Phone
-                        </label>
-                    </div>
-                </div>
-                <div class="form-group" id="forgotEmailGroup">
-                    <label>Email Address</label>
-                    <input type="email" id="forgotPasswordEmail" placeholder="your.email@example.com">
-                </div>
-                <div class="form-group" id="forgotPhoneGroup" style="display: none;">
-                    <label>Phone Number</label>
-                    <input type="tel" id="forgotPasswordPhone" placeholder="07501234567">
-                </div>
-                <div id="forgotPasswordError" class="error-message"></div>
-                <div id="forgotPasswordSuccess" class="success-message" style="display: none;"></div>
-                <button type="submit" class="btn btn-primary btn-block" id="forgotPasswordBtn">Send Reset Code</button>
-            </form>
-        </div>
-    </div>
-
-    <!-- Reset Password Modal -->
-    <div class="modal" id="resetPasswordModal">
-        <div class="modal-content">
-            <span class="close" onclick="closeModal('resetPasswordModal')">&times;</span>
-            <h2>🔐 Reset Password</h2>
-            <p style="margin-bottom: 1rem; color: var(--text-secondary);">Enter the reset code and your new password.</p>
-            <form id="resetPasswordForm" onsubmit="handleResetPassword(event)">
-                <div class="form-group" id="resetEmailGroup">
-                    <label>Email Address</label>
-                    <input type="email" id="resetPasswordEmail" placeholder="your.email@example.com">
-                </div>
-                <div class="form-group" id="resetPhoneGroup" style="display: none;">
-                    <label>Phone Number</label>
-                    <input type="tel" id="resetPasswordPhone" placeholder="07501234567">
-                </div>
-                <input type="hidden" id="resetIdentifierType" value="email">
-                <div class="form-group">
-                    <label>Reset Code</label>
-                    <input type="text" id="resetPasswordToken" required placeholder="Enter 6-digit code" maxlength="6">
-                </div>
-                <div class="form-group">
-                    <label>New Password</label>
-                    <input type="password" id="resetNewPassword" required autocomplete="new-password">
-                    <small>Min 8 characters, 1 uppercase, 1 lowercase, 1 number</small>
-                </div>
-                <div class="form-group">
-                    <label>Confirm New Password</label>
-                    <input type="password" id="resetConfirmPassword" required autocomplete="new-password">
-                </div>
-                <div id="resetPasswordError" class="error-message"></div>
-                <div id="resetPasswordSuccess" class="success-message" style="display: none;"></div>
-                <button type="submit" class="btn btn-primary btn-block">Reset Password</button>
             </form>
         </div>
     </div>
@@ -554,15 +464,15 @@
                             </div>
 
                             <div class="form-group">
-                                <label data-i18n="register.email">Email Address <span class="optional">(Optional)</span></label>
+                                <label data-i18n="register.email">Email Address <span class="required">*</span></label>
                                 <div class="input-wrapper modern-input">
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <rect x="2" y="4" width="20" height="16" rx="2"></rect>
                                         <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
                                     </svg>
-                                    <input type="email" id="registerEmail" data-i18n-placeholder="register.emailPlaceholder" placeholder="your.email@example.com">
+                                    <input type="email" id="registerEmail" data-i18n-placeholder="register.emailPlaceholder" placeholder="your.email@example.com" required>
                                 </div>
-                                <small data-i18n="register.emailHint">We'll never share your email (used for password recovery)</small>
+                                <small data-i18n="register.emailHint">We'll never share your email</small>
                             </div>
 
                             <div class="form-group">
@@ -649,26 +559,26 @@
                             </div>
 
                             <div class="form-group">
-                                <label data-i18n="register.phone">Phone Number <span class="optional">(Optional)</span></label>
+                                <label data-i18n="register.phone">Phone Number <span class="required">*</span></label>
                                 <div class="input-wrapper modern-input">
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
                                     </svg>
-                                    <input type="tel" id="registerPhone" data-i18n-placeholder="register.phonePlaceholder" placeholder="07501234567">
+                                    <input type="tel" id="registerPhone" data-i18n-placeholder="register.phonePlaceholder" placeholder="+1 234 567 8900" required>
                                 </div>
                                 <small data-i18n="register.phoneHint">We'll use this to contact you about your auctions</small>
                             </div>
 
                             <div class="form-group">
-                                <label data-i18n="register.address">Address <span class="optional">(Optional)</span></label>
+                                <label data-i18n="register.address">Address <span class="required">*</span></label>
                                 <div class="input-wrapper modern-input">
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
                                         <circle cx="12" cy="10" r="3"></circle>
                                     </svg>
-                                    <textarea id="registerAddress" rows="3" data-i18n-placeholder="register.addressPlaceholder" placeholder="Enter your full address (street, city, state, zip code)"></textarea>
+                                    <textarea id="registerAddress" rows="3" data-i18n-placeholder="register.addressPlaceholder" placeholder="Enter your full address (street, city, state, zip code)" required></textarea>
                                 </div>
-                                <small data-i18n="register.addressHint">Can be added later in your profile</small>
+                                <small data-i18n="register.addressHint">Required for auction transactions and shipping</small>
                             </div>
                         </div>
 
@@ -722,9 +632,9 @@
         </div>
     </div>
 
-    <script src="config.production.js?v=20251208"></script>
-    <script src="api.js?v=20251208"></script>
-    <script src="app.js?v=20251208"></script>
+    <script src="config.production.js"></script>
+    <script src="api.js"></script>
+    <script src="app.js"></script>
 
     <!-- PWA Service Worker Registration -->
     <script>
@@ -791,42 +701,28 @@
         });
     </script>
 
-    <!-- Mobile Bottom Navigation - Matching Reference Design -->
+    <!-- Premium Mobile Bottom Navigation -->
     <nav class="mobile-bottom-nav" id="mobileBottomNav">
         <div class="mobile-bottom-nav-container">
-            <a href="index.html" class="mobile-nav-item active" data-page="home">
-                <svg class="mobile-nav-icon-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
-                </svg>
+            <a href="index.html" class="mobile-nav-item active ripple" data-page="home">
+                <span class="mobile-nav-icon">🏠</span>
                 <span class="mobile-nav-label">Home</span>
             </a>
-            <a href="my-bids.html" class="mobile-nav-item" data-page="bids">
-                <svg class="mobile-nav-icon-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
-                </svg>
-                <span class="mobile-nav-label">Bids</span>
+            <a href="auctions.html" class="mobile-nav-item ripple" data-page="auctions">
+                <span class="mobile-nav-icon">🔨</span>
+                <span class="mobile-nav-label">Auctions</span>
             </a>
-            <a href="#" class="mobile-nav-item" data-page="wishlist" id="wishlistBtn">
-                <svg class="mobile-nav-icon-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                </svg>
-                <span class="mobile-nav-label">Wishlist</span>
+            <a href="#" class="mobile-nav-item mobile-nav-action ripple" id="mobileSearchBtn">
+                <span class="mobile-nav-icon">🔍</span>
             </a>
-            <a href="payments.html" class="mobile-nav-item" data-page="wons">
-                <svg class="mobile-nav-icon-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <polyline points="16 12 12 8 8 12"></polyline>
-                    <line x1="12" y1="16" x2="12" y2="8"></line>
-                </svg>
-                <span class="mobile-nav-label">Wons</span>
+            <a href="profile.html" class="mobile-nav-item ripple" data-page="profile">
+                <span class="mobile-nav-icon">👤</span>
+                <span class="mobile-nav-label">Profile</span>
+                <span class="mobile-nav-badge" id="profileBadge" style="display: none;">1</span>
             </a>
-            <a href="#" class="mobile-nav-item" data-page="notification" id="notificationBtn">
-                <svg class="mobile-nav-icon-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                    <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-                </svg>
-                <span class="mobile-nav-label">Notification</span>
+            <a href="#" class="mobile-nav-item ripple" id="mobileMenuBtn">
+                <span class="mobile-nav-icon">☰</span>
+                <span class="mobile-nav-label">Menu</span>
             </a>
         </div>
     </nav>

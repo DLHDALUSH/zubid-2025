@@ -182,38 +182,13 @@ def validate_email(email):
     return bool(re.match(pattern, email.strip()))
 
 def validate_phone(phone):
-    """Validate phone number format - supports Iraqi phone numbers"""
+    """Validate phone number format"""
     if not phone or not isinstance(phone, str):
         return False
-    # Remove common separators and spaces
+    # Remove common separators
     cleaned = re.sub(r'[\s\-\(\)]', '', phone)
-
-    # Iraqi phone number patterns:
-    # +964 7XX XXX XXXX (with country code)
-    # 00964 7XX XXX XXXX (with international prefix)
-    # 07XX XXX XXXX (local format with leading 0)
-    # 7XX XXX XXXX (without leading 0)
-
-    # Remove country code if present
-    if cleaned.startswith('+964'):
-        cleaned = cleaned[4:]
-    elif cleaned.startswith('00964'):
-        cleaned = cleaned[5:]
-    elif cleaned.startswith('964'):
-        cleaned = cleaned[3:]
-
-    # Remove leading 0 if present
-    if cleaned.startswith('0'):
-        cleaned = cleaned[1:]
-
-    # Iraqi mobile numbers should start with 7 and be 10 digits total
-    # Valid prefixes: 750, 751, 770, 771, 780, 781, 782, 783, 784, 785, 790, etc.
-    if cleaned.startswith('7') and len(cleaned) == 10 and cleaned.isdigit():
-        return True
-
-    # Also accept general international format (7-15 digits) for flexibility
-    cleaned_full = re.sub(r'[\s\-\(\)\+]', '', phone)
-    return cleaned_full.isdigit() and 7 <= len(cleaned_full) <= 15
+    # Check if it's all digits and reasonable length
+    return cleaned.isdigit() and 8 <= len(cleaned) <= 20
 
 def sanitize_filename(filename):
     """Sanitize filename to prevent path traversal"""
@@ -313,14 +288,14 @@ setup_logging()
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=True)  # Optional
+    email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
     id_number = db.Column(db.String(50), unique=True, nullable=False)  # National ID or Passport
     birth_date = db.Column(db.Date)  # Date of birth
     biometric_data = db.Column(db.Text, nullable=True)  # Deprecated: kept for backward compatibility
     profile_photo = db.Column(db.String(500), nullable=True)  # Profile photo URL
-    address = db.Column(db.String(255), nullable=True)  # Optional
-    phone = db.Column(db.String(20), nullable=True)  # Optional
+    address = db.Column(db.String(255))
+    phone = db.Column(db.String(20))
     role = db.Column(db.String(20), default='user')  # user, admin
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
@@ -955,16 +930,17 @@ def register():
         username = sanitize_string(form_data.get('username', ''), max_length=80)
         if not username:
             return jsonify({'error': 'Username is required'}), 400
-
-        # Email is optional - validate format only if provided
+        
         email = sanitize_string(form_data.get('email', ''), max_length=255).lower()
-        if email and not validate_email(email):
+        if not email:
+            return jsonify({'error': 'Email is required'}), 400
+        if not validate_email(email):
             return jsonify({'error': 'Invalid email format'}), 400
-
+        
         password = form_data.get('password', '')
         if not password:
             return jsonify({'error': 'Password is required'}), 400
-
+        
         # Validate password meets standard requirements
         password_errors = []
         if len(password) < 8:
@@ -977,33 +953,35 @@ def register():
             password_errors.append('Password must contain at least one number')
         if not any(c in '!@#$%^&*()_+-=[]{}|;:,.<>?' for c in password):
             password_errors.append('Password must contain at least one special character')
-
+        
         if password_errors:
             return jsonify({'error': 'Password does not meet requirements: ' + '; '.join(password_errors)}), 400
-
+        
         id_number = sanitize_string(form_data.get('id_number', ''), max_length=50)
         if not id_number:
             return jsonify({'error': 'ID Number is required'}), 400
-
+        
         if not form_data.get('birth_date'):
             return jsonify({'error': 'Date of Birth is required'}), 400
-
-        # Phone is optional - validate format only if provided
+        
         phone = sanitize_string(form_data.get('phone', ''), max_length=20)
-        if phone and not validate_phone(phone):
+        if not phone:
+            return jsonify({'error': 'Phone number is required'}), 400
+        if not validate_phone(phone):
             return jsonify({'error': 'Invalid phone number format'}), 400
-
-        # Address is optional - validate length only if provided
+        
         address = sanitize_string(form_data.get('address', ''), max_length=255)
-        if address and len(address) < 5:
+        if not address:
+            return jsonify({'error': 'Address is required'}), 400
+        if len(address) < 5:
             return jsonify({'error': 'Address must be at least 5 characters long'}), 400
-
+        
         # Check if username already exists
         if User.query.filter_by(username=username).first():
             return jsonify({'error': 'Username already exists'}), 400
-
-        # Check if email already exists (only if email provided)
-        if email and User.query.filter_by(email=email).first():
+        
+        # Check if email already exists
+        if User.query.filter_by(email=email).first():
             return jsonify({'error': 'Email already exists'}), 400
         
         # Check if ID number already exists
@@ -1164,212 +1142,6 @@ def login():
 def logout():
     session.pop('user_id', None)
     return jsonify({'message': 'Logout successful'}), 200
-
-# Password Reset Token storage (in production, use Redis or database)
-password_reset_tokens = {}
-
-@app.route('/api/user/change-password', methods=['POST'])
-@login_required
-@limiter.limit("5 per minute")
-def change_password():
-    """Change password for logged-in user"""
-    try:
-        if not request.json:
-            return jsonify({'error': 'No JSON data received'}), 400
-
-        data = request.json
-        current_password = data.get('current_password')
-        new_password = data.get('new_password')
-
-        if not current_password or not new_password:
-            return jsonify({'error': 'Current password and new password are required'}), 400
-
-        user = User.query.get(session['user_id'])
-        if not user:
-            return jsonify({'error': 'User not found'}), 404
-
-        # Verify current password
-        if not check_password_hash(user.password_hash, current_password):
-            return jsonify({'error': 'Current password is incorrect'}), 401
-
-        # Validate new password strength
-        password_errors = []
-        if len(new_password) < 8:
-            password_errors.append('Password must be at least 8 characters')
-        if not any(c.isupper() for c in new_password):
-            password_errors.append('Password must contain at least one uppercase letter')
-        if not any(c.islower() for c in new_password):
-            password_errors.append('Password must contain at least one lowercase letter')
-        if not any(c.isdigit() for c in new_password):
-            password_errors.append('Password must contain at least one number')
-
-        if password_errors:
-            return jsonify({'error': 'Password does not meet requirements: ' + '; '.join(password_errors)}), 400
-
-        # Update password
-        user.password_hash = generate_password_hash(new_password)
-        db.session.commit()
-
-        app.logger.info(f"Password changed for user: {user.username}")
-        return jsonify({'message': 'Password changed successfully'}), 200
-
-    except Exception as e:
-        db.session.rollback()
-        app.logger.error(f"Change password error: {str(e)}")
-        return jsonify({'error': 'Failed to change password'}), 500
-
-@app.route('/api/forgot-password', methods=['POST'])
-@limiter.limit("3 per minute")
-def forgot_password():
-    """Request password reset - supports both email and phone number"""
-    try:
-        if not request.json:
-            return jsonify({'error': 'No JSON data received'}), 400
-
-        email = request.json.get('email', '').strip().lower()
-        phone = request.json.get('phone', '').strip()
-
-        # Must provide either email or phone
-        if not email and not phone:
-            return jsonify({'error': 'Email or phone number is required'}), 400
-
-        user = None
-        identifier = None
-        identifier_type = None
-
-        # Try to find user by email first, then by phone
-        if email:
-            user = User.query.filter_by(email=email).first()
-            identifier = email
-            identifier_type = 'email'
-
-        if not user and phone:
-            # Clean phone number for comparison
-            phone_cleaned = re.sub(r'[\s\-\(\)\+]', '', phone)
-            # Try different phone formats
-            users = User.query.filter(User.phone.isnot(None)).all()
-            for u in users:
-                if u.phone:
-                    u_phone_cleaned = re.sub(r'[\s\-\(\)\+]', '', u.phone)
-                    if u_phone_cleaned == phone_cleaned or u_phone_cleaned.endswith(phone_cleaned[-10:]):
-                        user = u
-                        identifier = phone
-                        identifier_type = 'phone'
-                        break
-
-        # Always return success to prevent enumeration
-        if not user:
-            app.logger.warning(f"Password reset requested for non-existent identifier: {email or phone}")
-            return jsonify({
-                'message': 'If an account with that email/phone exists, a reset code has been generated',
-                'identifier_type': identifier_type or 'email'
-            }), 200
-
-        # Generate reset token (6-digit code for simplicity)
-        import random
-        reset_token = ''.join([str(random.randint(0, 9)) for _ in range(6)])
-
-        # Store token with expiry (15 minutes) - use user_id as key for flexibility
-        token_key = f"user_{user.id}"
-        password_reset_tokens[token_key] = {
-            'token': reset_token,
-            'user_id': user.id,
-            'identifier': identifier,
-            'identifier_type': identifier_type,
-            'expires': datetime.now(timezone.utc) + timedelta(minutes=15)
-        }
-
-        # In production, send email/SMS here
-        app.logger.info(f"Password reset token for {identifier} ({identifier_type}): {reset_token}")
-
-        # Return token in response for testing (REMOVE IN PRODUCTION - send via email/SMS instead)
-        return jsonify({
-            'message': f'Reset code has been generated for your {identifier_type}',
-            'reset_token': reset_token,  # REMOVE THIS LINE IN PRODUCTION
-            'identifier_type': identifier_type,
-            'expires_in': '15 minutes'
-        }), 200
-
-    except Exception as e:
-        app.logger.error(f"Forgot password error: {str(e)}")
-        return jsonify({'error': 'Failed to process request'}), 500
-
-@app.route('/api/reset-password', methods=['POST'])
-@limiter.limit("5 per minute")
-def reset_password():
-    """Reset password using token - supports both email and phone"""
-    try:
-        if not request.json:
-            return jsonify({'error': 'No JSON data received'}), 400
-
-        data = request.json
-        email = data.get('email', '').strip().lower()
-        phone = data.get('phone', '').strip()
-        token = data.get('token', '').strip()
-        new_password = data.get('new_password', '')
-
-        if (not email and not phone) or not token or not new_password:
-            return jsonify({'error': 'Email/phone, token, and new password are required'}), 400
-
-        # Find the token by checking all stored tokens
-        stored_data = None
-        token_key = None
-
-        for key, data_item in password_reset_tokens.items():
-            if data_item['token'] == token:
-                # Verify identifier matches
-                if email and data_item.get('identifier_type') == 'email' and data_item.get('identifier') == email:
-                    stored_data = data_item
-                    token_key = key
-                    break
-                elif phone:
-                    phone_cleaned = re.sub(r'[\s\-\(\)\+]', '', phone)
-                    stored_identifier = data_item.get('identifier', '')
-                    stored_cleaned = re.sub(r'[\s\-\(\)\+]', '', stored_identifier)
-                    if stored_cleaned == phone_cleaned or stored_cleaned.endswith(phone_cleaned[-10:]):
-                        stored_data = data_item
-                        token_key = key
-                        break
-
-        if not stored_data:
-            return jsonify({'error': 'Invalid or expired reset token'}), 400
-
-        if datetime.now(timezone.utc) > stored_data['expires']:
-            del password_reset_tokens[token_key]
-            return jsonify({'error': 'Reset token has expired'}), 400
-
-        # Validate new password strength
-        password_errors = []
-        if len(new_password) < 8:
-            password_errors.append('Password must be at least 8 characters')
-        if not any(c.isupper() for c in new_password):
-            password_errors.append('Password must contain at least one uppercase letter')
-        if not any(c.islower() for c in new_password):
-            password_errors.append('Password must contain at least one lowercase letter')
-        if not any(c.isdigit() for c in new_password):
-            password_errors.append('Password must contain at least one number')
-
-        if password_errors:
-            return jsonify({'error': 'Password does not meet requirements: ' + '; '.join(password_errors)}), 400
-
-        # Update password
-        user = User.query.get(stored_data['user_id'])
-        if not user:
-            return jsonify({'error': 'User not found'}), 404
-
-        user.password_hash = generate_password_hash(new_password)
-        db.session.commit()
-
-        # Remove used token
-        del password_reset_tokens[token_key]
-
-        app.logger.info(f"Password reset successful for user: {user.username}")
-        return jsonify({'message': 'Password reset successfully. You can now login with your new password.'}), 200
-
-    except Exception as e:
-        db.session.rollback()
-        app.logger.error(f"Reset password error: {str(e)}")
-        return jsonify({'error': 'Failed to reset password'}), 500
 
 @app.route('/api/user/profile', methods=['GET'])
 @login_required
@@ -2708,56 +2480,35 @@ def delete_user(user_id):
         user = User.query.get(user_id)
         if not user:
             return jsonify({'error': 'User not found'}), 404
-
+        
         # Prevent deleting admin users
         if user.role == 'admin':
             return jsonify({'error': 'Cannot delete admin users'}), 403
-
-        # Step 1: Delete user preferences
-        UserPreference.query.filter_by(user_id=user_id).delete()
-
-        # Step 2: Delete cashbacks
-        Cashback.query.filter_by(user_id=user_id).delete()
-
-        # Step 3: Delete social shares
-        SocialShare.query.filter_by(user_id=user_id).delete()
-
-        # Step 4: Delete return requests
-        ReturnRequest.query.filter_by(user_id=user_id).delete()
-
-        # Step 5: Delete invoices
-        Invoice.query.filter_by(user_id=user_id).delete()
-
-        # Step 6: Delete all bids made by this user (must be done before auctions)
-        Bid.query.filter_by(user_id=user_id).delete()
-
-        # Step 7: Handle auctions where user is the seller
-        # First delete bids on those auctions, then images, then auctions
+        
+        # Step 1: Delete all bids made by this user (must be done first to avoid foreign key constraint)
+        # This includes bids on auctions they created and bids on other auctions
+        bids = Bid.query.filter_by(user_id=user_id).all()
+        for bid in bids:
+            db.session.delete(bid)
+        
+        # Step 2: Handle auctions where user is the seller
+        # Delete images and auctions they created
+        # Optimize: Use eager loading to avoid N+1 queries
         auctions_as_seller = Auction.query.filter_by(seller_id=user_id).options(
             selectinload(Auction.images)
         ).all()
         for seller_auction in auctions_as_seller:
-            # Delete bids on this auction
-            Bid.query.filter_by(auction_id=seller_auction.id).delete()
-            # Delete invoices for this auction
-            Invoice.query.filter_by(auction_id=seller_auction.id).delete()
-            # Delete return requests for this auction
-            ReturnRequest.query.filter_by(auction_id=seller_auction.id).delete()
-            # Delete social shares for this auction
-            SocialShare.query.filter_by(auction_id=seller_auction.id).delete()
-            # Delete cashbacks for this auction
-            Cashback.query.filter_by(auction_id=seller_auction.id).delete()
-            # Delete all images for these auctions
+            # Delete all images for these auctions (already loaded via eager loading)
             for image in seller_auction.images:
                 db.session.delete(image)
             # Delete the auction
             db.session.delete(seller_auction)
-
-        # Step 8: Handle auctions where user is the winner (set winner_id to None)
+        
+        # Step 3: Handle auctions where user is the winner (set winner_id to None)
         auctions_as_winner = Auction.query.filter_by(winner_id=user_id).all()
         for auction in auctions_as_winner:
             auction.winner_id = None
-
+        
         # Now delete the user
         db.session.delete(user)
         db.session.commit()
@@ -4514,11 +4265,6 @@ def update_menu_item(menu_id):
         db.session.rollback()
         app.logger.error(f'Error updating menu item: {str(e)}')
         return jsonify({'error': f'Failed to update menu item: {str(e)}'}), 500
-
-# Serve favicon.ico
-@app.route('/favicon.ico')
-def serve_favicon():
-    return send_from_directory(os.path.join(frontend_dir, 'icons'), 'icon-96x96.png', mimetype='image/png')
 
 # Serve frontend static files (for same-origin requests to fix cookie issues)
 @app.route('/')
