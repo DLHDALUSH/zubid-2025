@@ -1168,6 +1168,165 @@ def logout():
     session.pop('user_id', None)
     return jsonify({'message': 'Logout successful'}), 200
 
+# Password Reset Token storage (in production, use Redis or database)
+password_reset_tokens = {}
+
+@app.route('/api/user/change-password', methods=['POST'])
+@login_required
+@limiter.limit("5 per minute")
+def change_password():
+    """Change password for logged-in user"""
+    try:
+        if not request.json:
+            return jsonify({'error': 'No JSON data received'}), 400
+
+        data = request.json
+        current_password = data.get('current_password')
+        new_password = data.get('new_password')
+
+        if not current_password or not new_password:
+            return jsonify({'error': 'Current password and new password are required'}), 400
+
+        user = User.query.get(session['user_id'])
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+
+        # Verify current password
+        if not check_password_hash(user.password_hash, current_password):
+            return jsonify({'error': 'Current password is incorrect'}), 401
+
+        # Validate new password strength
+        password_errors = []
+        if len(new_password) < 8:
+            password_errors.append('Password must be at least 8 characters')
+        if not any(c.isupper() for c in new_password):
+            password_errors.append('Password must contain at least one uppercase letter')
+        if not any(c.islower() for c in new_password):
+            password_errors.append('Password must contain at least one lowercase letter')
+        if not any(c.isdigit() for c in new_password):
+            password_errors.append('Password must contain at least one number')
+
+        if password_errors:
+            return jsonify({'error': 'Password does not meet requirements: ' + '; '.join(password_errors)}), 400
+
+        # Update password
+        user.password_hash = generate_password_hash(new_password)
+        db.session.commit()
+
+        app.logger.info(f"Password changed for user: {user.username}")
+        return jsonify({'message': 'Password changed successfully'}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f"Change password error: {str(e)}")
+        return jsonify({'error': 'Failed to change password'}), 500
+
+@app.route('/api/forgot-password', methods=['POST'])
+@limiter.limit("3 per minute")
+def forgot_password():
+    """Request password reset - sends reset token"""
+    try:
+        if not request.json:
+            return jsonify({'error': 'No JSON data received'}), 400
+
+        email = request.json.get('email', '').strip().lower()
+        if not email:
+            return jsonify({'error': 'Email is required'}), 400
+
+        user = User.query.filter_by(email=email).first()
+
+        # Always return success to prevent email enumeration
+        if not user:
+            app.logger.warning(f"Password reset requested for non-existent email: {email}")
+            return jsonify({'message': 'If an account with that email exists, a reset code has been generated'}), 200
+
+        # Generate reset token (6-digit code for simplicity)
+        import random
+        reset_token = ''.join([str(random.randint(0, 9)) for _ in range(6)])
+
+        # Store token with expiry (15 minutes)
+        password_reset_tokens[email] = {
+            'token': reset_token,
+            'user_id': user.id,
+            'expires': datetime.now(timezone.utc) + timedelta(minutes=15)
+        }
+
+        # In production, send email here
+        # For now, log it (REMOVE IN PRODUCTION)
+        app.logger.info(f"Password reset token for {email}: {reset_token}")
+
+        # Return token in response for testing (REMOVE IN PRODUCTION - send via email instead)
+        return jsonify({
+            'message': 'If an account with that email exists, a reset code has been generated',
+            'reset_token': reset_token,  # REMOVE THIS LINE IN PRODUCTION
+            'expires_in': '15 minutes'
+        }), 200
+
+    except Exception as e:
+        app.logger.error(f"Forgot password error: {str(e)}")
+        return jsonify({'error': 'Failed to process request'}), 500
+
+@app.route('/api/reset-password', methods=['POST'])
+@limiter.limit("5 per minute")
+def reset_password():
+    """Reset password using token"""
+    try:
+        if not request.json:
+            return jsonify({'error': 'No JSON data received'}), 400
+
+        data = request.json
+        email = data.get('email', '').strip().lower()
+        token = data.get('token', '').strip()
+        new_password = data.get('new_password', '')
+
+        if not email or not token or not new_password:
+            return jsonify({'error': 'Email, token, and new password are required'}), 400
+
+        # Check token
+        stored_data = password_reset_tokens.get(email)
+        if not stored_data:
+            return jsonify({'error': 'Invalid or expired reset token'}), 400
+
+        if stored_data['token'] != token:
+            return jsonify({'error': 'Invalid reset token'}), 400
+
+        if datetime.now(timezone.utc) > stored_data['expires']:
+            del password_reset_tokens[email]
+            return jsonify({'error': 'Reset token has expired'}), 400
+
+        # Validate new password strength
+        password_errors = []
+        if len(new_password) < 8:
+            password_errors.append('Password must be at least 8 characters')
+        if not any(c.isupper() for c in new_password):
+            password_errors.append('Password must contain at least one uppercase letter')
+        if not any(c.islower() for c in new_password):
+            password_errors.append('Password must contain at least one lowercase letter')
+        if not any(c.isdigit() for c in new_password):
+            password_errors.append('Password must contain at least one number')
+
+        if password_errors:
+            return jsonify({'error': 'Password does not meet requirements: ' + '; '.join(password_errors)}), 400
+
+        # Update password
+        user = User.query.get(stored_data['user_id'])
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+
+        user.password_hash = generate_password_hash(new_password)
+        db.session.commit()
+
+        # Remove used token
+        del password_reset_tokens[email]
+
+        app.logger.info(f"Password reset successful for user: {user.username}")
+        return jsonify({'message': 'Password reset successfully. You can now login with your new password.'}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f"Reset password error: {str(e)}")
+        return jsonify({'error': 'Failed to reset password'}), 500
+
 @app.route('/api/user/profile', methods=['GET'])
 @login_required
 def get_profile():

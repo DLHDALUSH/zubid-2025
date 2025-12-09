@@ -3266,3 +3266,132 @@ window.closeModalAndReset = function(modalId) {
         originalCloseModalAndReset(modalId);
     }
 };
+
+// ==========================================
+// FORGOT PASSWORD FUNCTIONALITY
+// ==========================================
+
+async function handleForgotPassword(event) {
+    event.preventDefault();
+
+    const email = document.getElementById('forgotPasswordEmail').value;
+    const errorDiv = document.getElementById('forgotPasswordError');
+    const successDiv = document.getElementById('forgotPasswordSuccess');
+    const submitBtn = document.getElementById('forgotPasswordBtn');
+
+    // Reset messages
+    if (errorDiv) {
+        errorDiv.textContent = '';
+        errorDiv.style.display = 'none';
+    }
+    if (successDiv) {
+        successDiv.style.display = 'none';
+    }
+
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Sending...';
+    }
+
+    try {
+        const response = await UserAPI.forgotPassword(email);
+        if (successDiv) {
+            successDiv.innerHTML = `
+                Reset code sent! Check your email.<br>
+                <small style="color: var(--text-secondary);">
+                    For testing, your code is: <strong>${response.reset_token || 'Check server logs'}</strong>
+                </small>
+            `;
+            successDiv.style.display = 'block';
+        }
+
+        // Store email for reset form
+        sessionStorage.setItem('resetEmail', email);
+
+        // Show option to enter code
+        setTimeout(() => {
+            if (confirm('Do you have the reset code? Click OK to enter it now.')) {
+                closeModal('forgotPasswordModal');
+                const resetEmailInput = document.getElementById('resetPasswordEmail');
+                if (resetEmailInput) {
+                    resetEmailInput.value = email;
+                }
+                openModal('resetPasswordModal');
+            }
+        }, 1000);
+
+    } catch (error) {
+        if (errorDiv) {
+            errorDiv.textContent = error.message || 'Failed to send reset code';
+            errorDiv.style.display = 'block';
+        }
+    } finally {
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Send Reset Code';
+        }
+    }
+}
+
+async function handleResetPassword(event) {
+    event.preventDefault();
+
+    const email = document.getElementById('resetPasswordEmail').value;
+    const token = document.getElementById('resetPasswordToken').value;
+    const newPassword = document.getElementById('resetNewPassword').value;
+    const confirmPassword = document.getElementById('resetConfirmPassword').value;
+    const errorDiv = document.getElementById('resetPasswordError');
+    const successDiv = document.getElementById('resetPasswordSuccess');
+
+    // Reset messages
+    if (errorDiv) {
+        errorDiv.textContent = '';
+        errorDiv.style.display = 'none';
+    }
+    if (successDiv) {
+        successDiv.style.display = 'none';
+    }
+
+    // Validate passwords match
+    if (newPassword !== confirmPassword) {
+        if (errorDiv) {
+            errorDiv.textContent = 'Passwords do not match';
+            errorDiv.style.display = 'block';
+        }
+        return;
+    }
+
+    // Validate password strength
+    if (newPassword.length < 8) {
+        if (errorDiv) {
+            errorDiv.textContent = 'Password must be at least 8 characters';
+            errorDiv.style.display = 'block';
+        }
+        return;
+    }
+
+    try {
+        await UserAPI.resetPassword(email, token, newPassword);
+        if (successDiv) {
+            successDiv.textContent = 'Password reset successfully! You can now login with your new password.';
+            successDiv.style.display = 'block';
+        }
+        showToast('Password reset successfully!', 'success');
+
+        // Close modal and open login after delay
+        setTimeout(() => {
+            closeModal('resetPasswordModal');
+            openModal('loginModal');
+        }, 2000);
+
+    } catch (error) {
+        if (errorDiv) {
+            errorDiv.textContent = error.message || 'Failed to reset password';
+            errorDiv.style.display = 'block';
+        }
+    }
+}
+
+// Make functions globally available
+window.handleForgotPassword = handleForgotPassword;
+window.handleResetPassword = handleResetPassword;

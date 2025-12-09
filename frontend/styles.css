@@ -3405,6 +3405,17 @@ body.language-changing {
     font-weight: 500;
 }
 
+.success-message {
+    color: var(--success-color, #10b981);
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
 .bidding-closed {
     text-align: center;
     padding: 3rem;

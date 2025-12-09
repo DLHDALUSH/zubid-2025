@@ -385,6 +385,58 @@
                     <input type="password" id="loginPassword" data-i18n-placeholder="auth.password" placeholder="Password" required>
                 </div>
                 <button type="submit" class="btn btn-primary btn-block" data-i18n="auth.login">Login</button>
+                <p class="form-footer" style="text-align: center; margin-top: 1rem;">
+                    <a href="#" onclick="event.preventDefault(); closeModal('loginModal'); openModal('forgotPasswordModal');" class="link">Forgot Password?</a>
+                </p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Forgot Password Modal -->
+    <div class="modal" id="forgotPasswordModal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('forgotPasswordModal')">&times;</span>
+            <h2>🔑 Forgot Password</h2>
+            <p style="margin-bottom: 1rem; color: var(--text-secondary);">Enter your email address and we'll send you a reset code.</p>
+            <form id="forgotPasswordForm" onsubmit="handleForgotPassword(event)">
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" id="forgotPasswordEmail" required placeholder="your.email@example.com">
+                </div>
+                <div id="forgotPasswordError" class="error-message"></div>
+                <div id="forgotPasswordSuccess" class="success-message" style="display: none;"></div>
+                <button type="submit" class="btn btn-primary btn-block" id="forgotPasswordBtn">Send Reset Code</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Reset Password Modal -->
+    <div class="modal" id="resetPasswordModal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('resetPasswordModal')">&times;</span>
+            <h2>🔐 Reset Password</h2>
+            <p style="margin-bottom: 1rem; color: var(--text-secondary);">Enter the reset code sent to your email and your new password.</p>
+            <form id="resetPasswordForm" onsubmit="handleResetPassword(event)">
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" id="resetPasswordEmail" required placeholder="your.email@example.com">
+                </div>
+                <div class="form-group">
+                    <label>Reset Code</label>
+                    <input type="text" id="resetPasswordToken" required placeholder="Enter 6-digit code" maxlength="6">
+                </div>
+                <div class="form-group">
+                    <label>New Password</label>
+                    <input type="password" id="resetNewPassword" required autocomplete="new-password">
+                    <small>Min 8 characters, 1 uppercase, 1 lowercase, 1 number</small>
+                </div>
+                <div class="form-group">
+                    <label>Confirm New Password</label>
+                    <input type="password" id="resetConfirmPassword" required autocomplete="new-password">
+                </div>
+                <div id="resetPasswordError" class="error-message"></div>
+                <div id="resetPasswordSuccess" class="success-message" style="display: none;"></div>
+                <button type="submit" class="btn btn-primary btn-block">Reset Password</button>
             </form>
         </div>
     </div>
