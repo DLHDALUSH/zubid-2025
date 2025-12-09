@@ -397,11 +397,28 @@
         <div class="modal-content">
             <span class="close" onclick="closeModal('forgotPasswordModal')">&times;</span>
             <h2>🔑 Forgot Password</h2>
-            <p style="margin-bottom: 1rem; color: var(--text-secondary);">Enter your email address and we'll send you a reset code.</p>
+            <p style="margin-bottom: 1rem; color: var(--text-secondary);">Enter your email address OR phone number to receive a reset code.</p>
             <form id="forgotPasswordForm" onsubmit="handleForgotPassword(event)">
                 <div class="form-group">
+                    <label>Reset Method</label>
+                    <div class="reset-method-toggle" style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                            <input type="radio" name="resetMethod" value="email" checked onchange="toggleResetMethod('email')">
+                            📧 Email
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                            <input type="radio" name="resetMethod" value="phone" onchange="toggleResetMethod('phone')">
+                            📱 Phone
+                        </label>
+                    </div>
+                </div>
+                <div class="form-group" id="forgotEmailGroup">
                     <label>Email Address</label>
-                    <input type="email" id="forgotPasswordEmail" required placeholder="your.email@example.com">
+                    <input type="email" id="forgotPasswordEmail" placeholder="your.email@example.com">
+                </div>
+                <div class="form-group" id="forgotPhoneGroup" style="display: none;">
+                    <label>Phone Number</label>
+                    <input type="tel" id="forgotPasswordPhone" placeholder="07501234567">
                 </div>
                 <div id="forgotPasswordError" class="error-message"></div>
                 <div id="forgotPasswordSuccess" class="success-message" style="display: none;"></div>
@@ -415,12 +432,17 @@
         <div class="modal-content">
             <span class="close" onclick="closeModal('resetPasswordModal')">&times;</span>
             <h2>🔐 Reset Password</h2>
-            <p style="margin-bottom: 1rem; color: var(--text-secondary);">Enter the reset code sent to your email and your new password.</p>
+            <p style="margin-bottom: 1rem; color: var(--text-secondary);">Enter the reset code and your new password.</p>
             <form id="resetPasswordForm" onsubmit="handleResetPassword(event)">
-                <div class="form-group">
+                <div class="form-group" id="resetEmailGroup">
                     <label>Email Address</label>
-                    <input type="email" id="resetPasswordEmail" required placeholder="your.email@example.com">
+                    <input type="email" id="resetPasswordEmail" placeholder="your.email@example.com">
                 </div>
+                <div class="form-group" id="resetPhoneGroup" style="display: none;">
+                    <label>Phone Number</label>
+                    <input type="tel" id="resetPasswordPhone" placeholder="07501234567">
+                </div>
+                <input type="hidden" id="resetIdentifierType" value="email">
                 <div class="form-group">
                     <label>Reset Code</label>
                     <input type="text" id="resetPasswordToken" required placeholder="Enter 6-digit code" maxlength="6">

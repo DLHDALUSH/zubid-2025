@@ -188,21 +188,27 @@ const UserAPI = {
         });
     },
 
-    forgotPassword: async (email) => {
+    forgotPassword: async (identifier, type = 'email') => {
+        const body = type === 'phone' ? { phone: identifier } : { email: identifier };
         return apiRequest('/forgot-password', {
             method: 'POST',
-            body: JSON.stringify({ email }),
+            body: JSON.stringify(body),
         });
     },
 
-    resetPassword: async (email, token, newPassword) => {
+    resetPassword: async (identifier, token, newPassword, type = 'email') => {
+        const body = {
+            token,
+            new_password: newPassword
+        };
+        if (type === 'phone') {
+            body.phone = identifier;
+        } else {
+            body.email = identifier;
+        }
         return apiRequest('/reset-password', {
             method: 'POST',
-            body: JSON.stringify({
-                email,
-                token,
-                new_password: newPassword
-            }),
+            body: JSON.stringify(body),
         });
     },
 };

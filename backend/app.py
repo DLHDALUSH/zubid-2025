@@ -1221,41 +1221,72 @@ def change_password():
 @app.route('/api/forgot-password', methods=['POST'])
 @limiter.limit("3 per minute")
 def forgot_password():
-    """Request password reset - sends reset token"""
+    """Request password reset - supports both email and phone number"""
     try:
         if not request.json:
             return jsonify({'error': 'No JSON data received'}), 400
 
         email = request.json.get('email', '').strip().lower()
-        if not email:
-            return jsonify({'error': 'Email is required'}), 400
+        phone = request.json.get('phone', '').strip()
 
-        user = User.query.filter_by(email=email).first()
+        # Must provide either email or phone
+        if not email and not phone:
+            return jsonify({'error': 'Email or phone number is required'}), 400
 
-        # Always return success to prevent email enumeration
+        user = None
+        identifier = None
+        identifier_type = None
+
+        # Try to find user by email first, then by phone
+        if email:
+            user = User.query.filter_by(email=email).first()
+            identifier = email
+            identifier_type = 'email'
+
+        if not user and phone:
+            # Clean phone number for comparison
+            phone_cleaned = re.sub(r'[\s\-\(\)\+]', '', phone)
+            # Try different phone formats
+            users = User.query.filter(User.phone.isnot(None)).all()
+            for u in users:
+                if u.phone:
+                    u_phone_cleaned = re.sub(r'[\s\-\(\)\+]', '', u.phone)
+                    if u_phone_cleaned == phone_cleaned or u_phone_cleaned.endswith(phone_cleaned[-10:]):
+                        user = u
+                        identifier = phone
+                        identifier_type = 'phone'
+                        break
+
+        # Always return success to prevent enumeration
         if not user:
-            app.logger.warning(f"Password reset requested for non-existent email: {email}")
-            return jsonify({'message': 'If an account with that email exists, a reset code has been generated'}), 200
+            app.logger.warning(f"Password reset requested for non-existent identifier: {email or phone}")
+            return jsonify({
+                'message': 'If an account with that email/phone exists, a reset code has been generated',
+                'identifier_type': identifier_type or 'email'
+            }), 200
 
         # Generate reset token (6-digit code for simplicity)
         import random
         reset_token = ''.join([str(random.randint(0, 9)) for _ in range(6)])
 
-        # Store token with expiry (15 minutes)
-        password_reset_tokens[email] = {
+        # Store token with expiry (15 minutes) - use user_id as key for flexibility
+        token_key = f"user_{user.id}"
+        password_reset_tokens[token_key] = {
             'token': reset_token,
             'user_id': user.id,
+            'identifier': identifier,
+            'identifier_type': identifier_type,
             'expires': datetime.now(timezone.utc) + timedelta(minutes=15)
         }
 
-        # In production, send email here
-        # For now, log it (REMOVE IN PRODUCTION)
-        app.logger.info(f"Password reset token for {email}: {reset_token}")
+        # In production, send email/SMS here
+        app.logger.info(f"Password reset token for {identifier} ({identifier_type}): {reset_token}")
 
-        # Return token in response for testing (REMOVE IN PRODUCTION - send via email instead)
+        # Return token in response for testing (REMOVE IN PRODUCTION - send via email/SMS instead)
         return jsonify({
-            'message': 'If an account with that email exists, a reset code has been generated',
+            'message': f'Reset code has been generated for your {identifier_type}',
             'reset_token': reset_token,  # REMOVE THIS LINE IN PRODUCTION
+            'identifier_type': identifier_type,
             'expires_in': '15 minutes'
         }), 200
 
@@ -1266,29 +1297,45 @@ def forgot_password():
 @app.route('/api/reset-password', methods=['POST'])
 @limiter.limit("5 per minute")
 def reset_password():
-    """Reset password using token"""
+    """Reset password using token - supports both email and phone"""
     try:
         if not request.json:
             return jsonify({'error': 'No JSON data received'}), 400
 
         data = request.json
         email = data.get('email', '').strip().lower()
+        phone = data.get('phone', '').strip()
         token = data.get('token', '').strip()
         new_password = data.get('new_password', '')
 
-        if not email or not token or not new_password:
-            return jsonify({'error': 'Email, token, and new password are required'}), 400
+        if (not email and not phone) or not token or not new_password:
+            return jsonify({'error': 'Email/phone, token, and new password are required'}), 400
 
-        # Check token
-        stored_data = password_reset_tokens.get(email)
+        # Find the token by checking all stored tokens
+        stored_data = None
+        token_key = None
+
+        for key, data_item in password_reset_tokens.items():
+            if data_item['token'] == token:
+                # Verify identifier matches
+                if email and data_item.get('identifier_type') == 'email' and data_item.get('identifier') == email:
+                    stored_data = data_item
+                    token_key = key
+                    break
+                elif phone:
+                    phone_cleaned = re.sub(r'[\s\-\(\)\+]', '', phone)
+                    stored_identifier = data_item.get('identifier', '')
+                    stored_cleaned = re.sub(r'[\s\-\(\)\+]', '', stored_identifier)
+                    if stored_cleaned == phone_cleaned or stored_cleaned.endswith(phone_cleaned[-10:]):
+                        stored_data = data_item
+                        token_key = key
+                        break
+
         if not stored_data:
             return jsonify({'error': 'Invalid or expired reset token'}), 400
 
-        if stored_data['token'] != token:
-            return jsonify({'error': 'Invalid reset token'}), 400
-
         if datetime.now(timezone.utc) > stored_data['expires']:
-            del password_reset_tokens[email]
+            del password_reset_tokens[token_key]
             return jsonify({'error': 'Reset token has expired'}), 400
 
         # Validate new password strength
@@ -1314,7 +1361,7 @@ def reset_password():
         db.session.commit()
 
         # Remove used token
-        del password_reset_tokens[email]
+        del password_reset_tokens[token_key]
 
         app.logger.info(f"Password reset successful for user: {user.username}")
         return jsonify({'message': 'Password reset successfully. You can now login with your new password.'}), 200

@@ -3271,10 +3271,35 @@ window.closeModalAndReset = function(modalId) {
 // FORGOT PASSWORD FUNCTIONALITY
 // ==========================================
 
+// Toggle between email and phone reset method
+function toggleResetMethod(method) {
+    const emailGroup = document.getElementById('forgotEmailGroup');
+    const phoneGroup = document.getElementById('forgotPhoneGroup');
+    const emailInput = document.getElementById('forgotPasswordEmail');
+    const phoneInput = document.getElementById('forgotPasswordPhone');
+
+    if (method === 'phone') {
+        if (emailGroup) emailGroup.style.display = 'none';
+        if (phoneGroup) phoneGroup.style.display = 'block';
+        if (emailInput) emailInput.removeAttribute('required');
+        if (phoneInput) phoneInput.setAttribute('required', 'required');
+    } else {
+        if (emailGroup) emailGroup.style.display = 'block';
+        if (phoneGroup) phoneGroup.style.display = 'none';
+        if (emailInput) emailInput.setAttribute('required', 'required');
+        if (phoneInput) phoneInput.removeAttribute('required');
+    }
+}
+
 async function handleForgotPassword(event) {
     event.preventDefault();
 
-    const email = document.getElementById('forgotPasswordEmail').value;
+    // Determine which method is selected
+    const resetMethod = document.querySelector('input[name="resetMethod"]:checked')?.value || 'email';
+    const email = document.getElementById('forgotPasswordEmail')?.value || '';
+    const phone = document.getElementById('forgotPasswordPhone')?.value || '';
+    const identifier = resetMethod === 'phone' ? phone : email;
+
     const errorDiv = document.getElementById('forgotPasswordError');
     const successDiv = document.getElementById('forgotPasswordSuccess');
     const submitBtn = document.getElementById('forgotPasswordBtn');
@@ -3288,16 +3313,26 @@ async function handleForgotPassword(event) {
         successDiv.style.display = 'none';
     }
 
+    // Validate input
+    if (!identifier) {
+        if (errorDiv) {
+            errorDiv.textContent = resetMethod === 'phone' ? 'Phone number is required' : 'Email is required';
+            errorDiv.style.display = 'block';
+        }
+        return;
+    }
+
     if (submitBtn) {
         submitBtn.disabled = true;
         submitBtn.textContent = 'Sending...';
     }
 
     try {
-        const response = await UserAPI.forgotPassword(email);
+        const response = await UserAPI.forgotPassword(identifier, resetMethod);
+        const methodLabel = resetMethod === 'phone' ? 'phone' : 'email';
         if (successDiv) {
             successDiv.innerHTML = `
-                Reset code sent! Check your email.<br>
+                Reset code sent! Check your ${methodLabel}.<br>
                 <small style="color: var(--text-secondary);">
                     For testing, your code is: <strong>${response.reset_token || 'Check server logs'}</strong>
                 </small>
@@ -3305,17 +3340,36 @@ async function handleForgotPassword(event) {
             successDiv.style.display = 'block';
         }
 
-        // Store email for reset form
-        sessionStorage.setItem('resetEmail', email);
+        // Store identifier for reset form
+        sessionStorage.setItem('resetIdentifier', identifier);
+        sessionStorage.setItem('resetIdentifierType', resetMethod);
 
         // Show option to enter code
         setTimeout(() => {
             if (confirm('Do you have the reset code? Click OK to enter it now.')) {
                 closeModal('forgotPasswordModal');
-                const resetEmailInput = document.getElementById('resetPasswordEmail');
-                if (resetEmailInput) {
-                    resetEmailInput.value = email;
+
+                // Set the correct field based on method
+                if (resetMethod === 'phone') {
+                    const resetPhoneInput = document.getElementById('resetPasswordPhone');
+                    const resetEmailGroup = document.getElementById('resetEmailGroup');
+                    const resetPhoneGroup = document.getElementById('resetPhoneGroup');
+                    if (resetPhoneInput) resetPhoneInput.value = identifier;
+                    if (resetEmailGroup) resetEmailGroup.style.display = 'none';
+                    if (resetPhoneGroup) resetPhoneGroup.style.display = 'block';
+                } else {
+                    const resetEmailInput = document.getElementById('resetPasswordEmail');
+                    const resetEmailGroup = document.getElementById('resetEmailGroup');
+                    const resetPhoneGroup = document.getElementById('resetPhoneGroup');
+                    if (resetEmailInput) resetEmailInput.value = identifier;
+                    if (resetEmailGroup) resetEmailGroup.style.display = 'block';
+                    if (resetPhoneGroup) resetPhoneGroup.style.display = 'none';
                 }
+
+                // Store identifier type
+                const typeInput = document.getElementById('resetIdentifierType');
+                if (typeInput) typeInput.value = resetMethod;
+
                 openModal('resetPasswordModal');
             }
         }, 1000);
@@ -3336,7 +3390,14 @@ async function handleForgotPassword(event) {
 async function handleResetPassword(event) {
     event.preventDefault();
 
-    const email = document.getElementById('resetPasswordEmail').value;
+    // Get identifier type from hidden field or session
+    const identifierType = document.getElementById('resetIdentifierType')?.value ||
+                          sessionStorage.getItem('resetIdentifierType') || 'email';
+
+    const email = document.getElementById('resetPasswordEmail')?.value || '';
+    const phone = document.getElementById('resetPasswordPhone')?.value || '';
+    const identifier = identifierType === 'phone' ? phone : email;
+
     const token = document.getElementById('resetPasswordToken').value;
     const newPassword = document.getElementById('resetNewPassword').value;
     const confirmPassword = document.getElementById('resetConfirmPassword').value;
@@ -3350,6 +3411,15 @@ async function handleResetPassword(event) {
     }
     if (successDiv) {
         successDiv.style.display = 'none';
+    }
+
+    // Validate identifier
+    if (!identifier) {
+        if (errorDiv) {
+            errorDiv.textContent = identifierType === 'phone' ? 'Phone number is required' : 'Email is required';
+            errorDiv.style.display = 'block';
+        }
+        return;
     }
 
     // Validate passwords match
@@ -3371,7 +3441,7 @@ async function handleResetPassword(event) {
     }
 
     try {
-        await UserAPI.resetPassword(email, token, newPassword);
+        await UserAPI.resetPassword(identifier, token, newPassword, identifierType);
         if (successDiv) {
             successDiv.textContent = 'Password reset successfully! You can now login with your new password.';
             successDiv.style.display = 'block';
@@ -3393,5 +3463,6 @@ async function handleResetPassword(event) {
 }
 
 // Make functions globally available
+window.toggleResetMethod = toggleResetMethod;
 window.handleForgotPassword = handleForgotPassword;
 window.handleResetPassword = handleResetPassword;
