@@ -192,7 +192,7 @@ function openCreateAuctionModal() {
     document.getElementById('createAuctionForm').reset();
     document.getElementById('createFormError').textContent = '';
     document.getElementById('imagePreviewContainer').innerHTML = '';
-    uploadedImages = []; // Clear uploaded images array
+    uploadedImageData = []; // Clear uploaded images array
 }
 
 // Store uploaded images as base64

@@ -10,7 +10,7 @@ const ThemeManager = {
         // Check for saved preference or system preference
         const savedTheme = localStorage.getItem(this.STORAGE_KEY);
         const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        
+
         // Apply theme: saved > system > light (default)
         const theme = savedTheme || (systemPrefersDark ? this.DARK : this.LIGHT);
         this.setTheme(theme, false);
