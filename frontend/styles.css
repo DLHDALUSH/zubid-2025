@@ -12661,79 +12661,144 @@ input, textarea, select, button {
 /* ============================================
    FORCE DESKTOP LAYOUT ON ALL DEVICES
    User requested: same layout on mobile as desktop
+   This section MUST be at the end to override all other styles
    ============================================ */
 
-/* Hide mobile-only elements */
-.mobile-bottom-nav {
+/* Hide ALL mobile-only elements on ALL screen sizes */
+.mobile-bottom-nav,
+.mobile-menu-toggle,
+.mobile-nav-item,
+.mobile-nav-label,
+.mobile-nav-icon {
     display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    height: 0 !important;
+    width: 0 !important;
+    overflow: hidden !important;
+    position: absolute !important;
+    pointer-events: none !important;
 }
 
-.mobile-menu-toggle {
-    display: none !important;
+/* Remove body padding that was added for mobile nav */
+body {
+    padding-bottom: 0 !important;
+    min-height: 100vh;
 }
 
-/* Always show desktop navigation */
+/* NAVBAR - Always show desktop style */
+.navbar {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 1000 !important;
+    padding: 0.5rem 1rem !important;
+}
+
+.nav-container {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    flex-wrap: nowrap !important;
+    gap: 1rem !important;
+    width: 100% !important;
+}
+
 .nav-menu {
     display: flex !important;
-    position: static !important;
     flex-direction: row !important;
+    align-items: center !important;
+    position: static !important;
     background: transparent !important;
     box-shadow: none !important;
     padding: 0 !important;
+    margin: 0 !important;
     opacity: 1 !important;
     visibility: visible !important;
     transform: none !important;
     width: auto !important;
     height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    flex: 1 !important;
+    justify-content: space-between !important;
 }
 
 .nav-links {
     display: flex !important;
     flex-direction: row !important;
+    align-items: center !important;
     gap: 0.25rem !important;
+    flex-wrap: nowrap !important;
 }
 
 .nav-actions {
     display: flex !important;
     flex-direction: row !important;
+    align-items: center !important;
     gap: 0.5rem !important;
+    flex-wrap: nowrap !important;
 }
 
-/* Remove body padding for mobile bottom nav */
-body {
-    padding-bottom: 0 !important;
+/* Nav items always horizontal */
+.nav-link {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    white-space: nowrap !important;
 }
 
-/* Keep grids responsive but consistent */
+.nav-dropdown {
+    position: relative !important;
+}
+
+.dropdown-menu {
+    position: absolute !important;
+    top: 100% !important;
+    left: 0 !important;
+}
+
+/* Grids - responsive columns */
 .auctions-grid {
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)) !important;
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)) !important;
+    gap: 1rem !important;
 }
 
 .categories-grid {
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)) !important;
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)) !important;
+    gap: 0.75rem !important;
 }
 
-/* Ensure dropdowns work on all devices */
-.nav-dropdown:hover .dropdown-menu,
-.nav-user:hover .user-dropdown,
-.settings-dropdown:hover .dropdown-menu {
-    opacity: 1 !important;
-    visibility: visible !important;
-    transform: translateY(0) !important;
+/* Cards scale properly */
+.auction-card,
+.category-card {
+    width: 100% !important;
+    max-width: 100% !important;
 }
 
-/* Scale down navbar items on small screens */
-@media (max-width: 768px) {
-    .navbar {
-        padding: 0.25rem 0.5rem !important;
-    }
+/* Container max-width */
+.container {
+    width: 100% !important;
+    max-width: 1400px !important;
+    margin: 0 auto !important;
+    padding: 0 1rem !important;
+}
 
+/* Footer always visible */
+.footer {
+    padding-bottom: 2rem !important;
+}
+
+/* ===== SMALL SCREEN SCALING (keeps desktop layout, just smaller) ===== */
+@media screen and (max-width: 900px) {
     .nav-container {
         gap: 0.5rem !important;
     }
 
     .nav-brand h1 {
-        font-size: 1.1rem !important;
+        font-size: 1.2rem !important;
     }
 
     .brand-tagline {
@@ -12742,11 +12807,38 @@ body {
 
     .nav-link {
         padding: 0.4rem 0.5rem !important;
+        font-size: 0.75rem !important;
+    }
+
+    .nav-link span:not(.notification-badge) {
         font-size: 0.7rem !important;
     }
 
-    .nav-link span {
+    .nav-icon {
+        width: 16px !important;
+        height: 16px !important;
+    }
+}
+
+@media screen and (max-width: 768px) {
+    .navbar {
+        padding: 0.25rem 0.5rem !important;
+    }
+
+    .nav-brand h1 {
+        font-size: 1rem !important;
+    }
+
+    /* Hide text labels, show only icons */
+    .nav-link > span:not(.notification-badge),
+    .dropdown-arrow {
         display: none !important;
+    }
+
+    .nav-link {
+        padding: 0.35rem !important;
+        min-width: 36px !important;
+        justify-content: center !important;
     }
 
     .nav-icon {
@@ -12754,12 +12846,9 @@ body {
         height: 18px !important;
     }
 
-    .dropdown-arrow {
-        display: none !important;
-    }
-
+    /* Compact buttons */
     .nav-auth .btn {
-        padding: 0.4rem 0.6rem !important;
+        padding: 0.35rem 0.6rem !important;
         font-size: 0.7rem !important;
     }
 
@@ -12767,34 +12856,42 @@ body {
         display: none !important;
     }
 
+    /* Smaller user elements */
     .user-avatar {
-        width: 28px !important;
-        height: 28px !important;
+        width: 30px !important;
+        height: 30px !important;
     }
 
     #userName {
         display: none !important;
     }
 
-    .notifications-btn {
-        width: 32px !important;
-        height: 32px !important;
+    .notifications-btn,
+    .settings-toggle {
+        width: 34px !important;
+        height: 34px !important;
+        padding: 0.3rem !important;
     }
 
-    .settings-toggle {
-        width: 32px !important;
-        height: 32px !important;
+    /* Smaller grids */
+    .auctions-grid {
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)) !important;
+        gap: 0.75rem !important;
+    }
+
+    .container {
+        padding: 0 0.5rem !important;
     }
 }
 
-/* Even smaller screens */
-@media (max-width: 480px) {
+@media screen and (max-width: 480px) {
     .nav-brand h1 {
-        font-size: 1rem !important;
+        font-size: 0.9rem !important;
     }
 
     .nav-link {
-        padding: 0.3rem 0.4rem !important;
+        padding: 0.3rem !important;
+        min-width: 32px !important;
     }
 
     .nav-icon {
@@ -12802,7 +12899,45 @@ body {
         height: 16px !important;
     }
 
+    .nav-auth .btn {
+        padding: 0.3rem 0.5rem !important;
+        font-size: 0.65rem !important;
+    }
+
+    .user-avatar {
+        width: 26px !important;
+        height: 26px !important;
+    }
+
+    .notifications-btn,
+    .settings-toggle {
+        width: 30px !important;
+        height: 30px !important;
+    }
+
+    .auctions-grid {
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)) !important;
+        gap: 0.5rem !important;
+    }
+
     .container {
-        padding: 0 0.5rem !important;
+        padding: 0 0.25rem !important;
+    }
+
+    /* Smaller cards */
+    .auction-card {
+        border-radius: 8px !important;
+    }
+
+    .auction-card-image {
+        height: 120px !important;
+    }
+
+    .auction-card-content {
+        padding: 0.5rem !important;
+    }
+
+    .auction-card h3 {
+        font-size: 0.85rem !important;
     }
 }
