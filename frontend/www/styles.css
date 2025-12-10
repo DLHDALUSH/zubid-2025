@@ -9564,6 +9564,130 @@ textarea.valid {
 }
 
 /* ==========================================
+   DARK MODE - SIGN UP / REGISTER FORM
+   ========================================== */
+[data-theme="dark"] .modern-register-modal {
+    background: #1e293b !important;
+    border: 1px solid rgba(148, 163, 184, 0.1);
+}
+
+[data-theme="dark"] .modal-close-btn {
+    color: #94a3b8;
+}
+
+[data-theme="dark"] .modal-close-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+[data-theme="dark"] .register-form-wrapper {
+    background: #1e293b;
+}
+
+[data-theme="dark"] .form-header h2 {
+    color: #f1f5f9;
+}
+
+[data-theme="dark"] .form-header p {
+    color: #94a3b8;
+}
+
+[data-theme="dark"] .step-header {
+    border-bottom-color: rgba(148, 163, 184, 0.2);
+}
+
+[data-theme="dark"] .step-title {
+    color: #f1f5f9;
+}
+
+[data-theme="dark"] .form-group label {
+    color: #e2e8f0;
+}
+
+[data-theme="dark"] .modern-input {
+    background: #0f172a;
+    border-color: rgba(148, 163, 184, 0.2);
+}
+
+[data-theme="dark"] .modern-input:focus-within {
+    background: #1e293b;
+    border-color: #6366f1;
+}
+
+[data-theme="dark"] .modern-input input,
+[data-theme="dark"] .modern-input textarea {
+    color: #f1f5f9;
+}
+
+[data-theme="dark"] .modern-input input::placeholder,
+[data-theme="dark"] .modern-input textarea::placeholder {
+    color: #64748b;
+}
+
+[data-theme="dark"] .password-toggle {
+    color: #94a3b8;
+}
+
+[data-theme="dark"] .password-toggle:hover {
+    color: #f1f5f9;
+}
+
+[data-theme="dark"] .form-hint {
+    color: #64748b;
+}
+
+[data-theme="dark"] .form-footer {
+    color: #94a3b8;
+}
+
+[data-theme="dark"] .form-footer .link {
+    color: #818cf8;
+}
+
+[data-theme="dark"] .form-footer .link:hover {
+    color: #a5b4fc;
+}
+
+/* Dark mode for regular modal forms */
+[data-theme="dark"] .modal-content {
+    background: #1e293b !important;
+    border: 1px solid rgba(148, 163, 184, 0.1);
+}
+
+[data-theme="dark"] .modal-header h2 {
+    color: #f1f5f9;
+}
+
+[data-theme="dark"] .modal-subtitle {
+    color: #94a3b8;
+}
+
+[data-theme="dark"] .form-group input[type="text"],
+[data-theme="dark"] .form-group input[type="email"],
+[data-theme="dark"] .form-group input[type="password"],
+[data-theme="dark"] .form-group input[type="number"],
+[data-theme="dark"] .form-group input[type="tel"],
+[data-theme="dark"] .form-group input[type="datetime-local"],
+[data-theme="dark"] .form-group textarea,
+[data-theme="dark"] .form-group select {
+    background: #0f172a !important;
+    border-color: rgba(148, 163, 184, 0.2) !important;
+    color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] .form-group input:focus,
+[data-theme="dark"] .form-group textarea:focus,
+[data-theme="dark"] .form-group select:focus {
+    background: #1e293b !important;
+    border-color: #6366f1 !important;
+}
+
+[data-theme="dark"] .form-group input::placeholder,
+[data-theme="dark"] .form-group textarea::placeholder {
+    color: #64748b !important;
+}
+
+/* ==========================================
    PWA Install Prompt Styles
    ========================================== */
 .pwa-install-prompt {
