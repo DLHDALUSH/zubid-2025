@@ -198,6 +198,173 @@ def sanitize_filename(filename):
     safe = safe.replace('/', '').replace('\\', '')
     return safe
 
+# ==========================================
+# EMAIL & SMS SENDING FUNCTIONS
+# ==========================================
+
+def send_email(to_email, subject, body):
+    """
+    Send email using SMTP
+    Requires environment variables:
+    - SMTP_HOST: SMTP server hostname
+    - SMTP_PORT: SMTP server port (usually 587 for TLS)
+    - SMTP_USER: SMTP username/email
+    - SMTP_PASSWORD: SMTP password
+    - SMTP_FROM: From email address
+    """
+    import smtplib
+    from email.mime.text import MIMEText
+    from email.mime.multipart import MIMEMultipart
+
+    smtp_host = os.getenv('SMTP_HOST')
+    smtp_port = int(os.getenv('SMTP_PORT', '587'))
+    smtp_user = os.getenv('SMTP_USER')
+    smtp_password = os.getenv('SMTP_PASSWORD')
+    smtp_from = os.getenv('SMTP_FROM', smtp_user)
+
+    if not all([smtp_host, smtp_user, smtp_password]):
+        app.logger.warning("SMTP not configured. Email not sent.")
+        return False
+
+    try:
+        # Create message
+        msg = MIMEMultipart('alternative')
+        msg['Subject'] = subject
+        msg['From'] = f"ZUBID Auction <{smtp_from}>"
+        msg['To'] = to_email
+
+        # Plain text version
+        text_part = MIMEText(body, 'plain')
+
+        # HTML version
+        html_body = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+                .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+                .header {{ background: linear-gradient(135deg, #f97316, #ea580c); color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }}
+                .content {{ background: #f8fafc; padding: 30px; border-radius: 0 0 8px 8px; }}
+                .code {{ font-size: 32px; font-weight: bold; color: #f97316; letter-spacing: 8px; text-align: center; padding: 20px; background: white; border-radius: 8px; margin: 20px 0; }}
+                .footer {{ text-align: center; color: #64748b; font-size: 12px; margin-top: 20px; }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1>🔐 ZUBID Auction</h1>
+                </div>
+                <div class="content">
+                    {body.replace(chr(10), '<br>')}
+                </div>
+                <div class="footer">
+                    <p>This is an automated message from ZUBID Auction Platform.</p>
+                    <p>If you didn't request this, please ignore this email.</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+        html_part = MIMEText(html_body, 'html')
+
+        msg.attach(text_part)
+        msg.attach(html_part)
+
+        # Connect and send
+        with smtplib.SMTP(smtp_host, smtp_port) as server:
+            server.starttls()
+            server.login(smtp_user, smtp_password)
+            server.send_message(msg)
+
+        app.logger.info(f"Email sent successfully to {to_email}")
+        return True
+
+    except Exception as e:
+        app.logger.error(f"Failed to send email to {to_email}: {str(e)}")
+        return False
+
+
+def send_sms(to_phone, message):
+    """
+    Send SMS using Twilio
+    Requires environment variables:
+    - TWILIO_ACCOUNT_SID: Twilio Account SID
+    - TWILIO_AUTH_TOKEN: Twilio Auth Token
+    - TWILIO_PHONE_NUMBER: Twilio phone number (from)
+    """
+    account_sid = os.getenv('TWILIO_ACCOUNT_SID')
+    auth_token = os.getenv('TWILIO_AUTH_TOKEN')
+    from_phone = os.getenv('TWILIO_PHONE_NUMBER')
+
+    if not all([account_sid, auth_token, from_phone]):
+        app.logger.warning("Twilio not configured. SMS not sent.")
+        return False
+
+    try:
+        from twilio.rest import Client
+        client = Client(account_sid, auth_token)
+
+        # Ensure phone number has country code
+        if not to_phone.startswith('+'):
+            # Default to Iraq country code if not provided
+            to_phone = '+964' + to_phone.lstrip('0')
+
+        sms = client.messages.create(
+            body=message,
+            from_=from_phone,
+            to=to_phone
+        )
+
+        app.logger.info(f"SMS sent successfully to {to_phone}, SID: {sms.sid}")
+        return True
+
+    except ImportError:
+        app.logger.warning("Twilio library not installed. Run: pip install twilio")
+        return False
+    except Exception as e:
+        app.logger.error(f"Failed to send SMS to {to_phone}: {str(e)}")
+        return False
+
+
+def send_verification_code(user, code, method='email'):
+    """
+    Send verification code via email or SMS
+
+    Args:
+        user: User object
+        code: 6-digit verification code
+        method: 'email' or 'phone'
+
+    Returns:
+        bool: True if sent successfully
+    """
+    if method == 'email' and user.email:
+        subject = "🔐 ZUBID - Password Reset Code"
+        body = f"""Hello {user.username},
+
+You requested to reset your password for your ZUBID Auction account.
+
+Your verification code is:
+
+{code}
+
+This code will expire in 15 minutes.
+
+If you didn't request this, please ignore this email and your password will remain unchanged.
+
+Best regards,
+ZUBID Auction Team"""
+
+        return send_email(user.email, subject, body)
+
+    elif method == 'phone' and user.phone:
+        message = f"ZUBID: Your password reset code is {code}. This code expires in 15 minutes."
+        return send_sms(user.phone, message)
+
+    return False
+
+
 # Security Headers Middleware
 @app.after_request
 def set_security_headers(response):
@@ -1172,6 +1339,7 @@ def forgot_password():
 
         email = request.json.get('email', '').strip().lower()
         phone = request.json.get('phone', '').strip()
+        method = request.json.get('method', 'email')  # 'email' or 'phone'
 
         # Must provide either email or phone
         if not email and not phone:
@@ -1187,10 +1355,12 @@ def forgot_password():
         user = None
         if email:
             user = User.query.filter_by(email=email).first()
+            method = 'email'
         elif phone:
             # Normalize phone number (remove spaces, dashes)
             phone = ''.join(filter(lambda x: x.isdigit() or x == '+', phone))
             user = User.query.filter_by(phone=phone).first()
+            method = 'phone'
 
         if not user:
             # Don't reveal if user exists for security
@@ -1219,15 +1389,33 @@ def forgot_password():
         db.session.add(token)
         db.session.commit()
 
-        # In production, send email/SMS here
-        # For now, return the code (for testing)
-        app.logger.info(f"Password reset code generated for user {user.username}: {reset_code}")
+        # Send verification code via email or SMS
+        sent = send_verification_code(user, reset_code, method)
 
-        return jsonify({
-            'message': 'Reset code sent successfully',
-            'reset_code': reset_code,  # Remove in production - just for testing
-            'expires_in': 15  # minutes
-        }), 200
+        if sent:
+            app.logger.info(f"Password reset code sent to user {user.username} via {method}")
+            return jsonify({
+                'message': f'Reset code sent successfully via {method}',
+                'method': method,
+                'expires_in': 15  # minutes
+            }), 200
+        else:
+            # If sending failed, still log it but don't expose the code
+            app.logger.warning(f"Failed to send reset code to {user.username} via {method}")
+            # For development/testing: include code if SMTP/Twilio not configured
+            if not is_production:
+                return jsonify({
+                    'message': 'Reset code generated (email/SMS not configured)',
+                    'reset_code': reset_code,  # Only for development
+                    'method': method,
+                    'expires_in': 15
+                }), 200
+            else:
+                return jsonify({
+                    'message': 'Reset code sent successfully',
+                    'method': method,
+                    'expires_in': 15
+                }), 200
 
     except Exception as e:
         db.session.rollback()
