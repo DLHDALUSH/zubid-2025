@@ -273,6 +273,15 @@ function updateNavAuth(isAuthenticated) {
     const userName = document.getElementById('userName');
     const userAvatar = document.getElementById('userAvatar');
 
+    // Mobile-only nav items (inside the "More" dropdown)
+    const mobileLoginItem = document.getElementById('mobileLoginItem');
+    const mobileSignUpItem = document.getElementById('mobileSignUpItem');
+    const mobileAuthDivider = document.getElementById('mobileAuthDivider');
+    const mobileProfileItem = document.getElementById('mobileProfileItem');
+    const mobilePaymentsItem = document.getElementById('mobilePaymentsItem');
+    const mobileReturnRequestsItem = document.getElementById('mobileReturnRequestsItem');
+    const mobileLogoutItem = document.getElementById('mobileLogoutItem');
+
     if (navAuth && navUser) {
         if (isAuthenticated) {
             navAuth.style.display = 'none';
@@ -297,6 +306,16 @@ function updateNavAuth(isAuthenticated) {
             if (notificationsWrapper) {
                 notificationsWrapper.style.display = 'block';
             }
+
+            // Mobile "More" menu: hide guest actions, show authenticated actions
+            if (mobileLoginItem) mobileLoginItem.style.display = 'none';
+            if (mobileSignUpItem) mobileSignUpItem.style.display = 'none';
+            if (mobileAuthDivider) mobileAuthDivider.style.display = 'none';
+
+            if (mobileProfileItem) mobileProfileItem.style.display = 'flex';
+            if (mobilePaymentsItem) mobilePaymentsItem.style.display = 'flex';
+            if (mobileReturnRequestsItem) mobileReturnRequestsItem.style.display = 'flex';
+            if (mobileLogoutItem) mobileLogoutItem.style.display = 'flex';
 
             // Update user info
             if (currentUser) {
@@ -337,6 +356,16 @@ function updateNavAuth(isAuthenticated) {
             if (notificationsWrapper) {
                 notificationsWrapper.style.display = 'none';
             }
+
+            // Mobile "More" menu: show guest actions, hide authenticated actions
+            if (mobileLoginItem) mobileLoginItem.style.display = 'block';
+            if (mobileSignUpItem) mobileSignUpItem.style.display = 'block';
+            if (mobileAuthDivider) mobileAuthDivider.style.display = 'block';
+
+            if (mobileProfileItem) mobileProfileItem.style.display = 'none';
+            if (mobilePaymentsItem) mobilePaymentsItem.style.display = 'none';
+            if (mobileReturnRequestsItem) mobileReturnRequestsItem.style.display = 'none';
+            if (mobileLogoutItem) mobileLogoutItem.style.display = 'none';
         }
     }
 }
