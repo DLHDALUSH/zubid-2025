@@ -12658,22 +12658,151 @@ input, textarea, select, button {
     }
 }
 
-/* Extra small devices (phones, less than 400px) */
-@media (max-width: 400px) {
-    html {
-        font-size: 14px;
+/* ============================================
+   FORCE DESKTOP LAYOUT ON ALL DEVICES
+   User requested: same layout on mobile as desktop
+   ============================================ */
+
+/* Hide mobile-only elements */
+.mobile-bottom-nav {
+    display: none !important;
+}
+
+.mobile-menu-toggle {
+    display: none !important;
+}
+
+/* Always show desktop navigation */
+.nav-menu {
+    display: flex !important;
+    position: static !important;
+    flex-direction: row !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: none !important;
+    width: auto !important;
+    height: auto !important;
+}
+
+.nav-links {
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 0.25rem !important;
+}
+
+.nav-actions {
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 0.5rem !important;
+}
+
+/* Remove body padding for mobile bottom nav */
+body {
+    padding-bottom: 0 !important;
+}
+
+/* Keep grids responsive but consistent */
+.auctions-grid {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)) !important;
+}
+
+.categories-grid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)) !important;
+}
+
+/* Ensure dropdowns work on all devices */
+.nav-dropdown:hover .dropdown-menu,
+.nav-user:hover .user-dropdown,
+.settings-dropdown:hover .dropdown-menu {
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: translateY(0) !important;
+}
+
+/* Scale down navbar items on small screens */
+@media (max-width: 768px) {
+    .navbar {
+        padding: 0.25rem 0.5rem !important;
+    }
+
+    .nav-container {
+        gap: 0.5rem !important;
+    }
+
+    .nav-brand h1 {
+        font-size: 1.1rem !important;
+    }
+
+    .brand-tagline {
+        display: none !important;
+    }
+
+    .nav-link {
+        padding: 0.4rem 0.5rem !important;
+        font-size: 0.7rem !important;
+    }
+
+    .nav-link span {
+        display: none !important;
+    }
+
+    .nav-icon {
+        width: 18px !important;
+        height: 18px !important;
+    }
+
+    .dropdown-arrow {
+        display: none !important;
+    }
+
+    .nav-auth .btn {
+        padding: 0.4rem 0.6rem !important;
+        font-size: 0.7rem !important;
+    }
+
+    .nav-auth .btn-outline {
+        display: none !important;
+    }
+
+    .user-avatar {
+        width: 28px !important;
+        height: 28px !important;
+    }
+
+    #userName {
+        display: none !important;
+    }
+
+    .notifications-btn {
+        width: 32px !important;
+        height: 32px !important;
+    }
+
+    .settings-toggle {
+        width: 32px !important;
+        height: 32px !important;
+    }
+}
+
+/* Even smaller screens */
+@media (max-width: 480px) {
+    .nav-brand h1 {
+        font-size: 1rem !important;
+    }
+
+    .nav-link {
+        padding: 0.3rem 0.4rem !important;
+    }
+
+    .nav-icon {
+        width: 16px !important;
+        height: 16px !important;
     }
 
     .container {
         padding: 0 0.5rem !important;
     }
-
-    .btn {
-        padding: 0.75rem 1rem !important;
-        font-size: 0.875rem !important;
-    }
-
-    h1 { font-size: 1.5rem !important; }
-    h2 { font-size: 1.25rem !important; }
-    h3 { font-size: 1.125rem !important; }
 }
