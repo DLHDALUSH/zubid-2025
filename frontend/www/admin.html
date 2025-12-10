@@ -1,11 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
     <title>Admin Dashboard - ZUBID</title>
     <link rel="stylesheet" href="styles.css?v=20250116-enhanced-enhanced">
-    <link rel="stylesheet" href="admin.css">
+    <link rel="stylesheet" href="admin.css?v=2.0">
+    <script src="theme.js"></script>
 </head>
 <body>
     <div class="admin-layout">
@@ -79,6 +80,17 @@
                     <p data-i18n="messages.welcome">Welcome back! Here's what's happening with your platform.</p>
                 </div>
                 <div class="admin-header-right">
+                    <div class="admin-search-box">
+                        <span class="icon">🔍</span>
+                        <input type="text" placeholder="Search..." id="adminSearch">
+                    </div>
+                    <button class="admin-notification-btn" title="Notifications">
+                        🔔
+                        <span class="badge">3</span>
+                    </button>
+                    <button class="admin-theme-toggle" onclick="ThemeManager.toggle()" title="Toggle Theme">
+                        🌙
+                    </button>
                     <span style="color: var(--admin-text-muted); font-size: 0.85rem;">
                         📅 <span id="currentDate"></span>
                     </span>
