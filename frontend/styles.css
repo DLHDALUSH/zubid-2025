@@ -958,6 +958,145 @@ body::after {
     margin: 0.5rem 0;
 }
 
+/* Settings Dropdown (for guests) */
+.settings-dropdown {
+    position: relative;
+}
+
+.settings-toggle {
+    padding: 0.5rem !important;
+    border-radius: 50% !important;
+    width: 40px !important;
+    height: 40px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.settings-toggle .nav-icon {
+    margin: 0 !important;
+}
+
+.settings-menu {
+    min-width: 220px;
+}
+
+/* Theme Toggle in Dropdown */
+.theme-toggle-dropdown {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+}
+
+.theme-toggle-dropdown .sun-icon,
+.theme-toggle-dropdown .moon-icon {
+    flex-shrink: 0;
+}
+
+[data-theme="dark"] .theme-toggle-dropdown .sun-icon {
+    display: none;
+}
+
+[data-theme="dark"] .theme-toggle-dropdown .moon-icon {
+    display: block;
+}
+
+.theme-toggle-dropdown .moon-icon {
+    display: none;
+}
+
+/* Language Menu Item with Submenu */
+.language-menu-item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+}
+
+.language-submenu {
+    position: absolute;
+    left: 100%;
+    top: 0;
+    background: var(--bg-color);
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+    min-width: 120px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateX(-10px);
+    transition: all 0.2s ease;
+    z-index: 1000;
+    overflow: hidden;
+}
+
+.language-menu-item:hover .language-submenu {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(0);
+}
+
+.language-btn {
+    display: block;
+    width: 100%;
+    padding: 0.75rem 1rem;
+    text-align: left;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-color);
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+}
+
+.language-btn:hover {
+    background: var(--primary-color);
+    color: white;
+}
+
+/* RTL Language Submenu */
+[dir="rtl"] .language-submenu {
+    left: auto;
+    right: 100%;
+    transform: translateX(10px);
+}
+
+[dir="rtl"] .language-menu-item:hover .language-submenu {
+    transform: translateX(0);
+}
+
+/* Dark mode styles for language submenu */
+[data-theme="dark"] .language-submenu {
+    background: var(--bg-light);
+    border: 1px solid rgba(249, 115, 22, 0.2);
+}
+
+[data-theme="dark"] .language-btn:hover {
+    background: rgba(249, 115, 22, 0.2);
+}
+
+/* Mobile adjustments for language submenu */
+@media (max-width: 767px) {
+    .language-submenu {
+        position: static;
+        opacity: 1;
+        visibility: visible;
+        transform: none;
+        box-shadow: none;
+        margin-top: 0.5rem;
+        margin-left: 1rem;
+        background: transparent;
+    }
+
+    .language-btn {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.85rem;
+    }
+}
+
 /* Mobile Menu Toggle */
 .mobile-menu-toggle {
     display: none;

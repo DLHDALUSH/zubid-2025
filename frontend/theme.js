@@ -75,3 +75,8 @@ document.addEventListener('DOMContentLoaded', () => {
 // Export for use in other modules
 window.ThemeManager = ThemeManager;
 
+// Global function for onclick handlers
+function toggleTheme() {
+    ThemeManager.toggle();
+}
+window.toggleTheme = toggleTheme;
