@@ -370,6 +370,69 @@
                 </div>
                 <button type="submit" class="btn btn-primary btn-block" data-i18n="auth.login">Login</button>
             </form>
+            <div style="text-align: center; margin-top: 1rem;">
+                <a href="#" onclick="showForgotPassword(); return false;" style="color: var(--primary-color); text-decoration: none;">🔐 Forgot Password?</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Forgot Password Modal -->
+    <div class="modal" id="forgotPasswordModal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('forgotPasswordModal')">&times;</span>
+            <h2>🔐 Forgot Password</h2>
+
+            <!-- Step 1: Enter Email or Phone -->
+            <div id="forgotStep1">
+                <p style="color: var(--text-secondary); margin-bottom: 1rem;">Enter your email address or phone number to receive a reset code.</p>
+
+                <!-- Method Toggle -->
+                <div class="reset-method-toggle" style="display: flex; gap: 1rem; margin-bottom: 1rem; justify-content: center;">
+                    <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                        <input type="radio" name="resetMethod" value="email" checked onchange="toggleResetMethod('email')">
+                        <span>📧 Email</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                        <input type="radio" name="resetMethod" value="phone" onchange="toggleResetMethod('phone')">
+                        <span>📱 Phone</span>
+                    </label>
+                </div>
+
+                <form id="forgotPasswordForm" onsubmit="handleForgotPassword(event)">
+                    <div class="form-group" id="forgotEmailGroup">
+                        <label>Email Address</label>
+                        <input type="email" id="forgotEmail" placeholder="Enter your email">
+                    </div>
+                    <div class="form-group" id="forgotPhoneGroup" style="display: none;">
+                        <label>Phone Number</label>
+                        <input type="tel" id="forgotPhone" placeholder="Enter your phone number">
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">Send Reset Code</button>
+                </form>
+            </div>
+
+            <!-- Step 2: Enter Code and New Password -->
+            <div id="forgotStep2" style="display: none;">
+                <p style="color: var(--text-secondary); margin-bottom: 1rem;">Enter the 6-digit code and your new password.</p>
+                <form id="resetPasswordForm" onsubmit="handleResetPassword(event)">
+                    <div class="form-group">
+                        <label>Reset Code</label>
+                        <input type="text" id="resetCode" placeholder="Enter 6-digit code" maxlength="6" required style="text-align: center; font-size: 1.5rem; letter-spacing: 0.5rem;">
+                    </div>
+                    <div class="form-group">
+                        <label>New Password</label>
+                        <input type="password" id="newPassword" placeholder="Enter new password" minlength="8" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Confirm New Password</label>
+                        <input type="password" id="confirmNewPassword" placeholder="Confirm new password" minlength="8" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">Reset Password</button>
+                </form>
+                <div style="text-align: center; margin-top: 1rem;">
+                    <a href="#" onclick="showForgotStep1(); return false;" style="color: var(--text-secondary);">← Back to enter email/phone</a>
+                </div>
+            </div>
         </div>
     </div>
 

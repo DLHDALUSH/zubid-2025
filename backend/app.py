@@ -326,6 +326,21 @@ class User(db.Model):
         Index('idx_user_active', 'is_active'),
     )
 
+class PasswordResetToken(db.Model):
+    """Store password reset tokens"""
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    token = db.Column(db.String(6), nullable=False)  # 6-digit code
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    expires_at = db.Column(db.DateTime, nullable=False)
+    used = db.Column(db.Boolean, default=False)
+
+    user = db.relationship('User', backref=db.backref('reset_tokens', lazy=True))
+
+    def is_valid(self):
+        """Check if token is valid (not expired and not used)"""
+        return not self.used and datetime.now(timezone.utc) < self.expires_at
+
 class Category(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), unique=True, nullable=False)
@@ -1142,6 +1157,152 @@ def login():
 def logout():
     session.pop('user_id', None)
     return jsonify({'message': 'Logout successful'}), 200
+
+# ==========================================
+# PASSWORD MANAGEMENT ENDPOINTS
+# ==========================================
+
+@app.route('/api/forgot-password', methods=['POST'])
+@limiter.limit("5 per minute")
+def forgot_password():
+    """Request password reset - accepts email OR phone"""
+    if not request.json:
+        return jsonify({'error': 'No JSON data received'}), 400
+
+    email = request.json.get('email', '').strip().lower()
+    phone = request.json.get('phone', '').strip()
+
+    # Must provide either email or phone
+    if not email and not phone:
+        return jsonify({'error': 'Email or phone number is required'}), 400
+
+    # Find user by email or phone
+    user = None
+    if email:
+        user = User.query.filter_by(email=email).first()
+    elif phone:
+        # Normalize phone number (remove spaces, dashes)
+        phone = ''.join(filter(lambda x: x.isdigit() or x == '+', phone))
+        user = User.query.filter_by(phone=phone).first()
+
+    if not user:
+        # Don't reveal if user exists for security
+        return jsonify({'message': 'If an account exists with this information, a reset code will be sent'}), 200
+
+    if not user.is_active:
+        return jsonify({'error': 'Account is deactivated. Please contact support.'}), 403
+
+    # Generate 6-digit reset code
+    import random
+    reset_code = ''.join([str(random.randint(0, 9)) for _ in range(6)])
+
+    # Delete any existing unused tokens for this user
+    PasswordResetToken.query.filter_by(user_id=user.id, used=False).delete()
+
+    # Create new token (expires in 15 minutes)
+    token = PasswordResetToken(
+        user_id=user.id,
+        token=reset_code,
+        expires_at=datetime.now(timezone.utc) + timedelta(minutes=15)
+    )
+    db.session.add(token)
+    db.session.commit()
+
+    # In production, send email/SMS here
+    # For now, return the code (for testing)
+    app.logger.info(f"Password reset code generated for user {user.username}: {reset_code}")
+
+    return jsonify({
+        'message': 'Reset code sent successfully',
+        'reset_code': reset_code,  # Remove in production - just for testing
+        'expires_in': 15  # minutes
+    }), 200
+
+@app.route('/api/reset-password', methods=['POST'])
+@limiter.limit("5 per minute")
+def reset_password():
+    """Reset password using token"""
+    if not request.json:
+        return jsonify({'error': 'No JSON data received'}), 400
+
+    email = request.json.get('email', '').strip().lower()
+    phone = request.json.get('phone', '').strip()
+    token = request.json.get('token', '').strip()
+    new_password = request.json.get('new_password', '')
+
+    if not token:
+        return jsonify({'error': 'Reset code is required'}), 400
+
+    if not new_password:
+        return jsonify({'error': 'New password is required'}), 400
+
+    if len(new_password) < 8:
+        return jsonify({'error': 'Password must be at least 8 characters'}), 400
+
+    # Find user by email or phone
+    user = None
+    if email:
+        user = User.query.filter_by(email=email).first()
+    elif phone:
+        phone = ''.join(filter(lambda x: x.isdigit() or x == '+', phone))
+        user = User.query.filter_by(phone=phone).first()
+
+    if not user:
+        return jsonify({'error': 'Invalid reset request'}), 400
+
+    # Find valid token
+    reset_token = PasswordResetToken.query.filter_by(
+        user_id=user.id,
+        token=token,
+        used=False
+    ).first()
+
+    if not reset_token or not reset_token.is_valid():
+        return jsonify({'error': 'Invalid or expired reset code'}), 400
+
+    # Update password
+    user.password_hash = generate_password_hash(new_password)
+    reset_token.used = True
+    db.session.commit()
+
+    app.logger.info(f"Password reset successful for user {user.username}")
+
+    return jsonify({'message': 'Password reset successful'}), 200
+
+@app.route('/api/change-password', methods=['POST'])
+@login_required
+def change_password():
+    """Change password for logged-in user"""
+    if not request.json:
+        return jsonify({'error': 'No JSON data received'}), 400
+
+    current_password = request.json.get('current_password', '')
+    new_password = request.json.get('new_password', '')
+
+    if not current_password:
+        return jsonify({'error': 'Current password is required'}), 400
+
+    if not new_password:
+        return jsonify({'error': 'New password is required'}), 400
+
+    if len(new_password) < 8:
+        return jsonify({'error': 'New password must be at least 8 characters'}), 400
+
+    user = User.query.get(session['user_id'])
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+
+    # Verify current password
+    if not check_password_hash(user.password_hash, current_password):
+        return jsonify({'error': 'Current password is incorrect'}), 400
+
+    # Update password
+    user.password_hash = generate_password_hash(new_password)
+    db.session.commit()
+
+    app.logger.info(f"Password changed for user {user.username}")
+
+    return jsonify({'message': 'Password changed successfully'}), 200
 
 @app.route('/api/user/profile', methods=['GET'])
 @login_required

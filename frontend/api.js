@@ -177,6 +177,41 @@ const UserAPI = {
             body: JSON.stringify(userData),
         });
     },
+
+    // Password management
+    forgotPassword: async (identifier, type = 'email') => {
+        const body = type === 'phone' ? { phone: identifier } : { email: identifier };
+        return apiRequest('/forgot-password', {
+            method: 'POST',
+            body: JSON.stringify(body),
+        });
+    },
+
+    resetPassword: async (identifier, token, newPassword, type = 'email') => {
+        const body = {
+            token,
+            new_password: newPassword
+        };
+        if (type === 'phone') {
+            body.phone = identifier;
+        } else {
+            body.email = identifier;
+        }
+        return apiRequest('/reset-password', {
+            method: 'POST',
+            body: JSON.stringify(body),
+        });
+    },
+
+    changePassword: async (currentPassword, newPassword) => {
+        return apiRequest('/change-password', {
+            method: 'POST',
+            body: JSON.stringify({
+                current_password: currentPassword,
+                new_password: newPassword
+            }),
+        });
+    },
 };
 
 // Auction API
