@@ -3192,6 +3192,10 @@ def init_db():
                 print("Creating UserPreference table...")
                 db.create_all()
                 print("[OK] UserPreference table created!")
+            if 'password_reset_token' not in tables:
+                print("Creating PasswordResetToken table...")
+                db.create_all()
+                print("[OK] PasswordResetToken table created!")
         except Exception as e:
             print(f"Note: Could not verify new tables: {e}")
 

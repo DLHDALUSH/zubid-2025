@@ -3270,3 +3270,223 @@ window.closeModalAndReset = function(modalId) {
         originalCloseModalAndReset(modalId);
     }
 };
+
+// ==========================================
+// PASSWORD MANAGEMENT FUNCTIONS
+// ==========================================
+
+// Store reset identifier for password reset flow
+let resetIdentifier = '';
+let resetType = 'email';
+
+// Open modal helper
+function openModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.style.display = 'block';
+    }
+}
+
+// Show forgot password modal
+function showForgotPassword() {
+    closeModal('loginModal');
+    showForgotStep1();
+    openModal('forgotPasswordModal');
+}
+
+// Make openModal globally available
+window.openModal = openModal;
+
+// Toggle between email and phone reset method
+function toggleResetMethod(method) {
+    resetType = method;
+    const emailGroup = document.getElementById('forgotEmailGroup');
+    const phoneGroup = document.getElementById('forgotPhoneGroup');
+
+    if (method === 'phone') {
+        emailGroup.style.display = 'none';
+        phoneGroup.style.display = 'block';
+        document.getElementById('forgotEmail').value = '';
+    } else {
+        emailGroup.style.display = 'block';
+        phoneGroup.style.display = 'none';
+        document.getElementById('forgotPhone').value = '';
+    }
+}
+
+// Show step 1 of forgot password
+function showForgotStep1() {
+    document.getElementById('forgotStep1').style.display = 'block';
+    document.getElementById('forgotStep2').style.display = 'none';
+    // Reset form
+    document.getElementById('forgotEmail').value = '';
+    document.getElementById('forgotPhone').value = '';
+    document.getElementById('resetCode').value = '';
+    document.getElementById('newPassword').value = '';
+    document.getElementById('confirmNewPassword').value = '';
+}
+
+// Handle forgot password form submission
+async function handleForgotPassword(event) {
+    event.preventDefault();
+
+    const email = document.getElementById('forgotEmail').value.trim();
+    const phone = document.getElementById('forgotPhone').value.trim();
+
+    if (resetType === 'email' && !email) {
+        showToast('Please enter your email address', 'error');
+        return;
+    }
+
+    if (resetType === 'phone' && !phone) {
+        showToast('Please enter your phone number', 'error');
+        return;
+    }
+
+    const submitBtn = event.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<span class="loading-spinner"></span> Sending...';
+    submitBtn.disabled = true;
+
+    try {
+        const response = await UserAPI.forgotPassword(
+            resetType === 'email' ? email : phone,
+            resetType
+        );
+
+        resetIdentifier = resetType === 'email' ? email : phone;
+
+        // Show reset code for testing (remove in production)
+        if (response.reset_code) {
+            showToast(`Reset code: ${response.reset_code}`, 'success', 10000);
+        } else {
+            showToast('Reset code sent! Check your ' + (resetType === 'email' ? 'email' : 'phone'), 'success');
+        }
+
+        // Show step 2
+        document.getElementById('forgotStep1').style.display = 'none';
+        document.getElementById('forgotStep2').style.display = 'block';
+
+    } catch (error) {
+        showToast(error.message || 'Failed to send reset code', 'error');
+    } finally {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    }
+}
+
+// Handle reset password form submission
+async function handleResetPassword(event) {
+    event.preventDefault();
+
+    const code = document.getElementById('resetCode').value.trim();
+    const newPassword = document.getElementById('newPassword').value;
+    const confirmPassword = document.getElementById('confirmNewPassword').value;
+
+    if (!code || code.length !== 6) {
+        showToast('Please enter the 6-digit reset code', 'error');
+        return;
+    }
+
+    if (!newPassword) {
+        showToast('Please enter a new password', 'error');
+        return;
+    }
+
+    if (newPassword.length < 8) {
+        showToast('Password must be at least 8 characters', 'error');
+        return;
+    }
+
+    if (newPassword !== confirmPassword) {
+        showToast('Passwords do not match', 'error');
+        return;
+    }
+
+    const submitBtn = event.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<span class="loading-spinner"></span> Resetting...';
+    submitBtn.disabled = true;
+
+    try {
+        await UserAPI.resetPassword(resetIdentifier, code, newPassword, resetType);
+
+        showToast('Password reset successful! Please login with your new password.', 'success');
+        closeModal('forgotPasswordModal');
+
+        // Reset form
+        showForgotStep1();
+
+        // Show login modal
+        setTimeout(() => {
+            showLogin();
+        }, 1000);
+
+    } catch (error) {
+        showToast(error.message || 'Failed to reset password', 'error');
+    } finally {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    }
+}
+
+// Handle change password form submission (for logged-in users)
+async function handleChangePassword(event) {
+    event.preventDefault();
+
+    const currentPassword = document.getElementById('currentPassword').value;
+    const newPassword = document.getElementById('newPasswordProfile')?.value || document.getElementById('newPassword')?.value;
+    const confirmPassword = document.getElementById('confirmNewPasswordProfile')?.value || document.getElementById('confirmNewPassword')?.value;
+
+    if (!currentPassword) {
+        showToast('Please enter your current password', 'error');
+        return;
+    }
+
+    if (!newPassword) {
+        showToast('Please enter a new password', 'error');
+        return;
+    }
+
+    if (newPassword.length < 8) {
+        showToast('New password must be at least 8 characters', 'error');
+        return;
+    }
+
+    if (newPassword !== confirmPassword) {
+        showToast('New passwords do not match', 'error');
+        return;
+    }
+
+    const submitBtn = event.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<span class="loading-spinner"></span> Changing...';
+    submitBtn.disabled = true;
+
+    try {
+        await UserAPI.changePassword(currentPassword, newPassword);
+
+        showToast('Password changed successfully!', 'success');
+
+        // Clear form
+        document.getElementById('currentPassword').value = '';
+        if (document.getElementById('newPasswordProfile')) {
+            document.getElementById('newPasswordProfile').value = '';
+            document.getElementById('confirmNewPasswordProfile').value = '';
+        }
+
+    } catch (error) {
+        showToast(error.message || 'Failed to change password', 'error');
+    } finally {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    }
+}
+
+// Make functions globally available
+window.showForgotPassword = showForgotPassword;
+window.toggleResetMethod = toggleResetMethod;
+window.showForgotStep1 = showForgotStep1;
+window.handleForgotPassword = handleForgotPassword;
+window.handleResetPassword = handleResetPassword;
+window.handleChangePassword = handleChangePassword;

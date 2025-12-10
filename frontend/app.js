@@ -3279,12 +3279,23 @@ window.closeModalAndReset = function(modalId) {
 let resetIdentifier = '';
 let resetType = 'email';
 
+// Open modal helper
+function openModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.style.display = 'block';
+    }
+}
+
 // Show forgot password modal
 function showForgotPassword() {
     closeModal('loginModal');
     showForgotStep1();
     openModal('forgotPasswordModal');
 }
+
+// Make openModal globally available
+window.openModal = openModal;
 
 // Toggle between email and phone reset method
 function toggleResetMethod(method) {

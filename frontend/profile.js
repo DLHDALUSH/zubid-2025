@@ -623,4 +623,60 @@ window.onclick = function(event) {
     }
 }
 
+// ==========================================
+// PASSWORD CHANGE FUNCTIONALITY
+// ==========================================
 
+// Handle change password form submission
+async function handleChangePassword(event) {
+    event.preventDefault();
+
+    const currentPassword = document.getElementById('currentPassword').value;
+    const newPassword = document.getElementById('newPasswordProfile').value;
+    const confirmPassword = document.getElementById('confirmNewPasswordProfile').value;
+
+    if (!currentPassword) {
+        showToast('Please enter your current password', 'error');
+        return;
+    }
+
+    if (!newPassword) {
+        showToast('Please enter a new password', 'error');
+        return;
+    }
+
+    if (newPassword.length < 8) {
+        showToast('New password must be at least 8 characters', 'error');
+        return;
+    }
+
+    if (newPassword !== confirmPassword) {
+        showToast('New passwords do not match', 'error');
+        return;
+    }
+
+    const submitBtn = event.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<span class="loading-spinner"></span> Changing...';
+    submitBtn.disabled = true;
+
+    try {
+        await UserAPI.changePassword(currentPassword, newPassword);
+
+        showToast('Password changed successfully!', 'success');
+
+        // Clear form
+        document.getElementById('currentPassword').value = '';
+        document.getElementById('newPasswordProfile').value = '';
+        document.getElementById('confirmNewPasswordProfile').value = '';
+
+    } catch (error) {
+        showToast(error.message || 'Failed to change password', 'error');
+    } finally {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    }
+}
+
+// Make function globally available
+window.handleChangePassword = handleChangePassword;
