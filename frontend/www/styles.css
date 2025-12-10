@@ -12693,3 +12693,34 @@ body {
         font-size: 0.85rem !important;
     }
 }
+
+/* ===== MOBILE NAV: show only logo + Home + Auctions + My Bids + Notifications in top row ===== */
+.mobile-more-dropdown {
+    display: none;
+}
+
+@media screen and (max-width: 768px) {
+	    /* Hide secondary dropdowns from the main nav row (My Account, Info, guest settings) */
+	    .nav-links .nav-dropdown {
+	        display: none !important;
+	    }
+	
+	    /* Hide desktop auth/settings/user controls from the main row on small screens */
+	    #navAuth,
+	    #navUser,
+	    #guestSettingsDropdown,
+	    #paymentsNavLink {
+	        display: none !important;
+	    }
+	
+	    /* Show the mobile-only "More" dropdown */
+	    .mobile-more-dropdown {
+	        display: flex !important;
+	    }
+	
+	    .mobile-more-dropdown .dropdown-menu {
+	        right: 0;
+	        left: auto;
+	        min-width: 220px;
+	    }
+	}

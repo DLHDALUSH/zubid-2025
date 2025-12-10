@@ -69,34 +69,37 @@ document.addEventListener('DOMContentLoaded', async () => {
         await loadAuctions();
         console.log('Auctions page: Auctions loaded successfully');
         clearTimeout(loadingTimeout);
-    } catch (error) {
-        clearTimeout(loadingTimeout);
-        console.error('Error during initialization:', error);
-        
-        // Show error to user
-        const loadingIndicator = document.getElementById('loadingIndicator');
-        const container = document.getElementById('auctionsContainer');
-        const errorMessage = document.getElementById('errorMessage');
-        
-        if (loadingIndicator) {
-            loadingIndicator.style.display = 'none';
-        }
-        
-        if (errorMessage) {
-            errorMessage.textContent = error.message || 'Failed to load auctions. Please refresh the page.';
-            errorMessage.style.display = 'block';
-        }
-        
-        if (container) {
-            container.style.display = 'block';
-            container.innerHTML = `<div class="error-state">
-                <p>${error.message || 'Failed to load auctions'}</p>
-                <button class="btn btn-primary" onclick="location.reload()">Refresh Page</button>
-            </div>`;
-        }
-        
-        showToast(error.message || 'Failed to load auctions', 'error');
-    }
+	    } catch (error) {
+	        clearTimeout(loadingTimeout);
+	        console.error('Error during initialization:', error);
+	        
+	        // Show error to user
+	        const loadingIndicator = document.getElementById('loadingIndicator');
+	        const container = document.getElementById('auctionsContainer');
+	        const errorMessage = document.getElementById('errorMessage');
+	        
+	        if (loadingIndicator) {
+	            loadingIndicator.style.display = 'none';
+	        }
+	        
+	        const rawMessage = (error && error.message) ? error.message : 'Failed to load auctions. Please refresh the page.';
+	        const safeMessage = (typeof escapeHtml === 'function') ? escapeHtml(rawMessage) : rawMessage;
+	        
+	        if (errorMessage) {
+	            errorMessage.textContent = rawMessage;
+	            errorMessage.style.display = 'block';
+	        }
+	        
+	        if (container) {
+	            container.style.display = 'block';
+	            container.innerHTML = `<div class="error-state">
+	                <p>${safeMessage}</p>
+	                <button class="btn btn-primary" onclick="location.reload()">Refresh Page</button>
+	            </div>`;
+	        }
+	        
+	        showToast(rawMessage, 'error');
+	    }
     
     // Set up filter event listeners with debouncing
     setupEventListeners();

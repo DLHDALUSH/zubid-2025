@@ -1,6 +1,14 @@
 // 🔔 ZUBID Notifications System
 // ==============================
 
+// Basic HTML escaping to prevent XSS in notification content
+function escapeNotificationHtml(text) {
+    if (text == null) return '';
+    const div = document.createElement('div');
+    div.textContent = String(text);
+    return div.innerHTML;
+}
+
 const NotificationManager = {
     STORAGE_KEY: 'zubid-notifications',
     notifications: [],
@@ -130,22 +138,24 @@ const NotificationManager = {
         list.innerHTML = this.notifications.slice(0, 10).map(n => this.renderNotificationItem(n)).join('');
     },
 
-    renderNotificationItem(notification) {
-        const icons = { bid: '🏷️', win: '🏆', outbid: '⚠️', payment: '💳', system: '📢' };
-        const icon = icons[notification.type] || '📌';
-        const timeAgo = this.getTimeAgo(new Date(notification.time));
+	    renderNotificationItem(notification) {
+	        const icons = { bid: '🏷️', win: '🏆', outbid: '⚠️', payment: '💳', system: '📢' };
+	        const icon = icons[notification.type] || '📌';
+	        const timeAgo = this.getTimeAgo(new Date(notification.time));
+	        const safeTitle = escapeNotificationHtml(notification.title);
+	        const safeMessage = escapeNotificationHtml(notification.message);
 
-        return `
-            <div class="notification-item ${notification.read ? '' : 'unread'}" data-id="${notification.id}" onclick="NotificationManager.markAsRead(${notification.id})">
-                <div class="notification-icon ${notification.type}">${icon}</div>
-                <div class="notification-content">
-                    <div class="notification-title">${notification.title}</div>
-                    <div class="notification-message">${notification.message}</div>
-                    <div class="notification-time">${timeAgo}</div>
-                </div>
-            </div>
-        `;
-    },
+	        return `
+	            <div class="notification-item ${notification.read ? '' : 'unread'}" data-id="${notification.id}" onclick="NotificationManager.markAsRead(${notification.id})">
+	                <div class="notification-icon ${notification.type}">${icon}</div>
+	                <div class="notification-content">
+	                    <div class="notification-title">${safeTitle}</div>
+	                    <div class="notification-message">${safeMessage}</div>
+	                    <div class="notification-time">${timeAgo}</div>
+	                </div>
+	            </div>
+	        `;
+	    },
 
     getTimeAgo(date) {
         const seconds = Math.floor((new Date() - date) / 1000);

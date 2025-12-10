@@ -4,22 +4,29 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
     <title>All Auctions - ZUBID</title>
+	    <meta name="description" content="Browse all live and upcoming ZUBID auctions, filter by category, price and status, and place bids in real time.">
+	    <meta property="og:title" content="All Auctions - ZUBID">
+	    <meta property="og:description" content="Browse all live and upcoming ZUBID auctions and place bids in real time.">
+	    <meta property="og:type" content="website">
+	    <meta property="og:image" content="icons/icon-512x512.png">
+	    <meta name="twitter:card" content="summary_large_image">
+	    <meta name="twitter:title" content="All Auctions - ZUBID">
+	    <meta name="twitter:description" content="Browse all live and upcoming ZUBID auctions and place bids in real time.">
+	    <meta name="twitter:image" content="icons/icon-512x512.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css?v=20251210-responsive-fix">
     <!-- Enhanced Utilities -->
-    <script src="utils.js"></script>
-    <script src="enhanced-utils.js"></script>
-    <script src="performance.js"></script>
-    <script src="accessibility.js"></script>
-    <!-- Tesseract.js for OCR -->
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1/dist/tesseract.min.js"></script>
-    <!-- i18n Translation System -->
-    <script src="i18n.js"></script>
-    <!-- Theme & Notifications -->
-    <script src="theme.js"></script>
-    <script src="notifications.js"></script>
+	    <script src="utils.js" defer></script>
+	    <script src="enhanced-utils.js" defer></script>
+	    <script src="performance.js" defer></script>
+	    <script src="accessibility.js" defer></script>
+	    <!-- i18n Translation System -->
+	    <script src="i18n.js" defer></script>
+	    <!-- Theme & Notifications -->
+	    <script src="theme.js" defer></script>
+	    <script src="notifications.js" defer></script>
 </head>
 <body>
 	    <!-- Navigation -->
@@ -259,6 +266,112 @@
                             </button>
                         </div>
                     </div>
+	            	
+	            	                    <!-- Mobile-only "More" dropdown: contains all secondary items on small screens -->
+	            	                    <div class="nav-dropdown mobile-more-dropdown">
+	            	                        <button class="nav-link dropdown-toggle" aria-label="More">
+	            	                            <!-- More (three dots) icon -->
+	            	                            <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+	            	                                <circle cx="5" cy="12" r="1.5"></circle>
+	            	                                <circle cx="12" cy="12" r="1.5"></circle>
+	            	                                <circle cx="19" cy="12" r="1.5"></circle>
+	            	                            </svg>
+	            	                            <svg class="dropdown-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+	            	                                <polyline points="6 9 12 15 18 9"></polyline>
+	            	                            </svg>
+	            	                        </button>
+	            	                        <div class="dropdown-menu mobile-more-menu">
+	            	                            <!-- Guest actions -->
+	            	                            <button class="dropdown-item" id="mobileLoginItem" onclick="showLogin()" data-i18n="nav.login">Login</button>
+	            	                            <button class="dropdown-item" id="mobileSignUpItem" onclick="showRegister()" data-i18n="nav.signUp">Sign Up</button>
+	            	                            <div class="dropdown-divider" id="mobileAuthDivider"></div>
+	            	
+	            	                            <!-- Authenticated-only shortcuts -->
+	            	                            <a href="profile.html" class="dropdown-item" id="mobileProfileItem">
+	            	                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+	            	                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+	            	                                    <circle cx="12" cy="7" r="4"></circle>
+	            	                                </svg>
+	            	                                <span data-i18n="nav.profile">Profile</span>
+	            	                            </a>
+	            	                            <a href="payments.html" class="dropdown-item" id="mobilePaymentsItem">
+	            	                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+	            	                                    <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+	            	                                    <line x1="1" y1="10" x2="23" y2="10"></line>
+	            	                                </svg>
+	            	                                <span data-i18n="nav.payments">Payments</span>
+	            	                            </a>
+	            	                            <a href="return-requests.html" class="dropdown-item" id="mobileReturnRequestsItem">
+	            	                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+	            	                                    <polyline points="1 4 1 10 7 10"></polyline>
+	            	                                    <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+	            	                                </svg>
+	            	                                <span>Return Requests</span>
+	            	                            </a>
+	            	                            <button class="dropdown-item" id="mobileLogoutItem" onclick="logout()">
+	            	                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+	            	                                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+	            	                                    <polyline points="16 17 21 12 16 7"></polyline>
+	            	                                    <line x1="21" y1="12" x2="9" y2="12"></line>
+	            	                                </svg>
+	            	                                <span data-i18n="nav.logout">Logout</span>
+	            	                            </button>
+	            	
+	            	                            <div class="dropdown-divider"></div>
+	            	
+	            	                            <!-- Theme toggle -->
+	            	                            <button class="dropdown-item theme-toggle-dropdown" onclick="toggleTheme()">
+	            	                                <svg class="sun-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+	            	                                    <circle cx="12" cy="12" r="5"></circle>
+	            	                                    <line x1="12" y1="1" x2="12" y2="3"></line>
+	            	                                    <line x1="12" y1="21" x2="12" y2="23"></line>
+	            	                                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+	            	                                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+	            	                                    <line x1="1" y1="12" x2="3" y2="12"></line>
+	            	                                    <line x1="21" y1="12" x2="23" y2="12"></line>
+	            	                                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+	            	                                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+	            	                                </svg>
+	            	                                <svg class="moon-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+	            	                                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+	            	                                </svg>
+	            	                                <span data-i18n="nav.darkMode">Dark Mode</span>
+	            	                            </button>
+	            	
+	            	                            <!-- Language options -->
+			                            <div class="dropdown-item language-menu-item">
+			                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+			                                    <circle cx="12" cy="12" r="10"></circle>
+			                                    <line x1="2" y1="12" x2="22" y2="12"></line>
+			                                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+			                                </svg>
+			                                <span data-i18n="nav.language">Language</span>
+			                                <div class="language-submenu">
+			                                    <button class="language-btn" onclick="changeLang('en')">English</button>
+			                                    <button class="language-btn" onclick="changeLang('ku')">1   </button>
+			                                    <button class="language-btn" onclick="changeLang('ar')">       </button>
+			                                </div>
+			                            </div>
+	            	
+	            	                            <div class="dropdown-divider"></div>
+	            	
+	            	                            <!-- Info links -->
+	            	                            <a href="how-to-bid.html" class="dropdown-item">
+	            	                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+	            	                                    <circle cx="12" cy="12" r="10"></circle>
+	            	                                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+	            	                                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+	            	                                </svg>
+	            	                                <span data-i18n="messages.howToBid">How to Bid</span>
+	            	                            </a>
+	            	                            <a href="contact-us.html" class="dropdown-item">
+	            	                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+	            	                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+	            	                                </svg>
+	            	                                <span data-i18n="messages.contactUs">Contact Us</span>
+	            	                            </a>
+	            	                        </div>
+	            	                    </div>
                 </div>
 	            </div>
 

@@ -1136,12 +1136,19 @@ async function loadCategories() {
         
         if (!container) return;
         
-        container.innerHTML = categories.map(cat => `
-            <div class="category-card" onclick="filterByCategory(${cat.id})">
-                <h3>${cat.name}</h3>
-                <p>${cat.description || ''}</p>
-            </div>
-        `).join('');
+        container.innerHTML = categories
+            .map(cat => {
+                const safeId = Number(cat.id) || 0;
+                const safeName = escapeHtml(cat.name || '');
+                const safeDescription = escapeHtml(cat.description || '');
+                return `
+                    <div class="category-card" onclick="filterByCategory(${safeId})">
+                        <h3>${safeName}</h3>
+                        <p>${safeDescription}</p>
+                    </div>
+                `;
+            })
+            .join('');
     } catch (error) {
         debugError('Error loading categories:', error);
     }
@@ -2493,19 +2500,72 @@ function updateStepUI() {
     updateStepStatus('selfie', !!capturedSelfie);
 }
 
-// Process ID card image with OCR
+// Lazy-load Tesseract.js once when OCR is first needed
+let tesseractLoadPromise = null;
+
+function loadTesseractScript() {
+    if (typeof Tesseract !== 'undefined') {
+        return Promise.resolve(Tesseract);
+    }
+    if (tesseractLoadPromise) return tesseractLoadPromise;
+
+    tesseractLoadPromise = new Promise((resolve, reject) => {
+        try {
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1/dist/tesseract.min.js';
+            script.async = true;
+            script.onload = () => {
+                if (typeof Tesseract !== 'undefined') {
+                    resolve(Tesseract);
+                } else {
+                    reject(new Error('Tesseract.js loaded but global Tesseract is undefined'));
+                }
+            };
+            script.onerror = (err) => {
+                if (typeof debugError === 'function') {
+                    debugError('Failed to load Tesseract.js', err);
+                }
+                reject(new Error('Failed to load Tesseract.js'));
+            };
+            document.head.appendChild(script);
+        } catch (err) {
+            if (typeof debugError === 'function') {
+                debugError('Error while injecting Tesseract.js script', err);
+            }
+            reject(err);
+        }
+    });
+
+    return tesseractLoadPromise;
+}
+
+// Process ID card image with OCR (now uses lazy-loaded Tesseract.js)
 async function processIDCardWithOCR(imageData, side = 'front') {
     try {
-        // Check if Tesseract is available
         if (typeof Tesseract === 'undefined') {
-            debugWarn('Tesseract.js not loaded, skipping OCR');
+            try {
+                await loadTesseractScript();
+            } catch (loadError) {
+                if (typeof debugError === 'function') {
+                    debugError('Tesseract.js load error:', loadError);
+                }
+                if (typeof showToast === 'function') {
+                    showToast('OCR engine could not be loaded. Please enter details manually.', 'warning');
+                }
+                return null;
+            }
+        }
+
+        if (typeof Tesseract === 'undefined') {
+            if (typeof debugWarn === 'function') {
+                debugWarn('Tesseract.js not available after loading, skipping OCR');
+            }
             return null;
         }
-        
+
         const sideText = side === 'front' ? 'front' : 'back';
         showToast(`Extracting text from ID card ${sideText}...`, 'info');
-        
-        // Use Tesseract to recognize text from the image
+
         const { data: { text } } = await Tesseract.recognize(imageData, 'eng', {
             logger: (info) => {
                 if (info.status === 'recognizing text') {
@@ -2514,16 +2574,22 @@ async function processIDCardWithOCR(imageData, side = 'front') {
                 }
             }
         });
-        
+
         debugLog('OCR Extracted Text:', text);
-        
-        // Parse the extracted text to find name, birth date, and ID number
+
         const extractedData = parseIDCardText(text);
-        
+
         return extractedData;
     } catch (error) {
-        console.error('OCR processing error:', error);
-        throw error;
+        if (typeof debugError === 'function') {
+            debugError('OCR processing error:', error);
+        } else {
+            console.error('OCR processing error:', error);
+        }
+        if (typeof showToast === 'function') {
+            showToast('Failed to process ID card. Please enter details manually.', 'error');
+        }
+        return null;
     }
 }
 
