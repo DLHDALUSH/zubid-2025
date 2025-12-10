@@ -175,10 +175,18 @@ function filterPayments(filter) {
     });
 }
 
+// Basic HTML escaping helper for safely displaying auction titles, etc.
+function escapeHtml(text) {
+	if (text === null || text === undefined) return '';
+	const div = document.createElement('div');
+	div.textContent = String(text);
+	return div.innerHTML;
+}
+
 function createInvoiceCard(payment) {
-    const card = document.createElement('div');
-    card.className = 'premium-invoice-card';
-    card.id = `invoice-${payment.id}`;
+	const card = document.createElement('div');
+	card.className = 'premium-invoice-card';
+	card.id = `invoice-${payment.id}`;
 
     const statusClass = payment.payment_status === 'paid' ? 'paid' :
                        payment.payment_status === 'pending' ? 'pending' : 'failed';
@@ -205,12 +213,14 @@ function createInvoiceCard(payment) {
     // Get QR code URL
     let qrCodeUrl = getFullUrl(payment.qr_code_url || payment.auction?.qr_code_url);
 
-    // Get Product Image URL - Fixed!
-    let productImageUrl = getFullUrl(payment.auction?.image_url);
+	// Get Product Image URL - Fixed!
+	let productImageUrl = getFullUrl(payment.auction?.image_url);
 
-    const shortItemName = payment.auction.item_name.length > 30
-        ? payment.auction.item_name.substring(0, 27) + '...'
-        : payment.auction.item_name;
+	const rawItemName = payment.auction?.item_name || '';
+	const safeItemName = escapeHtml(rawItemName);
+	const shortItemName = rawItemName.length > 30
+	    ? `${rawItemName.substring(0, 27)}...`
+	    : rawItemName;
 
     card.innerHTML = `
         <!-- Premium Invoice Header -->
@@ -230,9 +240,9 @@ function createInvoiceCard(payment) {
 
         <!-- Product Showcase Section -->
         <div class="product-showcase">
-            <div class="product-image-wrapper">
-                ${productImageUrl ? `
-                    <img src="${productImageUrl}" alt="${shortItemName}" class="product-image" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+	            <div class="product-image-wrapper">
+	                ${productImageUrl ? `
+	                    <img src="${productImageUrl}" alt="${escapeHtml(shortItemName)}" class="product-image" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
                     <div class="product-image-fallback" style="display:none;">
                         <span class="fallback-icon">📦</span>
                     </div>
@@ -247,8 +257,8 @@ function createInvoiceCard(payment) {
                     </a>
                 </div>
             </div>
-            <div class="product-details">
-                <h3 class="product-name" title="${payment.auction.item_name}">${shortItemName}</h3>
+	            <div class="product-details">
+	                <h3 class="product-name" title="${safeItemName}">${escapeHtml(shortItemName)}</h3>
                 <div class="product-meta">
                     <span class="meta-item">
                         <span class="meta-icon">📅</span>

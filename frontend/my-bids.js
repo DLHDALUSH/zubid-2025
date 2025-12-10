@@ -1,4 +1,12 @@
 // My Bids page functionality
+
+// Basic HTML escaping helper for safely displaying auction titles, etc.
+function escapeHtml(text) {
+	if (text === null || text === undefined) return '';
+	const div = document.createElement('div');
+	div.textContent = String(text);
+	return div.innerHTML;
+}
 document.addEventListener('DOMContentLoaded', async () => {
     // Wait for app.js to load and check authentication
     // Check if checkAuth exists, if not wait a bit
@@ -138,12 +146,15 @@ async function loadMyBids() {
 	                        bidClass = 'losing-bid';
 	                    }
 	                    
+	                    const safeAuctionName = escapeHtml(bid.auction_name || unknownAuction);
+	                    const safeAuctionId = Number(bid.auction_id) || 0;
+	                    
 	                    return `
-	                        <div class="bid-history-item ${bidClass}" onclick="window.location.href='auction-detail.html?id=${bid.auction_id}'">
+	                        <div class="bid-history-item ${bidClass}" onclick="window.location.href='auction-detail.html?id=${safeAuctionId}'">
 	                            <div class="bid-info">
 	                                <div>
 	                                    <div class="bid-header">
-	                                        <strong>${bid.auction_name || unknownAuction}</strong>
+	                                        <strong>${safeAuctionName}</strong>
 	                                        ${statusBadge}
 	                                    </div>
 	                                    <div class="bid-details">

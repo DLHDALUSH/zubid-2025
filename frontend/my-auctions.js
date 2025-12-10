@@ -1,4 +1,13 @@
 // My Auctions page functionality
+
+// Basic HTML escaping helper for safely displaying auction titles, etc.
+function escapeHtml(text) {
+	if (text === null || text === undefined) return '';
+	const div = document.createElement('div');
+	div.textContent = String(text);
+	return div.innerHTML;
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     // Wait for app.js to load and check authentication
     // Check if checkAuth exists, if not wait a bit
@@ -47,17 +56,24 @@ async function loadMyAuctions() {
             throw new Error('Please login to view your auctions');
         }
         
-        const auctions = await AuctionAPI.getUserAuctions();
+	        const auctions = await AuctionAPI.getUserAuctions();
         
         if (loadingIndicator) loadingIndicator.style.display = 'none';
         
-        if (auctions && auctions.length > 0) {
+	        if (auctions && auctions.length > 0) {
             if (container) {
                 container.style.display = 'grid';
-                container.innerHTML = auctions.map(auction => `
-                    <div class="auction-card" onclick="window.location.href='auction-detail.html?id=${auction.id}'">
-                        <div class="auction-card-content">
-                            <h3>${auction.item_name}</h3>
+	                container.innerHTML = auctions.map(auction => {
+	                    const safeTitle = escapeHtml(auction.item_name || '');
+	                    const rawStatus = auction.status || 'active';
+	                    const allowedStatuses = ['active', 'ended', 'cancelled', 'pending'];
+	                    const safeStatusClass = allowedStatuses.includes(rawStatus) ? rawStatus : 'other';
+	                    const safeStatusLabel = escapeHtml(rawStatus);
+	                    const safeAuctionId = Number(auction.id) || 0;
+	                    return `
+	                    <div class="auction-card" onclick="window.location.href='auction-detail.html?id=${safeAuctionId}'">
+	                        <div class="auction-card-content">
+	                            <h3>${safeTitle}</h3>
                             <div class="auction-stats">
                                 <div class="stat">
                                     <label>Current Bid</label>
@@ -65,7 +81,7 @@ async function loadMyAuctions() {
                                 </div>
                                 <div class="stat">
                                     <label>Status</label>
-                                    <span class="status-badge ${auction.status || 'active'}">${auction.status || 'active'}</span>
+	                                    <span class="status-badge ${safeStatusClass}">${safeStatusLabel}</span>
                                 </div>
                                 <div class="stat">
                                     <label>Bids</label>
@@ -78,7 +94,7 @@ async function loadMyAuctions() {
                             <button class="btn btn-primary btn-block">View Auction</button>
                         </div>
                     </div>
-                `).join('');
+	                `; }).join('');
             }
             if (noAuctions) noAuctions.style.display = 'none';
         } else {

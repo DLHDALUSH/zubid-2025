@@ -1,6 +1,14 @@
 // Create auction page functionality
 let html5QrcodeScanner = null;
 
+// Basic HTML escaping helper for safely displaying scanned/remote data
+function escapeHtml(text) {
+	if (text === null || text === undefined) return '';
+	const div = document.createElement('div');
+	div.textContent = String(text);
+	return div.innerHTML;
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     await loadCategories();
     
@@ -386,17 +394,60 @@ function onScanSuccess(decodedText, decodedResult) {
         if (resultsDiv && dataDiv) {
             resultsDiv.style.display = 'block';
 
-            // Format the scanned data nicely
-            let displayText = '';
-            if (qrData.item_name) displayText += `📦 <strong>Item:</strong> ${qrData.item_name}<br>`;
-            if (qrData.brand) displayText += `🏷️ <strong>Brand:</strong> ${qrData.brand}<br>`;
-            if (qrData.category) displayText += `📁 <strong>Category:</strong> ${qrData.category}<br>`;
-            if (qrData.price || qrData.starting_bid) displayText += `💰 <strong>Price:</strong> $${qrData.price || qrData.starting_bid}<br>`;
-            if (qrData.condition) displayText += `✨ <strong>Condition:</strong> ${qrData.condition}<br>`;
-            if (qrData.url) displayText += `🔗 <strong>URL:</strong> <a href="${qrData.url}" target="_blank">${qrData.url.substring(0, 40)}...</a><br>`;
-            if (!displayText && qrData.raw_text) displayText = `📝 ${qrData.raw_text}`;
-
-            dataDiv.innerHTML = displayText || 'QR Code scanned successfully';
+	    	    // Clear previous content
+	    	    dataDiv.innerHTML = '';
+	    	
+	    	    // Format the scanned data safely
+	    	    if (qrData.item_name) {
+	    	        const p = document.createElement('p');
+	    	        p.innerHTML = `📦 <strong>Item:</strong> ${escapeHtml(qrData.item_name)}`;
+	    	        dataDiv.appendChild(p);
+	    	    }
+	    	    if (qrData.brand) {
+	    	        const p = document.createElement('p');
+	    	        p.innerHTML = `🏷️ <strong>Brand:</strong> ${escapeHtml(qrData.brand)}`;
+	    	        dataDiv.appendChild(p);
+	    	    }
+	    	    if (qrData.category) {
+	    	        const p = document.createElement('p');
+	    	        p.innerHTML = `📁 <strong>Category:</strong> ${escapeHtml(qrData.category)}`;
+	    	        dataDiv.appendChild(p);
+	    	    }
+	    	    if (qrData.price || qrData.starting_bid) {
+	    	        const p = document.createElement('p');
+	    	        const price = qrData.price || qrData.starting_bid;
+	    	        p.innerHTML = `💰 <strong>Price:</strong> $${price}`;
+	    	        dataDiv.appendChild(p);
+	    	    }
+	    	    if (qrData.condition) {
+	    	        const p = document.createElement('p');
+	    	        p.innerHTML = `✨ <strong>Condition:</strong> ${escapeHtml(qrData.condition)}`;
+	    	        dataDiv.appendChild(p);
+	    	    }
+	    	    if (qrData.url) {
+	    	        const p = document.createElement('p');
+	    	        const link = document.createElement('a');
+	    	        link.href = qrData.url;
+	    	        link.target = '_blank';
+	    	        link.rel = 'noopener noreferrer';
+	    	        const displayUrl = qrData.url.length > 40 ? `${qrData.url.substring(0, 40)}...` : qrData.url;
+	    	        link.textContent = displayUrl;
+	    	        p.append('🔗 ');
+	    	        const strong = document.createElement('strong');
+	    	        strong.textContent = 'URL:';
+	    	        p.appendChild(strong);
+	    	        p.append(' ');
+	    	        p.appendChild(link);
+	    	        dataDiv.appendChild(p);
+	    	    }
+	    	    if (!dataDiv.hasChildNodes() && qrData.raw_text) {
+	    	        const p = document.createElement('p');
+	    	        p.textContent = `📝 ${qrData.raw_text}`;
+	    	        dataDiv.appendChild(p);
+	    	    }
+	    	    if (!dataDiv.hasChildNodes()) {
+	    	        dataDiv.textContent = 'QR Code scanned successfully';
+	    	    }
         }
 
         updateScannerStatus('idle', 'Scan complete!');
@@ -633,8 +684,12 @@ async function loadCategories() {
         const categories = await CategoryAPI.getAll();
         const select = document.getElementById('category');
         if (select) {
-            select.innerHTML = '<option value="">Select Category</option>' +
-                categories.map(cat => `<option value="${cat.id}">${cat.name}</option>`).join('');
+	        select.innerHTML = '<option value="">Select Category</option>' +
+	            categories.map(cat => {
+	                const safeId = Number(cat.id) || 0;
+	                const safeName = escapeHtml(cat.name || '');
+	                return `<option value="${safeId}">${safeName}</option>`;
+	            }).join('');
         }
     } catch (error) {
         console.error('Error loading categories:', error);

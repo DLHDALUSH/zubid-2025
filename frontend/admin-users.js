@@ -2,6 +2,14 @@
 let currentPage = 1;
 let currentSearch = '';
 
+// Basic HTML escaping helper for safely displaying user data
+function escapeHtml(text) {
+	if (text === null || text === undefined) return '';
+	const div = document.createElement('div');
+	div.textContent = String(text);
+	return div.innerHTML;
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     await checkAdminAuth();
     await loadUsers();
@@ -14,25 +22,33 @@ async function loadUsers(page = 1) {
     const tbody = document.getElementById('usersTableBody');
     tbody.innerHTML = '<tr><td colspan="8" class="loading">Loading users...</td></tr>';
     
-    try {
-        const data = await AdminAPI.getUsers(page, currentSearch);
-        
-        if (data.users && data.users.length > 0) {
-            tbody.innerHTML = data.users.map(user => `
-                <tr>
-                    <td>${user.id}</td>
-                    <td>${user.username}</td>
-                    <td>${user.email}</td>
-                    <td><span class="status-badge ${user.role}">${user.role}</span></td>
-                    <td>${user.auction_count}</td>
-                    <td>${user.bid_count}</td>
-                    <td>${new Date(user.created_at).toLocaleDateString()}</td>
-                    <td class="actions">
-                        <button class="btn btn-small btn-primary" onclick="editUser(${user.id})">Edit</button>
-                        ${user.role !== 'admin' ? `<button class="btn btn-small btn-danger" onclick="deleteUser(${user.id})">Delete</button>` : ''}
-                    </td>
-                </tr>
-            `).join('');
+	    try {
+	        const data = await AdminAPI.getUsers(page, currentSearch);
+	        
+	        if (data.users && data.users.length > 0) {
+	            tbody.innerHTML = data.users.map(user => {
+	                const safeUsername = escapeHtml(user.username || '');
+	                const safeEmail = escapeHtml(user.email || '');
+	                const allowedRoles = ['admin', 'user', 'moderator'];
+	                const roleClass = allowedRoles.includes(user.role) ? user.role : 'other';
+	                const roleLabel = escapeHtml(user.role || 'user');
+	                const safeUserId = Number(user.id) || 0;
+	                const createdAt = user.created_at ? new Date(user.created_at).toLocaleDateString() : '';
+	                return `
+	                <tr>
+	                    <td>${safeUserId}</td>
+	                    <td>${safeUsername}</td>
+	                    <td>${safeEmail}</td>
+	                    <td><span class="status-badge ${roleClass}">${roleLabel}</span></td>
+	                    <td>${user.auction_count}</td>
+	                    <td>${user.bid_count}</td>
+	                    <td>${createdAt}</td>
+	                    <td class="actions">
+	                        <button class="btn btn-small btn-primary" onclick="editUser(${safeUserId})">Edit</button>
+	                        ${user.role !== 'admin' ? `<button class="btn btn-small btn-danger" onclick="deleteUser(${safeUserId})">Delete</button>` : ''}
+	                    </td>
+	                </tr>
+	            `; }).join('');
             
             renderPagination(data, 'userPagination');
         } else {

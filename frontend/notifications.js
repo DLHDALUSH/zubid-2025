@@ -98,28 +98,38 @@ const NotificationManager = {
         });
     },
 
-    setupEventListeners() {
-        // Toggle dropdown
-        document.addEventListener('click', (e) => {
-            const btn = e.target.closest('.notifications-btn');
-            const dropdown = document.querySelector('.notifications-dropdown');
-            
-            if (btn && dropdown) {
-                e.stopPropagation();
-                dropdown.classList.toggle('active');
-                this.renderNotifications();
-            } else if (dropdown && !e.target.closest('.notifications-dropdown')) {
-                dropdown.classList.remove('active');
-            }
-        });
+	    setupEventListeners() {
+	        // Toggle dropdown (support multiple navbars if present)
+	        document.addEventListener('click', (e) => {
+	            const btn = e.target.closest('.notifications-btn');
+	            const wrapper = btn ? btn.closest('.notifications-wrapper') : null;
+	            const dropdown = wrapper ? wrapper.querySelector('.notifications-dropdown') : document.querySelector('.notifications-dropdown');
 
-        // Mark all as read
-        document.addEventListener('click', (e) => {
-            if (e.target.closest('.mark-all-read-btn')) {
-                this.markAllAsRead();
-            }
-        });
-    },
+	            // Close any open dropdowns when clicking outside
+	            const allDropdowns = document.querySelectorAll('.notifications-dropdown');
+	            if (!btn && !e.target.closest('.notifications-dropdown')) {
+	                allDropdowns.forEach(d => d.classList.remove('active'));
+	                return;
+	            }
+
+	            if (btn && dropdown) {
+	                e.stopPropagation();
+	                const isActive = dropdown.classList.contains('active');
+	                allDropdowns.forEach(d => d.classList.remove('active'));
+	                if (!isActive) {
+	                    dropdown.classList.add('active');
+	                    this.renderNotifications();
+	                }
+	            }
+	        });
+
+	        // Mark all as read
+	        document.addEventListener('click', (e) => {
+	            if (e.target.closest('.mark-all-read-btn')) {
+	                this.markAllAsRead();
+	            }
+	        });
+	    },
 
     renderNotifications() {
         const list = document.querySelector('.notifications-list');
@@ -140,14 +150,18 @@ const NotificationManager = {
 
 	    renderNotificationItem(notification) {
 	        const icons = { bid: '🏷️', win: '🏆', outbid: '⚠️', payment: '💳', system: '📢' };
-	        const icon = icons[notification.type] || '📌';
+	        const typeRaw = notification.type || 'system';
+	        const allowedTypes = ['bid', 'win', 'outbid', 'payment', 'system'];
+	        const safeTypeClass = allowedTypes.includes(typeRaw) ? typeRaw : 'system';
+	        const icon = icons[typeRaw] || '📌';
 	        const timeAgo = this.getTimeAgo(new Date(notification.time));
 	        const safeTitle = escapeNotificationHtml(notification.title);
 	        const safeMessage = escapeNotificationHtml(notification.message);
+	        const safeId = Number(notification.id) || 0;
 
 	        return `
-	            <div class="notification-item ${notification.read ? '' : 'unread'}" data-id="${notification.id}" onclick="NotificationManager.markAsRead(${notification.id})">
-	                <div class="notification-icon ${notification.type}">${icon}</div>
+	            <div class="notification-item ${notification.read ? '' : 'unread'}" data-id="${safeId}" onclick="NotificationManager.markAsRead(${safeId})">
+	                <div class="notification-icon ${safeTypeClass}">${icon}</div>
 	                <div class="notification-content">
 	                    <div class="notification-title">${safeTitle}</div>
 	                    <div class="notification-message">${safeMessage}</div>

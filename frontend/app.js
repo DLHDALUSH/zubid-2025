@@ -264,43 +264,31 @@ async function checkAuth() {
 }
 
 function updateNavAuth(isAuthenticated) {
-    const navAuth = document.getElementById('navAuth');
-    const navUser = document.getElementById('navUser');
-    const myAccountDropdown = document.getElementById('myAccountDropdown');
-    const myBidsNavLink = document.getElementById('myBidsNavLink');
-    const paymentsNavLink = document.getElementById('paymentsNavLink');
-    const notificationsWrapper = document.getElementById('notificationsWrapper');
-    const userName = document.getElementById('userName');
-    const userAvatar = document.getElementById('userAvatar');
+	const navAuth = document.getElementById('navAuth');
+	const navUser = document.getElementById('navUser');
+	const myBidsNavLink = document.getElementById('myBidsNavLink');
+	const notificationsWrapper = document.getElementById('notificationsWrapper');
+	const userName = document.getElementById('userName');
+	const userAvatar = document.getElementById('userAvatar');
 
-    // Mobile-only nav items (inside the "More" dropdown)
-    const mobileLoginItem = document.getElementById('mobileLoginItem');
-    const mobileSignUpItem = document.getElementById('mobileSignUpItem');
-    const mobileAuthDivider = document.getElementById('mobileAuthDivider');
-    const mobileProfileItem = document.getElementById('mobileProfileItem');
-    const mobilePaymentsItem = document.getElementById('mobilePaymentsItem');
-    const mobileReturnRequestsItem = document.getElementById('mobileReturnRequestsItem');
-    const mobileLogoutItem = document.getElementById('mobileLogoutItem');
+	// Mobile-only nav items (inside the "More" dropdown)
+	const mobileLoginItem = document.getElementById('mobileLoginItem');
+	const mobileSignUpItem = document.getElementById('mobileSignUpItem');
+	const mobileAuthDivider = document.getElementById('mobileAuthDivider');
+	const mobileProfileItem = document.getElementById('mobileProfileItem');
+	const mobilePaymentsItem = document.getElementById('mobilePaymentsItem');
+	const mobileReturnRequestsItem = document.getElementById('mobileReturnRequestsItem');
+	const mobileLogoutItem = document.getElementById('mobileLogoutItem');
 
-    if (navAuth && navUser) {
-        if (isAuthenticated) {
-            navAuth.style.display = 'none';
-            navUser.style.display = 'block';
-
-            // Show My Account dropdown
-            if (myAccountDropdown) {
-                myAccountDropdown.style.display = 'block';
-            }
-
-            // Show My Bids link in main nav
-            if (myBidsNavLink) {
-                myBidsNavLink.style.display = 'flex';
-            }
-
-            // Show Payments link in main nav
-            if (paymentsNavLink) {
-                paymentsNavLink.style.display = 'flex';
-            }
+	    if (navAuth && navUser) {
+	        if (isAuthenticated) {
+	            navAuth.style.display = 'none';
+	            navUser.style.display = 'block';
+	
+	            // Show My Bids link in main nav
+	            if (myBidsNavLink) {
+	                myBidsNavLink.style.display = 'flex';
+	            }
 
             // Show notifications
             if (notificationsWrapper) {
@@ -1175,31 +1163,40 @@ async function loadMyAuctions() {
         const auctions = await AuctionAPI.getUserAuctions();
         debugLog('User auctions loaded:', auctions);
         
-        if (auctions && auctions.length > 0) {
-            debugLog(`Showing ${auctions.length} user auctions`);
-            section.style.display = 'block';
-            container.innerHTML = auctions.map(auction => `
-                <div class="auction-card" onclick="window.location.href='auction-detail.html?id=${auction.id}'">
-                    <div class="auction-card-content">
-                        <h3>${auction.item_name}</h3>
-                        <div class="auction-stats">
-                            <div class="stat">
-                                <label>Current Bid</label>
-                                <span class="price">$${(auction.current_bid || 0).toFixed(2)}</span>
-                            </div>
-                            <div class="stat">
-                                <label>Status</label>
-                                <span class="status-badge ${auction.status || 'active'}">${auction.status || 'active'}</span>
-                            </div>
-                            <div class="stat">
-                                <label>Bids</label>
-                                <span>${auction.bid_count || 0}</span>
-                            </div>
-                        </div>
-                        <button class="btn btn-primary btn-block">View Auction</button>
-                    </div>
-                </div>
-            `).join('');
+	    	if (auctions && auctions.length > 0) {
+	    	    debugLog(`Showing ${auctions.length} user auctions`);
+	    	    section.style.display = 'block';
+	    	    container.innerHTML = auctions.map(auction => {
+	    	        const safeTitle = escapeHtml(auction.item_name || '');
+	    	        const rawStatus = auction.status || 'active';
+	    	        const allowedStatuses = ['active', 'ended', 'cancelled', 'pending'];
+	    	        const safeStatusClass = allowedStatuses.includes(rawStatus) ? rawStatus : 'other';
+	    	        const safeStatusLabel = escapeHtml(rawStatus);
+	    	        const safeAuctionId = Number(auction.id) || 0;
+
+	    	        return `
+	    	        <div class="auction-card" onclick="window.location.href='auction-detail.html?id=${safeAuctionId}'">
+	    	            <div class="auction-card-content">
+	    	                <h3>${safeTitle}</h3>
+	    	                <div class="auction-stats">
+	    	                    <div class="stat">
+	    	                        <label>Current Bid</label>
+	    	                        <span class="price">$${(auction.current_bid || 0).toFixed(2)}</span>
+	    	                    </div>
+	    	                    <div class="stat">
+	    	                        <label>Status</label>
+	    	                        <span class="status-badge ${safeStatusClass}">${safeStatusLabel}</span>
+	    	                    </div>
+	    	                    <div class="stat">
+	    	                        <label>Bids</label>
+	    	                        <span>${auction.bid_count || 0}</span>
+	    	                    </div>
+	    	                </div>
+	    	                <button class="btn btn-primary btn-block">View Auction</button>
+	    	            </div>
+	    	        </div>
+	    	    `;
+	    	    }).join('');
         } else {
             debugLog('No user auctions found');
             // Show section even if empty with a message
@@ -1262,7 +1259,7 @@ async function loadMyBids() {
             
             debugLog(`Showing ${uniqueBids.length} unique bids (from ${bids.length} total bids)`);
             
-            container.innerHTML = uniqueBids.map(bid => {
+	            container.innerHTML = uniqueBids.map(bid => {
                 // Check if user won (for ended auctions) or is winning (for active auctions)
                 let statusBadge = '';
                 let bidClass = 'losing-bid';
@@ -1293,12 +1290,15 @@ async function loadMyBids() {
                     bidClass = 'losing-bid';
                 }
                 
+	                const safeAuctionName = escapeHtml(bid.auction_name || 'Unknown Auction');
+	                const safeAuctionId = Number(bid.auction_id) || 0;
+	                
                 return `
-                <div class="bid-history-item ${bidClass}" onclick="window.location.href='auction-detail.html?id=${bid.auction_id}'">
+	                <div class="bid-history-item ${bidClass}" onclick="window.location.href='auction-detail.html?id=${safeAuctionId}'">
                     <div class="bid-info">
                         <div>
                             <div class="bid-header">
-                                <strong>${bid.auction_name || 'Unknown Auction'}</strong>
+	                                <strong>${safeAuctionName}</strong>
                                 ${statusBadge}
                             </div>
                             <div class="bid-details">

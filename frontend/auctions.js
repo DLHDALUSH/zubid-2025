@@ -178,7 +178,11 @@ async function loadCategories() {
         const select = document.getElementById('categoryFilter');
         if (select) {
             select.innerHTML = '<option value="">All Categories</option>' +
-                categories.map(cat => `<option value="${cat.id}">${cat.name}</option>`).join('');
+                categories.map(cat => {
+                    const safeId = Number(cat.id) || 0;
+                    const safeName = escapeHtml(cat.name || '');
+                    return `<option value="${safeId}">${safeName}</option>`;
+                }).join('');
         }
     } catch (error) {
         console.error('Error loading categories:', error);

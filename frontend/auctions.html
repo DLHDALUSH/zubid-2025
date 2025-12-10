@@ -58,80 +58,16 @@
 	                        <span>Auctions</span>
 	                    </a>
 
-	                    <!-- My Account Dropdown (shown when logged in) -->
-	                    <div class="nav-dropdown" id="myAccountDropdown" style="display: none;">
-	                        <button class="nav-link dropdown-toggle">
-	                            <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-	                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-	                                <circle cx="12" cy="7" r="4"></circle>
-	                            </svg>
-	                            <span data-i18n="nav.myAccount">My Account</span>
-	                            <svg class="dropdown-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-	                                <polyline points="6 9 12 15 18 9"></polyline>
-	                            </svg>
-	                        </button>
-	                        <div class="dropdown-menu">
-	                            <a href="profile.html" class="dropdown-item">
-	                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-	                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-	                                    <circle cx="12" cy="7" r="4"></circle>
-	                                </svg>
-	                                <span data-i18n="nav.profile">Profile</span>
-	                            </a>
-	                            <a href="my-bids.html" class="dropdown-item">
-	                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-	                                    <polyline points="9 11 12 14 22 4"></polyline>
-	                                    <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
-	                                </svg>
-	                                <span data-i18n="nav.myBids">My Bids</span>
-	                            </a>
-	                            <a href="payments.html" class="dropdown-item">
-	                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-	                                    <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
-	                                    <line x1="1" y1="10" x2="23" y2="10"></line>
-	                                </svg>
-	                                <span data-i18n="nav.payments">Payments</span>
-	                            </a>
-	                            <a href="return-requests.html" class="dropdown-item">
-	                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-	                                    <polyline points="1 4 1 10 7 10"></polyline>
-	                                    <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
-	                                </svg>
-	                                <span>Return Requests</span>
-	                            </a>
-	                        </div>
-	                    </div>
+					            <!-- My Bids Link (shown when logged in) -->
+					            <a href="my-bids.html" class="nav-link" id="myBidsNavLink" style="display: none;" data-i18n="nav.myBids">
+					                <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+					                    <polyline points="9 11 12 14 22 4"></polyline>
+					                    <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+					                </svg>
+					                <span>My Bid Info</span>
+					            </a>
 
-	                    <!-- Info Dropdown -->
-	                    <div class="nav-dropdown">
-	                        <button class="nav-link dropdown-toggle">
-	                            <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-	                                <circle cx="12" cy="12" r="10"></circle>
-	                                <line x1="12" y1="16" x2="12" y2="12"></line>
-	                                <line x1="12" y1="8" x2="12.01" y2="8"></line>
-	                            </svg>
-	                            <span data-i18n="messages.info">Info</span>
-	                            <svg class="dropdown-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-	                                <polyline points="6 9 12 15 18 9"></polyline>
-	                            </svg>
-	                        </button>
-	                        <div class="dropdown-menu">
-	                            <a href="how-to-bid.html" class="dropdown-item">
-	                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-	                                    <circle cx="12" cy="12" r="10"></circle>
-	                                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
-	                                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
-	                                </svg>
-	                                <span data-i18n="messages.howToBid">How to Bid</span>
-	                            </a>
-	                            <a href="contact-us.html" class="dropdown-item">
-	                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-	                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-	                                </svg>
-	                                <span data-i18n="messages.contactUs">Contact Us</span>
-	                            </a>
-	                        </div>
-	                    </div>
+					            <!-- My Account / Info moved into user profile dropdown -->
 	                </div>
 
                 <div class="nav-actions">
@@ -222,9 +158,44 @@
                                     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                                     <circle cx="12" cy="7" r="4"></circle>
                                 </svg>
-                                <span data-i18n="nav.profile">Profile</span>
-                            </a>
-                            <div class="dropdown-divider"></div>
+	                                <span data-i18n="nav.profile">Profile</span>
+	                            </a>
+	                            <a href="my-bids.html" class="user-dropdown-item">
+	                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+	                                    <polyline points="9 11 12 14 22 4"></polyline>
+	                                    <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+	                                </svg>
+	                                <span data-i18n="nav.myBids">My Bids</span>
+	                            </a>
+	                            <a href="payments.html" class="user-dropdown-item">
+	                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+	                                    <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+	                                    <line x1="1" y1="10" x2="23" y2="10"></line>
+	                                </svg>
+	                                <span data-i18n="nav.payments">Payments</span>
+	                            </a>
+	                            <a href="return-requests.html" class="user-dropdown-item">
+	                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+	                                    <polyline points="1 4 1 10 7 10"></polyline>
+	                                    <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+	                                </svg>
+	                                <span>Return Requests</span>
+	                            </a>
+	                            <a href="how-to-bid.html" class="user-dropdown-item">
+	                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+	                                    <circle cx="12" cy="12" r="10"></circle>
+	                                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+	                                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+	                                </svg>
+	                                <span data-i18n="messages.howToBid">How to Bid</span>
+	                            </a>
+	                            <a href="contact-us.html" class="user-dropdown-item">
+	                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+	                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+	                                </svg>
+	                                <span data-i18n="messages.contactUs">Contact Us</span>
+	                            </a>
+	                            <div class="dropdown-divider"></div>
                             <button class="user-dropdown-item theme-toggle-dropdown" onclick="toggleTheme()">
                                 <svg class="sun-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <circle cx="12" cy="12" r="5"></circle>

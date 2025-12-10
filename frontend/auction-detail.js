@@ -213,8 +213,9 @@ async function loadAuctionDetail() {
         // Show error in loading indicator
         if (loadingIndicator) {
             const errorMsg = error.message || 'Failed to load auction details';
+            const safeErrorMsg = escapeHtml(errorMsg);
             loadingIndicator.innerHTML = `<div class="error-state">
-                <p><strong>Error:</strong> ${errorMsg}</p>
+                <p><strong>Error:</strong> ${safeErrorMsg}</p>
                 <p>Please check:</p>
                 <ul style="text-align: left; display: inline-block; margin: 1rem 0;">
                     <li>Is the backend server running on port 5000?</li>
@@ -602,12 +603,14 @@ function showVideo() {
                 else if (embedUrl.includes('.m4v')) videoType = 'video/mp4';
             }
             
-            videoContainer.innerHTML = `
-                <video id="localVideoPlayer" controls style="width: 100%; height: 100%; border-radius: 20px; background: #000;" preload="metadata">
-                    <source src="${embedUrl}" type="${videoType}">
-                    Your browser does not support the video tag.
-                </video>
-            `;
+	            const safeEmbedUrl = escapeHtml(embedUrl || '');
+	            const safeVideoType = escapeHtml(videoType || 'video/mp4');
+	            videoContainer.innerHTML = `
+	                <video id="localVideoPlayer" controls style="width: 100%; height: 100%; border-radius: 20px; background: #000;" preload="metadata">
+	                    <source src="${safeEmbedUrl}" type="${safeVideoType}">
+	                    Your browser does not support the video tag.
+	                </video>
+	            `;
         } else {
             // For YouTube/Vimeo, use iframe
             videoPlayer.src = embedUrl;
@@ -949,15 +952,16 @@ function updateCurrentWinner(winnerBid) {
     }
     
     if (winnerDisplay) {
-        const isCurrentUser = currentUser && winnerBid.user_id === currentUser.id;
-        winnerDisplay.innerHTML = `
-            <div class="winner-announcement ${isCurrentUser ? 'your-winner' : ''}">
-                <h3>🏆 Current Highest Bid</h3>
-                <p><strong>${winnerBid.username}</strong> is currently winning with <strong>$${winnerBid.amount.toFixed(2)}</strong></p>
-                ${isCurrentUser ? '<p class="congratulations">Congratulations! You are currently the highest bidder!</p>' : 
-                  '<p class="outbid-notice">Place a higher bid to become the winner!</p>'}
-            </div>
-        `;
+	        const isCurrentUser = currentUser && winnerBid.user_id === currentUser.id;
+	        const safeUsername = escapeHtml(winnerBid.username || 'Unknown');
+	        winnerDisplay.innerHTML = `
+	            <div class="winner-announcement ${isCurrentUser ? 'your-winner' : ''}">
+	                <h3>🏆 Current Highest Bid</h3>
+	                <p><strong>${safeUsername}</strong> is currently winning with <strong>$${winnerBid.amount.toFixed(2)}</strong></p>
+	                ${isCurrentUser ? '<p class="congratulations">Congratulations! You are currently the highest bidder!</p>' : 
+	                  '<p class="outbid-notice">Place a higher bid to become the winner!</p>'}
+	            </div>
+	        `;
     }
 }
 
@@ -1087,17 +1091,18 @@ function startRealTimeUpdates() {
                     try {
                         const bids = await BidAPI.getByAuctionId(auctionId);
                         const winner = bids.find(b => b.user_id === updatedAuction.winner_id);
-                        if (winner) {
-                            const winnerInfo = document.getElementById('winnerInfo');
-                            if (winnerInfo) {
-                                const isCurrentUser = currentUser && winner.user_id === currentUser.id;
-                                winnerInfo.innerHTML = `
-                                    <div class="winner-announcement-final ${isCurrentUser ? 'your-winner' : ''}">
-                                        <h3>🎉 Auction Winner</h3>
-                                        <p><strong>${winner.username}</strong> won with a bid of <strong>$${winner.amount.toFixed(2)}</strong></p>
-                                        ${isCurrentUser ? '<p class="congratulations">Congratulations! You won this auction!</p>' : ''}
-                                    </div>
-                                `;
+	                        if (winner) {
+	                            const winnerInfo = document.getElementById('winnerInfo');
+	                            if (winnerInfo) {
+	                                const isCurrentUser = currentUser && winner.user_id === currentUser.id;
+	                                const safeUsername = escapeHtml(winner.username || 'Unknown');
+	                                winnerInfo.innerHTML = `
+	                                    <div class="winner-announcement-final ${isCurrentUser ? 'your-winner' : ''}">
+	                                        <h3>🎉 Auction Winner</h3>
+	                                        <p><strong>${safeUsername}</strong> won with a bid of <strong>$${winner.amount.toFixed(2)}</strong></p>
+	                                        ${isCurrentUser ? '<p class="congratulations">Congratulations! You won this auction!</p>' : ''}
+	                                    </div>
+	                                `;
                                 
                                 if (isCurrentUser) {
                                     showToast('🎉 Congratulations! You won this auction!', 'success');

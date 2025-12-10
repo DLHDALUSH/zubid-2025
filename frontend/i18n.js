@@ -15,7 +15,50 @@ const translations = {
             signUp: 'Sign Up',
             logout: 'Logout'
         },
-        // Common
+	        // SEO meta descriptions and titles
+	        seo: {
+	            index: {
+	                title: 'ZUBID - Modern Auction Platform',
+	                description: 'ZUBID is a modern auction platform where you can bid on premium items, track your bids, and manage your auctions securely.'
+	            },
+	            auctions: {
+	                title: 'Browse Live Auctions - ZUBID',
+	                description: 'Explore live and upcoming auctions on ZUBID. Filter by category, status, and price to find the perfect item to bid on.'
+	            },
+	            auctionDetail: {
+	                title: 'Auction Details - ZUBID',
+	                description: 'View detailed information, live bidding, and history for this auction on ZUBID.'
+	            },
+	            createAuction: {
+	                title: 'Create Auction - ZUBID',
+	                description: 'Create a new auction on ZUBID. Upload photos, set starting bids, and reach more bidders.'
+	            },
+	            profile: {
+	                title: 'My Profile - ZUBID',
+	                description: 'Manage your ZUBID account, profile details, security settings, and preferences.'
+	            },
+	            myBids: {
+	                title: 'My Bids - ZUBID',
+	                description: 'Track all your bids, see where you are winning, and manage your bidding activity on ZUBID.'
+	            },
+	            myAuctions: {
+	                title: 'My Auctions - ZUBID',
+	                description: 'View and manage all auctions you created on ZUBID, including active and completed ones.'
+	            },
+	            payments: {
+	                title: 'Payments & Invoices - ZUBID',
+	                description: 'Review your payments, invoices, and transaction history for your winning bids on ZUBID.'
+	            },
+	            contact: {
+	                title: 'Contact Us - ZUBID',
+	                description: 'Contact the ZUBID support team for help with your account, auctions, or payments.'
+	            },
+	            howToBid: {
+	                title: 'How to Bid - ZUBID',
+	                description: 'Learn how to register, place bids, win auctions, and complete payments on ZUBID.'
+	            }
+	        },
+	        // Common
         common: {
             search: 'Search',
             searchPlaceholder: 'Search for auctions, items, categories...',
@@ -533,7 +576,50 @@ const translations = {
 	        	    max5MB: 'Max 5MB, JPG/PNG'
         }
     },
-    ku: {
+	    ku: {
+	        // SEO meta descriptions and titles (Kurdish)
+	        seo: {
+	            index: {
+	                title: 'ZUBID - پلاتفۆڕمی مزایدةی نوێ',
+	                description: 'ZUBID پلاتفۆڕمێکی نوێی مزایدەیە بۆ داواندن لە سەر کاڵای گرنگ، بەدواداچوونی داوەکان و بەڕێوەبردنی مزایدەکانت بە ئاساییش.'
+	            },
+	            auctions: {
+	                title: 'بینینی مزایدەکان - ZUBID',
+	                description: 'مزایدە تازە و داواکراوەکان لە ZUBID ببینە و بەپێی هاوپۆل، دۆخ و نرخ فلتەر بکە.'
+	            },
+	            auctionDetail: {
+	                title: 'وردەکاری مزایدە - ZUBID',
+	                description: 'وردەکاری کاڵا، داواندنە لایڤ و ڕێکەوتی کۆتایی بوون لە ئەم مزایدەیە لە ZUBID ببینە.'
+	            },
+	            createAuction: {
+	                title: 'دروستکردنی مزایدە - ZUBID',
+	                description: 'مزایدەکی نوێی خۆت لە ZUBID دروست بکە، وێنە باربکە، داوای دەستپێک دیاری بکە و گەیشتنت بۆ داواکاری زیاتر بکە.'
+	            },
+	            profile: {
+	                title: 'پرۆفایلی من - ZUBID',
+	                description: 'هەژمار، زانیاری تایبەتی و ڕێکخستنی پاراستنی خۆت لە ZUBID بەڕێوەببەرە.'
+	            },
+	            myBids: {
+	                title: 'داواندنی من - ZUBID',
+	                description: 'هەموو داواندنەکانت ببینە و بینەوە لە کوێ داواکت بردووە و لە کوێ داوات هێنایە.'
+	            },
+	            myAuctions: {
+	                title: 'مزایدەکانی من - ZUBID',
+	                description: 'هەموو مزایدەکانت ببینە و بەڕێوەببەرە، بەلگەی ئەوەی چەند دانە جێبەجێ کران و چەند دانە چالاکن.'
+	            },
+	            payments: {
+	                title: 'پارەدان و وەسڵەکان - ZUBID',
+	                description: 'وەسڵ و مۆژۆوی پارەدانەکانت بۆ مزایدە بردووەکان لە ZUBID بەدواداچە.'
+	            },
+	            contact: {
+	                title: 'پەیوەندیکردن - ZUBID',
+	                description: 'بۆ یارمەتیدان لەسەر هەژمار، مزایدە یان پارەدانەکانت پەیوەندی بە تیمی پشتگیری ZUBID بکە.'
+	            },
+	            howToBid: {
+	                title: 'چۆن داوا بدەیت - ZUBID',
+	                description: 'فێربە چۆن خۆت تۆمار بکەی، داوا بدەیت، مزایدە ببریتەوە و پارەدان تەواو بکەیت لە ZUBID.'
+	            }
+	        },
         // Navigation
         nav: {
             home: 'سەرەکی',
@@ -1189,7 +1275,50 @@ const translations = {
             other: 'هیتر'
         }
     },
-    ar: {
+	    ar: {
+	        // SEO meta descriptions and titles (Arabic)
+	        seo: {
+	            index: {
+	                title: 'ZUBID - منصة مزادات حديثة',
+	                description: 'ZUBID هي منصة مزادات حديثة يمكنك من خلالها المزايدة على المنتجات المميزة ومتابعة عروضك وإدارة مزاداتك بأمان.'
+	            },
+	            auctions: {
+	                title: 'تصفح المزادات - ZUBID',
+	                description: 'استعرض المزادات الجارية والقادمة على ZUBID. قم بالتصفية حسب الفئة والحالة والسعر للعثور على المنتج المناسب.'
+	            },
+	            auctionDetail: {
+	                title: 'تفاصيل المزاد - ZUBID',
+	                description: 'شاهد تفاصيل المزاد الكاملة وسجل المزايدات والمعلومات المهمة لهذا المنتج على ZUBID.'
+	            },
+	            createAuction: {
+	                title: 'إنشاء مزاد - ZUBID',
+	                description: 'أنشئ مزاداً جديداً على ZUBID، أضف الصور وحدد سعر البداية واجذب المزيد من المزايدين.'
+	            },
+	            profile: {
+	                title: 'حسابي - ZUBID',
+	                description: 'أدِر حسابك على ZUBID، وحدث بياناتك الشخصية وإعدادات الأمان والتفضيلات.'
+	            },
+	            myBids: {
+	                title: 'مزايداتي - ZUBID',
+	                description: 'تابع جميع عروضك، واعرف المزادات التي تتصدرها، وأدِر نشاط المزايدة الخاص بك على ZUBID.'
+	            },
+	            myAuctions: {
+	                title: 'مزاداتي - ZUBID',
+	                description: 'اعرض وأدِر جميع المزادات التي أنشأتها على ZUBID، بما في ذلك المزادات النشطة والمنتهية.'
+	            },
+	            payments: {
+	                title: 'المدفوعات والفواتير - ZUBID',
+	                description: 'راجع مدفوعاتك وفواتيرك وسجل معاملاتك للمزادات الفائزة على ZUBID.'
+	            },
+	            contact: {
+	                title: 'اتصل بنا - ZUBID',
+	                description: 'تواصل مع فريق دعم ZUBID للحصول على المساعدة في الحساب أو المزادات أو المدفوعات.'
+	            },
+	            howToBid: {
+	                title: 'كيفية المزايدة - ZUBID',
+	                description: 'تعرّف على كيفية التسجيل وتقديم العروض والفوز بالمزادات وإتمام الدفع على ZUBID.'
+	            }
+	        },
         // Navigation
         nav: {
             home: 'الرئيسية',
@@ -1881,20 +2010,48 @@ function applyLanguage(lang) {
     currentLanguage = lang;
     localStorage.setItem('language', lang);
     
-    // Update HTML lang attribute
-    document.documentElement.lang = lang;
-    
-    // Update page title if translation exists
-    const titleTranslation = getTranslation('home.title');
-    if (titleTranslation && document.title) {
-        // Only update if title matches expected pattern or contains 'ZUBID'
-        if (document.title.includes('ZUBID') || !document.title.includes(' - ')) {
-            document.title = titleTranslation;
-        }
-    }
-    
-    // Apply RTL if needed
-    applyRTL(lang);
+	    // Update HTML lang attribute
+	    document.documentElement.lang = lang;
+	    
+	    // Determine SEO page key
+	    let pageKey = 'index';
+	    try {
+	        const body = document.body;
+	        const explicitPageKey = body ? body.getAttribute('data-page-key') : null;
+	        const path = window.location.pathname.split('/').pop() || 'index.html';
+	        if (explicitPageKey) {
+	            pageKey = explicitPageKey;
+	        } else if (path === 'index.html' || path === '') pageKey = 'index';
+	        else if (path === 'auctions.html') pageKey = 'auctions';
+	        else if (path === 'auction-detail.html') pageKey = 'auctionDetail';
+	        else if (path === 'create-auction.html') pageKey = 'createAuction';
+	        else if (path === 'profile.html') pageKey = 'profile';
+	        else if (path === 'my-bids.html') pageKey = 'myBids';
+	        else if (path === 'my-auctions.html') pageKey = 'myAuctions';
+	        else if (path === 'payments.html') pageKey = 'payments';
+	        else if (path === 'contact-us.html') pageKey = 'contact';
+	        else if (path === 'how-to-bid.html') pageKey = 'howToBid';
+	    } catch (e) {
+	        console.warn('SEO page key detection failed:', e);
+	    }
+	    
+	    // Update page title and basic SEO meta tags if translations exist
+	    const seoTitle = getTranslation(`seo.${pageKey}.title`) || getTranslation('home.title');
+	    const seoDescription = getTranslation(`seo.${pageKey}.description`);
+	    if (seoTitle && document.title) {
+	        document.title = seoTitle;
+	    }
+	    if (seoDescription) {
+	        const descMeta = document.querySelector('meta[name="description"]');
+	        if (descMeta) descMeta.setAttribute('content', seoDescription);
+	        const ogDesc = document.querySelector('meta[property="og:description"]');
+	        if (ogDesc) ogDesc.setAttribute('content', seoDescription);
+	        const twitterDesc = document.querySelector('meta[name="twitter:description"]');
+	        if (twitterDesc) twitterDesc.setAttribute('content', seoDescription);
+	    }
+	    
+	    // Apply RTL if needed
+	    applyRTL(lang);
     
     // Translate all elements with data-i18n attribute
     document.querySelectorAll('[data-i18n]').forEach(element => {
