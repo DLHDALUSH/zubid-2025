@@ -11820,93 +11820,123 @@ html {
 
     /* TABLET NAVBAR - Compact & Organized */
     .navbar {
-        padding: 0.5rem 0.75rem !important;
+        padding: 0.35rem 0.5rem !important;
     }
 
-    .navbar .container {
-        padding: 0 !important;
+    .nav-container {
+        padding: 0 0.5rem !important;
+        gap: 0.5rem !important;
+    }
+
+    /* Hide brand tagline on tablet */
+    .nav-brand .brand-tagline,
+    .brand-tagline {
+        display: none !important;
+    }
+
+    .nav-brand h1 {
+        font-size: 1.3rem !important;
+    }
+
+    /* Nav menu compact */
+    .nav-menu {
         gap: 0.5rem !important;
     }
 
     .nav-links {
+        gap: 0.15rem !important;
+    }
+
+    /* Nav links - show icons only */
+    .nav-link {
+        padding: 0.5rem 0.65rem !important;
+        font-size: 0.75rem !important;
+        white-space: nowrap;
+        flex-direction: column !important;
+        align-items: center !important;
+        gap: 2px !important;
+    }
+
+    /* Make text smaller under icons */
+    .nav-link:not(.dropdown-toggle) {
+        font-size: 0.65rem !important;
+    }
+
+    .nav-link .nav-icon {
+        width: 20px !important;
+        height: 20px !important;
+    }
+
+    /* Nav dropdown buttons */
+    .nav-dropdown .dropdown-toggle {
+        padding: 0.5rem 0.5rem !important;
+        font-size: 0.65rem !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        gap: 2px !important;
+    }
+
+    .nav-dropdown .dropdown-toggle span {
+        font-size: 0.65rem !important;
+    }
+
+    /* Hide dropdown arrows on tablet */
+    .dropdown-arrow {
+        display: none !important;
+    }
+
+    /* Nav actions compact */
+    .nav-actions {
         gap: 0.25rem !important;
     }
 
-    .nav-link {
-        padding: 0.4rem 0.6rem !important;
-        font-size: 0.8rem !important;
-        white-space: nowrap;
+    .theme-toggle {
+        padding: 0.4rem !important;
+        width: 36px !important;
+        height: 36px !important;
     }
 
-    .nav-link span {
-        display: none !important; /* Hide text labels, show only icons */
+    .theme-toggle svg {
+        width: 18px !important;
+        height: 18px !important;
     }
 
-    .nav-link svg,
-    .nav-link i {
-        font-size: 1.1rem !important;
-        margin: 0 !important;
+    .notification-bell {
+        padding: 0.4rem !important;
+        width: 36px !important;
+        height: 36px !important;
     }
 
-    /* Show text only on hover */
-    .nav-link:hover span {
-        display: inline !important;
-        position: absolute;
-        bottom: -25px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: var(--bg-dark);
-        color: white;
-        padding: 4px 8px;
-        border-radius: 4px;
-        font-size: 0.7rem;
-        white-space: nowrap;
-        z-index: 100;
+    .notification-bell svg {
+        width: 18px !important;
+        height: 18px !important;
     }
 
-    .nav-link {
-        position: relative;
-    }
-
-    /* Dropdown adjustments */
-    .dropdown .nav-link::after,
-    .nav-link .dropdown-arrow {
-        display: none !important;
-    }
-
-    /* Logo smaller */
-    .logo {
-        font-size: 1.25rem !important;
-    }
-
-    .logo-subtitle {
-        display: none !important;
-    }
-
-    /* Right side icons */
-    .nav-actions {
-        gap: 0.35rem !important;
-    }
-
+    /* Language switcher compact */
     .language-switcher-btn {
         padding: 0.35rem 0.5rem !important;
         font-size: 0.75rem !important;
+        gap: 0.25rem !important;
     }
 
-    .language-switcher-btn span {
+    /* User menu compact */
+    .nav-user .user-menu-toggle {
+        gap: 0.35rem !important;
+    }
+
+    .nav-user .user-avatar {
+        width: 32px !important;
+        height: 32px !important;
+    }
+
+    .nav-user #userName {
         display: none !important;
     }
 
-    .notification-btn,
-    .settings-btn,
-    .theme-toggle-btn {
-        padding: 0.35rem !important;
-        font-size: 1rem !important;
-    }
-
-    .user-avatar {
-        width: 32px !important;
-        height: 32px !important;
+    /* Auth buttons compact */
+    .nav-auth .btn {
+        padding: 0.4rem 0.75rem !important;
+        font-size: 0.75rem !important;
     }
 
     .auctions-grid {
