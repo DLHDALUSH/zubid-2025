@@ -51,68 +51,100 @@ self.addEventListener('activate', (event) => {
 
 // Fetch event - serve from cache, fallback to network
 self.addEventListener('fetch', (event) => {
-  const { request } = event;
-  const url = new URL(request.url);
+	const { request } = event;
+	const url = new URL(request.url);
 
-  // Skip API requests - always fetch from network
-  if (url.pathname.startsWith('/api/')) {
-    event.respondWith(fetch(request));
-    return;
-  }
+	// Only handle safe, same-origin GET requests over http/https
+	if (
+		request.method !== 'GET' ||
+		(url.protocol !== 'http:' && url.protocol !== 'https:') ||
+		url.origin !== self.location.origin
+	) {
+		// Let the browser handle things like chrome-extension://, POST, etc.
+		return;
+	}
 
-  // Skip uploads - always fetch from network
-  if (url.pathname.startsWith('/uploads/')) {
-    event.respondWith(fetch(request));
-    return;
-  }
+	// Skip API requests - always fetch from network
+	if (url.pathname.startsWith('/api/')) {
+		event.respondWith(fetch(request));
+		return;
+	}
 
-  // For other requests, try cache first, then network
-  event.respondWith(
-    caches.match(request)
-      .then((cachedResponse) => {
-        if (cachedResponse) {
-          // Return cached version and update cache in background
-          event.waitUntil(updateCache(request));
-          return cachedResponse;
-        }
-        // Not in cache, fetch from network
-        return fetchAndCache(request);
-      })
-      .catch(() => {
-        // Offline fallback for HTML pages
-        if (request.headers.get('accept').includes('text/html')) {
-          return caches.match('/index.html');
-        }
-      })
-  );
+	// Skip uploads - always fetch from network
+	if (url.pathname.startsWith('/uploads/')) {
+		event.respondWith(fetch(request));
+		return;
+	}
+
+	// For other requests, try cache first, then network
+	event.respondWith(
+		caches.match(request)
+			.then((cachedResponse) => {
+				if (cachedResponse) {
+					// Return cached version and update cache in background
+					event.waitUntil(updateCache(request));
+					return cachedResponse;
+				}
+				// Not in cache, fetch from network
+				return fetchAndCache(request);
+			})
+			.catch(() => {
+				// Offline fallback for HTML pages
+				if (request.headers.get('accept') && request.headers.get('accept').includes('text/html')) {
+					return caches.match('/index.html');
+				}
+			})
+	);
 });
 
 // Fetch and add to cache
 async function fetchAndCache(request) {
-  try {
-    const response = await fetch(request);
-    if (response.ok) {
-      const cache = await caches.open(DYNAMIC_CACHE);
-      cache.put(request, response.clone());
-    }
-    return response;
-  } catch (error) {
-    console.log('[SW] Fetch failed:', error);
-    throw error;
-  }
+	const url = new URL(request.url);
+
+	// Safety: only cache GET http/https same-origin requests
+	if (
+		request.method !== 'GET' ||
+		(url.protocol !== 'http:' && url.protocol !== 'https:') ||
+		url.origin !== self.location.origin
+	) {
+		return fetch(request);
+	}
+
+	try {
+		const response = await fetch(request);
+		if (response.ok) {
+			const cache = await caches.open(DYNAMIC_CACHE);
+			cache.put(request, response.clone());
+		}
+		return response;
+	} catch (error) {
+		console.log('[SW] Fetch failed:', error);
+		throw error;
+	}
 }
 
 // Update cache in background
 async function updateCache(request) {
-  try {
-    const response = await fetch(request);
-    if (response.ok) {
-      const cache = await caches.open(DYNAMIC_CACHE);
-      cache.put(request, response);
-    }
-  } catch (error) {
-    // Silently fail - we have cached version
-  }
+	const url = new URL(request.url);
+
+	// Safety: only cache GET http/https same-origin requests
+	if (
+		request.method !== 'GET' ||
+		(url.protocol !== 'http:' && url.protocol !== 'https:') ||
+		url.origin !== self.location.origin
+	) {
+		return;
+	}
+
+	try {
+		const response = await fetch(request);
+		if (response.ok) {
+			const cache = await caches.open(DYNAMIC_CACHE);
+			cache.put(request, response);
+		}
+	} catch (error) {
+		// Silently fail - we have cached version
+	}
 }
 
 // Handle push notifications (for future use)
