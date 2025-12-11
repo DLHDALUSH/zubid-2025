@@ -5,8 +5,14 @@
 // ============================================================
 // 🔧 PRODUCTION CONFIGURATION - UPDATE THESE VALUES
 // ============================================================
-const PRODUCTION_API_URL = 'https://your-backend-domain.com/api';
-const PRODUCTION_BASE_URL = 'https://your-backend-domain.com';
+// For your live site at https://zubidauction.duckdns.org
+// the backend API is exposed via Nginx at /api on the same domain.
+// That means the production API base URL is:
+//   https://zubidauction.duckdns.org/api
+// and the base site URL is:
+//   https://zubidauction.duckdns.org
+const PRODUCTION_API_URL = 'https://zubidauction.duckdns.org/api';
+const PRODUCTION_BASE_URL = 'https://zubidauction.duckdns.org';
 // ============================================================
 
 // Auto-detect environment
