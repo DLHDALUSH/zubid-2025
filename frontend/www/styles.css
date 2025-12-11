@@ -683,23 +683,24 @@ body::after {
 
 /* Notifications Dropdown Panel */
 .notifications-dropdown {
-    position: absolute;
-    top: calc(100% + 10px);
-    right: 0;
-    width: 380px;
-    max-height: 480px;
-    background: var(--glass-bg);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid var(--border-color);
-    border-radius: 16px;
-    box-shadow: var(--shadow-lg);
-    opacity: 0;
-    visibility: hidden;
-    transform: translateY(-10px);
-    transition: all var(--transition-base);
-    z-index: 1000;
-    overflow: hidden;
+	/* Use fixed positioning so the panel is never clipped by header/layout containers */
+	position: fixed;
+	top: 72px;
+	right: 1rem;
+	width: min(380px, 90vw);
+	max-height: min(480px, 70vh);
+	background: var(--glass-bg);
+	backdrop-filter: blur(20px);
+	-webkit-backdrop-filter: blur(20px);
+	border: 1px solid var(--border-color);
+	border-radius: 16px;
+	box-shadow: var(--shadow-lg);
+	opacity: 0;
+	visibility: hidden;
+	transform: translateY(-10px);
+	transition: all var(--transition-base);
+	z-index: 2000;
+	overflow: hidden;
 }
 
 .notifications-dropdown.active {
