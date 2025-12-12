@@ -3703,6 +3703,9 @@ def init_db():
 
         print("Database initialized successfully!")
 
+# Initialize database on module load (for gunicorn/production)
+init_db()
+
 @app.route('/api/user/payments', methods=['GET'])
 @login_required
 def get_user_payments():
