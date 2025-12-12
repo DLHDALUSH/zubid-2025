@@ -44,6 +44,9 @@ dependencies {
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
     implementation project(':capacitor-cordova-android-plugins')
+
+    // CircleImageView for circular avatars
+    implementation 'de.hdodenhof:circleimageview:3.1.0'
 }
 
 apply from: 'capacitor.build.gradle'
