@@ -1,7 +1,7 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">ZUBID</string>
-    <string name="title_activity_main">ZUBID</string>
+    <string name="app_name">Zubid</string>
+    <string name="title_activity_main">Zubid</string>
     <string name="package_name">com.zubid.app</string>
     <string name="custom_url_scheme">com.zubid.app</string>
 
@@ -9,7 +9,7 @@
     <string name="nav_home">Home</string>
     <string name="nav_bids">My Bids</string>
     <string name="nav_wishlist">Wishlist</string>
-    <string name="nav_wons">Wins</string>
+    <string name="nav_wons">Won</string>
     <string name="nav_notifications">Notifications</string>
     <string name="nav_categories">Categories</string>
     <string name="nav_profile">Profile</string>
@@ -28,13 +28,13 @@
     <string name="dont_have_account">Don\'t have an account?</string>
     <string name="already_have_account">Already have an account?</string>
     <string name="skip">Skip</string>
-    <string name="use_biometric">Use Biometric</string>
+    <string name="use_biometric">Use Fingerprint/Face ID</string>
     <string name="biometric_title">Biometric Login</string>
     <string name="biometric_subtitle">Use your fingerprint or face to login</string>
     <string name="biometric_cancel">Cancel</string>
 
     <!-- Home -->
-    <string name="search_hint">Search auctions...</string>
+    <string name="search_hint">Search auctions…</string>
     <string name="all_products">All Products</string>
     <string name="live_auctions">Live Auctions</string>
     <string name="ending_soon">Ending Soon</string>
@@ -44,15 +44,15 @@
     <string name="buy_now">Buy Now</string>
     <string name="place_bid">Place Bid</string>
     <string name="your_bid">Your Bid</string>
-    <string name="time_left">Time Left</string>
+    <string name="time_left">Time Remaining</string>
     <string name="bids">Bids</string>
     <string name="auction_ended">Auction Ended</string>
     <string name="you_won">Congratulations! You Won!</string>
-    <string name="outbid">Outbid</string>
+    <string name="outbid">You\'ve Been Outbid</string>
     <string name="description">Description</string>
     <string name="real_price">Real Price</string>
     <string name="market_price">Market Price</string>
-    <string name="buy_now_confirmation">Confirm Purchase</string>
+    <string name="buy_now_confirmation">Buy Now Confirmation</string>
     <string name="buy_now_message">Are you sure you want to buy this item for %1$s?</string>
     <string name="yes_buy">Yes, Buy</string>
     <string name="no_cancel">No, Cancel</string>
@@ -66,7 +66,7 @@
     <!-- Payment -->
     <string name="payment">Payment</string>
     <string name="select_payment">Select Payment Method</string>
-    <string name="credit_card">Credit Card (Stripe)</string>
+    <string name="credit_card">Credit/Debit Card (Stripe)</string>
     <string name="fib_payment">FIB (Fast Iraqi Bank)</string>
     <string name="google_pay">Google Pay</string>
     <string name="zaincash_payment">ZainCash</string>
@@ -79,7 +79,7 @@
     <string name="payment_failed">Payment Failed</string>
     <string name="delivery_address">Delivery Address</string>
     <string name="city">City</string>
-    <string name="phone">Phone</string>
+    <string name="phone">Phone Number</string>
     <string name="notes">Notes (Optional)</string>
 
     <!-- Profile -->
@@ -109,7 +109,7 @@
     <string name="arabic">العربية</string>
     <string name="kurdish">کوردی</string>
     <string name="security">Security</string>
-    <string name="enable_biometric">Enable Biometric</string>
+    <string name="enable_biometric">Enable Biometric Login</string>
     <string name="clear_cache">Clear Cache</string>
     <string name="privacy_policy">Privacy Policy</string>
     <string name="terms">Terms of Service</string>
@@ -117,9 +117,9 @@
     <string name="other">Other</string>
 
     <!-- Empty States -->
-    <string name="no_bids">No bids</string>
-    <string name="no_wishlist">Wishlist is empty</string>
-    <string name="no_wins">No winning auctions</string>
+    <string name="no_bids">No bids yet</string>
+    <string name="no_wishlist">Your wishlist is empty</string>
+    <string name="no_wins">No won auctions yet</string>
     <string name="no_notifications">No notifications</string>
 
     <!-- Messages -->
@@ -131,49 +131,61 @@
     <string name="error">An error occurred</string>
     <string name="new_bid_placed">New bid placed!</string>
     <string name="live">LIVE</string>
-    <string name="offline">Offline</string>
+    <string name="offline">OFFLINE</string>
     <string name="reconnecting">Reconnecting...</string>
 
-    <!-- Notifications -->
+    <!-- Buttons -->
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
+    <string name="confirm">Confirm</string>
+    <string name="continue_btn">Continue</string>
+    <string name="back">Back</string>
+    <string name="share">Share</string>
+    <string name="guest_user">Guest User</string>
+    <string name="tap_to_login">Tap to login</string>
+
+    <!-- Notification Channels -->
     <string name="bid_notifications">Bid Notifications</string>
     <string name="message_notifications">Message Notifications</string>
     <string name="general_notifications">General Notifications</string>
-    <string name="outbid_title">You\'ve been outbid!</string>
+
+    <!-- Outbid Notifications -->
+    <string name="outbid_title">You\'ve been outbid! 😱</string>
     <string name="outbid_message">Someone placed a higher bid on %1$s. Current price: %2$s</string>
     <string name="bid_now">Bid Now</string>
-    <string name="auction_ending_title">Auction ending soon!</string>
+    <string name="auction_ending_title">Auction ending soon! ⏰</string>
     <string name="auction_ending_message">%1$s is ending in %2$d minutes</string>
     <string name="won_auction_title">Congratulations! 🎉</string>
     <string name="won_auction_message">You won %1$s for %2$s</string>
 
     <!-- Bid History -->
     <string name="bid_history">Bid History</string>
-    <string name="show_all_bids">Show All (%1$d)</string>
-    <string name="hide_bids">Hide</string>
-    <string name="no_bids_yet">No bids yet</string>
+    <string name="show_all_bids">Show all %1$d bids</string>
+    <string name="hide_bids">Hide bids</string>
+    <string name="no_bids_yet">No bids yet. Be the first!</string>
     <string name="winning_bid">Winning</string>
-    <string name="your_bid_label">Your Bid</string>
+    <string name="your_bid_label">Your bid</string>
 
     <!-- Messaging -->
     <string name="messages">Messages</string>
     <string name="new_message">New Message</string>
-    <string name="type_message">Type a message...</string>
+    <string name="type_message">Type a message…</string>
     <string name="send">Send</string>
-    <string name="no_messages">No messages</string>
+    <string name="no_messages">No messages yet</string>
     <string name="contact_seller">Contact Seller</string>
+    <string name="start_conversation">Start a conversation</string>
     <string name="online">Online</string>
     <string name="last_seen">Last seen %1$s</string>
+    <string name="today">Today</string>
+    <string name="yesterday">Yesterday</string>
+    <string name="message_sent">Message sent</string>
+    <string name="unread_messages">%1$d unread</string>
     <string name="just_now">Just now</string>
     <string name="minutes_ago">%1$d minutes ago</string>
     <string name="hours_ago">%1$d hours ago</string>
-    <string name="yesterday">Yesterday</string>
-    <string name="today">Today</string>
-    <string name="start_conversation">Start a conversation</string>
-    <string name="message_sent">Message sent</string>
-    <string name="unread_messages">%1$d unread</string>
 
     <!-- Chat Enhancements -->
-    <string name="typing">Typing…</string>
+    <string name="typing">typing…</string>
     <string name="is_typing">%1$s is typing…</string>
     <string name="read">Read</string>
     <string name="delivered">Delivered</string>
@@ -190,23 +202,13 @@
     <string name="light_mode">Light Mode</string>
     <string name="theme">Theme</string>
     <string name="system_default">System Default</string>
-
-    <!-- Buttons -->
-    <string name="save">Save</string>
-    <string name="cancel">Cancel</string>
-    <string name="confirm">Confirm</string>
-    <string name="continue_btn">Continue</string>
-    <string name="back">Back</string>
-    <string name="share">Share</string>
-    <string name="guest_user">Guest User</string>
-    <string name="tap_to_login">Tap to login</string>
     <string name="attach_file">Attach File</string>
 
     <!-- Voice Messages -->
     <string name="voice_message">Voice Message</string>
     <string name="recording">Recording…</string>
     <string name="record_voice">Record Voice</string>
-    <string name="recording_failed">Recording Failed</string>
+    <string name="recording_failed">Recording failed</string>
     <string name="play">Play</string>
     <string name="pause">Pause</string>
     <string name="stop">Stop</string>
@@ -233,8 +235,8 @@
     <string name="unmute">Unmute</string>
     <string name="toggle_video">Toggle Video</string>
     <string name="flip_camera">Flip Camera</string>
-    <string name="camera_flipped">Camera Flipped</string>
+    <string name="camera_flipped">Camera flipped</string>
     <string name="call_duration">Call Duration</string>
-    <string name="permissions_required">Camera and microphone permissions required for video calls</string>
+    <string name="permissions_required">Camera and microphone permissions are required for video calls</string>
     <string name="is_calling_you">%1$s is calling you…</string>
 </resources>
