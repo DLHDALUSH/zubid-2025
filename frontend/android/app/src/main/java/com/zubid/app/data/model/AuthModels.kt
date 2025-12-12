@@ -2,39 +2,48 @@ package com.zubid.app.data.model
 
 import com.google.gson.annotations.SerializedName
 
+// Login with username (backend expects username, not email)
 data class LoginRequest(
-    val email: String,
+    val username: String,
     val password: String
 )
 
+// Registration - matches backend required fields
 data class RegisterRequest(
-    val name: String,
+    val username: String,
     val email: String,
     val password: String,
-    @SerializedName("password_confirmation")
-    val passwordConfirmation: String
+    @SerializedName("id_number")
+    val idNumber: String,
+    @SerializedName("birth_date")
+    val birthDate: String,  // Format: YYYY-MM-DD
+    val phone: String,
+    val address: String,
+    @SerializedName("first_name")
+    val firstName: String? = null,
+    @SerializedName("last_name")
+    val lastName: String? = null
 )
 
+// Response from login/register
 data class AuthResponse(
-    val success: Boolean,
     val message: String?,
-    val token: String?,
+    val error: String?,
     val user: User?
 )
 
 data class User(
     val id: String,
-    val name: String,
+    val username: String,
     val email: String,
-    @SerializedName("avatar_url")
-    val avatarUrl: String?,
-    @SerializedName("created_at")
-    val createdAt: String?,
-    val balance: Double = 0.0,
-    @SerializedName("total_bids")
-    val totalBids: Int = 0,
-    @SerializedName("total_won")
-    val totalWon: Int = 0
+    val role: String? = null,
+    @SerializedName("profile_photo")
+    val profilePhoto: String? = null,
+    @SerializedName("first_name")
+    val firstName: String? = null,
+    @SerializedName("last_name")
+    val lastName: String? = null,
+    val balance: Double = 0.0
 )
 
 data class BidRequest(

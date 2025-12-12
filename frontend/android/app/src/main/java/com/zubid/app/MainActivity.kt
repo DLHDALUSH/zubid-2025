@@ -120,7 +120,13 @@ class MainActivity : AppCompatActivity() {
 
         if (sessionManager.isLoggedIn()) {
             val user = sessionManager.getUser()
-            userName.text = user?.name ?: "User"
+            // Use firstName + lastName if available, otherwise username
+            val displayName = if (!user?.firstName.isNullOrEmpty() && !user?.lastName.isNullOrEmpty()) {
+                "${user?.firstName} ${user?.lastName}"
+            } else {
+                user?.username ?: "User"
+            }
+            userName.text = displayName
             userEmail.text = user?.email ?: ""
         } else {
             userName.text = "Guest User"

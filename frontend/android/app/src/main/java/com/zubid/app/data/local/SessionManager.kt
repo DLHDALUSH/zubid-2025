@@ -48,7 +48,7 @@ class SessionManager(context: Context) {
     }
     
     fun isLoggedIn(): Boolean {
-        return prefs.getBoolean(KEY_IS_LOGGED_IN, false) && getAuthToken() != null
+        return prefs.getBoolean(KEY_IS_LOGGED_IN, false) && getUser() != null
     }
     
     fun logout() {

@@ -12,21 +12,21 @@ import retrofit2.http.*
 
 interface ApiService {
 
-    // Authentication
-    @POST("auth/login")
+    // Authentication - matches backend /api/* routes
+    @POST("api/login")
     suspend fun login(@Body request: LoginRequest): Response<AuthResponse>
 
-    @POST("auth/register")
+    @POST("api/register")
     suspend fun register(@Body request: RegisterRequest): Response<AuthResponse>
 
-    @GET("auth/me")
+    @GET("api/me")
     suspend fun getCurrentUser(@Header("Authorization") token: String): Response<User>
 
-    @POST("auth/logout")
+    @POST("api/logout")
     suspend fun logout(@Header("Authorization") token: String): Response<Unit>
 
     // Auctions
-    @GET("auctions")
+    @GET("api/auctions")
     suspend fun getAuctions(
         @Query("category") category: String? = null,
         @Query("search") search: String? = null,
@@ -34,48 +34,48 @@ interface ApiService {
         @Query("limit") limit: Int = 20
     ): Response<List<Auction>>
 
-    @GET("auctions/{id}")
+    @GET("api/auctions/{id}")
     suspend fun getAuction(@Path("id") id: String): Response<Auction>
 
-    @GET("auctions/featured")
+    @GET("api/auctions")
     suspend fun getFeaturedAuctions(): Response<List<Auction>>
 
     // Bids
-    @POST("auctions/{id}/bid")
+    @POST("api/auctions/{id}/bid")
     suspend fun placeBid(
         @Header("Authorization") token: String,
         @Path("id") auctionId: String,
         @Body request: BidRequest
     ): Response<BidResponse>
 
-    @GET("users/me/bids")
+    @GET("api/my-bids")
     suspend fun getMyBids(@Header("Authorization") token: String): Response<List<Auction>>
 
     // Wishlist
-    @GET("users/me/wishlist")
+    @GET("api/wishlist")
     suspend fun getWishlist(@Header("Authorization") token: String): Response<List<Auction>>
 
-    @POST("users/me/wishlist/{auctionId}")
+    @POST("api/wishlist/{auctionId}")
     suspend fun addToWishlist(
         @Header("Authorization") token: String,
         @Path("auctionId") auctionId: String
     ): Response<Unit>
 
-    @DELETE("users/me/wishlist/{auctionId}")
+    @DELETE("api/wishlist/{auctionId}")
     suspend fun removeFromWishlist(
         @Header("Authorization") token: String,
         @Path("auctionId") auctionId: String
     ): Response<Unit>
 
     // Won Auctions
-    @GET("users/me/won")
+    @GET("api/my-auctions")
     suspend fun getWonAuctions(@Header("Authorization") token: String): Response<List<Auction>>
 
     // Notifications
-    @GET("users/me/notifications")
+    @GET("api/notifications")
     suspend fun getNotifications(@Header("Authorization") token: String): Response<List<com.zubid.app.data.model.Notification>>
 
-    @PUT("users/me/notifications/{id}/read")
+    @PUT("api/notifications/{id}/read")
     suspend fun markNotificationRead(
         @Header("Authorization") token: String,
         @Path("id") notificationId: String

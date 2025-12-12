@@ -56,11 +56,11 @@ class LoginActivity : AppCompatActivity() {
 
     private fun setupViews() {
         binding.btnLogin.setOnClickListener {
-            val email = binding.inputEmail.text.toString().trim()
+            val username = binding.inputUsername.text.toString().trim()
             val password = binding.inputPassword.text.toString()
 
-            if (validateInput(email, password)) {
-                performLogin(email, password)
+            if (validateInput(username, password)) {
+                performLogin(username, password)
             }
         }
 
@@ -73,44 +73,38 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
-    private fun validateInput(email: String, password: String): Boolean {
-        if (email.isEmpty()) {
-            binding.inputEmail.error = "Email is required"
-            return false
-        }
-        if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            binding.inputEmail.error = "Invalid email format"
+    private fun validateInput(username: String, password: String): Boolean {
+        if (username.isEmpty()) {
+            binding.inputUsername.error = "Username is required"
             return false
         }
         if (password.isEmpty()) {
             binding.inputPassword.error = "Password is required"
             return false
         }
-        if (password.length < 6) {
-            binding.inputPassword.error = "Password must be at least 6 characters"
-            return false
-        }
         return true
     }
 
-    private fun performLogin(email: String, password: String) {
+    private fun performLogin(username: String, password: String) {
         showLoading(true)
-        
+
         lifecycleScope.launch {
             try {
-                val response = ApiClient.apiService.login(LoginRequest(email, password))
-                
-                if (response.isSuccessful && response.body()?.success == true) {
+                val response = ApiClient.apiService.login(LoginRequest(username, password))
+
+                if (response.isSuccessful) {
                     response.body()?.let { authResponse ->
-                        authResponse.token?.let { sessionManager.saveAuthToken(it) }
-                        authResponse.user?.let { sessionManager.saveUser(it) }
+                        if (authResponse.error == null) {
+                            authResponse.user?.let { sessionManager.saveUser(it) }
+                            startMainActivity()
+                        } else {
+                            showError(authResponse.error)
+                        }
                     }
-                    startMainActivity()
                 } else {
-                    showError(response.body()?.message ?: "Login failed")
+                    showError("Login failed: Invalid credentials")
                 }
             } catch (e: Exception) {
-                // For demo: allow skip on network error
                 showError("Network error: ${e.message}")
             } finally {
                 showLoading(false)

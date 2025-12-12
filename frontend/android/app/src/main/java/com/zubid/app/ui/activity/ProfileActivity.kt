@@ -190,7 +190,13 @@ class ProfileActivity : AppCompatActivity() {
     private fun loadUserProfile() {
         val user = sessionManager.getUser()
         if (user != null) {
-            binding.userName.text = user.name
+            // Use firstName + lastName if available, otherwise username
+            val displayName = if (!user.firstName.isNullOrEmpty() && !user.lastName.isNullOrEmpty()) {
+                "${user.firstName} ${user.lastName}"
+            } else {
+                user.username
+            }
+            binding.userName.text = displayName
             binding.userEmail.text = user.email
             binding.memberSince.text = "Member since 2024"
             binding.totalBids.text = "24"
