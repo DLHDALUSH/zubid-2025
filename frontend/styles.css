@@ -959,19 +959,20 @@ body::after {
     margin: 0.5rem 0;
 }
 
-/* Settings Dropdown (for guests) */
+/* Settings Dropdown (for guests) - force hidden (legacy gear icon) */
 .settings-dropdown {
-    position: relative;
+	position: relative;
+	display: none !important;
 }
 
 .settings-toggle {
-    padding: 0.5rem !important;
-    border-radius: 50% !important;
-    width: 40px !important;
-    height: 40px !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
+	padding: 0.5rem !important;
+	border-radius: 50% !important;
+	width: 40px !important;
+	height: 40px !important;
+	display: none !important;
+	align-items: center !important;
+	justify-content: center !important;
 }
 
 .settings-toggle .nav-icon {
@@ -1586,6 +1587,10 @@ body::after {
     font-size: 1.2rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+	/* Ensure horizontal text, never vertical-stacked */
+	writing-mode: horizontal-tb;
+	text-orientation: mixed;
+	display: block;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;

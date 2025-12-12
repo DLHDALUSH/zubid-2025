@@ -576,15 +576,15 @@ function removePhoto() {
 	}
 
 async function logout() {
-    try {
-        await UserAPI.logout();
-        currentUser = null;
-        updateNavAuth(false);
-        showToast('Logged out successfully', 'success');
-        window.location.href = 'index.html';
-    } catch (error) {
-        showToast('Logout failed', 'error');
-    }
+	try {
+		await UserAPI.logout();
+		currentUser = null;
+		updateNavAuth(false);
+		showToast('You have been signed out.', 'success');
+		window.location.href = 'index.html';
+	} catch (error) {
+		showToast('Sign out failed. Please try again.', 'error');
+	}
 }
 
 // Modal functions
@@ -701,16 +701,16 @@ function resetRegistrationForm() {
 }
 
 async function logout() {
-    try {
-        await UserAPI.logout();
-        currentUser = null;
-        updateNavAuth(false);
-        showToast('Logged out successfully', 'success');
-        window.location.href = 'index.html';
-    } catch (error) {
-        debugError('Logout error:', error);
-        showToast('Logout failed', 'error');
-    }
+	try {
+		await UserAPI.logout();
+		currentUser = null;
+		updateNavAuth(false);
+		showToast('You have been signed out.', 'success');
+		window.location.href = 'index.html';
+	} catch (error) {
+		debugError('Logout error:', error);
+		showToast('Sign out failed. Please try again.', 'error');
+	}
 }
 
 function closeModal(modalId) {
