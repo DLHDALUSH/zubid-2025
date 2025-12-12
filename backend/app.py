@@ -4664,6 +4664,46 @@ def serve_static(filename):
         # If file not found, return 404
         return jsonify({'error': 'File not found'}), 404
 
+# ==========================================
+# ADMIN: Database Reset Endpoint (Development Only)
+# ==========================================
+@app.route('/api/admin/reset-database', methods=['POST'])
+def reset_database():
+    """Reset database - clears all users except admin. Development only."""
+    try:
+        # Get secret key from request
+        data = request.get_json() or {}
+        secret = data.get('secret', '')
+
+        # Simple secret check (in production, use proper admin auth)
+        expected_secret = os.getenv('ADMIN_RESET_SECRET', 'zubid-reset-2025')
+        if secret != expected_secret:
+            return jsonify({'error': 'Unauthorized'}), 401
+
+        # Delete all users except admin
+        deleted_users = User.query.filter(User.role != 'admin').delete()
+
+        # Delete all bids
+        deleted_bids = Bid.query.delete()
+
+        # Delete password reset tokens
+        try:
+            PasswordResetToken.query.delete()
+        except:
+            pass
+
+        db.session.commit()
+
+        return jsonify({
+            'message': 'Database reset successful',
+            'deleted_users': deleted_users,
+            'deleted_bids': deleted_bids
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': f'Reset failed: {str(e)}'}), 500
+
 if __name__ == '__main__':
     init_db()
 
