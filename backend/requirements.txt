@@ -9,14 +9,9 @@ python-dotenv==1.0.0
 gunicorn==21.2.0
 Pillow>=10.2.0
 qrcode[pil]>=7.4.2
-
-# Optional database drivers (only install if needed)
-# For PostgreSQL: pip install -r requirements-postgresql.txt
-# For MySQL: pip install -r requirements-mysql.txt
-# SQLite is included by default with Python, no driver needed
+psycopg2-binary==2.9.9
 
 # Optional payment gateway SDKs (only install if needed)
 # For Stripe: pip install stripe
 # For PayPal: pip install paypalrestsdk
-# These are optional - the payment_gateways.py module will work without them
 

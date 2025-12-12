@@ -1,0 +1,29 @@
+databases:
+  - name: zubid-db
+    databaseName: zubid
+    user: zubid
+    plan: free
+
+services:
+  - type: web
+    name: zubid-backend
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URI
+        fromDatabase:
+          name: zubid-db
+          property: connectionString
+      - key: HTTPS_ENABLED
+        value: "true"
+      - key: CSRF_ENABLED
+        value: "false"
+      - key: PYTHON_VERSION
+        value: "3.11.0"
+
