@@ -20,7 +20,7 @@ class WebSocketManager private constructor() {
         private const val TAG = "WebSocketManager"
         private const val NORMAL_CLOSURE_STATUS = 1000
         private const val RECONNECT_DELAY_MS = 5000L
-        private const val WS_URL = "wss://api.zubid.com/ws"
+        private const val WS_URL = "wss://zubid-2025.onrender.com/ws"
 
         @Volatile
         private var instance: WebSocketManager? = null

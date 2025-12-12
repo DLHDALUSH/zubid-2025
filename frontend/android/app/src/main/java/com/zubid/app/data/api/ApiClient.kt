@@ -8,13 +8,12 @@ import java.util.concurrent.TimeUnit
 
 object ApiClient {
 
-    // API Configuration - Change BASE_URL for different environments
-    private const val BASE_URL = "https://api.zubid.com/api/v1/"
+    // API Configuration - Live Render Server
+    private const val BASE_URL = "https://zubid-2025.onrender.com/"
 
     // Alternative URLs for different environments:
-    // Production: "https://api.zubid.com/api/v1/"
-    // Staging: "https://staging-api.zubid.com/api/v1/"
-    // Local: "http://10.0.2.2:3000/api/v1/" (for Android emulator)
+    // Production: "https://zubid-2025.onrender.com/"
+    // Local: "http://10.0.2.2:5000/" (for Android emulator)
 
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
         level = HttpLoggingInterceptor.Level.BODY
