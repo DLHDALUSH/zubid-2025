@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.media.Ringtone
 import android.media.RingtoneManager
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -57,11 +58,20 @@ class IncomingCallActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        window.addFlags(
-            WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or
-            WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
-            WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
-        )
+        // Keep screen on
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+
+        // Show when locked and turn screen on (use modern API for Android O+)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+            setShowWhenLocked(true)
+            setTurnScreenOn(true)
+        } else {
+            @Suppress("DEPRECATION")
+            window.addFlags(
+                WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
+                WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
+            )
+        }
 
         binding = ActivityIncomingCallBinding.inflate(layoutInflater)
         setContentView(binding.root)

@@ -5,6 +5,7 @@ import android.media.AudioFormat
 import android.media.AudioRecord
 import android.media.MediaPlayer
 import android.media.MediaRecorder
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import java.io.File
@@ -44,7 +45,14 @@ class VoiceRecorderHelper(private val context: Context) {
 
         audioFile = File(recordingDir, "voice_${System.currentTimeMillis()}.m4a")
 
-        mediaRecorder = MediaRecorder().apply {
+        mediaRecorder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            MediaRecorder(context)
+        } else {
+            @Suppress("DEPRECATION")
+            MediaRecorder()
+        }
+
+        mediaRecorder?.apply {
             try {
                 setAudioSource(MediaRecorder.AudioSource.MIC)
                 setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)

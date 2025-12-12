@@ -146,7 +146,10 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun showBiometricPrompt() {
-        biometricHelper = BiometricHelper(this)
+        // Reuse existing biometricHelper or create if null
+        if (biometricHelper == null) {
+            biometricHelper = BiometricHelper(this)
+        }
         biometricHelper?.authenticate(
             title = getString(R.string.biometric_title),
             subtitle = getString(R.string.biometric_subtitle),

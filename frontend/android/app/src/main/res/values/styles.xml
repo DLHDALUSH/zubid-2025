@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <!-- ZUBID Light Theme (Default) - Orange Primary -->
+    <!-- ZUBID Light Theme (Default) - Samsung One UI Blue -->
     <style name="AppTheme" parent="Theme.Material3.Light.NoActionBar">
-        <!-- Brand Colors - Orange Theme -->
+        <!-- Brand Colors - Samsung Blue Theme -->
         <item name="colorPrimary">@color/primary</item>
         <item name="colorPrimaryContainer">@color/bg_secondary</item>
         <item name="colorOnPrimary">@color/white</item>
