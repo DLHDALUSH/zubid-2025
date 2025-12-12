@@ -4707,6 +4707,55 @@ def reset_database():
         db.session.rollback()
         return jsonify({'error': f'Reset failed: {str(e)}'}), 500
 
+@app.route('/api/admin/init-database', methods=['POST', 'GET'])
+def init_database_endpoint():
+    """Initialize database tables - useful for first deployment"""
+    try:
+        with app.app_context():
+            db.create_all()
+
+            # Create default categories if none exist
+            if Category.query.count() == 0:
+                categories = [
+                    Category(name='Electronics', description='Electronic devices and gadgets'),
+                    Category(name='Art & Collectibles', description='Artwork and collectible items'),
+                    Category(name='Jewelry', description='Precious jewelry and watches'),
+                    Category(name='Vehicles', description='Cars, motorcycles, and other vehicles'),
+                    Category(name='Real Estate', description='Properties and land'),
+                    Category(name='Fashion', description='Clothing and accessories'),
+                    Category(name='Sports', description='Sports equipment and memorabilia'),
+                    Category(name='Other', description='Other miscellaneous items')
+                ]
+                for cat in categories:
+                    db.session.add(cat)
+                db.session.commit()
+
+            # Create admin user if doesn't exist
+            admin = User.query.filter_by(username='admin').first()
+            if not admin:
+                from werkzeug.security import generate_password_hash
+                admin = User(
+                    username='admin',
+                    email='admin@zubid.com',
+                    password_hash=generate_password_hash('Admin123!@#'),
+                    role='admin',
+                    id_number='ADMIN001',
+                    birth_date=datetime(1990, 1, 1),
+                    phone='+1234567890',
+                    address='ZUBID HQ'
+                )
+                db.session.add(admin)
+                db.session.commit()
+
+        return jsonify({
+            'message': 'Database initialized successfully',
+            'tables_created': True
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': f'Init failed: {str(e)}'}), 500
+
 if __name__ == '__main__':
     init_db()
 
