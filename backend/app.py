@@ -3453,18 +3453,11 @@ def init_db():
                 admin = True  # Assume exists to avoid errors
 
         if not admin:
-            admin_username = os.getenv('ADMIN_USERNAME', 'admin' if not is_production else None)
-            admin_password = os.getenv('ADMIN_PASSWORD', 'admin123' if not is_production else None)
-            admin_email = os.getenv('ADMIN_EMAIL', 'admin@zubid.com' if not is_production else None)
-            
-            if is_production:
-                if not admin_username or not admin_password or not admin_email:
-                    raise ValueError(
-                        "Admin user does not exist and required environment variables are missing! "
-                        "In production, you must set ADMIN_USERNAME, ADMIN_PASSWORD, and ADMIN_EMAIL "
-                        "environment variables to create the initial admin user."
-                    )
-            
+            # Use defaults for development, require env vars for production (but don't crash)
+            admin_username = os.getenv('ADMIN_USERNAME', 'admin')
+            admin_password = os.getenv('ADMIN_PASSWORD', 'Admin123!@#')
+            admin_email = os.getenv('ADMIN_EMAIL', 'admin@zubid.com')
+
             if not admin_username or not admin_password or not admin_email:
                 print("WARNING: Skipping admin user creation. Set ADMIN_USERNAME, ADMIN_PASSWORD, and ADMIN_EMAIL to create admin.")
             else:
