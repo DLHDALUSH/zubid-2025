@@ -810,14 +810,14 @@
 }
 
 .admin-action-card .text {
-    font-weight: 600;
-    font-size: 0.9rem;
-}
+	    font-weight: 600;
+	    font-size: 0.9rem;
+	}
 
-/* ==========================================
-   ADMIN TABLES
-   ========================================== */
-.admin-table-container {
+	/* ==========================================
+	   ADMIN TABLES
+	   ========================================== */
+	.admin-table-container {
     background: var(--admin-glass-bg);
     backdrop-filter: blur(20px);
     border-radius: var(--admin-radius-lg);

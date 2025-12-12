@@ -1127,7 +1127,8 @@ async function loadCategories() {
         container.innerHTML = categories
             .map(cat => {
                 const safeId = Number(cat.id) || 0;
-                const safeName = escapeHtml(cat.name || '');
+                const rawName = (cat.name || '').replace(/\s+/g, ' ').trim();
+                const safeName = escapeHtml(rawName);
                 const safeDescription = escapeHtml(cat.description || '');
                 return `
                     <div class="category-card" onclick="filterByCategory(${safeId})">

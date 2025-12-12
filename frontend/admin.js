@@ -3,16 +3,16 @@ let currentAdmin = null;
 
 // Check if user is admin on page load
 document.addEventListener('DOMContentLoaded', async () => {
-    // Add a delay to ensure session is properly established
-    // This is important for cross-origin requests with credentials
-    await new Promise(resolve => setTimeout(resolve, 500));
+	    // Add a delay to ensure session is properly established
+	    // This is important for cross-origin requests with credentials
+	    await new Promise(resolve => setTimeout(resolve, 500));
 
-    await checkAdminAuth();
+	    await checkAdminAuth();
 
-    // Load dashboard stats if on dashboard
-    if (window.location.pathname.includes('admin.html') || window.location.pathname === '/admin.html' || window.location.pathname.includes('index.html')) {
-        await loadAdminStats();
-    }
+	    // Load dashboard stats if on dashboard
+	    if (window.location.pathname.includes('admin.html') || window.location.pathname === '/admin.html' || window.location.pathname.includes('index.html')) {
+	        await loadAdminStats();
+	    }
 });
 
 // Check admin authentication
@@ -48,6 +48,11 @@ async function checkAdminAuth() {
         if (adminUserName) {
             adminUserName.textContent = response.username;
         }
+
+	        const adminAvatar = document.getElementById('adminAvatar');
+	        if (adminAvatar && response.username) {
+	            adminAvatar.textContent = (response.username[0] || 'A').toUpperCase();
+	        }
     } catch (error) {
         console.error('Admin auth error:', error);
         console.error('Error message:', error.message);
@@ -82,30 +87,27 @@ function showToast(message, type = 'info') {
 // Load admin dashboard stats
 async function loadAdminStats() {
     try {
-        const API_BASE = window.API_BASE || (window.location.hostname === 'localhost' ? 'http://localhost:5000' : window.location.origin);
-        const stats = await fetch(`${API_BASE}/api/admin/stats`, {
-            credentials: 'include'
-        });
-        
-        if (!stats.ok) {
-            throw new Error('Failed to load stats');
-        }
-        
-        const data = await stats.json();
-        
+	        const data = await AdminAPI.getStats();
+	        
         // Update stat cards
         document.getElementById('totalUsers').textContent = data.total_users || 0;
         document.getElementById('totalAdmins').textContent = data.total_admins || 0;
         document.getElementById('totalAuctions').textContent = data.total_auctions || 0;
         document.getElementById('activeAuctions').textContent = data.active_auctions || 0;
-        document.getElementById('endedAuctions').textContent = data.ended_auctions || 0;
-        document.getElementById('totalBids').textContent = data.total_bids || 0;
-        document.getElementById('recentUsers').textContent = data.recent_users || 0;
+	        document.getElementById('endedAuctions').textContent = data.ended_auctions || 0;
+	        document.getElementById('totalBids').textContent = data.total_bids || 0;
+	        document.getElementById('recentUsers').textContent = data.recent_users || 0;
+
+	        // Reflect recent user activity in header badge (simple, clean)
+	        const notifBadge = document.querySelector('.admin-notification-btn .badge');
+	        if (notifBadge && typeof data.recent_users !== 'undefined') {
+	            notifBadge.textContent = String(data.recent_users);
+	        }
     } catch (error) {
         console.error('Error loading stats:', error);
         showToast('Error loading dashboard statistics', 'error');
-    }
-}
+	    }
+	}
 
 // Logout
 async function logout() {
