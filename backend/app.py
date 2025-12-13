@@ -55,7 +55,15 @@ if not secret_key:
         )
 
 app.config['SECRET_KEY'] = secret_key
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URI', 'sqlite:///auction.db')
+
+# Database configuration - convert postgresql:// to postgresql+psycopg:// for psycopg3
+database_uri = os.getenv('DATABASE_URI', 'sqlite:///auction.db')
+if database_uri.startswith('postgresql://'):
+    database_uri = database_uri.replace('postgresql://', 'postgresql+psycopg://', 1)
+elif database_uri.startswith('postgres://'):
+    database_uri = database_uri.replace('postgres://', 'postgresql+psycopg://', 1)
+
+app.config['SQLALCHEMY_DATABASE_URI'] = database_uri
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Session configuration for proper cookie handling
