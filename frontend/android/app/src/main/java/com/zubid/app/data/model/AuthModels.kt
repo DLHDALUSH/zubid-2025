@@ -59,3 +59,34 @@ data class BidResponse(
     val bidCount: Int?
 )
 
+// Forgot Password - Request OTP
+data class ForgotPasswordRequest(
+    val email: String? = null,
+    val phone: String? = null,
+    val method: String = "email"  // "email" or "phone"
+)
+
+data class ForgotPasswordResponse(
+    val message: String?,
+    val error: String?,
+    val method: String?,
+    @SerializedName("expires_in")
+    val expiresIn: Int?,
+    @SerializedName("reset_code")
+    val resetCode: String? = null  // Only in development mode
+)
+
+// Reset Password - Verify OTP and set new password
+data class ResetPasswordRequest(
+    val email: String? = null,
+    val phone: String? = null,
+    val token: String,
+    @SerializedName("new_password")
+    val newPassword: String
+)
+
+data class ResetPasswordResponse(
+    val message: String?,
+    val error: String?
+)
+

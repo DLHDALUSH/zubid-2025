@@ -462,7 +462,7 @@ class User(db.Model):
     biometric_data = db.Column(db.Text, nullable=True)  # Deprecated: kept for backward compatibility
     profile_photo = db.Column(db.String(500), nullable=True)  # Profile photo URL
     address = db.Column(db.String(255))
-    phone = db.Column(db.String(20))
+    phone = db.Column(db.String(20), unique=True, nullable=False)  # Made unique for OTP recovery
     role = db.Column(db.String(20), default='user')  # user, admin
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
@@ -1169,7 +1169,11 @@ def register():
         # Check if ID number already exists
         if User.query.filter_by(id_number=id_number).first():
             return jsonify({'error': 'ID Number already registered'}), 400
-        
+
+        # Check if phone number already exists
+        if User.query.filter_by(phone=phone).first():
+            return jsonify({'error': 'Phone number already registered'}), 400
+
         # Parse birth_date string to Date object
         birth_date_obj = None
         if form_data.get('birth_date'):

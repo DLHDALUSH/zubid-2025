@@ -54,6 +54,13 @@
             android:theme="@style/AppTheme"
             android:windowSoftInputMode="adjustResize" />
 
+        <!-- Forgot Password Activity -->
+        <activity
+            android:name=".ui.activity.ForgotPasswordActivity"
+            android:label="Forgot Password"
+            android:theme="@style/AppTheme"
+            android:windowSoftInputMode="adjustResize" />
+
         <!-- Main Activity -->
         <activity
             android:name=".MainActivity"

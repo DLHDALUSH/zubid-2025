@@ -4,8 +4,12 @@ import com.zubid.app.data.model.Auction
 import com.zubid.app.data.model.AuthResponse
 import com.zubid.app.data.model.BidRequest
 import com.zubid.app.data.model.BidResponse
+import com.zubid.app.data.model.ForgotPasswordRequest
+import com.zubid.app.data.model.ForgotPasswordResponse
 import com.zubid.app.data.model.LoginRequest
 import com.zubid.app.data.model.RegisterRequest
+import com.zubid.app.data.model.ResetPasswordRequest
+import com.zubid.app.data.model.ResetPasswordResponse
 import com.zubid.app.data.model.User
 import retrofit2.Response
 import retrofit2.http.*
@@ -24,6 +28,14 @@ interface ApiService {
 
     @POST("api/logout")
     suspend fun logout(@Header("Authorization") token: String): Response<Unit>
+
+    // Forgot Password - Request OTP
+    @POST("api/forgot-password")
+    suspend fun forgotPassword(@Body request: ForgotPasswordRequest): Response<ForgotPasswordResponse>
+
+    // Reset Password - Verify OTP and set new password
+    @POST("api/reset-password")
+    suspend fun resetPassword(@Body request: ResetPasswordRequest): Response<ResetPasswordResponse>
 
     // Auctions
     @GET("api/auctions")
