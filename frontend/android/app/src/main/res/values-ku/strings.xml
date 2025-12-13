@@ -2,168 +2,170 @@
 <resources>
     <string name="app_name">زوبید</string>
     <string name="title_activity_main">زوبید</string>
-    
+    <string name="package_name">com.zubid.app</string>
+    <string name="custom_url_scheme">com.zubid.app</string>
+
     <!-- Navigation -->
-    <string name="nav_home">سەرەکی</string>
+    <string name="nav_home">سەرەتا</string>
     <string name="nav_bids">مزایدەکانم</string>
-    <string name="nav_wishlist">لیستی خواست</string>
-    <string name="nav_wons">بردنەوە</string>
-    <string name="nav_notifications">ئاگادارکردنەوە</string>
-    <string name="nav_categories">پۆلەکان</string>
-    <string name="nav_profile">پرۆفایل</string>
+    <string name="nav_wishlist">دڵخوازەکان</string>
+    <string name="nav_wons">بردنەوەکان</string>
+    <string name="nav_notifications">ئاگادارییەکان</string>
+    <string name="nav_categories">بەشەکان</string>
+    <string name="nav_profile">هەژمارەکەم</string>
     <string name="nav_settings">ڕێکخستنەکان</string>
-    <string name="nav_help">یارمەتی و پشتگیری</string>
-    <string name="nav_logout">چوونەدەرەوە</string>
-    
+    <string name="nav_help">یارمەتی و پشتیوانی</string>
+    <string name="nav_logout">دەرچوون</string>
+
     <!-- Auth -->
     <string name="login">چوونەژوورەوە</string>
-    <string name="register">تۆمارکردن</string>
+    <string name="register">دروستکردنی هەژمار</string>
     <string name="email">ئیمەیڵ</string>
-    <string name="password">وشەی نهێنی</string>
-    <string name="confirm_password">دووبارەکردنەوەی وشەی نهێنی</string>
+    <string name="password">وشەی تێپەڕ</string>
+    <string name="confirm_password">دووبارەکردنەوەی وشەی تێپەڕ</string>
     <string name="full_name">ناوی تەواو</string>
-    <string name="forgot_password">وشەی نهێنیت لەبیرچووە؟</string>
+    <string name="forgot_password">وشەی تێپەڕت بیرچووەتەوە؟</string>
     <string name="dont_have_account">هەژمارت نییە؟</string>
-    <string name="already_have_account">هەژمارت هەیە؟</string>
+    <string name="already_have_account">پێشتر هەژمارت هەیە؟</string>
     <string name="skip">تێپەڕین</string>
-    <string name="use_biometric">پەنجەمۆر/ناسینەوەی ڕوو</string>
+    <string name="use_biometric">چوونەژوورەوە بە پەنجەمۆر یان دەموچاو</string>
     <string name="biometric_title">چوونەژوورەوە بە پەنجەمۆر</string>
-    <string name="biometric_subtitle">پەنجەمۆر یان ڕووت بەکاربێنە بۆ چوونەژوورەوە</string>
-    <string name="biometric_cancel">پاشگەزبوونەوە</string>
-    
+    <string name="biometric_subtitle">پەنجەمۆر یان دەموچاوت بەکاربێنە بۆ چوونەژوورەوەی خێرا</string>
+    <string name="biometric_cancel">هەڵوەشاندنەوە</string>
+
     <!-- Home -->
-    <string name="search_hint">گەڕان لە مزایدەکان...</string>
-    <string name="all_products">هەموو بەرهەمەکان</string>
-    <string name="live_auctions">مزایدەی زیندوو</string>
-    <string name="ending_soon">بە زووی کۆتایی دێت</string>
-    
+    <string name="search_hint">لە مزایدەکاندا بگەڕێ…</string>
+    <string name="all_products">هەموو کاڵاکان</string>
+    <string name="live_auctions">مزایدە زیندووەکان</string>
+    <string name="ending_soon">نزیکی کۆتایی</string>
+
     <!-- Auction -->
-    <string name="current_bid">مزایدەی ئێستا</string>
-    <string name="buy_now">ئێستا بکڕە</string>
+    <string name="current_bid">نرخی ئێستا</string>
+    <string name="buy_now">ئێستا بیکڕە</string>
     <string name="place_bid">مزایدە بکە</string>
-    <string name="your_bid">مزایدەکەت</string>
-    <string name="time_left">کاتی ماوە</string>
+    <string name="your_bid">مزایدەی تۆ</string>
+    <string name="time_left">ماوەی ماو</string>
     <string name="bids">مزایدەکان</string>
     <string name="auction_ended">مزایدەکە تەواو بوو</string>
-    <string name="you_won">پیرۆز! تۆ بردیتەوە!</string>
+    <string name="you_won">پیرۆزبێت! تۆ بردتەوە! 🎉</string>
     <string name="outbid">مزایدەکەت تێپەڕێنرا</string>
     <string name="description">وەسف</string>
-    <string name="real_price">نرخی ڕاستەقینە</string>
+    <string name="real_price">نرخی ڕاستەوخۆ</string>
     <string name="market_price">نرخی بازاڕ</string>
-    <string name="buy_now_confirmation">دووپاتکردنەوەی کڕین</string>
-    <string name="buy_now_message">دڵنیایت دەتەوێت ئەم کاڵایە بکڕیت بە %1$s؟</string>
-    <string name="yes_buy">بەڵێ، بکڕە</string>
-    <string name="no_cancel">نەخێر، پاشگەزبوونەوە</string>
-    <string name="please_login_to_buy">تکایە چوونەژوورەوە بکە بۆ کڕینی ئەم کاڵایە</string>
-    <string name="please_login_to_bid">تکایە چوونەژوورەوە بکە بۆ مزایدەکردن</string>
-    <string name="enter_valid_bid">بڕی مزایدەی دروست بنووسە</string>
-    <string name="bid_must_be_higher">مزایدەکە دەبێت بەرزتر بێت لە نرخی ئێستا</string>
+    <string name="buy_now_confirmation">دڵنیابوونەوە لە کڕین</string>
+    <string name="buy_now_message">دڵنیای کە دەتەوێت ئەم کاڵایە بکڕیت بە %1$s؟</string>
+    <string name="yes_buy">بەڵێ، بیکڕە</string>
+    <string name="no_cancel">نەخێر، هەڵوەشاندنەوە</string>
+    <string name="please_login_to_buy">تکایە سەرەتا بچۆرە ژوورەوە بۆ کڕین</string>
+    <string name="please_login_to_bid">تکایە سەرەتا بچۆرە ژوورەوە بۆ مزایدەکردن</string>
+    <string name="enter_valid_bid">تکایە بڕێکی دروستی مزایدە بنووسە</string>
+    <string name="bid_must_be_higher">مزایدەکە دەبێت زیاتر بێت لە نرخی ئێستا</string>
     <string name="no_description">هیچ وەسفێک بەردەست نییە</string>
     <string name="bids_count">%1$d مزایدە</string>
-    
+
     <!-- Payment -->
     <string name="payment">پارەدان</string>
     <string name="select_payment">شێوازی پارەدان هەڵبژێرە</string>
-    <string name="credit_card">کارتی کریدت (Stripe)</string>
-    <string name="fib_payment">FIB (بانکی خێرای عێراق)</string>
+    <string name="credit_card">کارتی بانکی (Stripe)</string>
+    <string name="fib_payment">FIB - بانکی خێرای عێراق</string>
     <string name="google_pay">Google Pay</string>
     <string name="zaincash_payment">زەین کاش</string>
-    <string name="cash_on_delivery">پارەدان لە کاتی گەیاندن</string>
+    <string name="cash_on_delivery">پارەدان لەکاتی وەرگرتن</string>
     <string name="pay_now">ئێستا پارە بدە</string>
-    <string name="pay_with_google">پارەدان لە ڕێگەی Google</string>
+    <string name="pay_with_google">پارەدان بە Google</string>
     <string name="total_amount">کۆی گشتی</string>
-    <string name="processing">چارەسەرکردن...</string>
-    <string name="payment_success">پارەدان سەرکەوتوو بوو!</string>
+    <string name="processing">چاوەڕوان بە…</string>
+    <string name="payment_success">پارەدان سەرکەوتوو بوو! ✓</string>
     <string name="payment_failed">پارەدان سەرکەوتوو نەبوو</string>
     <string name="delivery_address">ناونیشانی گەیاندن</string>
     <string name="city">شار</string>
-    <string name="phone">ژمارەی تەلەفۆن</string>
-    <string name="notes">تێبینی (ئارەزوومەندانە)</string>
-    
+    <string name="phone">ژمارەی مۆبایل</string>
+    <string name="notes">تێبینی زیاتر (بەدڵخوازی)</string>
+
     <!-- Profile -->
-    <string name="profile">پرۆفایل</string>
-    <string name="edit_profile">دەستکاری پرۆفایل</string>
-    <string name="change_password">گۆڕینی وشەی نهێنی</string>
+    <string name="profile">هەژمارەکەم</string>
+    <string name="edit_profile">دەستکاریکردنی هەژمار</string>
+    <string name="change_password">گۆڕینی وشەی تێپەڕ</string>
     <string name="change_photo">گۆڕینی وێنەی پرۆفایل</string>
     <string name="take_photo">وێنە بگرە</string>
-    <string name="choose_gallery">هەڵبژاردن لە گالەری</string>
+    <string name="choose_gallery">لە گالەری هەڵبژێرە</string>
     <string name="photo_updated">وێنەی پرۆفایل نوێکرایەوە!</string>
     <string name="member_since">ئەندام لە</string>
     <string name="total_bids">کۆی مزایدەکان</string>
-    <string name="won_auctions">مزایدە بردووەکان</string>
-    <string name="wishlist_count">لیستی خواست</string>
-    
+    <string name="won_auctions">بردنەوەکان</string>
+    <string name="wishlist_count">دڵخوازەکان</string>
+
     <!-- Settings -->
     <string name="settings">ڕێکخستنەکان</string>
-    <string name="notifications">ئاگادارکردنەوەکان</string>
-    <string name="push_notifications">ئاگادارکردنەوەی پاش</string>
-    <string name="bid_alerts">ئاگادارکردنەوەی مزایدە</string>
-    <string name="email_updates">نوێکردنەوەی ئیمەیڵ</string>
-    <string name="appearance">ڕواڵەت</string>
+    <string name="notifications">ئاگادارییەکان</string>
+    <string name="push_notifications">ئاگاداری ڕاستەوخۆ</string>
+    <string name="bid_alerts">ئاگاداری مزایدەکان</string>
+    <string name="email_updates">نامەکانی ئیمەیڵ</string>
+    <string name="appearance">شێواز</string>
     <string name="dark_mode">دۆخی تاریک</string>
     <string name="language">زمان</string>
-    <string name="select_language">زمان هەڵبژێرە</string>
+    <string name="select_language">زمانێک هەڵبژێرە</string>
     <string name="english">English</string>
     <string name="arabic">العربية</string>
     <string name="kurdish">کوردی</string>
-    <string name="security">ئاسایش</string>
+    <string name="security">پاراستن</string>
     <string name="enable_biometric">چالاککردنی پەنجەمۆر</string>
     <string name="clear_cache">سڕینەوەی کاش</string>
     <string name="privacy_policy">سیاسەتی تایبەتمەندی</string>
-    <string name="terms">مەرجەکانی خزمەتگوزاری</string>
-    <string name="about">دەربارە</string>
+    <string name="terms">مەرجەکانی بەکارهێنان</string>
+    <string name="about">دەربارەی ئەپ</string>
     <string name="other">هیتر</string>
-    
+
     <!-- Empty States -->
-    <string name="no_bids">هیچ مزایدەیەک نییە</string>
-    <string name="no_wishlist">لیستی خواستت بەتاڵە</string>
-    <string name="no_wins">هیچ مزایدەیەکت نەبردووەتەوە</string>
-    <string name="no_notifications">هیچ ئاگادارکردنەوەیەک نییە</string>
-    
+    <string name="no_bids">هێشتا هیچ مزایدەیەکت نەکردووە</string>
+    <string name="no_wishlist">لیستی دڵخوازەکان بەتاڵە</string>
+    <string name="no_wins">هێشتا هیچ مزایدەیەکت نەبردووەتەوە</string>
+    <string name="no_notifications">هیچ ئاگاداریەک نییە</string>
+
     <!-- Messages -->
-    <string name="logged_out">دەرچوون</string>
-    <string name="bid_placed">مزایدە نێردرا!</string>
-    <string name="added_wishlist">زیادکرا بۆ لیستی خواست</string>
-    <string name="removed_wishlist">لابرا لە لیستی خواست</string>
+    <string name="logged_out">دەرچوویت</string>
+    <string name="bid_placed">مزایدەکەت تۆمار کرا!</string>
+    <string name="added_wishlist">زیادکرا بۆ دڵخوازەکان</string>
+    <string name="removed_wishlist">لابرا لە دڵخوازەکان</string>
     <string name="cache_cleared">کاش سڕایەوە</string>
     <string name="error">هەڵەیەک ڕوویدا</string>
-    <string name="new_bid_placed">مزایدەیەکی نوێ نێردرا!</string>
-    <string name="live">ڕاستەوخۆ</string>
-    <string name="offline">ئۆفلاین</string>
-    <string name="reconnecting">پەیوەندی دەکرێتەوە...</string>
+    <string name="new_bid_placed">مزایدەیەکی نوێ تۆمار کرا!</string>
+    <string name="live">زیندوو</string>
+    <string name="offline">ناپەیوەست</string>
+    <string name="reconnecting">پەیوەستبوونەوە…</string>
 
     <!-- Notifications -->
-    <string name="bid_notifications">ئاگادارکردنەوەی مزایدە</string>
-    <string name="message_notifications">ئاگادارکردنەوەی نامە</string>
-    <string name="general_notifications">ئاگادارکردنەوەی گشتی</string>
-    <string name="outbid_title">مزایدەکەت تێپەڕێنرا!</string>
-    <string name="outbid_message">کەسێک مزایدەیەکی بەرزتری کرد لەسەر %1$s. نرخی ئێستا: %2$s</string>
+    <string name="bid_notifications">ئاگاداری مزایدەکان</string>
+    <string name="message_notifications">ئاگاداری نامەکان</string>
+    <string name="general_notifications">ئاگاداری گشتی</string>
+    <string name="outbid_title">مزایدەکەت تێپەڕێنرا! 😱</string>
+    <string name="outbid_message">کەسێک مزایدەیەکی زیاتری کرد لەسەر %1$s. نرخی ئێستا: %2$s</string>
     <string name="bid_now">ئێستا مزایدە بکە</string>
-    <string name="auction_ending_title">مزایدەکە بە زووی کۆتایی دێت!</string>
-    <string name="auction_ending_message">%1$s لە %2$d خولەکدا کۆتایی دێت</string>
-    <string name="won_auction_title">پیرۆزە! 🎉</string>
-    <string name="won_auction_message">تۆ بردیتەوە %1$s بە %2$s</string>
+    <string name="auction_ending_title">مزایدەکە نزیکی کۆتاییە! ⏰</string>
+    <string name="auction_ending_message">%1$s لە %2$d خولەکدا تەواو دەبێت</string>
+    <string name="won_auction_title">پیرۆزبێت! 🎉</string>
+    <string name="won_auction_message">تۆ %1$s بردتەوە بە %2$s</string>
 
     <!-- Bid History -->
-    <string name="bid_history">مێژووی مزایدە</string>
-    <string name="show_all_bids">هەموو ببینە (%1$d)</string>
+    <string name="bid_history">مێژووی مزایدەکان</string>
+    <string name="show_all_bids">بینینی هەموو (%1$d)</string>
     <string name="hide_bids">شاردنەوە</string>
-    <string name="no_bids_yet">هێشتا هیچ مزایدەیەک نییە</string>
-    <string name="winning_bid">براوە</string>
-    <string name="your_bid_label">مزایدەکەت</string>
+    <string name="no_bids_yet">هێشتا هیچ مزایدەیەک نییە. یەکەم کەس بە!</string>
+    <string name="winning_bid">سەرکەوتوو</string>
+    <string name="your_bid_label">مزایدەی تۆ</string>
 
     <!-- Messaging -->
     <string name="messages">نامەکان</string>
     <string name="new_message">نامەی نوێ</string>
-    <string name="type_message">نامەیەک بنووسە...</string>
+    <string name="type_message">نامەکەت لێرە بنووسە…</string>
     <string name="send">ناردن</string>
     <string name="no_messages">هیچ نامەیەک نییە</string>
-    <string name="contact_seller">پەیوەندی بە فرۆشیار</string>
+    <string name="contact_seller">پەیوەندی بکە بە فرۆشیار</string>
     <string name="online">سەرهێڵ</string>
-    <string name="last_seen">دوایین بینین %1$s</string>
+    <string name="last_seen">دوایین جار بینرا %1$s</string>
     <string name="just_now">ئێستا</string>
-    <string name="minutes_ago">%1$d خولەک لەمەوپێش</string>
-    <string name="hours_ago">%1$d کاتژمێر لەمەوپێش</string>
+    <string name="minutes_ago">پێش %1$d خولەک</string>
+    <string name="hours_ago">پێش %1$d کاتژمێر</string>
     <string name="yesterday">دوێنێ</string>
     <string name="today">ئەمڕۆ</string>
     <string name="start_conversation">گفتوگۆ دەست پێبکە</string>
@@ -177,28 +179,28 @@
     <string name="delivered">گەیشت</string>
     <string name="sending">دەنێردرێت…</string>
     <string name="sent">نێردرا</string>
-    <string name="attach_image">وێنە هاوپێچ بکە</string>
+    <string name="attach_image">وێنە زیاد بکە</string>
     <string name="take_picture">وێنە بگرە</string>
     <string name="choose_from_gallery">لە گالەری هەڵبژێرە</string>
     <string name="image_sent">وێنەکە نێردرا</string>
     <string name="failed_to_send">ناردن سەرکەوتوو نەبوو</string>
-    <string name="tap_to_retry">بۆ هەوڵدانەوە دابگرە</string>
-    <string name="view_image">وێنە ببینە</string>
+    <string name="tap_to_retry">بۆ هەوڵدانەوە لێرە دابگرە</string>
+    <string name="view_image">بینینی وێنە</string>
     <string name="image">وێنە</string>
     <string name="light_mode">دۆخی ڕووناک</string>
-    <string name="theme">ڕواڵەت</string>
-    <string name="system_default">بەرنامەی سیستەم</string>
+    <string name="theme">شێواز</string>
+    <string name="system_default">ڕێکخستنی سیستەم</string>
 
     <!-- Buttons -->
     <string name="save">پاشەکەوتکردن</string>
-    <string name="cancel">پاشگەزبوونەوە</string>
-    <string name="confirm">دووپاتکردنەوە</string>
+    <string name="cancel">هەڵوەشاندنەوە</string>
+    <string name="confirm">دڵنیابوونەوە</string>
     <string name="continue_btn">بەردەوامبوون</string>
     <string name="back">گەڕانەوە</string>
     <string name="share">هاوبەشکردن</string>
     <string name="guest_user">میوان</string>
-    <string name="tap_to_login">بۆ چوونەژوورەوە دابگرە</string>
-    <string name="attach_file">فایل هاوپێچ بکە</string>
+    <string name="tap_to_login">بۆ چوونەژوورەوە لێرە دابگرە</string>
+    <string name="attach_file">فایل زیاد بکە</string>
 
     <!-- Voice Messages -->
     <string name="voice_message">نامەی دەنگی</string>
@@ -211,29 +213,29 @@
     <string name="voice_sent">نامەی دەنگی نێردرا</string>
 
     <!-- Message Reactions -->
-    <string name="add_reaction">کارلێکردن زیاد بکە</string>
-    <string name="reactions">کارلێکردنەکان</string>
-    <string name="react_to_message">کارلێکردن لەسەر نامە</string>
+    <string name="add_reaction">هەستکردن زیاد بکە</string>
+    <string name="reactions">هەستکردنەکان</string>
+    <string name="react_to_message">هەست بکە بە نامەکە</string>
 
     <!-- Video Calling -->
     <string name="video_call">پەیوەندی ڤیدیۆیی</string>
     <string name="voice_call">پەیوەندی دەنگی</string>
     <string name="calling">پەیوەندی دەکرێت…</string>
-    <string name="connecting">پەیوەندی دەکرێت…</string>
-    <string name="connected">پەیوەندی کرا</string>
-    <string name="call_ended">پەیوەندی کۆتایی هات</string>
+    <string name="connecting">پەیوەستدەبێت…</string>
+    <string name="connected">پەیوەست بوو</string>
+    <string name="call_ended">پەیوەندی تەواو بوو</string>
     <string name="incoming_video_call">پەیوەندی ڤیدیۆیی هاتوو</string>
     <string name="incoming_voice_call">پەیوەندی دەنگی هاتوو</string>
-    <string name="accept">قبوڵکردن</string>
+    <string name="accept">وەرگرتن</string>
     <string name="decline">ڕەتکردنەوە</string>
-    <string name="end_call">کۆتایی پەیوەندی</string>
+    <string name="end_call">کۆتایی هێنان</string>
     <string name="mute">بێدەنگکردن</string>
-    <string name="unmute">دەنگ چالاک بکە</string>
-    <string name="toggle_video">گۆڕینی ڤیدیۆ</string>
+    <string name="unmute">دەنگ کردنەوە</string>
+    <string name="toggle_video">کردنەوە/داخستنی کامێرا</string>
     <string name="flip_camera">گۆڕینی کامێرا</string>
     <string name="camera_flipped">کامێرا گۆڕدرا</string>
-    <string name="call_duration">ماوەی پەیوەندی</string>
-    <string name="permissions_required">ڕێگەپێدانی کامێرا و مایکرۆفۆن پێویستە بۆ پەیوەندی ڤیدیۆیی</string>
+    <string name="call_duration">درێژی پەیوەندی</string>
+    <string name="permissions_required">مۆڵەتی کامێرا و مایکرۆفۆن پێویستە بۆ پەیوەندی ڤیدیۆیی</string>
     <string name="is_calling_you">%1$s پەیوەندیت پێوە دەکات…</string>
 </resources>
 
