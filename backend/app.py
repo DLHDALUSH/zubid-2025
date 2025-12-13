@@ -133,22 +133,21 @@ limiter = Limiter(
 # CORS configuration - restrict origins in production
 cors_origins = os.getenv('CORS_ORIGINS', '*')
 if cors_origins == '*':
-    # Development mode - allow all origins with credentials
-    # Note: When using credentials, we cannot use wildcard '*' for origins
-    # Instead, we use a custom function to allow all origins
+    # Development/default mode - allow all origins for API access (mobile apps, web)
+    # For APIs that need to be accessed from mobile apps, we use permissive CORS
     CORS(app,
-         supports_credentials=True,
-         origins=["http://localhost:8080", "http://localhost:3000", "http://127.0.0.1:8080", "http://127.0.0.1:3000"],
-         allow_headers=['Content-Type', 'X-CSRFToken'],
+         supports_credentials=False,  # Mobile apps don't use cookies
+         origins="*",  # Allow any origin (required for mobile apps)
+         allow_headers=['Content-Type', 'X-CSRFToken', 'Authorization'],
          expose_headers=['Set-Cookie'],
          methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'])
 else:
-    # Production mode - restrict to specific origins
+    # Production mode with specific origins - restrict to specific origins
     allowed_origins = [origin.strip() for origin in cors_origins.split(',')]
     CORS(app,
          supports_credentials=True,
          origins=allowed_origins,
-         allow_headers=['Content-Type', 'X-CSRFToken'],
+         allow_headers=['Content-Type', 'X-CSRFToken', 'Authorization'],
          expose_headers=['Set-Cookie'],
          methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'])
 
@@ -696,6 +695,40 @@ class UserPreference(db.Model):
     # Database index
     __table_args__ = (
         Index('idx_user_pref_user_id', 'user_id'),
+    )
+
+class Wishlist(db.Model):
+    """User wishlist for favorite auctions"""
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    auction_id = db.Column(db.Integer, db.ForeignKey('auction.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+
+    user = db.relationship('User', backref=db.backref('wishlist_items', lazy=True))
+    auction = db.relationship('Auction', backref=db.backref('wishlisted_by', lazy=True))
+
+    __table_args__ = (
+        db.UniqueConstraint('user_id', 'auction_id', name='unique_wishlist_item'),
+        Index('idx_wishlist_user', 'user_id'),
+    )
+
+class Notification(db.Model):
+    """User notifications"""
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    title = db.Column(db.String(200), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    type = db.Column(db.String(50), default='info')  # outbid, ending, won, new, info
+    is_read = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    auction_id = db.Column(db.Integer, db.ForeignKey('auction.id'), nullable=True)
+
+    user = db.relationship('User', backref=db.backref('notifications', lazy=True))
+    auction = db.relationship('Auction', backref=db.backref('notifications', lazy=True))
+
+    __table_args__ = (
+        Index('idx_notification_user_read', 'user_id', 'is_read'),
+        Index('idx_notification_created', 'created_at'),
     )
 
 # Authentication decorator
@@ -1270,12 +1303,20 @@ def register():
             f"Happy bidding! 🚀"
         )
         
+        # Return response compatible with Android app's AuthResponse model
         return jsonify({
             'message': 'User registered successfully',
             'welcome_message': welcome_message,
-            'user_id': user.id,
-            'username': user.username,
-            'profile_photo': profile_photo_url
+            'user': {
+                'id': str(user.id),
+                'username': user.username,
+                'email': user.email,
+                'role': user.role,
+                'profile_photo': profile_photo_url,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'balance': 0.0
+            }
         }), 201
     except Exception as e:
         db.session.rollback()
@@ -1320,13 +1361,14 @@ def login():
         return jsonify({
             'message': 'Login successful',
             'user': {
-                'id': user.id,
+                'id': str(user.id),
                 'username': user.username,
                 'email': user.email,
                 'role': user.role,
                 'profile_photo': user.profile_photo,
                 'first_name': user.first_name,
-                'last_name': user.last_name
+                'last_name': user.last_name,
+                'balance': 0.0  # TODO: Add actual balance field to User model
             }
         }), 200
     app.logger.warning(f"Failed login attempt for user: {data.get('username')}")
@@ -1336,6 +1378,229 @@ def login():
 def logout():
     session.pop('user_id', None)
     return jsonify({'message': 'Logout successful'}), 200
+
+@app.route('/api/me', methods=['GET'])
+@login_required
+def get_current_user():
+    """Get current logged-in user's profile"""
+    user = User.query.get(session['user_id'])
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+
+    return jsonify({
+        'id': str(user.id),
+        'username': user.username,
+        'email': user.email,
+        'role': user.role,
+        'profile_photo': user.profile_photo,
+        'first_name': user.first_name,
+        'last_name': user.last_name,
+        'balance': 0.0,  # TODO: Add actual balance field
+        'phone': user.phone,
+        'address': user.address,
+        'city': user.city,
+        'country': user.country,
+        'bio': user.bio,
+        'company': user.company,
+        'website': user.website,
+        'email_verified': user.email_verified,
+        'phone_verified': user.phone_verified,
+        'created_at': user.created_at.isoformat() if user.created_at else None,
+        'last_login': user.last_login.isoformat() if user.last_login else None
+    }), 200
+
+# ==========================================
+# WISHLIST ENDPOINTS
+# ==========================================
+
+def get_auction_image(auction):
+    """Get primary image URL for an auction"""
+    if auction.images:
+        primary = next((img for img in auction.images if img.is_primary), None)
+        if primary:
+            return primary.url
+        return auction.images[0].url if auction.images else None
+    return auction.featured_image_url
+
+@app.route('/api/wishlist', methods=['GET'])
+@login_required
+def get_wishlist():
+    """Get user's wishlist"""
+    user_id = session['user_id']
+    wishlist_items = Wishlist.query.filter_by(user_id=user_id).all()
+
+    auctions = []
+    for item in wishlist_items:
+        auction = item.auction
+        if auction:
+            end_time = ensure_timezone_aware(auction.end_time) if auction.end_time else None
+            end_time_ms = int(end_time.timestamp() * 1000) if end_time else 0
+            auctions.append({
+                # Android-compatible field names
+                'id': str(auction.id),
+                'title': auction.item_name,
+                'description': auction.description,
+                'imageUrl': get_auction_image(auction),
+                'currentPrice': auction.current_bid or auction.starting_bid,
+                'startingPrice': auction.starting_bid,
+                'endTime': end_time_ms,
+                'categoryId': str(auction.category_id) if auction.category_id else '',
+                'sellerId': str(auction.seller_id),
+                'bidCount': len(auction.bids) if auction.bids else 0,
+                'isWishlisted': True,
+                'realPrice': auction.real_price,
+                'marketPrice': auction.market_price
+            })
+
+    return jsonify(auctions), 200
+
+@app.route('/api/wishlist/<int:auction_id>', methods=['POST'])
+@login_required
+def add_to_wishlist(auction_id):
+    """Add auction to wishlist"""
+    user_id = session['user_id']
+
+    # Check if auction exists
+    auction = Auction.query.get(auction_id)
+    if not auction:
+        return jsonify({'error': 'Auction not found'}), 404
+
+    # Check if already in wishlist
+    existing = Wishlist.query.filter_by(user_id=user_id, auction_id=auction_id).first()
+    if existing:
+        return jsonify({'message': 'Already in wishlist'}), 200
+
+    wishlist_item = Wishlist(user_id=user_id, auction_id=auction_id)
+    db.session.add(wishlist_item)
+    db.session.commit()
+
+    return jsonify({'message': 'Added to wishlist'}), 201
+
+@app.route('/api/wishlist/<int:auction_id>', methods=['DELETE'])
+@login_required
+def remove_from_wishlist(auction_id):
+    """Remove auction from wishlist"""
+    user_id = session['user_id']
+
+    wishlist_item = Wishlist.query.filter_by(user_id=user_id, auction_id=auction_id).first()
+    if wishlist_item:
+        db.session.delete(wishlist_item)
+        db.session.commit()
+
+    return jsonify({'message': 'Removed from wishlist'}), 200
+
+# ==========================================
+# MY BIDS & MY AUCTIONS ENDPOINTS
+# ==========================================
+
+@app.route('/api/my-bids', methods=['GET'])
+@login_required
+def get_my_bids():
+    """Get auctions the user has bid on"""
+    user_id = session['user_id']
+
+    # Get all auctions where user has placed bids
+    user_bids = Bid.query.filter_by(user_id=user_id).all()
+    auction_ids = list(set([bid.auction_id for bid in user_bids]))
+
+    auctions = Auction.query.filter(Auction.id.in_(auction_ids)).all()
+
+    result = []
+    for auction in auctions:
+        end_time = ensure_timezone_aware(auction.end_time) if auction.end_time else None
+        end_time_ms = int(end_time.timestamp() * 1000) if end_time else 0
+        result.append({
+            # Android-compatible field names
+            'id': str(auction.id),
+            'title': auction.item_name,
+            'description': auction.description,
+            'imageUrl': get_auction_image(auction),
+            'currentPrice': auction.current_bid or auction.starting_bid,
+            'startingPrice': auction.starting_bid,
+            'endTime': end_time_ms,
+            'categoryId': str(auction.category_id) if auction.category_id else '',
+            'sellerId': str(auction.seller_id),
+            'bidCount': len(auction.bids) if auction.bids else 0,
+            'isWishlisted': False,
+            'realPrice': auction.real_price,
+            'marketPrice': auction.market_price
+        })
+
+    return jsonify(result), 200
+
+@app.route('/api/my-auctions', methods=['GET'])
+@login_required
+def get_my_auctions():
+    """Get auctions the user has won"""
+    user_id = session['user_id']
+
+    # Get all auctions where user is the winner
+    won_auctions = Auction.query.filter_by(winner_id=user_id, status='ended').all()
+
+    result = []
+    for auction in won_auctions:
+        end_time = ensure_timezone_aware(auction.end_time) if auction.end_time else None
+        end_time_ms = int(end_time.timestamp() * 1000) if end_time else 0
+        result.append({
+            # Android-compatible field names
+            'id': str(auction.id),
+            'title': auction.item_name,
+            'description': auction.description,
+            'imageUrl': get_auction_image(auction),
+            'currentPrice': auction.current_bid or auction.starting_bid,
+            'startingPrice': auction.starting_bid,
+            'endTime': end_time_ms,
+            'categoryId': str(auction.category_id) if auction.category_id else '',
+            'sellerId': str(auction.seller_id),
+            'bidCount': len(auction.bids) if auction.bids else 0,
+            'isWishlisted': False,
+            'realPrice': auction.real_price,
+            'marketPrice': auction.market_price
+        })
+
+    return jsonify(result), 200
+
+# ==========================================
+# NOTIFICATIONS ENDPOINTS
+# ==========================================
+
+@app.route('/api/notifications', methods=['GET'])
+@login_required
+def get_notifications():
+    """Get user's notifications"""
+    user_id = session['user_id']
+
+    notifications = Notification.query.filter_by(user_id=user_id)\
+        .order_by(Notification.created_at.desc())\
+        .limit(50).all()
+
+    result = []
+    for notif in notifications:
+        result.append({
+            'id': str(notif.id),
+            'title': notif.title,
+            'message': notif.message,
+            'timestamp': int(notif.created_at.timestamp() * 1000) if notif.created_at else 0,
+            'type': notif.type,
+            'isRead': notif.is_read
+        })
+
+    return jsonify(result), 200
+
+@app.route('/api/notifications/<int:notification_id>/read', methods=['PUT'])
+@login_required
+def mark_notification_read(notification_id):
+    """Mark notification as read"""
+    user_id = session['user_id']
+
+    notification = Notification.query.filter_by(id=notification_id, user_id=user_id).first()
+    if not notification:
+        return jsonify({'error': 'Notification not found'}), 404
+
+    notification.is_read = True
+    db.session.commit()
+
+    return jsonify({'message': 'Notification marked as read'}), 200
 
 # ==========================================
 # PASSWORD MANAGEMENT ENDPOINTS
@@ -2025,16 +2290,31 @@ def get_auctions():
                 except Exception:
                     unique_bidders = set()
             
+            # Return both old field names (for web) and new field names (for Android)
+            end_time_ms = int(end_time.timestamp() * 1000) if end_time else 0
             auctions.append({
-                'id': auction.id,
-                'item_name': auction.item_name,
+                # Android-compatible field names
+                'id': str(auction.id),
+                'title': auction.item_name,
                 'description': auction.description[:100] + '...' if len(auction.description) > 100 else auction.description,
+                'imageUrl': auction.images[0].url if auction.images else None,
+                'currentPrice': auction.current_bid or auction.starting_bid,
+                'startingPrice': auction.starting_bid,
+                'endTime': end_time_ms,
+                'categoryId': str(auction.category_id) if auction.category_id else '',
+                'sellerId': str(auction.seller_id),
+                'bidCount': len(unique_bidders),
+                'isWishlisted': False,  # TODO: Check if user has wishlisted
+                'realPrice': auction.real_price,
+                'marketPrice': auction.market_price,
+                # Legacy field names (for web compatibility)
+                'item_name': auction.item_name,
                 'item_condition': auction.item_condition,
                 'starting_bid': auction.starting_bid,
                 'current_bid': auction.current_bid or auction.starting_bid,
                 'bid_increment': auction.bid_increment,
                 'market_price': auction.market_price,
-                'real_price': auction.real_price,  # Buy It Now / Real Price
+                'real_price': auction.real_price,
                 'start_time': ensure_timezone_aware(auction.start_time).isoformat() if auction.start_time else None,
                 'end_time': end_time.isoformat() if end_time else None,
                 'time_left': max(0, int(time_left)),
@@ -2045,8 +2325,8 @@ def get_auctions():
                 'status': auction.status,
                 'featured': auction.featured,
                 'image_url': auction.images[0].url if auction.images else None,
-                'featured_image_url': auction.featured_image_url,  # Separate featured image
-                'bid_count': len(unique_bidders),  # Count unique bidders, not total bids
+                'featured_image_url': auction.featured_image_url,
+                'bid_count': len(unique_bidders),
                 'qr_code_url': auction.qr_code_url,
                 'video_url': auction.video_url
             })
