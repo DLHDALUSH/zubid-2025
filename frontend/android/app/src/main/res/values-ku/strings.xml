@@ -7,7 +7,7 @@
 
     <!-- Navigation -->
     <string name="nav_home">سەرەتا</string>
-    <string name="nav_bids">مزایدەکانم</string>
+    <string name="nav_bids">هەڕاجەکانم</string>
     <string name="nav_wishlist">دڵخوازەکان</string>
     <string name="nav_wons">بردنەوەکان</string>
     <string name="nav_notifications">ئاگادارییەکان</string>
@@ -34,21 +34,21 @@
     <string name="biometric_cancel">هەڵوەشاندنەوە</string>
 
     <!-- Home -->
-    <string name="search_hint">لە مزایدەکاندا بگەڕێ…</string>
+    <string name="search_hint">لە هەڕاجەکاندا بگەڕێ…</string>
     <string name="all_products">هەموو کاڵاکان</string>
-    <string name="live_auctions">مزایدە زیندووەکان</string>
+    <string name="live_auctions">هەڕاجە زیندووەکان</string>
     <string name="ending_soon">نزیکی کۆتایی</string>
 
     <!-- Auction -->
     <string name="current_bid">نرخی ئێستا</string>
     <string name="buy_now">ئێستا بیکڕە</string>
-    <string name="place_bid">مزایدە بکە</string>
-    <string name="your_bid">مزایدەی تۆ</string>
+    <string name="place_bid">زیادکردنی ئاشکرا (هەڕاج)</string>
+    <string name="your_bid">هەڕاجی تۆ</string>
     <string name="time_left">ماوەی ماو</string>
-    <string name="bids">مزایدەکان</string>
-    <string name="auction_ended">مزایدەکە تەواو بوو</string>
+    <string name="bids">هەڕاجەکان</string>
+    <string name="auction_ended">هەڕاجەکە تەواو بوو</string>
     <string name="you_won">پیرۆزبێت! تۆ بردتەوە! 🎉</string>
-    <string name="outbid">مزایدەکەت تێپەڕێنرا</string>
+    <string name="outbid">هەڕاجەکەت تێپەڕێنرا</string>
     <string name="description">وەسف</string>
     <string name="real_price">نرخی ڕاستەوخۆ</string>
     <string name="market_price">نرخی بازاڕ</string>
@@ -57,11 +57,11 @@
     <string name="yes_buy">بەڵێ، بیکڕە</string>
     <string name="no_cancel">نەخێر، هەڵوەشاندنەوە</string>
     <string name="please_login_to_buy">تکایە سەرەتا بچۆرە ژوورەوە بۆ کڕین</string>
-    <string name="please_login_to_bid">تکایە سەرەتا بچۆرە ژوورەوە بۆ مزایدەکردن</string>
-    <string name="enter_valid_bid">تکایە بڕێکی دروستی مزایدە بنووسە</string>
-    <string name="bid_must_be_higher">مزایدەکە دەبێت زیاتر بێت لە نرخی ئێستا</string>
+    <string name="please_login_to_bid">تکایە سەرەتا بچۆرە ژوورەوە بۆ زیادکردنی ئاشکرا</string>
+    <string name="enter_valid_bid">تکایە بڕێکی دروستی هەڕاج بنووسە</string>
+    <string name="bid_must_be_higher">هەڕاجەکە دەبێت زیاتر بێت لە نرخی ئێستا</string>
     <string name="no_description">هیچ وەسفێک بەردەست نییە</string>
-    <string name="bids_count">%1$d مزایدە</string>
+    <string name="bids_count">%1$d هەڕاج</string>
 
     <!-- Payment -->
     <string name="payment">پارەدان</string>
@@ -91,7 +91,7 @@
     <string name="choose_gallery">لە گالەری هەڵبژێرە</string>
     <string name="photo_updated">وێنەی پرۆفایل نوێکرایەوە!</string>
     <string name="member_since">ئەندام لە</string>
-    <string name="total_bids">کۆی مزایدەکان</string>
+    <string name="total_bids">کۆی هەڕاجەکان</string>
     <string name="won_auctions">بردنەوەکان</string>
     <string name="wishlist_count">دڵخوازەکان</string>
 
@@ -99,7 +99,7 @@
     <string name="settings">ڕێکخستنەکان</string>
     <string name="notifications">ئاگادارییەکان</string>
     <string name="push_notifications">ئاگاداری ڕاستەوخۆ</string>
-    <string name="bid_alerts">ئاگاداری مزایدەکان</string>
+    <string name="bid_alerts">ئاگاداری هەڕاجەکان</string>
     <string name="email_updates">نامەکانی ئیمەیڵ</string>
     <string name="appearance">شێواز</string>
     <string name="dark_mode">دۆخی تاریک</string>
@@ -117,42 +117,42 @@
     <string name="other">هیتر</string>
 
     <!-- Empty States -->
-    <string name="no_bids">هێشتا هیچ مزایدەیەکت نەکردووە</string>
+    <string name="no_bids">هێشتا هیچ هەڕاجێکت نەکردووە</string>
     <string name="no_wishlist">لیستی دڵخوازەکان بەتاڵە</string>
-    <string name="no_wins">هێشتا هیچ مزایدەیەکت نەبردووەتەوە</string>
+    <string name="no_wins">هێشتا هیچ هەڕاجێکت نەبردووەتەوە</string>
     <string name="no_notifications">هیچ ئاگاداریەک نییە</string>
 
     <!-- Messages -->
     <string name="logged_out">دەرچوویت</string>
-    <string name="bid_placed">مزایدەکەت تۆمار کرا!</string>
+    <string name="bid_placed">هەڕاجەکەت تۆمار کرا!</string>
     <string name="added_wishlist">زیادکرا بۆ دڵخوازەکان</string>
     <string name="removed_wishlist">لابرا لە دڵخوازەکان</string>
     <string name="cache_cleared">کاش سڕایەوە</string>
     <string name="error">هەڵەیەک ڕوویدا</string>
-    <string name="new_bid_placed">مزایدەیەکی نوێ تۆمار کرا!</string>
+    <string name="new_bid_placed">هەڕاجێکی نوێ تۆمار کرا!</string>
     <string name="live">زیندوو</string>
     <string name="offline">ناپەیوەست</string>
     <string name="reconnecting">پەیوەستبوونەوە…</string>
 
     <!-- Notifications -->
-    <string name="bid_notifications">ئاگاداری مزایدەکان</string>
+    <string name="bid_notifications">ئاگاداری هەڕاجەکان</string>
     <string name="message_notifications">ئاگاداری نامەکان</string>
     <string name="general_notifications">ئاگاداری گشتی</string>
-    <string name="outbid_title">مزایدەکەت تێپەڕێنرا! 😱</string>
-    <string name="outbid_message">کەسێک مزایدەیەکی زیاتری کرد لەسەر %1$s. نرخی ئێستا: %2$s</string>
-    <string name="bid_now">ئێستا مزایدە بکە</string>
-    <string name="auction_ending_title">مزایدەکە نزیکی کۆتاییە! ⏰</string>
+    <string name="outbid_title">هەڕاجەکەت تێپەڕێنرا! 😱</string>
+    <string name="outbid_message">کەسێک هەڕاجێکی زیاتری کرد لەسەر %1$s. نرخی ئێستا: %2$s</string>
+    <string name="bid_now">ئێستا هەڕاج بکە</string>
+    <string name="auction_ending_title">هەڕاجەکە نزیکی کۆتاییە! ⏰</string>
     <string name="auction_ending_message">%1$s لە %2$d خولەکدا تەواو دەبێت</string>
     <string name="won_auction_title">پیرۆزبێت! 🎉</string>
     <string name="won_auction_message">تۆ %1$s بردتەوە بە %2$s</string>
 
     <!-- Bid History -->
-    <string name="bid_history">مێژووی مزایدەکان</string>
+    <string name="bid_history">مێژووی هەڕاجەکان</string>
     <string name="show_all_bids">بینینی هەموو (%1$d)</string>
     <string name="hide_bids">شاردنەوە</string>
-    <string name="no_bids_yet">هێشتا هیچ مزایدەیەک نییە. یەکەم کەس بە!</string>
+    <string name="no_bids_yet">هێشتا هیچ هەڕاجێک نییە. یەکەم کەس بە!</string>
     <string name="winning_bid">سەرکەوتوو</string>
-    <string name="your_bid_label">مزایدەی تۆ</string>
+    <string name="your_bid_label">هەڕاجی تۆ</string>
 
     <!-- Messaging -->
     <string name="messages">نامەکان</string>
