@@ -4,8 +4,8 @@
     android:height="108dp"
     android:viewportHeight="108"
     android:viewportWidth="108">
-    <!-- Samsung Blue background -->
+    <!-- Orange gradient background -->
     <path
-        android:fillColor="#1259C3"
+        android:fillColor="#FF6B35"
         android:pathData="M0,0h108v108h-108z" />
 </vector>
