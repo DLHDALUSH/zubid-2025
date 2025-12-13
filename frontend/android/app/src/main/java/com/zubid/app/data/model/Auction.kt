@@ -1,10 +1,12 @@
 package com.zubid.app.data.model
 
+import com.google.gson.annotations.SerializedName
+
 data class Auction(
     val id: String,
     val title: String,
     val description: String,
-    val imageUrl: String,
+    val imageUrl: String?,
     val currentPrice: Double,
     val startingPrice: Double,
     val endTime: Long,
@@ -32,4 +34,14 @@ data class Auction(
         return "$${String.format("%.0f", currentPrice)}"
     }
 }
+
+// Response wrapper for paginated auctions from /api/auctions endpoint
+data class AuctionsResponse(
+    val auctions: List<Auction>,
+    val total: Int,
+    val page: Int,
+    @SerializedName("per_page")
+    val perPage: Int,
+    val pages: Int
+)
 

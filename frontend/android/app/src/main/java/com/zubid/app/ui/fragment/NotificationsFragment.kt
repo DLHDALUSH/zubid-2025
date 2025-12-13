@@ -5,17 +5,22 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.zubid.app.R
+import com.zubid.app.data.api.ApiClient
+import com.zubid.app.data.local.SessionManager
 import com.zubid.app.data.model.Notification
 import com.zubid.app.databinding.FragmentNotificationsBinding
 import com.zubid.app.ui.adapter.NotificationAdapter
+import kotlinx.coroutines.launch
 
 class NotificationsFragment : Fragment() {
 
     private var _binding: FragmentNotificationsBinding? = null
     private val binding get() = _binding!!
     private lateinit var notificationAdapter: NotificationAdapter
+    private lateinit var sessionManager: SessionManager
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -28,6 +33,7 @@ class NotificationsFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        sessionManager = SessionManager(requireContext())
         setupRecyclerView()
         setupSwipeRefresh()
         loadNotifications()
@@ -35,7 +41,7 @@ class NotificationsFragment : Fragment() {
 
     private fun setupRecyclerView() {
         notificationAdapter = NotificationAdapter { notification ->
-            // Handle notification click
+            markAsRead(notification)
         }
 
         binding.notificationsRecyclerView.apply {
@@ -53,22 +59,45 @@ class NotificationsFragment : Fragment() {
     }
 
     private fun loadNotifications() {
-        // Sample data - replace with API call
-        val notifications = listOf(
-            Notification("1", "You've been outbid!", "Someone placed a higher bid on iPhone 15 Pro Max", 
-                System.currentTimeMillis() - 300000, "outbid", false),
-            Notification("2", "Auction ending soon", "iPhone 15 Pro Max ends in 30 minutes", 
-                System.currentTimeMillis() - 1800000, "ending", false),
-            Notification("3", "Congratulations!", "You won the Apple AirPods Pro auction!", 
-                System.currentTimeMillis() - 86400000, "won", true),
-            Notification("4", "New auction", "A new Rolex watch has been listed", 
-                System.currentTimeMillis() - 172800000, "new", true)
-        )
+        binding.swipeRefresh.isRefreshing = true
 
+        if (!sessionManager.isLoggedIn()) {
+            showEmptyState(emptyList())
+            binding.swipeRefresh.isRefreshing = false
+            return
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                val response = ApiClient.apiService.getNotifications()
+                if (response.isSuccessful && response.body() != null) {
+                    showEmptyState(response.body()!!)
+                } else {
+                    showEmptyState(emptyList())
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                showEmptyState(emptyList())
+            } finally {
+                binding.swipeRefresh.isRefreshing = false
+            }
+        }
+    }
+
+    private fun markAsRead(notification: Notification) {
+        if (notification.isRead) return
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                ApiClient.apiService.markNotificationRead(notification.id.toInt())
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    private fun showEmptyState(notifications: List<Notification>) {
         notificationAdapter.submitList(notifications)
-        binding.swipeRefresh.isRefreshing = false
-
-        // Show/hide empty state
         if (notifications.isEmpty()) {
             binding.emptyState.visibility = View.VISIBLE
             binding.notificationsRecyclerView.visibility = View.GONE

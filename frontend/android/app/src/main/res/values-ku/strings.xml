@@ -127,8 +127,11 @@
     <string name="bid_placed">هەڕاجەکەت تۆمار کرا!</string>
     <string name="added_wishlist">زیادکرا بۆ دڵخوازەکان</string>
     <string name="removed_wishlist">لابرا لە دڵخوازەکان</string>
+    <string name="removed_from_wishlist">لابرا لە دڵخوازەکان</string>
     <string name="cache_cleared">کاش سڕایەوە</string>
     <string name="error">هەڵەیەک ڕوویدا</string>
+    <string name="error_generic">هەڵەیەک ڕوویدا. تکایە دووبارە هەوڵ بدەوە.</string>
+    <string name="error_network">هەڵەی تۆڕ. تکایە پەیوەندیەکەت بپشکنە.</string>
     <string name="new_bid_placed">هەڕاجێکی نوێ تۆمار کرا!</string>
     <string name="live">زیندوو</string>
     <string name="offline">ناپەیوەست</string>

@@ -127,8 +127,11 @@
     <string name="bid_placed">تم تسجيل مزايدتك بنجاح!</string>
     <string name="added_wishlist">تمت الإضافة للمفضلة</string>
     <string name="removed_wishlist">تمت الإزالة من المفضلة</string>
+    <string name="removed_from_wishlist">تمت الإزالة من المفضلة</string>
     <string name="cache_cleared">تم مسح الذاكرة المؤقتة</string>
     <string name="error">حدث خطأ ما</string>
+    <string name="error_generic">حدث خطأ. يرجى المحاولة مرة أخرى.</string>
+    <string name="error_network">خطأ في الشبكة. يرجى التحقق من اتصالك.</string>
     <string name="new_bid_placed">تم تسجيل مزايدة جديدة!</string>
     <string name="live">مباشر</string>
     <string name="offline">غير متصل</string>

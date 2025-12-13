@@ -147,13 +147,15 @@ class HomeFragment : Fragment() {
             try {
                 val response = ApiClient.apiService.getAuctions()
                 if (response.isSuccessful && response.body() != null) {
-                    allAuctions = response.body()!!
+                    // Extract auctions from paginated response
+                    allAuctions = response.body()!!.auctions
                 } else {
                     // Load sample data as fallback
                     loadSampleData()
                 }
             } catch (e: Exception) {
                 // Network error - load sample data
+                e.printStackTrace()
                 loadSampleData()
             } finally {
                 filterAuctions()

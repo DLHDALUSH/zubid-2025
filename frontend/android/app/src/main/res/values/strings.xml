@@ -127,8 +127,11 @@
     <string name="bid_placed">Bid placed!</string>
     <string name="added_wishlist">Added to wishlist</string>
     <string name="removed_wishlist">Removed from wishlist</string>
+    <string name="removed_from_wishlist">Removed from wishlist</string>
     <string name="cache_cleared">Cache cleared</string>
     <string name="error">An error occurred</string>
+    <string name="error_generic">An error occurred. Please try again.</string>
+    <string name="error_network">Network error. Please check your connection.</string>
     <string name="new_bid_placed">New bid placed!</string>
     <string name="live">LIVE</string>
     <string name="offline">OFFLINE</string>

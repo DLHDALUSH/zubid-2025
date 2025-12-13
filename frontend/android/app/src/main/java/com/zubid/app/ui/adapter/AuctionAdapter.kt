@@ -79,7 +79,7 @@ class AuctionAdapter(
             updateTimer(auction)
 
             // Load image with Glide
-            if (auction.imageUrl.isNotEmpty()) {
+            if (!auction.imageUrl.isNullOrEmpty()) {
                 Glide.with(binding.auctionImage)
                     .load(auction.imageUrl)
                     .placeholder(R.drawable.ic_launcher_foreground)

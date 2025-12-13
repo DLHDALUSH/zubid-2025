@@ -1,22 +1,29 @@
 package com.zubid.app.ui.fragment
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.zubid.app.R
+import com.zubid.app.data.api.ApiClient
+import com.zubid.app.data.local.SessionManager
 import com.zubid.app.data.model.Auction
 import com.zubid.app.databinding.FragmentBidsBinding
+import com.zubid.app.ui.activity.AuctionDetailActivity
 import com.zubid.app.ui.adapter.AuctionAdapter
+import kotlinx.coroutines.launch
 
 class BidsFragment : Fragment() {
 
     private var _binding: FragmentBidsBinding? = null
     private val binding get() = _binding!!
     private lateinit var auctionAdapter: AuctionAdapter
+    private lateinit var sessionManager: SessionManager
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -29,6 +36,7 @@ class BidsFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        sessionManager = SessionManager(requireContext())
         setupRecyclerView()
         setupSwipeRefresh()
         loadBids()
@@ -37,7 +45,16 @@ class BidsFragment : Fragment() {
     private fun setupRecyclerView() {
         auctionAdapter = AuctionAdapter(
             onItemClick = { auction ->
-                Toast.makeText(context, "View bid: ${auction.title}", Toast.LENGTH_SHORT).show()
+                val intent = Intent(requireContext(), AuctionDetailActivity::class.java).apply {
+                    putExtra(AuctionDetailActivity.EXTRA_AUCTION_ID, auction.id)
+                    putExtra(AuctionDetailActivity.EXTRA_AUCTION_TITLE, auction.title)
+                    putExtra(AuctionDetailActivity.EXTRA_AUCTION_IMAGE, auction.imageUrl)
+                    putExtra(AuctionDetailActivity.EXTRA_AUCTION_PRICE, auction.currentPrice)
+                    putExtra(AuctionDetailActivity.EXTRA_AUCTION_END_TIME, auction.endTime)
+                    putExtra(AuctionDetailActivity.EXTRA_AUCTION_BID_COUNT, auction.bidCount)
+                    putExtra(AuctionDetailActivity.EXTRA_AUCTION_DESCRIPTION, auction.description)
+                }
+                startActivity(intent)
             },
             onWishlistClick = { auction ->
                 Toast.makeText(context, "Wishlist: ${auction.title}", Toast.LENGTH_SHORT).show()
@@ -59,24 +76,34 @@ class BidsFragment : Fragment() {
     }
 
     private fun loadBids() {
-        // Sample data - replace with API call
-        val myBids = listOf(
-            Auction("1", "iPhone 15 Pro Max 256GB", "Your bid: $1,250", 
-                "https://via.placeholder.com/300", 1250.0, 999.0, 
-                System.currentTimeMillis() + 9000000, "electronics", "seller1", 15),
-            Auction("2", "MacBook Pro M3 14-inch", "Your bid: $2,100", 
-                "https://via.placeholder.com/300", 2100.0, 1999.0, 
-                System.currentTimeMillis() + 5400000, "electronics", "seller2", 8),
-            Auction("3", "Sony PlayStation 5", "Your bid: $550", 
-                "https://via.placeholder.com/300", 550.0, 499.0, 
-                System.currentTimeMillis() + 3600000, "electronics", "seller3", 22)
-        )
+        binding.swipeRefresh.isRefreshing = true
 
-        auctionAdapter.submitList(myBids)
-        binding.swipeRefresh.isRefreshing = false
+        if (!sessionManager.isLoggedIn()) {
+            showEmptyState(emptyList())
+            binding.swipeRefresh.isRefreshing = false
+            return
+        }
 
-        // Show/hide empty state
-        if (myBids.isEmpty()) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                val response = ApiClient.apiService.getMyBids()
+                if (response.isSuccessful && response.body() != null) {
+                    showEmptyState(response.body()!!)
+                } else {
+                    showEmptyState(emptyList())
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                showEmptyState(emptyList())
+            } finally {
+                binding.swipeRefresh.isRefreshing = false
+            }
+        }
+    }
+
+    private fun showEmptyState(bids: List<Auction>) {
+        auctionAdapter.submitList(bids)
+        if (bids.isEmpty()) {
             binding.emptyState.visibility = View.VISIBLE
             binding.bidsRecyclerView.visibility = View.GONE
         } else {

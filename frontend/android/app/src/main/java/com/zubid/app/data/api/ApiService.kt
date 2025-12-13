@@ -1,6 +1,7 @@
 package com.zubid.app.data.api
 
 import com.zubid.app.data.model.Auction
+import com.zubid.app.data.model.AuctionsResponse
 import com.zubid.app.data.model.AuthResponse
 import com.zubid.app.data.model.BidRequest
 import com.zubid.app.data.model.BidResponse
@@ -24,10 +25,10 @@ interface ApiService {
     suspend fun register(@Body request: RegisterRequest): Response<AuthResponse>
 
     @GET("api/me")
-    suspend fun getCurrentUser(@Header("Authorization") token: String): Response<User>
+    suspend fun getCurrentUser(): Response<User>
 
     @POST("api/logout")
-    suspend fun logout(@Header("Authorization") token: String): Response<Unit>
+    suspend fun logout(): Response<Unit>
 
     // Forgot Password - Request OTP
     @POST("api/forgot-password")
@@ -37,60 +38,59 @@ interface ApiService {
     @POST("api/reset-password")
     suspend fun resetPassword(@Body request: ResetPasswordRequest): Response<ResetPasswordResponse>
 
-    // Auctions
+    // Auctions - returns paginated response with "auctions" array
     @GET("api/auctions")
     suspend fun getAuctions(
-        @Query("category") category: String? = null,
+        @Query("category_id") categoryId: Int? = null,
         @Query("search") search: String? = null,
         @Query("page") page: Int = 1,
-        @Query("limit") limit: Int = 20
-    ): Response<List<Auction>>
+        @Query("per_page") perPage: Int = 20,
+        @Query("status") status: String = "active"
+    ): Response<AuctionsResponse>
 
     @GET("api/auctions/{id}")
-    suspend fun getAuction(@Path("id") id: String): Response<Auction>
+    suspend fun getAuction(@Path("id") id: Int): Response<Auction>
 
     @GET("api/auctions")
-    suspend fun getFeaturedAuctions(): Response<List<Auction>>
+    suspend fun getFeaturedAuctions(
+        @Query("featured") featured: Boolean = true
+    ): Response<AuctionsResponse>
 
-    // Bids
-    @POST("api/auctions/{id}/bid")
+    // Bids - backend expects /api/auctions/{id}/bids (plural)
+    @POST("api/auctions/{id}/bids")
     suspend fun placeBid(
-        @Header("Authorization") token: String,
-        @Path("id") auctionId: String,
+        @Path("id") auctionId: Int,
         @Body request: BidRequest
     ): Response<BidResponse>
 
     @GET("api/my-bids")
-    suspend fun getMyBids(@Header("Authorization") token: String): Response<List<Auction>>
+    suspend fun getMyBids(): Response<List<Auction>>
 
     // Wishlist
     @GET("api/wishlist")
-    suspend fun getWishlist(@Header("Authorization") token: String): Response<List<Auction>>
+    suspend fun getWishlist(): Response<List<Auction>>
 
     @POST("api/wishlist/{auctionId}")
     suspend fun addToWishlist(
-        @Header("Authorization") token: String,
-        @Path("auctionId") auctionId: String
+        @Path("auctionId") auctionId: Int
     ): Response<Unit>
 
     @DELETE("api/wishlist/{auctionId}")
     suspend fun removeFromWishlist(
-        @Header("Authorization") token: String,
-        @Path("auctionId") auctionId: String
+        @Path("auctionId") auctionId: Int
     ): Response<Unit>
 
     // Won Auctions
     @GET("api/my-auctions")
-    suspend fun getWonAuctions(@Header("Authorization") token: String): Response<List<Auction>>
+    suspend fun getWonAuctions(): Response<List<Auction>>
 
     // Notifications
     @GET("api/notifications")
-    suspend fun getNotifications(@Header("Authorization") token: String): Response<List<com.zubid.app.data.model.Notification>>
+    suspend fun getNotifications(): Response<List<com.zubid.app.data.model.Notification>>
 
     @PUT("api/notifications/{id}/read")
     suspend fun markNotificationRead(
-        @Header("Authorization") token: String,
-        @Path("id") notificationId: String
+        @Path("id") notificationId: Int
     ): Response<Unit>
 }
 

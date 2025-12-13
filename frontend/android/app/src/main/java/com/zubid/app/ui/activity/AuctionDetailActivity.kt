@@ -394,20 +394,23 @@ class AuctionDetailActivity : AppCompatActivity() {
             showLoading(true)
             lifecycleScope.launch {
                 try {
+                    val auctionIdInt = currentAuction.id.toIntOrNull() ?: 0
                     val response = ApiClient.apiService.placeBid(
-                        sessionManager.getBearerToken(),
-                        currentAuction.id,
+                        auctionIdInt,
                         BidRequest(bidAmount)
                     )
                     if (response.isSuccessful) {
                         Toast.makeText(this@AuctionDetailActivity, getString(R.string.bid_placed), Toast.LENGTH_SHORT).show()
                         binding.currentPrice.text = formatPrice(bidAmount)
+                        // Update auction object
+                        auction = currentAuction.copy(currentPrice = bidAmount, bidCount = currentAuction.bidCount + 1)
+                        binding.bidCount.text = getString(R.string.bids_count, currentAuction.bidCount + 1)
                     } else {
                         Toast.makeText(this@AuctionDetailActivity, getString(R.string.error), Toast.LENGTH_SHORT).show()
                     }
                 } catch (e: Exception) {
-                    Toast.makeText(this@AuctionDetailActivity, getString(R.string.bid_placed), Toast.LENGTH_SHORT).show()
-                    binding.currentPrice.text = formatPrice(bidAmount)
+                    e.printStackTrace()
+                    Toast.makeText(this@AuctionDetailActivity, getString(R.string.error_network), Toast.LENGTH_SHORT).show()
                 } finally {
                     showLoading(false)
                 }
