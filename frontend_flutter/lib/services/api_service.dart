@@ -51,12 +51,24 @@ class ApiService {
     return null;
   }
 
-  Future<User?> register(String username, String email, String password) async {
+  Future<User?> register({
+    required String username,
+    required String email,
+    required String password,
+    required String idNumber,
+    required String birthDate,
+    required String phone,
+    required String address,
+  }) async {
     try {
       final response = await _dio.post('/register', data: {
         'username': username,
         'email': email,
         'password': password,
+        'id_number': idNumber,
+        'birth_date': birthDate,
+        'phone': phone,
+        'address': address,
       });
       if (response.statusCode == 201) {
         return User.fromJson(response.data['user']);

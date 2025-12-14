@@ -1,33 +1,39 @@
 class User {
-  final int id;
+  final String id;
   final String username;
   final String? email;
   final String? phone;
-  final String? avatarUrl;
-  final bool isAdmin;
-  final DateTime createdAt;
+  final String? profilePhoto;
+  final String role;
+  final double balance;
+  final String? firstName;
+  final String? lastName;
 
   User({
     required this.id,
     required this.username,
     this.email,
     this.phone,
-    this.avatarUrl,
-    this.isAdmin = false,
-    required this.createdAt,
+    this.profilePhoto,
+    this.role = 'user',
+    this.balance = 0.0,
+    this.firstName,
+    this.lastName,
   });
+
+  bool get isAdmin => role == 'admin';
 
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
-      id: json['id'] ?? 0,
+      id: json['id']?.toString() ?? '0',
       username: json['username'] ?? '',
       email: json['email'],
       phone: json['phone'],
-      avatarUrl: json['avatar_url'],
-      isAdmin: json['is_admin'] ?? false,
-      createdAt: json['created_at'] != null
-          ? DateTime.parse(json['created_at'])
-          : DateTime.now(),
+      profilePhoto: json['profile_photo'],
+      role: json['role'] ?? 'user',
+      balance: (json['balance'] ?? 0).toDouble(),
+      firstName: json['first_name'],
+      lastName: json['last_name'],
     );
   }
 
@@ -37,9 +43,11 @@ class User {
       'username': username,
       'email': email,
       'phone': phone,
-      'avatar_url': avatarUrl,
-      'is_admin': isAdmin,
-      'created_at': createdAt.toIso8601String(),
+      'profile_photo': profilePhoto,
+      'role': role,
+      'balance': balance,
+      'first_name': firstName,
+      'last_name': lastName,
     };
   }
 }

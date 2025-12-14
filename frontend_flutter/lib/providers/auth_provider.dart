@@ -46,13 +46,29 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> register(String username, String email, String password) async {
+  Future<bool> register({
+    required String username,
+    required String email,
+    required String password,
+    required String idNumber,
+    required String birthDate,
+    required String phone,
+    required String address,
+  }) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      _user = await _apiService.register(username, email, password);
+      _user = await _apiService.register(
+        username: username,
+        email: email,
+        password: password,
+        idNumber: idNumber,
+        birthDate: birthDate,
+        phone: phone,
+        address: address,
+      );
       _isLoading = false;
       notifyListeners();
       return _user != null;

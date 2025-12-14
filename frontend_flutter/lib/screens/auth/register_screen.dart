@@ -16,6 +16,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+  final _idNumberController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _addressController = TextEditingController();
+  DateTime? _birthDate;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
 
@@ -25,17 +29,43 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
+    _idNumberController.dispose();
+    _phoneController.dispose();
+    _addressController.dispose();
     super.dispose();
+  }
+
+  Future<void> _selectBirthDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime(2000, 1, 1),
+      firstDate: DateTime(1900),
+      lastDate: DateTime.now().subtract(const Duration(days: 365 * 18)),
+      helpText: 'Select your birth date',
+    );
+    if (picked != null) {
+      setState(() => _birthDate = picked);
+    }
   }
 
   Future<void> _register() async {
     if (!_formKey.currentState!.validate()) return;
+    if (_birthDate == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select your birth date'), backgroundColor: Colors.red),
+      );
+      return;
+    }
 
     final authProvider = context.read<AuthProvider>();
     final success = await authProvider.register(
-      _usernameController.text.trim(),
-      _emailController.text.trim(),
-      _passwordController.text,
+      username: _usernameController.text.trim(),
+      email: _emailController.text.trim(),
+      password: _passwordController.text,
+      idNumber: _idNumberController.text.trim(),
+      birthDate: '${_birthDate!.year}-${_birthDate!.month.toString().padLeft(2, '0')}-${_birthDate!.day.toString().padLeft(2, '0')}',
+      phone: _phoneController.text.trim(),
+      address: _addressController.text.trim(),
     );
 
     if (success && mounted) {
@@ -126,10 +156,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       icon: Icon(_obscurePassword ? Icons.visibility : Icons.visibility_off),
                       onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                     ),
+                    helperText: 'Min 8 chars, uppercase, lowercase, number & special char',
+                    helperMaxLines: 2,
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) return 'Please enter a password';
-                    if (value.length < 6) return 'Password must be at least 6 characters';
+                    if (value.length < 8) return 'Password must be at least 8 characters';
+                    if (!value.contains(RegExp(r'[a-z]'))) return 'Must contain lowercase letter';
+                    if (!value.contains(RegExp(r'[A-Z]'))) return 'Must contain uppercase letter';
+                    if (!value.contains(RegExp(r'[0-9]'))) return 'Must contain a number';
+                    if (!value.contains(RegExp(r'[!@#$%^&*()_+\-=\[\]{}|;:,.<>?]'))) return 'Must contain special char';
                     return null;
                   },
                 ),
@@ -149,6 +185,72 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   validator: (value) {
                     if (value != _passwordController.text) return 'Passwords do not match';
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+
+                // ID Number
+                TextFormField(
+                  controller: _idNumberController,
+                  decoration: const InputDecoration(
+                    labelText: 'ID Number',
+                    prefixIcon: Icon(Icons.badge_outlined),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) return 'Please enter your ID number';
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+
+                // Birth Date
+                InkWell(
+                  onTap: _selectBirthDate,
+                  child: InputDecorator(
+                    decoration: const InputDecoration(
+                      labelText: 'Birth Date',
+                      prefixIcon: Icon(Icons.calendar_today_outlined),
+                    ),
+                    child: Text(
+                      _birthDate != null
+                          ? '${_birthDate!.year}-${_birthDate!.month.toString().padLeft(2, '0')}-${_birthDate!.day.toString().padLeft(2, '0')}'
+                          : 'Select your birth date',
+                      style: TextStyle(
+                        color: _birthDate != null ? null : Theme.of(context).hintColor,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Phone
+                TextFormField(
+                  controller: _phoneController,
+                  keyboardType: TextInputType.phone,
+                  decoration: const InputDecoration(
+                    labelText: 'Phone Number',
+                    prefixIcon: Icon(Icons.phone_outlined),
+                    hintText: '+964-XXX-XXXXXXX',
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) return 'Please enter your phone number';
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+
+                // Address
+                TextFormField(
+                  controller: _addressController,
+                  maxLines: 2,
+                  decoration: const InputDecoration(
+                    labelText: 'Address',
+                    prefixIcon: Icon(Icons.location_on_outlined),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) return 'Please enter your address';
+                    if (value.length < 5) return 'Address must be at least 5 characters';
                     return null;
                   },
                 ),
