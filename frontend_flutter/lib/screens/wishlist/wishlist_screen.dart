@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auction_provider.dart';
 import '../../providers/auth_provider.dart';
-import '../../theme/app_theme.dart';
 import '../../widgets/auction_card.dart';
 import '../auction/auction_detail_screen.dart';
 

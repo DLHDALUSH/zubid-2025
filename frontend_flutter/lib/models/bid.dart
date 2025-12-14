@@ -22,15 +22,24 @@ class Bid {
   });
 
   factory Bid.fromJson(Map<String, dynamic> json) {
+    // Try multiple timestamp field names
+    DateTime parseTimestamp() {
+      if (json['created_at'] != null) {
+        return DateTime.parse(json['created_at']);
+      }
+      if (json['timestamp'] != null) {
+        return DateTime.parse(json['timestamp']);
+      }
+      return DateTime.now();
+    }
+
     return Bid(
       id: json['id'] ?? 0,
       auctionId: json['auction_id'] ?? 0,
       userId: json['user_id'] ?? 0,
       username: json['username'],
       amount: (json['amount'] ?? 0).toDouble(),
-      createdAt: json['created_at'] != null 
-          ? DateTime.parse(json['created_at']) 
-          : DateTime.now(),
+      createdAt: parseTimestamp(),
       auctionTitle: json['auction_title'],
       auctionImage: json['auction_image'],
       auctionStatus: json['auction_status'],

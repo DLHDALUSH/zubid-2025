@@ -49,31 +49,49 @@ class Auction {
   }
 
   factory Auction.fromJson(Map<String, dynamic> json) {
+    // Parse images - can be list of strings or list of objects with 'url' property
+    List<String> parseImages(dynamic imagesData) {
+      if (imagesData == null) return [];
+      if (imagesData is List) {
+        return imagesData.map((img) {
+          if (img is String) return img;
+          if (img is Map) return img['url']?.toString() ?? '';
+          return '';
+        }).where((url) => url.isNotEmpty).toList();
+      }
+      return [];
+    }
+
+    // Get image URL - try multiple field names
+    String? getImageUrl(Map<String, dynamic> json) {
+      return json['image_url'] ?? json['imageUrl'] ?? json['featured_image_url'];
+    }
+
     return Auction(
       id: json['id'] ?? 0,
-      title: json['title'] ?? '',
+      title: json['title'] ?? json['item_name'] ?? '',
       description: json['description'] ?? '',
-      startingPrice: (json['starting_price'] ?? 0).toDouble(),
-      currentBid: (json['current_bid'] ?? json['starting_price'] ?? 0).toDouble(),
+      startingPrice: (json['starting_price'] ?? json['starting_bid'] ?? 0).toDouble(),
+      currentBid: (json['current_bid'] ?? json['currentPrice'] ?? json['starting_bid'] ?? json['starting_price'] ?? 0).toDouble(),
       buyNowPrice: json['buy_now_price']?.toDouble(),
-      imageUrl: json['image_url'],
-      images: json['images'] != null
-          ? List<String>.from(json['images'])
-          : [],
+      imageUrl: getImageUrl(json),
+      images: parseImages(json['images']),
       videoUrl: json['video_url'],
       endTime: json['end_time'] != null
           ? DateTime.parse(json['end_time'])
           : DateTime.now().add(const Duration(days: 7)),
       status: json['status'] ?? 'active',
-      sellerId: json['seller_id'] ?? 0,
+      sellerId: json['seller_id'] ?? json['sellerId'] ?? 0,
       sellerName: json['seller_name'],
-      categoryId: json['category_id'],
+      categoryId: json['category_id'] ?? json['categoryId'],
       categoryName: json['category_name'],
-      bidCount: json['bid_count'] ?? 0,
-      highestBidderId: json['highest_bidder_id'],
+      bidCount: json['bid_count'] ?? json['bidCount'] ?? 0,
+      highestBidderId: json['highest_bidder_id'] ?? json['winner_id'],
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'])
-          : DateTime.now(),
+          : (json['start_time'] != null
+              ? DateTime.parse(json['start_time'])
+              : DateTime.now()),
     );
   }
 
