@@ -1135,6 +1135,7 @@ def uploaded_file(filename):
 
 # User Management APIs
 @app.route('/api/register', methods=['POST'])
+@csrf.exempt  # CSRF exempt for registration endpoint
 @limiter.limit("5 per minute")  # Rate limit registration
 def register():
     try:
@@ -1326,6 +1327,7 @@ def register():
         return jsonify({'error': f'Registration failed: {str(e)}'}), 500
 
 @app.route('/api/login', methods=['POST'])
+@csrf.exempt  # CSRF exempt for login endpoint
 @limiter.limit("10 per minute")  # Rate limit login attempts
 def login():
     if not request.json:
@@ -1375,6 +1377,7 @@ def login():
     return jsonify({'error': 'Invalid credentials'}), 401
 
 @app.route('/api/logout', methods=['POST'])
+@csrf.exempt  # CSRF exempt for logout endpoint
 def logout():
     session.pop('user_id', None)
     return jsonify({'message': 'Logout successful'}), 200
