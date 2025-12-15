@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- Allow HTTPS connections to production server -->
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">zubidauction.duckdns.org</domain>
+        <trust-anchors>
+            <certificates src="system" />
+            <certificates src="user" />
+        </trust-anchors>
+    </domain-config>
+    
+    <!-- Default policy for other domains -->
+    <default-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </default-config>
+</network-security-config>
+
