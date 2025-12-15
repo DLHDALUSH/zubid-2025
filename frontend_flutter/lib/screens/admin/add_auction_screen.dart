@@ -50,16 +50,56 @@ class _AddAuctionScreenState extends State<AddAuctionScreen> {
     }
   }
 
-  void _submit() {
+  void _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    // TODO: Call API to create/update auction
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(widget.auction != null ? 'Auction updated!' : 'Auction created!'),
-        backgroundColor: AppColors.success,
-      ),
-    );
-    Navigator.pop(context);
+
+    try {
+      final startingPrice = double.parse(_startingPriceController.text);
+      final buyNowPrice = _buyNowPriceController.text.isNotEmpty
+          ? double.parse(_buyNowPriceController.text)
+          : null;
+
+      final auctionProvider = context.read<AuctionProvider>();
+
+      final success = await auctionProvider.createAuction(
+        itemName: _titleController.text,
+        description: _descriptionController.text,
+        startingBid: startingPrice,
+        endTime: _endTime,
+        categoryId: _selectedCategoryId,
+        realPrice: buyNowPrice,
+        images: _imageUrls.isNotEmpty ? _imageUrls : null,
+        videoUrl: _videoUrlController.text.isNotEmpty ? _videoUrlController.text : null,
+      );
+
+      if (mounted) {
+        if (success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('Auction created successfully!'),
+              backgroundColor: AppColors.success,
+            ),
+          );
+          Navigator.pop(context);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(auctionProvider.error ?? 'Failed to create auction'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   @override

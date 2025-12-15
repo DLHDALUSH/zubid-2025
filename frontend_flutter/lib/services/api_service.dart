@@ -131,6 +131,46 @@ class ApiService {
     return null;
   }
 
+  Future<bool> createAuction({
+    required String itemName,
+    required String description,
+    required double startingBid,
+    required DateTime endTime,
+    int? categoryId,
+    double? bidIncrement,
+    double? marketPrice,
+    double? realPrice,
+    List<String>? images,
+    String? itemCondition,
+    String? videoUrl,
+    String? featuredImageUrl,
+    bool featured = false,
+  }) async {
+    try {
+      final data = {
+        'item_name': itemName,
+        'description': description,
+        'starting_bid': startingBid,
+        'end_time': endTime.toIso8601String(),
+        'bid_increment': bidIncrement ?? 1.0,
+        'featured': featured,
+      };
+
+      if (categoryId != null) data['category_id'] = categoryId;
+      if (marketPrice != null) data['market_price'] = marketPrice;
+      if (realPrice != null) data['real_price'] = realPrice;
+      if (itemCondition != null) data['item_condition'] = itemCondition;
+      if (videoUrl != null) data['video_url'] = videoUrl;
+      if (featuredImageUrl != null) data['featured_image_url'] = featuredImageUrl;
+      if (images != null && images.isNotEmpty) data['images'] = images;
+
+      final response = await _dio.post('/auctions', data: data);
+      return response.statusCode == 201;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   Future<List<Category>> getCategories() async {
     try {
       final response = await _dio.get('/categories');

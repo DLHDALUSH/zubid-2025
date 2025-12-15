@@ -135,5 +135,57 @@ class AuctionProvider extends ChangeNotifier {
       return [];
     }
   }
+
+  Future<bool> createAuction({
+    required String itemName,
+    required String description,
+    required double startingBid,
+    required DateTime endTime,
+    int? categoryId,
+    double? bidIncrement,
+    double? marketPrice,
+    double? realPrice,
+    List<String>? images,
+    String? itemCondition,
+    String? videoUrl,
+    String? featuredImageUrl,
+    bool featured = false,
+  }) async {
+    try {
+      _isLoading = true;
+      notifyListeners();
+
+      final success = await _apiService.createAuction(
+        itemName: itemName,
+        description: description,
+        startingBid: startingBid,
+        endTime: endTime,
+        categoryId: categoryId,
+        bidIncrement: bidIncrement,
+        marketPrice: marketPrice,
+        realPrice: realPrice,
+        images: images,
+        itemCondition: itemCondition,
+        videoUrl: videoUrl,
+        featuredImageUrl: featuredImageUrl,
+        featured: featured,
+      );
+
+      if (success) {
+        _error = null;
+        await loadAuctions(); // Refresh auctions list
+      } else {
+        _error = 'Failed to create auction';
+      }
+
+      return success;
+    } catch (e) {
+      _error = e.toString();
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
 }
 
