@@ -6,19 +6,33 @@ import '../models/user.dart';
 import '../models/notification.dart';
 
 class ApiService {
-  static const String baseUrl = 'https://zubidauction.duckdns.org/api';
-  
-  final Dio _dio;
+  // Use localhost for development, external URL for production
+  // For Android emulator: 10.0.2.2 is the host machine
+  // For physical device: use the actual machine IP or domain
+  static const String baseUrl = 'http://10.0.2.2:5000/api';
+  // Fallback to external server if local is not available
+  static const String fallbackUrl = 'https://zubidauction.duckdns.org/api';
+
+  late final Dio _dio;
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
-  
-  ApiService() : _dio = Dio(BaseOptions(
-    baseUrl: baseUrl,
-    connectTimeout: const Duration(seconds: 30),
-    receiveTimeout: const Duration(seconds: 30),
-    headers: {'Content-Type': 'application/json'},
-  )) {
+  String _currentBaseUrl = baseUrl;
+
+  ApiService() {
+    _initializeDio();
+  }
+
+  void _initializeDio() {
+    _dio = Dio(BaseOptions(
+      baseUrl: _currentBaseUrl,
+      connectTimeout: const Duration(seconds: 30),
+      receiveTimeout: const Duration(seconds: 30),
+      headers: {'Content-Type': 'application/json'},
+      validateStatus: (status) => status != null && status < 500,
+    ));
+
     _dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) async {
+        print('[API] ${options.method} ${options.path}');
         final cookies = await _storage.read(key: 'cookies');
         if (cookies != null) {
           options.headers['Cookie'] = cookies;
@@ -26,11 +40,26 @@ class ApiService {
         return handler.next(options);
       },
       onResponse: (response, handler) async {
+        print('[API] Response: ${response.statusCode} ${response.requestOptions.path}');
         final setCookie = response.headers['set-cookie'];
         if (setCookie != null && setCookie.isNotEmpty) {
           await _storage.write(key: 'cookies', value: setCookie.join('; '));
         }
         return handler.next(response);
+      },
+      onError: (error, handler) async {
+        print('[API ERROR] ${error.message}');
+        print('[API ERROR] Type: ${error.type}');
+        print('[API ERROR] Status: ${error.response?.statusCode}');
+
+        // Try fallback URL if local server is not available
+        if (_currentBaseUrl == baseUrl && error.type == DioExceptionType.connectionTimeout) {
+          print('[API] Switching to fallback URL: $fallbackUrl');
+          _currentBaseUrl = fallbackUrl;
+          _initializeDio();
+        }
+
+        return handler.next(error);
       },
     ));
   }
@@ -38,17 +67,23 @@ class ApiService {
   // Auth
   Future<User?> login(String username, String password) async {
     try {
+      print('[LOGIN] Attempting login for user: $username');
       final response = await _dio.post('/login', data: {
         'username': username,
         'password': password,
       });
+      print('[LOGIN] Response status: ${response.statusCode}');
       if (response.statusCode == 200) {
+        print('[LOGIN] Login successful');
         return User.fromJson(response.data['user']);
+      } else {
+        print('[LOGIN] Login failed: ${response.data}');
+        throw Exception(response.data['error'] ?? 'Login failed');
       }
     } catch (e) {
+      print('[LOGIN] Error: $e');
       rethrow;
     }
-    return null;
   }
 
   Future<User?> register({
@@ -103,20 +138,26 @@ class ApiService {
   // Auctions
   Future<List<Auction>> getAuctions({int page = 1, int? categoryId, String? search}) async {
     try {
+      print('[AUCTIONS] Loading auctions - page: $page, category: $categoryId, search: $search');
       final params = <String, dynamic>{'page': page};
       if (categoryId != null) params['category_id'] = categoryId;
       if (search != null) params['search'] = search;
-      
+
       final response = await _dio.get('/auctions', queryParameters: params);
+      print('[AUCTIONS] Response status: ${response.statusCode}');
       if (response.statusCode == 200) {
         final data = response.data;
         final auctions = data['auctions'] as List? ?? data as List;
+        print('[AUCTIONS] Loaded ${auctions.length} auctions');
         return auctions.map((json) => Auction.fromJson(json)).toList();
+      } else {
+        print('[AUCTIONS] Failed to load auctions: ${response.data}');
+        return [];
       }
     } catch (e) {
+      print('[AUCTIONS] Error: $e');
       rethrow;
     }
-    return [];
   }
 
   Future<Auction?> getAuction(int id) async {
@@ -173,15 +214,21 @@ class ApiService {
 
   Future<List<Category>> getCategories() async {
     try {
+      print('[CATEGORIES] Loading categories');
       final response = await _dio.get('/categories');
+      print('[CATEGORIES] Response status: ${response.statusCode}');
       if (response.statusCode == 200) {
         final categories = response.data as List;
+        print('[CATEGORIES] Loaded ${categories.length} categories');
         return categories.map((json) => Category.fromJson(json)).toList();
+      } else {
+        print('[CATEGORIES] Failed to load categories: ${response.data}');
+        return [];
       }
     } catch (e) {
+      print('[CATEGORIES] Error: $e');
       return [];
     }
-    return [];
   }
 
   // Bids

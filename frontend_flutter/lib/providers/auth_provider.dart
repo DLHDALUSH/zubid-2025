@@ -18,10 +18,18 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
+      print('[AUTH] Checking authentication...');
       _user = await _apiService.getCurrentUser();
+      if (_user != null) {
+        print('[AUTH] User authenticated: ${_user!.username}');
+      } else {
+        print('[AUTH] No authenticated user');
+      }
       _error = null;
     } catch (e) {
+      print('[AUTH] Error checking auth: $e');
       _user = null;
+      _error = e.toString();
     } finally {
       _isLoading = false;
       notifyListeners();

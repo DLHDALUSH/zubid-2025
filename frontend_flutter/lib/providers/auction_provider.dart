@@ -30,13 +30,17 @@ class AuctionProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
+      print('[PROVIDER] Loading auctions...');
       _auctions = await _apiService.getAuctions(
-        categoryId: _selectedCategoryId, 
+        categoryId: _selectedCategoryId,
         search: search,
       );
+      print('[PROVIDER] Loaded ${_auctions.length} auctions');
       _error = null;
     } catch (e) {
+      print('[PROVIDER] Error loading auctions: $e');
       _error = e.toString();
+      _auctions = [];
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -45,10 +49,14 @@ class AuctionProvider extends ChangeNotifier {
 
   Future<void> loadCategories() async {
     try {
+      print('[PROVIDER] Loading categories...');
       _categories = await _apiService.getCategories();
+      print('[PROVIDER] Loaded ${_categories.length} categories');
       notifyListeners();
     } catch (e) {
-      // Ignore category loading errors
+      print('[PROVIDER] Error loading categories: $e');
+      _categories = [];
+      notifyListeners();
     }
   }
 
