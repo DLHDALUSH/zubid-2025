@@ -86,8 +86,8 @@ class _MyBidsScreenState extends State<MyBidsScreen> {
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
                           color: bid.auctionStatus == 'active'
-                              ? AppColors.success.withOpacity(0.2)
-                              : Colors.grey.withOpacity(0.2),
+                              ? AppColors.success.withValues(alpha: 0.2)
+                              : Colors.grey.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(

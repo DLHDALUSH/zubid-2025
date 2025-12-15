@@ -148,7 +148,7 @@ class _AddAuctionScreenState extends State<AddAuctionScreen> {
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<int>(
-              value: _selectedCategoryId,
+              initialValue: _selectedCategoryId,
               decoration: const InputDecoration(labelText: 'Category'),
               items: categories.map((c) => DropdownMenuItem(value: c.id, child: Text(c.name))).toList(),
               onChanged: (v) => setState(() => _selectedCategoryId = v),
@@ -160,9 +160,9 @@ class _AddAuctionScreenState extends State<AddAuctionScreen> {
               trailing: const Icon(Icons.calendar_today),
               onTap: () async {
                 final date = await showDatePicker(context: context, initialDate: _endTime, firstDate: DateTime.now(), lastDate: DateTime.now().add(const Duration(days: 365)));
-                if (date != null) {
+                if (date != null && mounted && context.mounted) {
                   final time = await showTimePicker(context: context, initialTime: TimeOfDay.fromDateTime(_endTime));
-                  if (time != null) {
+                  if (time != null && mounted && context.mounted) {
                     setState(() => _endTime = DateTime(date.year, date.month, date.day, time.hour, time.minute));
                   }
                 }

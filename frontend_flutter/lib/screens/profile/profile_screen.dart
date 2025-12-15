@@ -79,7 +79,7 @@ class ProfileScreen extends StatelessWidget {
           // Admin Panel (only for admins)
           if (isAdmin) ...[
             Card(
-              color: Colors.purple.withOpacity(0.1),
+              color: Colors.purple.withValues(alpha: 0.1),
               child: ListTile(
                 leading: Container(
                   padding: const EdgeInsets.all(8),
@@ -106,7 +106,7 @@ class ProfileScreen extends StatelessWidget {
                   trailing: Switch(
                     value: isDark,
                     onChanged: (_) => themeProvider.toggleTheme(),
-                    activeColor: AppColors.primaryLight,
+                    activeThumbColor: AppColors.primaryLight,
                   ),
                 ),
                 const Divider(height: 1),

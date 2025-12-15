@@ -51,11 +51,11 @@ class AuctionCard extends StatelessWidget {
                       ? CachedNetworkImage(
                           imageUrl: auction.imageUrl!,
                           fit: BoxFit.cover,
-                          placeholder: (_, __) => Container(
+                          placeholder: (context, url) => Container(
                             color: isDark ? AppColors.cardDark : Colors.grey[200],
                             child: const Center(child: CircularProgressIndicator()),
                           ),
-                          errorWidget: (_, __, ___) => Container(
+                          errorWidget: (context, url, error) => Container(
                             color: isDark ? AppColors.cardDark : Colors.grey[200],
                             child: Icon(Icons.image, size: 40, color: Colors.grey[400]),
                           ),

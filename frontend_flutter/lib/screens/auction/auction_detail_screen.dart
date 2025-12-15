@@ -118,10 +118,10 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen> {
         ],
       ),
     );
-    if (confirmed == true) {
+    if (confirmed == true && mounted && context.mounted) {
       // Place bid at buy now price
       final success = await context.read<AuctionProvider>().placeBid(widget.auctionId, _auction!.buyNowPrice!);
-      if (success && mounted) {
+      if (success && mounted && context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Item purchased! 🎉'), backgroundColor: AppColors.success),
         );
@@ -463,8 +463,8 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen> {
             return CachedNetworkImage(
               imageUrl: images[i],
               fit: BoxFit.cover,
-              placeholder: (_, __) => const Center(child: CircularProgressIndicator()),
-              errorWidget: (_, __, ___) => const Center(child: Icon(Icons.error)),
+              placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
+              errorWidget: (context, url, error) => const Center(child: Icon(Icons.error)),
             );
           },
         ),
@@ -579,8 +579,8 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen> {
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         itemCount: _bids.length > 10 ? 10 : _bids.length,
-        separatorBuilder: (_, __) => const Divider(height: 1),
-        itemBuilder: (_, i) {
+        separatorBuilder: (context, index) => const Divider(height: 1),
+        itemBuilder: (context, i) {
           final bid = _bids[i];
           final isHighest = i == 0;
           return ListTile(

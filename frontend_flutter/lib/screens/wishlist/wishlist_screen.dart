@@ -110,7 +110,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
                               },
                               onWishlistTap: () async {
                                 final success = await auctionProvider.toggleWishlist(auction.id);
-                                if (success && mounted) {
+                                if (success && mounted && context.mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
                                       content: Text('Removed from wishlist'),

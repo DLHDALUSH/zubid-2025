@@ -249,7 +249,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         onWishlistTap: authProvider.isLoggedIn
                             ? () async {
                                 final success = await auctionProvider.toggleWishlist(auction.id);
-                                if (success && mounted) {
+                                if (success && mounted && context.mounted) {
                                   final isNowInWishlist = auctionProvider.isInWishlist(auction.id);
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
