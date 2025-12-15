@@ -6,7 +6,7 @@ import '../models/user.dart';
 import '../models/notification.dart';
 
 class ApiService {
-  static const String baseUrl = 'https://zubid-2025.onrender.com/api';
+  static const String baseUrl = 'https://zubidauction.duckdns.org/api';
   
   final Dio _dio;
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
