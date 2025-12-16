@@ -812,11 +812,13 @@ function showWelcomeMessage(welcomeMessage, username) {
         document.body.appendChild(welcomeModal);
     }
     
-    // Format the welcome message (preserve line breaks)
+    // Format the welcome message (preserve line breaks) - SECURITY: Escape HTML to prevent XSS
     const messageContent = document.getElementById('welcomeMessageContent');
     if (messageContent) {
+        // Escape HTML first to prevent XSS attacks
+        const escapedMessage = escapeHtml(welcomeMessage);
         // Convert newlines to <br> tags and preserve formatting
-        const formattedMessage = welcomeMessage
+        const formattedMessage = escapedMessage
             .replace(/\n\n/g, '</p><p>')
             .replace(/\n/g, '<br>');
         messageContent.innerHTML = `<p>${formattedMessage}</p>`;
@@ -997,10 +999,12 @@ async function loadFeaturedCarousel() {
             // Create overlay
             const overlay = document.createElement('div');
             overlay.className = 'carousel-overlay';
+            // SECURITY: Validate auction ID to prevent XSS in onclick handler
+            const safeAuctionId = Number(auction.id) || 0;
             overlay.innerHTML = `
                 <h2>${escapeHtml(auction.item_name || 'Auction')}</h2>
                 <p>Current Bid: $${(auction.current_bid || 0).toFixed(2)}</p>
-                <button class="btn btn-primary" onclick="window.location.href='auction-detail.html?id=${auction.id}'">View Auction</button>
+                <button class="btn btn-primary" onclick="window.location.href='auction-detail.html?id=${safeAuctionId}'">View Auction</button>
             `;
             
             item.appendChild(img);

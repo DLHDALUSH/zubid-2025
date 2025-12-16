@@ -25,7 +25,9 @@ android {
         versionName "1.0"
     }
     lintOptions {
-        abortOnError false
+        abortOnError true  // Enable lint error checking for security
+        warningsAsErrors true
+        disable 'MissingTranslation'  // Allow missing translations for now
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_21

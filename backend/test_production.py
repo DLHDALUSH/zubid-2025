@@ -116,9 +116,13 @@ class ProductionTestCase(unittest.TestCase):
             'password': 'NewPass123!@#',
             'id_number': 'NEW001',
             'birth_date': '1990-01-01',
-            'phone': '1234567890',
-            'address': '123 New St'
+            'phone': '+1234567890',  # Fixed: Added + prefix for international format
+            'address': '123 New Street Address'  # Fixed: Made address longer (min 5 chars required)
         })
+        # Debug: Print response details if test fails
+        if response.status_code != 201:
+            print(f"Registration failed with status {response.status_code}")
+            print(f"Response: {response.get_json()}")
         self.assertEqual(response.status_code, 201)
         data = response.get_json()
         self.assertIn('message', data)

@@ -11,15 +11,16 @@ import java.util.concurrent.TimeUnit
 
 object ApiClient {
 
-    // API Configuration - Live Render Server
-    private const val BASE_URL = "https://zubid-2025.onrender.com/"
+    // API Configuration - Environment-based URL selection
+    private const val PRODUCTION_URL = "https://zubid-2025.onrender.com/"
+    private const val DEVELOPMENT_URL = "http://10.0.2.2:5000/"
 
-    // Alternative URLs for different environments:
-    // Production: "https://zubid-2025.onrender.com/"
-    // Local: "http://10.0.2.2:5000/" (for Android emulator)
+    // Use BuildConfig to determine environment (set in build.gradle)
+    private val BASE_URL = if (BuildConfig.DEBUG) DEVELOPMENT_URL else PRODUCTION_URL
 
+    // SECURITY: Only enable detailed logging in debug builds to prevent sensitive data exposure
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
-        level = HttpLoggingInterceptor.Level.BODY
+        level = if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.BODY else HttpLoggingInterceptor.Level.NONE
     }
 
     // Cookie storage for session-based authentication

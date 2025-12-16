@@ -151,6 +151,38 @@ else:
          expose_headers=['Set-Cookie'],
          methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'])
 
+# Security Headers Middleware
+@app.after_request
+def add_security_headers(response):
+    """Add comprehensive security headers to all responses"""
+    # Prevent clickjacking
+    response.headers['X-Frame-Options'] = 'DENY'
+    # Prevent MIME type sniffing
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    # Enable XSS protection
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    # Strict Transport Security (HTTPS only)
+    if request.is_secure:
+        response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+    # Content Security Policy
+    response.headers['Content-Security-Policy'] = (
+        "default-src 'self'; "
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval'; "
+        "style-src 'self' 'unsafe-inline'; "
+        "img-src 'self' data: https:; "
+        "font-src 'self' https:; "
+        "connect-src 'self' https:; "
+        "frame-ancestors 'none';"
+    )
+    # Referrer Policy
+    response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+    # Permissions Policy
+    response.headers['Permissions-Policy'] = (
+        "geolocation=(), microphone=(), camera=(), "
+        "payment=(), usb=(), magnetometer=(), gyroscope=()"
+    )
+    return response
+
 # Input Validation and Sanitization Helpers
 def sanitize_string(value, max_length=None, allow_html=False):
     """
@@ -192,9 +224,12 @@ def validate_phone(phone):
     """Validate phone number format"""
     if not phone or not isinstance(phone, str):
         return False
-    # Remove common separators
+    # Remove common separators and spaces
     cleaned = re.sub(r'[\s\-\(\)]', '', phone)
-    # Check if it's all digits and reasonable length
+    # Allow international format with + prefix
+    if cleaned.startswith('+'):
+        cleaned = cleaned[1:]  # Remove the + sign
+    # Check if it's all digits and reasonable length (8-20 digits)
     return cleaned.isdigit() and 8 <= len(cleaned) <= 20
 
 def sanitize_filename(filename):
@@ -1135,7 +1170,7 @@ def uploaded_file(filename):
 
 # User Management APIs
 @app.route('/api/register', methods=['POST'])
-@csrf.exempt  # CSRF exempt for registration endpoint
+@csrf.exempt  # Allow registration without CSRF token for API clients
 @limiter.limit("5 per minute")  # Rate limit registration
 def register():
     try:
@@ -1327,7 +1362,7 @@ def register():
         return jsonify({'error': f'Registration failed: {str(e)}'}), 500
 
 @app.route('/api/login', methods=['POST'])
-@csrf.exempt  # CSRF exempt for login endpoint
+@csrf.exempt  # Allow login without CSRF token for API clients
 @limiter.limit("10 per minute")  # Rate limit login attempts
 def login():
     if not request.json:
@@ -1377,7 +1412,7 @@ def login():
     return jsonify({'error': 'Invalid credentials'}), 401
 
 @app.route('/api/logout', methods=['POST'])
-@csrf.exempt  # CSRF exempt for logout endpoint
+@csrf.exempt  # Allow logout without CSRF token for API clients
 def logout():
     session.pop('user_id', None)
     return jsonify({'message': 'Logout successful'}), 200

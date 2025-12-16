@@ -2,7 +2,8 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 // Set to true for development (connects to local backend)
 // Set to false for production APK build
-const isDevelopment = false;
+// Use environment variable or default to development for safety
+const isDevelopment = process.env.NODE_ENV !== 'production';
 
 // Your production backend URL (change this when you deploy)
 const PRODUCTION_API_URL = 'https://your-backend-domain.com';
