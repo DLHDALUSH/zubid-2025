@@ -9,9 +9,9 @@ class ApiService {
   // Use localhost for development, external URL for production
   // For Android emulator: 10.0.2.2 is the host machine
   // For physical device: use the actual machine IP or domain
-  static const String baseUrl = 'http://10.0.2.2:5000/api';
-  // Fallback to external server if local is not available
-  static const String fallbackUrl = 'https://zubidauction.duckdns.org/api';
+  static const String baseUrl = 'https://zubidauction.duckdns.org/api';
+  // Fallback to local server if external is not available
+  static const String fallbackUrl = 'http://10.0.2.2:5000/api';
 
   late final Dio _dio;
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
