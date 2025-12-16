@@ -19,7 +19,13 @@ class AuthProvider extends ChangeNotifier {
 
     try {
       print('[AUTH] Checking authentication...');
-      _user = await _apiService.getCurrentUser();
+      _user = await _apiService.getCurrentUser().timeout(
+        const Duration(seconds: 8),
+        onTimeout: () {
+          print('[AUTH] Auth check timed out - assuming no user');
+          return null;
+        },
+      );
       if (_user != null) {
         print('[AUTH] User authenticated: ${_user!.username}');
       } else {
@@ -29,7 +35,8 @@ class AuthProvider extends ChangeNotifier {
     } catch (e) {
       print('[AUTH] Error checking auth: $e');
       _user = null;
-      _error = e.toString();
+      // Don't set error for auth check failures - just continue without user
+      _error = null;
     } finally {
       _isLoading = false;
       notifyListeners();

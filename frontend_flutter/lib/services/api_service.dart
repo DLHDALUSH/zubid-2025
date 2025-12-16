@@ -24,8 +24,9 @@ class ApiService {
   void _initializeDio() {
     _dio = Dio(BaseOptions(
       baseUrl: _currentBaseUrl,
-      connectTimeout: const Duration(seconds: 30),
-      receiveTimeout: const Duration(seconds: 30),
+      connectTimeout: const Duration(seconds: 10), // Reduced from 30 to 10
+      receiveTimeout: const Duration(seconds: 10), // Reduced from 30 to 10
+      sendTimeout: const Duration(seconds: 10), // Added send timeout
       headers: {'Content-Type': 'application/json'},
       validateStatus: (status) => status != null && status < 500,
     ));
@@ -125,14 +126,20 @@ class ApiService {
 
   Future<User?> getCurrentUser() async {
     try {
+      print('[API] Getting current user...');
       final response = await _dio.get('/me');
+      print('[API] getCurrentUser response: ${response.statusCode}');
       if (response.statusCode == 200) {
+        print('[API] User data received');
         return User.fromJson(response.data);
+      } else {
+        print('[API] No user authenticated (${response.statusCode})');
+        return null;
       }
     } catch (e) {
+      print('[API] getCurrentUser error: $e');
       return null;
     }
-    return null;
   }
 
   // Auctions
