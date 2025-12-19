@@ -92,5 +92,13 @@ interface ApiService {
     suspend fun markNotificationRead(
         @Path("id") notificationId: Int
     ): Response<Unit>
+
+    // Health check
+    @GET("api/health")
+    suspend fun healthCheck(): Response<Map<String, Any>>
+
+    // CSRF token
+    @GET("api/csrf-token")
+    suspend fun getCsrfToken(): Response<Map<String, String>>
 }
 

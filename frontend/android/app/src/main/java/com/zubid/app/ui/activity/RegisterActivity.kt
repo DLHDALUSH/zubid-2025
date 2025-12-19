@@ -3,6 +3,8 @@ package com.zubid.app.ui.activity
 import android.app.DatePickerDialog
 import android.content.Context
 import android.content.Intent
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
@@ -56,6 +58,11 @@ class RegisterActivity : AppCompatActivity() {
             val address = binding.inputAddress.text.toString().trim()
             val password = binding.inputPassword.text.toString()
 
+            if (!isNetworkAvailable()) {
+                showError("No internet connection. Please check your network and try again.")
+                return@setOnClickListener
+            }
+
             if (validateInput(username, email, idNumber, phone, address, password)) {
                 performRegister(username, email, idNumber, phone, address, password)
             }
@@ -63,6 +70,17 @@ class RegisterActivity : AppCompatActivity() {
 
         binding.btnLogin.setOnClickListener {
             finish()
+        }
+
+        // Add test buttons for debugging (remove in production)
+        binding.inputUsername.setOnLongClickListener {
+            testApiConnectivity()
+            true
+        }
+
+        binding.inputEmail.setOnLongClickListener {
+            fillTestData()
+            true
         }
     }
 
@@ -160,33 +178,63 @@ class RegisterActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             try {
-                val response = ApiClient.apiService.register(
-                    RegisterRequest(
-                        username = username,
-                        email = email,
-                        password = password,
-                        idNumber = idNumber,
-                        birthDate = selectedBirthDate,
-                        phone = phone,
-                        address = address
-                    )
+                val registerRequest = RegisterRequest(
+                    username = username,
+                    email = email,
+                    password = password,
+                    idNumber = idNumber,
+                    birthDate = selectedBirthDate,
+                    phone = phone,
+                    address = address
                 )
+
+                android.util.Log.d("RegisterActivity", "Sending registration request: $registerRequest")
+
+                val response = ApiClient.apiService.register(registerRequest)
+
+                android.util.Log.d("RegisterActivity", "Response code: ${response.code()}")
+                android.util.Log.d("RegisterActivity", "Response message: ${response.message()}")
 
                 if (response.isSuccessful) {
                     response.body()?.let { authResponse ->
+                        android.util.Log.d("RegisterActivity", "Response body: $authResponse")
                         if (authResponse.error == null) {
                             authResponse.user?.let { sessionManager.saveUser(it) }
-                            Toast.makeText(this@RegisterActivity, "Registration successful!", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(this@RegisterActivity,
+                                authResponse.message ?: "Registration successful!",
+                                Toast.LENGTH_SHORT).show()
                             startMainActivity()
                         } else {
                             showError(authResponse.error)
                         }
+                    } ?: run {
+                        showError("Registration failed: Empty response from server")
                     }
                 } else {
-                    // Try to parse error from response
-                    showError("Registration failed. Please try again.")
+                    // Try to parse error from response body
+                    val errorBody = response.errorBody()?.string()
+                    android.util.Log.e("RegisterActivity", "Error response: $errorBody")
+
+                    try {
+                        val gson = com.google.gson.Gson()
+                        val errorResponse = gson.fromJson(errorBody, com.zubid.app.data.model.AuthResponse::class.java)
+                        showError(errorResponse.error ?: "Registration failed: ${response.code()} ${response.message()}")
+                    } catch (e: Exception) {
+                        android.util.Log.e("RegisterActivity", "Failed to parse error response", e)
+                        showError("Registration failed: ${response.code()} ${response.message()}")
+                    }
                 }
+            } catch (e: java.net.SocketTimeoutException) {
+                android.util.Log.e("RegisterActivity", "Timeout error", e)
+                showError("Registration timeout. Please check your internet connection and try again.")
+            } catch (e: java.net.UnknownHostException) {
+                android.util.Log.e("RegisterActivity", "Network error", e)
+                showError("Cannot connect to server. Please check your internet connection.")
+            } catch (e: java.net.ConnectException) {
+                android.util.Log.e("RegisterActivity", "Connection error", e)
+                showError("Cannot connect to server. Please try again later.")
             } catch (e: Exception) {
+                android.util.Log.e("RegisterActivity", "Registration error", e)
                 showError("Network error: ${e.message}")
             } finally {
                 showLoading(false)
@@ -208,6 +256,51 @@ class RegisterActivity : AppCompatActivity() {
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)
         finish()
+    }
+
+    private fun isNetworkAvailable(): Boolean {
+        val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val network = connectivityManager.activeNetwork ?: return false
+        val networkCapabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
+        return networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
+                networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+    }
+
+    private fun testApiConnectivity() {
+        lifecycleScope.launch {
+            try {
+                android.util.Log.d("RegisterActivity", "Testing API connectivity...")
+                Toast.makeText(this@RegisterActivity, "Testing API connectivity...", Toast.LENGTH_SHORT).show()
+
+                // Try health check first
+                val response = ApiClient.apiService.healthCheck()
+                android.util.Log.d("RegisterActivity", "Health check response: ${response.code()}")
+
+                if (response.isSuccessful) {
+                    val body = response.body()
+                    android.util.Log.d("RegisterActivity", "Health check body: $body")
+                    Toast.makeText(this@RegisterActivity, "API is healthy! Status: ${body?.get("status")}", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(this@RegisterActivity, "API health check failed: ${response.code()}", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("RegisterActivity", "API test failed", e)
+                Toast.makeText(this@RegisterActivity, "API test failed: ${e.message}", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    private fun fillTestData() {
+        val timestamp = System.currentTimeMillis()
+        binding.inputUsername.setText("testuser$timestamp")
+        binding.inputEmail.setText("test$timestamp@example.com")
+        binding.inputIdNumber.setText("ID$timestamp")
+        binding.inputPhone.setText("+1234567890")
+        binding.inputAddress.setText("123 Test Street, Test City, Test Country")
+        binding.inputPassword.setText("TestPass123!")
+        selectedBirthDate = "1990-01-01"
+        binding.inputBirthDate.setText(selectedBirthDate)
+        Toast.makeText(this, "Test data filled. You can now test registration.", Toast.LENGTH_SHORT).show()
     }
 }
 
