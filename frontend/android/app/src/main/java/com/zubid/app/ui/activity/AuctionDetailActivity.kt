@@ -3,6 +3,8 @@ package com.zubid.app.ui.activity
 import android.content.Context
 import android.content.Intent
 import android.graphics.Paint
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -18,6 +20,7 @@ import com.zubid.app.data.api.ApiClient
 import com.zubid.app.data.local.SessionManager
 import com.zubid.app.data.model.Auction
 import com.zubid.app.data.model.BidRequest
+import com.zubid.app.data.model.BuyNowResponse
 import com.zubid.app.data.websocket.AuctionStatus
 import com.zubid.app.data.websocket.BidHistoryItem
 import com.zubid.app.data.websocket.BidUpdate
@@ -81,24 +84,32 @@ class AuctionDetailActivity : AppCompatActivity() {
 
     private fun setupViews() {
         binding.btnBack.setOnClickListener { finish() }
-        
+
         binding.btnWishlist.setOnClickListener {
+            if (!sessionManager.isLoggedIn()) {
+                Toast.makeText(this, getString(R.string.please_login_to_bid), Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
             Toast.makeText(this, "Added to wishlist", Toast.LENGTH_SHORT).show()
         }
-        
+
         binding.btnShare.setOnClickListener {
-            Toast.makeText(this, "Share auction", Toast.LENGTH_SHORT).show()
+            shareAuction()
         }
-        
+
         binding.btnPlaceBid.setOnClickListener {
             placeBid()
         }
-        
+
         binding.btnBuyNow.setOnClickListener {
             showBuyNowConfirmation()
         }
 
         binding.btnContactSeller.setOnClickListener {
+            if (!sessionManager.isLoggedIn()) {
+                Toast.makeText(this, getString(R.string.please_login_to_bid), Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
             // Open chat with seller
             startActivity(Intent(this, ChatActivity::class.java).apply {
                 putExtra("user_id", "seller_1")
@@ -110,6 +121,60 @@ class AuctionDetailActivity : AppCompatActivity() {
         binding.tvShowAllBids.setOnClickListener {
             toggleBidHistory()
         }
+
+        // Add input validation for bid amount
+        binding.inputBidAmount.setOnFocusChangeListener { _, hasFocus ->
+            if (!hasFocus) {
+                validateBidInput()
+            }
+        }
+    }
+
+    private fun shareAuction() {
+        auction?.let { currentAuction ->
+            val shareText = "Check out this auction: ${currentAuction.title}\n" +
+                    "Current Price: ${formatPrice(currentAuction.currentPrice)}\n" +
+                    "Time Left: ${currentAuction.getTimeRemaining()}"
+
+            val shareIntent = Intent().apply {
+                action = Intent.ACTION_SEND
+                putExtra(Intent.EXTRA_TEXT, shareText)
+                type = "text/plain"
+            }
+            startActivity(Intent.createChooser(shareIntent, "Share Auction"))
+        }
+    }
+
+    private fun validateBidInput(): Boolean {
+        val bidAmountText = binding.inputBidAmount.text.toString().trim()
+        if (bidAmountText.isEmpty()) {
+            return true // Empty is okay, will be validated on submit
+        }
+
+        val bidAmount = try {
+            bidAmountText.toDouble()
+        } catch (e: NumberFormatException) {
+            binding.inputBidAmount.error = getString(R.string.enter_valid_bid)
+            return false
+        }
+
+        if (bidAmount <= 0) {
+            binding.inputBidAmount.error = getString(R.string.enter_valid_bid)
+            return false
+        }
+
+        auction?.let { currentAuction ->
+            val bidIncrement = 1.0
+            val minimumBid = currentAuction.currentPrice + bidIncrement
+
+            if (bidAmount < minimumBid) {
+                binding.inputBidAmount.error = "Minimum bid: ${formatPrice(minimumBid)}"
+                return false
+            }
+        }
+
+        binding.inputBidAmount.error = null
+        return true
     }
 
     private fun setupBidHistory() {
@@ -351,25 +416,91 @@ class AuctionDetailActivity : AppCompatActivity() {
         }
 
         auction?.let { currentAuction ->
-            val realPrice = currentAuction.realPrice ?: currentAuction.currentPrice
+            val realPrice = currentAuction.realPrice ?: (currentAuction.currentPrice * 1.2) // Default to 20% above current price
             val formattedPrice = formatPrice(realPrice)
 
             AlertDialog.Builder(this, R.style.AlertDialogTheme)
                 .setTitle(getString(R.string.buy_now_confirmation))
                 .setMessage(getString(R.string.buy_now_message, formattedPrice))
                 .setPositiveButton(getString(R.string.yes_buy)) { _, _ ->
-                    // Navigate to payment activity
-                    val intent = Intent(this, PaymentActivity::class.java).apply {
-                        putExtra("auction_id", currentAuction.id)
-                        putExtra("auction_title", currentAuction.title)
-                        putExtra("amount", realPrice)
+                    checkNetworkAndProceed {
+                        processBuyNow(currentAuction, realPrice)
                     }
-                    startActivity(intent)
                 }
                 .setNegativeButton(getString(R.string.no_cancel)) { dialog, _ ->
                     dialog.dismiss()
                 }
                 .show()
+        }
+    }
+
+    private fun processBuyNow(auction: Auction, realPrice: Double) {
+        showLoading(true)
+        lifecycleScope.launch {
+            try {
+                val auctionIdInt = auction.id.toIntOrNull()
+                if (auctionIdInt == null || auctionIdInt <= 0) {
+                    Toast.makeText(this@AuctionDetailActivity, "Invalid auction ID", Toast.LENGTH_SHORT).show()
+                    showLoading(false)
+                    return@launch
+                }
+
+                val response = ApiClient.apiService.buyNow(auctionIdInt)
+
+                if (response.isSuccessful) {
+                    val buyNowResponse = response.body()
+                    if (buyNowResponse?.success == true) {
+                        Toast.makeText(this@AuctionDetailActivity,
+                            buyNowResponse.message ?: "Purchase successful!", Toast.LENGTH_LONG).show()
+
+                        // Navigate to payment activity with purchase details
+                        val intent = Intent(this@AuctionDetailActivity, PaymentActivity::class.java).apply {
+                            putExtra("auction_id", auction.id)
+                            putExtra("auction_title", auction.title)
+                            putExtra("product_name", auction.title)
+                            putExtra("product_price", buyNowResponse.totalWithFees ?: buyNowResponse.purchasePrice ?: realPrice)
+                            putExtra("amount", buyNowResponse.totalWithFees ?: buyNowResponse.purchasePrice ?: realPrice)
+                            putExtra("purchase_price", buyNowResponse.purchasePrice)
+                            putExtra("total_with_fees", buyNowResponse.totalWithFees)
+                            putExtra("is_buy_now", true)
+                        }
+                        startActivity(intent)
+
+                        // Disable buttons since auction is now ended
+                        binding.btnPlaceBid.isEnabled = false
+                        binding.btnBuyNow.isEnabled = false
+
+                        // Update auction status
+                        this@AuctionDetailActivity.auction = auction.copy(
+                            currentPrice = buyNowResponse.purchasePrice ?: realPrice,
+                            bidCount = auction.bidCount + 1
+                        )
+                        binding.currentPrice.text = formatPrice(buyNowResponse.purchasePrice ?: realPrice)
+
+                    } else {
+                        val errorMessage = buyNowResponse?.error ?: "Purchase failed"
+                        Toast.makeText(this@AuctionDetailActivity, errorMessage, Toast.LENGTH_LONG).show()
+                    }
+                } else {
+                    val errorBody = response.errorBody()?.string()
+                    val errorMessage = try {
+                        val errorJson = org.json.JSONObject(errorBody ?: "{}")
+                        errorJson.optString("error", "Purchase failed")
+                    } catch (e: Exception) {
+                        "Purchase failed"
+                    }
+                    Toast.makeText(this@AuctionDetailActivity, errorMessage, Toast.LENGTH_LONG).show()
+                }
+            } catch (e: java.net.SocketTimeoutException) {
+                Toast.makeText(this@AuctionDetailActivity, "Request timeout. Please try again.", Toast.LENGTH_LONG).show()
+            } catch (e: java.net.UnknownHostException) {
+                Toast.makeText(this@AuctionDetailActivity, getString(R.string.error_network), Toast.LENGTH_LONG).show()
+            } catch (e: Exception) {
+                android.util.Log.e("AuctionDetailActivity", "Error processing buy now", e)
+                Toast.makeText(this@AuctionDetailActivity, "Purchase failed. Please try again.", Toast.LENGTH_LONG).show()
+            } finally {
+                showLoading(false)
+            }
         }
     }
 
@@ -379,38 +510,111 @@ class AuctionDetailActivity : AppCompatActivity() {
             return
         }
 
-        val bidAmount = binding.inputBidAmount.text.toString().toDoubleOrNull()
-        if (bidAmount == null || bidAmount <= 0) {
-            Toast.makeText(this, getString(R.string.enter_valid_bid), Toast.LENGTH_SHORT).show()
+        checkNetworkAndProceed {
+            placeBidInternal()
+        }
+    }
+
+    private fun placeBidInternal() {
+        // Clear any previous errors
+        binding.inputBidAmount.error = null
+
+        val bidAmountText = binding.inputBidAmount.text.toString().trim()
+        if (bidAmountText.isEmpty()) {
+            binding.inputBidAmount.error = getString(R.string.enter_valid_bid)
+            binding.inputBidAmount.requestFocus()
+            return
+        }
+
+        val bidAmount = try {
+            bidAmountText.toDouble()
+        } catch (e: NumberFormatException) {
+            binding.inputBidAmount.error = getString(R.string.enter_valid_bid)
+            binding.inputBidAmount.requestFocus()
+            return
+        }
+
+        if (bidAmount <= 0) {
+            binding.inputBidAmount.error = getString(R.string.enter_valid_bid)
+            binding.inputBidAmount.requestFocus()
             return
         }
 
         auction?.let { currentAuction ->
-            if (bidAmount <= currentAuction.currentPrice) {
-                Toast.makeText(this, getString(R.string.bid_must_be_higher), Toast.LENGTH_SHORT).show()
+            // Calculate minimum bid (current price + increment, default increment is 1.0)
+            val bidIncrement = 1.0 // Default increment, should come from auction data
+            val minimumBid = currentAuction.currentPrice + bidIncrement
+
+            if (bidAmount < minimumBid) {
+                binding.inputBidAmount.error = getString(R.string.bid_must_be_higher) + " (Min: ${formatPrice(minimumBid)})"
+                binding.inputBidAmount.requestFocus()
                 return
             }
 
             showLoading(true)
             lifecycleScope.launch {
                 try {
-                    val auctionIdInt = currentAuction.id.toIntOrNull() ?: 0
+                    val auctionIdInt = currentAuction.id.toIntOrNull()
+                    if (auctionIdInt == null || auctionIdInt <= 0) {
+                        Toast.makeText(this@AuctionDetailActivity, "Invalid auction ID", Toast.LENGTH_SHORT).show()
+                        showLoading(false)
+                        return@launch
+                    }
+
                     val response = ApiClient.apiService.placeBid(
                         auctionIdInt,
                         BidRequest(bidAmount)
                     )
+
                     if (response.isSuccessful) {
-                        Toast.makeText(this@AuctionDetailActivity, getString(R.string.bid_placed), Toast.LENGTH_SHORT).show()
-                        binding.currentPrice.text = formatPrice(bidAmount)
-                        // Update auction object
-                        auction = currentAuction.copy(currentPrice = bidAmount, bidCount = currentAuction.bidCount + 1)
-                        binding.bidCount.text = getString(R.string.bids_count, currentAuction.bidCount + 1)
+                        val bidResponse = response.body()
+                        if (bidResponse?.success == true) {
+                            Toast.makeText(this@AuctionDetailActivity,
+                                bidResponse.message ?: getString(R.string.bid_placed), Toast.LENGTH_SHORT).show()
+
+                            // Update UI with response data
+                            val newCurrentPrice = bidResponse.currentBid ?: bidAmount
+                            val newBidCount = currentAuction.bidCount + 1
+
+                            binding.currentPrice.text = formatPrice(newCurrentPrice)
+                            binding.bidCount.text = getString(R.string.bids_count, newBidCount)
+
+                            // Update auction object
+                            auction = currentAuction.copy(
+                                currentPrice = newCurrentPrice,
+                                bidCount = newBidCount
+                            )
+
+                            // Clear the input field
+                            binding.inputBidAmount.text.clear()
+
+                            // Update time if extended
+                            if (bidResponse.timeExtended == true && bidResponse.timeLeft != null) {
+                                // Update countdown timer with new time
+                                updateTimeRemaining(bidResponse.timeLeft)
+                            }
+
+                        } else {
+                            val errorMessage = bidResponse?.error ?: getString(R.string.error)
+                            Toast.makeText(this@AuctionDetailActivity, errorMessage, Toast.LENGTH_LONG).show()
+                        }
                     } else {
-                        Toast.makeText(this@AuctionDetailActivity, getString(R.string.error), Toast.LENGTH_SHORT).show()
+                        val errorBody = response.errorBody()?.string()
+                        val errorMessage = try {
+                            val errorJson = org.json.JSONObject(errorBody ?: "{}")
+                            errorJson.optString("error", getString(R.string.error))
+                        } catch (e: Exception) {
+                            getString(R.string.error)
+                        }
+                        Toast.makeText(this@AuctionDetailActivity, errorMessage, Toast.LENGTH_LONG).show()
                     }
+                } catch (e: java.net.SocketTimeoutException) {
+                    Toast.makeText(this@AuctionDetailActivity, "Request timeout. Please try again.", Toast.LENGTH_LONG).show()
+                } catch (e: java.net.UnknownHostException) {
+                    Toast.makeText(this@AuctionDetailActivity, getString(R.string.error_network), Toast.LENGTH_LONG).show()
                 } catch (e: Exception) {
-                    e.printStackTrace()
-                    Toast.makeText(this@AuctionDetailActivity, getString(R.string.error_network), Toast.LENGTH_SHORT).show()
+                    android.util.Log.e("AuctionDetailActivity", "Error placing bid", e)
+                    Toast.makeText(this@AuctionDetailActivity, getString(R.string.error_network), Toast.LENGTH_LONG).show()
                 } finally {
                     showLoading(false)
                 }
@@ -425,6 +629,37 @@ class AuctionDetailActivity : AppCompatActivity() {
     private fun showLoading(show: Boolean) {
         binding.progressBar.visibility = if (show) View.VISIBLE else View.GONE
         binding.btnPlaceBid.isEnabled = !show
+        binding.btnBuyNow.isEnabled = !show
+    }
+
+    private fun isNetworkAvailable(): Boolean {
+        val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val network = connectivityManager.activeNetwork ?: return false
+        val networkCapabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
+        return networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
+                networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+    }
+
+    private fun checkNetworkAndProceed(action: () -> Unit) {
+        if (!isNetworkAvailable()) {
+            Toast.makeText(this, getString(R.string.error_network), Toast.LENGTH_LONG).show()
+            return
+        }
+        action()
+    }
+
+    private fun updateTimeRemaining(timeLeftSeconds: Int) {
+        val hours = timeLeftSeconds / 3600
+        val minutes = (timeLeftSeconds % 3600) / 60
+        val seconds = timeLeftSeconds % 60
+
+        val timeText = when {
+            hours > 0 -> String.format("%02d:%02d:%02d", hours, minutes, seconds)
+            minutes > 0 -> String.format("%02d:%02d", minutes, seconds)
+            else -> String.format("00:%02d", seconds)
+        }
+
+        binding.timeRemaining.text = timeText
     }
 
     override fun onDestroy() {

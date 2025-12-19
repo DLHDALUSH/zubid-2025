@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+    <title>Financial Management - Admin Portal</title>
+    <link rel="stylesheet" href="styles.css?v=20251210-responsive-fix">
+    <link rel="stylesheet" href="admin.css?v=2.0">
+    <script src="theme.js"></script>
+</head>
+<body>
+    <div class="admin-layout">
+        <!-- Mobile Toggle -->
+        <button class="admin-mobile-toggle" onclick="toggleSidebar()">☰</button>
+
+        <!-- Sidebar Navigation -->
+        <aside class="admin-sidebar" id="adminSidebar">
+            <div class="admin-sidebar-header">
+                <div class="admin-logo">
+                    <div class="admin-logo-icon">🏆</div>
+                    <div class="admin-logo-text">
+                        <h1>ZUBID</h1>
+                        <span data-i18n="admin.title">Admin Portal</span>
+                    </div>
+                </div>
+            </div>
+
+            <nav class="admin-nav">
+                <div class="admin-nav-section">
+                    <div class="admin-nav-title" data-i18n="admin.dashboard">Main Menu</div>
+                    <a href="admin.html" class="admin-nav-link">
+                        <span class="icon">📊</span>
+                        <span data-i18n="admin.dashboard">Dashboard</span>
+                    </a>
+                    <a href="admin-users.html" class="admin-nav-link">
+                        <span class="icon">👥</span>
+                        <span data-i18n="admin.users">Users</span>
+                    </a>
+                    <a href="admin-auctions.html" class="admin-nav-link">
+                        <span class="icon">🏷️</span>
+                        <span data-i18n="admin.auctions">Auctions</span>
+                    </a>
+                    <a href="admin-categories.html" class="admin-nav-link">
+                        <span class="icon">📁</span>
+                        <span data-i18n="admin.categories">Categories</span>
+                    </a>
+                    <a href="admin-financial.html" class="admin-nav-link active">
+                        <span class="icon">💰</span>
+                        <span>Financial Management</span>
+                    </a>
+                    <a href="admin-system.html" class="admin-nav-link">
+                        <span class="icon">⚙️</span>
+                        <span>System Administration</span>
+                    </a>
+                    <a href="admin-security.html" class="admin-nav-link">
+                        <span class="icon">🔒</span>
+                        <span>Security & Monitoring</span>
+                    </a>
+                </div>
+
+                <div class="admin-nav-section">
+                    <div class="admin-nav-title" data-i18n="common.actions">Actions</div>
+                    <a href="admin-create-auction.html" class="admin-nav-link">
+                        <span class="icon">➕</span>
+                        <span data-i18n="admin.createAuction">Create Auction</span>
+                    </a>
+                    <a href="index.html" class="admin-nav-link">
+                        <span class="icon">🌐</span>
+                        <span data-i18n="nav.home">User Portal</span>
+                    </a>
+                </div>
+            </nav>
+
+            <div class="admin-sidebar-user">
+                <div class="admin-user-info">
+                    <div class="admin-user-avatar" id="adminAvatar">A</div>
+                    <div class="admin-user-details">
+                        <div class="admin-user-name" id="adminUserName">Admin</div>
+                        <div class="admin-user-role" data-i18n="admin.title">Administrator</div>
+                    </div>
+                    <button class="admin-logout-btn" onclick="logout()" title="Logout">🚪</button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="admin-main">
+            <!-- Header -->
+            <div class="admin-header">
+                <div class="admin-header-left">
+                    <h1>💰 <span>Financial Management</span></h1>
+                    <p>Monitor revenue, commissions, payouts, and financial performance</p>
+                </div>
+                <div class="admin-header-right">
+                    <div class="admin-search-box">
+                        <span class="icon">🔍</span>
+                        <input type="text" placeholder="Search transactions..." id="financialSearch">
+                    </div>
+                    <button class="admin-btn-primary" onclick="exportFinancialReport()">
+                        📊 Export Report
+                    </button>
+                    <button class="admin-theme-toggle" onclick="ThemeManager.toggle()" title="Toggle Theme">
+                        🌙
+                    </button>
+                </div>
+            </div>
+
+            <!-- Financial Overview -->
+            <div class="admin-section">
+                <div class="admin-section-header">
+                    <h2>📈 <span>Financial Overview</span></h2>
+                    <div class="admin-section-controls">
+                        <select id="financialPeriod" class="admin-select">
+                            <option value="7">Last 7 days</option>
+                            <option value="30" selected>Last 30 days</option>
+                            <option value="90">Last 90 days</option>
+                            <option value="365">Last year</option>
+                        </select>
+                        <button class="admin-btn-secondary" onclick="refreshFinancialData()">
+                            <span data-i18n="common.refresh">Refresh</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="admin-financial-grid">
+                    <div class="admin-financial-card">
+                        <div class="admin-financial-header">
+                            <h3>💵 Total Revenue</h3>
+                            <span class="admin-trend positive">+15.2%</span>
+                        </div>
+                        <div class="admin-financial-value" id="totalRevenue">$0</div>
+                        <div class="admin-financial-subtitle">From completed auctions</div>
+                    </div>
+                    <div class="admin-financial-card">
+                        <div class="admin-financial-header">
+                            <h3>🏦 Commission Earned</h3>
+                            <span class="admin-trend positive">+12.8%</span>
+                        </div>
+                        <div class="admin-financial-value" id="totalCommission">$0</div>
+                        <div class="admin-financial-subtitle">Platform fees collected</div>
+                    </div>
+                    <div class="admin-financial-card">
+                        <div class="admin-financial-header">
+                            <h3>📊 Average Sale</h3>
+                            <span class="admin-trend neutral">+2.1%</span>
+                        </div>
+                        <div class="admin-financial-value" id="averageSale">$0</div>
+                        <div class="admin-financial-subtitle">Per completed auction</div>
+                    </div>
+                    <div class="admin-financial-card">
+                        <div class="admin-financial-header">
+                            <h3>🔄 Pending Payouts</h3>
+                            <span class="admin-trend warning">Review needed</span>
+                        </div>
+                        <div class="admin-financial-value" id="pendingPayouts">$0</div>
+                        <div class="admin-financial-subtitle">Awaiting processing</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Methods & Processing -->
+            <div class="admin-section">
+                <div class="admin-section-header">
+                    <h2>💳 <span>Payment Processing</span></h2>
+                    <button class="admin-btn-secondary" onclick="refreshPaymentData()">
+                        Refresh
+                    </button>
+                </div>
+                <div class="admin-payment-grid">
+                    <div class="admin-payment-card">
+                        <div class="payment-method-header">
+                            <h3>💳 Credit Cards</h3>
+                            <span class="payment-status active">Active</span>
+                        </div>
+                        <div class="payment-stats">
+                            <div class="stat">
+                                <span>Transactions</span>
+                                <span id="creditCardTransactions">0</span>
+                            </div>
+                            <div class="stat">
+                                <span>Volume</span>
+                                <span id="creditCardVolume">$0</span>
+                            </div>
+                            <div class="stat">
+                                <span>Success Rate</span>
+                                <span id="creditCardSuccess">0%</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="admin-payment-card">
+                        <div class="payment-method-header">
+                            <h3>📱 Google Pay</h3>
+                            <span class="payment-status active">Active</span>
+                        </div>
+                        <div class="payment-stats">
+                            <div class="stat">
+                                <span>Transactions</span>
+                                <span id="googlePayTransactions">0</span>
+                            </div>
+                            <div class="stat">
+                                <span>Volume</span>
+                                <span id="googlePayVolume">$0</span>
+                            </div>
+                            <div class="stat">
+                                <span>Success Rate</span>
+                                <span id="googlePaySuccess">0%</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="admin-payment-card">
+                        <div class="payment-method-header">
+                            <h3>🏦 FIB</h3>
+                            <span class="payment-status active">Active</span>
+                        </div>
+                        <div class="payment-stats">
+                            <div class="stat">
+                                <span>Transactions</span>
+                                <span id="fibTransactions">0</span>
+                            </div>
+                            <div class="stat">
+                                <span>Volume</span>
+                                <span id="fibVolume">$0</span>
+                            </div>
+                            <div class="stat">
+                                <span>Success Rate</span>
+                                <span id="fibSuccess">0%</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="admin-payment-card">
+                        <div class="payment-method-header">
+                            <h3>💰 ZainCash</h3>
+                            <span class="payment-status active">Active</span>
+                        </div>
+                        <div class="payment-stats">
+                            <div class="stat">
+                                <span>Transactions</span>
+                                <span id="zainCashTransactions">0</span>
+                            </div>
+                            <div class="stat">
+                                <span>Volume</span>
+                                <span id="zainCashVolume">$0</span>
+                            </div>
+                            <div class="stat">
+                                <span>Success Rate</span>
+                                <span id="zainCashSuccess">0%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Notification Toast -->
+    <div class="toast" id="toast"></div>
+
+    <script src="config.production.js"></script>
+    <script src="i18n.js"></script>
+    <script src="api.js"></script>
+    <script src="admin.js"></script>
+    <script src="admin-financial.js"></script>
+    <script>
+        // Mobile sidebar toggle
+        function toggleSidebar() {
+            document.getElementById('adminSidebar').classList.toggle('open');
+        }
+    </script>
+</body>
+</html>

@@ -5,8 +5,12 @@ import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
+import androidx.lifecycle.lifecycleScope
 import com.zubid.app.R
+import com.zubid.app.data.api.ApiClient
+import com.zubid.app.data.local.SessionManager
 import com.zubid.app.util.LocaleHelper
+import kotlinx.coroutines.launch
 
 class PaymentActivity : AppCompatActivity() {
 
@@ -33,10 +37,14 @@ class PaymentActivity : AppCompatActivity() {
     private lateinit var btnPay: Button
     private lateinit var progressBar: ProgressBar
 
+    private lateinit var sessionManager: SessionManager
     private var selectedMethod: PaymentMethod = PaymentMethod.STRIPE
     private var productName: String = ""
     private var productPrice: Double = 0.0
     private var auctionId: String = ""
+    private var invoiceId: Int? = null
+    private var qrCodeUrl: String? = null
+    private var isBuyNow: Boolean = false
 
     enum class PaymentMethod { STRIPE, FIB, GOOGLE_PAY, ZAINCASH, COD }
 
@@ -48,10 +56,18 @@ class PaymentActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_payment)
 
-        // Get intent extras
-        productName = intent.getStringExtra("product_name") ?: "Product"
+        sessionManager = SessionManager(this)
+
+        // Get intent extras - handle both old and new parameter names
+        productName = intent.getStringExtra("product_name")
+            ?: intent.getStringExtra("auction_title")
+            ?: "Product"
         productPrice = intent.getDoubleExtra("product_price", 0.0)
+            .takeIf { it > 0.0 } ?: intent.getDoubleExtra("amount", 0.0)
         auctionId = intent.getStringExtra("auction_id") ?: ""
+        invoiceId = intent.getIntExtra("invoice_id", -1).takeIf { it > 0 }
+        qrCodeUrl = intent.getStringExtra("qr_code_url")
+        isBuyNow = intent.getBooleanExtra("is_buy_now", false)
 
         initViews()
         setupListeners()
@@ -140,51 +156,97 @@ class PaymentActivity : AppCompatActivity() {
 
     private fun processStripePayment() {
         showLoading(true)
-        // TODO: Integrate Stripe SDK
-        // For now, simulate payment
-        btnPay.postDelayed({
-            showLoading(false)
-            showSuccess()
-        }, 2000)
+        lifecycleScope.launch {
+            try {
+                // TODO: Integrate Stripe SDK
+                // For now, simulate payment and mark as paid in backend
+                processPaymentWithBackend("stripe")
+            } catch (e: Exception) {
+                android.util.Log.e("PaymentActivity", "Stripe payment error", e)
+                showLoading(false)
+                Toast.makeText(this@PaymentActivity, "Payment failed: ${e.message}", Toast.LENGTH_LONG).show()
+            }
+        }
     }
 
     private fun processFibPayment() {
         showLoading(true)
-        // TODO: Integrate FIB payment
-        btnPay.postDelayed({
-            showLoading(false)
-            showSuccess()
-        }, 2000)
+        lifecycleScope.launch {
+            try {
+                // TODO: Integrate FIB payment
+                processPaymentWithBackend("fib")
+            } catch (e: Exception) {
+                android.util.Log.e("PaymentActivity", "FIB payment error", e)
+                showLoading(false)
+                Toast.makeText(this@PaymentActivity, "Payment failed: ${e.message}", Toast.LENGTH_LONG).show()
+            }
+        }
     }
 
     private fun processGooglePayPayment() {
         showLoading(true)
-        // TODO: Integrate Google Pay SDK
-        // For now, simulate payment
-        btnPay.postDelayed({
-            showLoading(false)
-            showSuccess()
-        }, 2000)
+        lifecycleScope.launch {
+            try {
+                // TODO: Integrate Google Pay SDK
+                processPaymentWithBackend("google_pay")
+            } catch (e: Exception) {
+                android.util.Log.e("PaymentActivity", "Google Pay payment error", e)
+                showLoading(false)
+                Toast.makeText(this@PaymentActivity, "Payment failed: ${e.message}", Toast.LENGTH_LONG).show()
+            }
+        }
     }
 
     private fun processZainCashPayment() {
         showLoading(true)
-        // TODO: Integrate ZainCash API
-        // For now, simulate payment
-        btnPay.postDelayed({
-            showLoading(false)
-            showSuccess()
-        }, 2000)
+        lifecycleScope.launch {
+            try {
+                // TODO: Integrate ZainCash API
+                processPaymentWithBackend("zaincash")
+            } catch (e: Exception) {
+                android.util.Log.e("PaymentActivity", "ZainCash payment error", e)
+                showLoading(false)
+                Toast.makeText(this@PaymentActivity, "Payment failed: ${e.message}", Toast.LENGTH_LONG).show()
+            }
+        }
     }
 
     private fun processCodPayment() {
         if (!validateDeliveryInfo()) return
         showLoading(true)
-        // TODO: Submit COD order
-        btnPay.postDelayed({
+        lifecycleScope.launch {
+            try {
+                processPaymentWithBackend("cod", getDeliveryInfo())
+            } catch (e: Exception) {
+                android.util.Log.e("PaymentActivity", "COD payment error", e)
+                showLoading(false)
+                Toast.makeText(this@PaymentActivity, "Order failed: ${e.message}", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    private suspend fun processPaymentWithBackend(paymentMethod: String, deliveryInfo: Map<String, String>? = null) {
+        try {
+            // For now, simulate successful payment
+            // TODO: Integrate with actual payment backend API
+            kotlinx.coroutines.delay(2000) // Simulate network delay
+
             showLoading(false)
             showSuccess()
-        }, 1500)
+
+        } catch (e: Exception) {
+            showLoading(false)
+            throw e
+        }
+    }
+
+    private fun getDeliveryInfo(): Map<String, String> {
+        return mapOf(
+            "address" to etAddress.text.toString(),
+            "city" to etCity.text.toString(),
+            "phone" to etPhone.text.toString(),
+            "notes" to etNotes.text.toString()
+        )
     }
 
     private fun validateDeliveryInfo(): Boolean {

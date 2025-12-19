@@ -5,6 +5,7 @@ import com.zubid.app.data.model.AuctionsResponse
 import com.zubid.app.data.model.AuthResponse
 import com.zubid.app.data.model.BidRequest
 import com.zubid.app.data.model.BidResponse
+import com.zubid.app.data.model.BuyNowResponse
 import com.zubid.app.data.model.ForgotPasswordRequest
 import com.zubid.app.data.model.ForgotPasswordResponse
 import com.zubid.app.data.model.LoginRequest
@@ -96,6 +97,12 @@ interface ApiService {
     // Health check
     @GET("api/health")
     suspend fun healthCheck(): Response<Map<String, Any>>
+
+    // Buy Now - backend expects /api/auctions/{id}/buy-now
+    @POST("api/auctions/{id}/buy-now")
+    suspend fun buyNow(
+        @Path("id") auctionId: Int
+    ): Response<BuyNowResponse>
 
     // CSRF token
     @GET("api/csrf-token")

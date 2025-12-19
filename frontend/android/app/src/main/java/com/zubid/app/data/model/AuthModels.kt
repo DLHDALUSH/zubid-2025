@@ -51,13 +51,22 @@ data class BidRequest(
 )
 
 data class BidResponse(
-    val success: Boolean,
     val message: String?,
-    @SerializedName("current_price")
-    val currentPrice: Double?,
-    @SerializedName("bid_count")
-    val bidCount: Int?
-)
+    val error: String?,
+    @SerializedName("current_bid")
+    val currentBid: Double?,
+    @SerializedName("bid_id")
+    val bidId: Int?,
+    @SerializedName("time_extended")
+    val timeExtended: Boolean?,
+    @SerializedName("new_end_time")
+    val newEndTime: String?,
+    @SerializedName("time_left")
+    val timeLeft: Int?
+) {
+    val success: Boolean
+        get() = error == null && message != null
+}
 
 // Forgot Password - Request OTP
 data class ForgotPasswordRequest(
@@ -89,4 +98,18 @@ data class ResetPasswordResponse(
     val message: String?,
     val error: String?
 )
+
+data class BuyNowResponse(
+    val message: String?,
+    val error: String?,
+    @SerializedName("auction_id")
+    val auctionId: Int?,
+    @SerializedName("purchase_price")
+    val purchasePrice: Double?,
+    @SerializedName("total_with_fees")
+    val totalWithFees: Double?
+) {
+    val success: Boolean
+        get() = error == null && message != null
+}
 

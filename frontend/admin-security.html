@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+    <title>Security & Monitoring - Admin Portal</title>
+    <link rel="stylesheet" href="styles.css?v=20251210-responsive-fix">
+    <link rel="stylesheet" href="admin.css?v=2.0">
+    <script src="theme.js"></script>
+</head>
+<body>
+    <div class="admin-layout">
+        <!-- Mobile Toggle -->
+        <button class="admin-mobile-toggle" onclick="toggleSidebar()">☰</button>
+
+        <!-- Sidebar Navigation -->
+        <aside class="admin-sidebar" id="adminSidebar">
+            <div class="admin-sidebar-header">
+                <div class="admin-logo">
+                    <div class="admin-logo-icon">🏆</div>
+                    <div class="admin-logo-text">
+                        <h1>ZUBID</h1>
+                        <span data-i18n="admin.title">Admin Portal</span>
+                    </div>
+                </div>
+            </div>
+
+            <nav class="admin-nav">
+                <div class="admin-nav-section">
+                    <div class="admin-nav-title" data-i18n="admin.dashboard">Main Menu</div>
+                    <a href="admin.html" class="admin-nav-link">
+                        <span class="icon">📊</span>
+                        <span data-i18n="admin.dashboard">Dashboard</span>
+                    </a>
+                    <a href="admin-users.html" class="admin-nav-link">
+                        <span class="icon">👥</span>
+                        <span data-i18n="admin.users">Users</span>
+                    </a>
+                    <a href="admin-auctions.html" class="admin-nav-link">
+                        <span class="icon">🏷️</span>
+                        <span data-i18n="admin.auctions">Auctions</span>
+                    </a>
+                    <a href="admin-categories.html" class="admin-nav-link">
+                        <span class="icon">📁</span>
+                        <span data-i18n="admin.categories">Categories</span>
+                    </a>
+                    <a href="admin-financial.html" class="admin-nav-link">
+                        <span class="icon">💰</span>
+                        <span>Financial Management</span>
+                    </a>
+                    <a href="admin-system.html" class="admin-nav-link">
+                        <span class="icon">⚙️</span>
+                        <span>System Administration</span>
+                    </a>
+                    <a href="admin-security.html" class="admin-nav-link active">
+                        <span class="icon">🔒</span>
+                        <span>Security & Monitoring</span>
+                    </a>
+                </div>
+
+                <div class="admin-nav-section">
+                    <div class="admin-nav-title" data-i18n="common.actions">Actions</div>
+                    <a href="admin-create-auction.html" class="admin-nav-link">
+                        <span class="icon">➕</span>
+                        <span data-i18n="admin.createAuction">Create Auction</span>
+                    </a>
+                    <a href="index.html" class="admin-nav-link">
+                        <span class="icon">🌐</span>
+                        <span data-i18n="nav.home">User Portal</span>
+                    </a>
+                </div>
+            </nav>
+
+            <div class="admin-sidebar-user">
+                <div class="admin-user-info">
+                    <div class="admin-user-avatar" id="adminAvatar">A</div>
+                    <div class="admin-user-details">
+                        <div class="admin-user-name" id="adminUserName">Admin</div>
+                        <div class="admin-user-role" data-i18n="admin.title">Administrator</div>
+                    </div>
+                    <button class="admin-logout-btn" onclick="logout()" title="Logout">🚪</button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="admin-main">
+            <!-- Header -->
+            <div class="admin-header">
+                <div class="admin-header-left">
+                    <h1>🔒 <span>Security & Monitoring</span></h1>
+                    <p>Monitor security threats, manage access controls, and track system security</p>
+                </div>
+                <div class="admin-header-right">
+                    <div class="admin-security-status" id="securityStatusIndicator">
+                        <span class="security-dot secure"></span>
+                        <span>System Secure</span>
+                    </div>
+                    <button class="admin-btn-warning" onclick="runSecurityScan()" title="Run Security Scan">
+                        🔍 Scan Now
+                    </button>
+                    <button class="admin-theme-toggle" onclick="ThemeManager.toggle()" title="Toggle Theme">
+                        🌙
+                    </button>
+                </div>
+            </div>
+
+            <!-- Security Overview -->
+            <div class="admin-section">
+                <div class="admin-section-header">
+                    <h2>🛡️ <span>Security Overview</span></h2>
+                    <button class="admin-btn-secondary" onclick="refreshSecurityData()">
+                        Refresh
+                    </button>
+                </div>
+                <div class="admin-security-grid">
+                    <div class="admin-security-card">
+                        <div class="security-card-header">
+                            <h3>🚨 Threat Detection</h3>
+                            <span class="security-status good">Active</span>
+                        </div>
+                        <div class="security-metrics">
+                            <div class="metric-item">
+                                <span class="metric-label">Threats Blocked (24h)</span>
+                                <span class="metric-value" id="threatsBlocked">0</span>
+                            </div>
+                            <div class="metric-item">
+                                <span class="metric-label">Suspicious Activities</span>
+                                <span class="metric-value" id="suspiciousActivities">2</span>
+                            </div>
+                            <div class="metric-item">
+                                <span class="metric-label">Failed Login Attempts</span>
+                                <span class="metric-value" id="failedLogins">5</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="admin-security-card">
+                        <div class="security-card-header">
+                            <h3>🔐 Access Control</h3>
+                            <span class="security-status good">Secure</span>
+                        </div>
+                        <div class="security-metrics">
+                            <div class="metric-item">
+                                <span class="metric-label">Active Sessions</span>
+                                <span class="metric-value" id="activeSessions">24</span>
+                            </div>
+                            <div class="metric-item">
+                                <span class="metric-label">Admin Sessions</span>
+                                <span class="metric-value" id="adminSessions">3</span>
+                            </div>
+                            <div class="metric-item">
+                                <span class="metric-label">Blocked IPs</span>
+                                <span class="metric-value" id="blockedIPs">8</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="admin-security-card">
+                        <div class="security-card-header">
+                            <h3>🔍 Fraud Detection</h3>
+                            <span class="security-status warning">Monitoring</span>
+                        </div>
+                        <div class="security-metrics">
+                            <div class="metric-item">
+                                <span class="metric-label">Flagged Transactions</span>
+                                <span class="metric-value" id="flaggedTransactions">3</span>
+                            </div>
+                            <div class="metric-item">
+                                <span class="metric-label">Suspicious Bids</span>
+                                <span class="metric-value" id="suspiciousBids">1</span>
+                            </div>
+                            <div class="metric-item">
+                                <span class="metric-label">Risk Score</span>
+                                <span class="metric-value" id="riskScore">Low</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- IP Management -->
+            <div class="admin-section">
+                <div class="admin-section-header">
+                    <h2>🌐 <span>IP Management</span></h2>
+                    <div class="admin-section-controls">
+                        <input type="text" id="ipAddressInput" placeholder="Enter IP address..." class="admin-input" style="width: 200px;">
+                        <button class="admin-btn-danger" onclick="blockIP()">
+                            Block IP
+                        </button>
+                        <button class="admin-btn-secondary" onclick="refreshIPList()">
+                            Refresh
+                        </button>
+                    </div>
+                </div>
+                <div class="admin-table-container">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>IP Address</th>
+                                <th>Location</th>
+                                <th>Reason</th>
+                                <th>Blocked Date</th>
+                                <th>Attempts</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="blockedIPsTableBody">
+                            <tr>
+                                <td class="ip-address">192.168.1.100</td>
+                                <td>
+                                    <div class="location-info">
+                                        <div class="country">🇺🇸 United States</div>
+                                        <div class="city">New York, NY</div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="reason-badge brute-force">Brute Force Attack</span>
+                                </td>
+                                <td>Dec 19, 2024</td>
+                                <td class="attempts">25</td>
+                                <td><span class="status-badge blocked">Blocked</span></td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="admin-btn-sm admin-btn-success" onclick="unblockIP('192.168.1.100')">
+                                            Unblock
+                                        </button>
+                                        <button class="admin-btn-sm admin-btn-secondary" onclick="viewIPDetails('192.168.1.100')">
+                                            Details
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Security Incidents -->
+            <div class="admin-section">
+                <div class="admin-section-header">
+                    <h2>⚠️ <span>Security Incidents</span></h2>
+                    <div class="admin-section-controls">
+                        <select id="incidentFilter" class="admin-select">
+                            <option value="all">All Incidents</option>
+                            <option value="high">High Priority</option>
+                            <option value="medium">Medium Priority</option>
+                            <option value="low">Low Priority</option>
+                            <option value="resolved">Resolved</option>
+                        </select>
+                        <button class="admin-btn-secondary" onclick="refreshIncidents()">
+                            Refresh
+                        </button>
+                    </div>
+                </div>
+                <div class="admin-incidents-list" id="incidentsList">
+                    <div class="incident-item high">
+                        <div class="incident-header">
+                            <div class="incident-title">
+                                <span class="incident-priority high">HIGH</span>
+                                <span class="incident-name">Multiple Failed Login Attempts</span>
+                            </div>
+                            <div class="incident-time">2 minutes ago</div>
+                        </div>
+                        <div class="incident-description">
+                            Detected 15 failed login attempts from IP 192.168.1.100 within 5 minutes
+                        </div>
+                        <div class="incident-actions">
+                            <button class="admin-btn-sm admin-btn-primary" onclick="investigateIncident('INC-001')">
+                                Investigate
+                            </button>
+                            <button class="admin-btn-sm admin-btn-success" onclick="resolveIncident('INC-001')">
+                                Resolve
+                            </button>
+                        </div>
+                    </div>
+                    <div class="incident-item medium">
+                        <div class="incident-header">
+                            <div class="incident-title">
+                                <span class="incident-priority medium">MEDIUM</span>
+                                <span class="incident-name">Suspicious Bid Pattern</span>
+                            </div>
+                            <div class="incident-time">15 minutes ago</div>
+                        </div>
+                        <div class="incident-description">
+                            User ID 1234 placed 10 consecutive bids on auction #5678 within 2 minutes
+                        </div>
+                        <div class="incident-actions">
+                            <button class="admin-btn-sm admin-btn-primary" onclick="investigateIncident('INC-002')">
+                                Investigate
+                            </button>
+                            <button class="admin-btn-sm admin-btn-success" onclick="resolveIncident('INC-002')">
+                                Resolve
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Audit Logs -->
+            <div class="admin-section">
+                <div class="admin-section-header">
+                    <h2>📋 <span>Audit Logs</span></h2>
+                    <div class="admin-section-controls">
+                        <select id="auditLogType" class="admin-select">
+                            <option value="all">All Activities</option>
+                            <option value="login">Login Activities</option>
+                            <option value="admin">Admin Actions</option>
+                            <option value="financial">Financial Activities</option>
+                            <option value="auction">Auction Activities</option>
+                        </select>
+                        <button class="admin-btn-secondary" onclick="refreshAuditLogs()">
+                            Refresh
+                        </button>
+                        <button class="admin-btn-primary" onclick="exportAuditLogs()">
+                            Export
+                        </button>
+                    </div>
+                </div>
+                <div class="admin-audit-logs" id="auditLogsContainer">
+                    <div class="audit-log-entry">
+                        <div class="audit-timestamp">2024-12-19 10:30:15</div>
+                        <div class="audit-user">
+                            <div class="user-avatar">A</div>
+                            <div class="user-name">Admin User</div>
+                        </div>
+                        <div class="audit-action">
+                            <span class="action-type admin">ADMIN</span>
+                            <span class="action-description">Created new auction category: Electronics</span>
+                        </div>
+                        <div class="audit-ip">192.168.1.50</div>
+                    </div>
+                    <div class="audit-log-entry">
+                        <div class="audit-timestamp">2024-12-19 10:25:42</div>
+                        <div class="audit-user">
+                            <div class="user-avatar">J</div>
+                            <div class="user-name">John Doe</div>
+                        </div>
+                        <div class="audit-action">
+                            <span class="action-type financial">PAYMENT</span>
+                            <span class="action-description">Completed payment for auction #1234 - $250.00</span>
+                        </div>
+                        <div class="audit-ip">203.0.113.45</div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Notification Toast -->
+    <div class="toast" id="toast"></div>
+
+    <script src="config.production.js"></script>
+    <script src="i18n.js"></script>
+    <script src="api.js"></script>
+    <script src="admin.js"></script>
+    <script src="admin-security.js"></script>
+    <script>
+        // Mobile sidebar toggle
+        function toggleSidebar() {
+            document.getElementById('adminSidebar').classList.toggle('open');
+        }
+    </script>
+</body>
+</html>

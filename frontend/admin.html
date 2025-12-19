@@ -44,6 +44,18 @@
                         <span class="icon">📁</span>
                         <span data-i18n="admin.categories">Categories</span>
                     </a>
+                    <a href="admin-financial.html" class="admin-nav-link">
+                        <span class="icon">💰</span>
+                        <span>Financial Management</span>
+                    </a>
+                    <a href="admin-system.html" class="admin-nav-link">
+                        <span class="icon">⚙️</span>
+                        <span>System Administration</span>
+                    </a>
+                    <a href="admin-security.html" class="admin-nav-link">
+                        <span class="icon">🔒</span>
+                        <span>Security & Monitoring</span>
+                    </a>
                 </div>
 
                 <div class="admin-nav-section">
@@ -156,6 +168,180 @@
                     </div>
                     <div class="admin-stat-value" id="recentUsers">-</div>
                     <div class="admin-stat-label" data-i18n="admin.recentUsers">New Users (7 days)</div>
+                </div>
+            </div>
+
+            <!-- Financial Analytics -->
+            <div class="admin-section">
+                <div class="admin-section-header">
+                    <h2>💰 <span data-i18n="admin.financialAnalytics">Financial Analytics</span></h2>
+                    <div class="admin-section-controls">
+                        <select id="financialPeriod" class="admin-select">
+                            <option value="7">Last 7 days</option>
+                            <option value="30" selected>Last 30 days</option>
+                            <option value="90">Last 90 days</option>
+                            <option value="365">Last year</option>
+                        </select>
+                        <button class="admin-btn-secondary" onclick="refreshFinancialData()">
+                            <span data-i18n="common.refresh">Refresh</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="admin-financial-grid">
+                    <div class="admin-financial-card">
+                        <div class="admin-financial-header">
+                            <h3>💵 Total Revenue</h3>
+                            <span class="admin-trend positive">+15.2%</span>
+                        </div>
+                        <div class="admin-financial-value" id="totalRevenue">$0</div>
+                        <div class="admin-financial-subtitle">From completed auctions</div>
+                    </div>
+                    <div class="admin-financial-card">
+                        <div class="admin-financial-header">
+                            <h3>🏦 Commission Earned</h3>
+                            <span class="admin-trend positive">+12.8%</span>
+                        </div>
+                        <div class="admin-financial-value" id="totalCommission">$0</div>
+                        <div class="admin-financial-subtitle">Platform fees collected</div>
+                    </div>
+                    <div class="admin-financial-card">
+                        <div class="admin-financial-header">
+                            <h3>📊 Average Sale</h3>
+                            <span class="admin-trend neutral">+2.1%</span>
+                        </div>
+                        <div class="admin-financial-value" id="averageSale">$0</div>
+                        <div class="admin-financial-subtitle">Per completed auction</div>
+                    </div>
+                    <div class="admin-financial-card">
+                        <div class="admin-financial-header">
+                            <h3>🔄 Pending Payouts</h3>
+                            <span class="admin-trend warning">Review needed</span>
+                        </div>
+                        <div class="admin-financial-value" id="pendingPayouts">$0</div>
+                        <div class="admin-financial-subtitle">Awaiting processing</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Monitoring -->
+            <div class="admin-section">
+                <div class="admin-section-header">
+                    <h2>🖥️ <span data-i18n="admin.systemMonitoring">System Monitoring</span></h2>
+                    <div class="admin-system-status" id="systemStatusIndicator">
+                        <span class="status-dot online"></span>
+                        <span>All Systems Operational</span>
+                    </div>
+                </div>
+                <div class="admin-monitoring-grid">
+                    <div class="admin-monitoring-card">
+                        <div class="admin-monitoring-header">
+                            <h3>🚀 Performance</h3>
+                            <span class="admin-status-badge good">Good</span>
+                        </div>
+                        <div class="admin-monitoring-metrics">
+                            <div class="metric">
+                                <span>Response Time</span>
+                                <span id="responseTime">120ms</span>
+                            </div>
+                            <div class="metric">
+                                <span>Uptime</span>
+                                <span id="systemUptime">99.9%</span>
+                            </div>
+                            <div class="metric">
+                                <span>Active Sessions</span>
+                                <span id="activeSessions">0</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="admin-monitoring-card">
+                        <div class="admin-monitoring-header">
+                            <h3>💾 Database</h3>
+                            <span class="admin-status-badge good">Healthy</span>
+                        </div>
+                        <div class="admin-monitoring-metrics">
+                            <div class="metric">
+                                <span>Total Records</span>
+                                <span id="totalRecords">0</span>
+                            </div>
+                            <div class="metric">
+                                <span>Storage Used</span>
+                                <span id="storageUsed">0 MB</span>
+                            </div>
+                            <div class="metric">
+                                <span>Backup Status</span>
+                                <span id="backupStatus">Current</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="admin-monitoring-card">
+                        <div class="admin-monitoring-header">
+                            <h3>🔒 Security</h3>
+                            <span class="admin-status-badge good">Secure</span>
+                        </div>
+                        <div class="admin-monitoring-metrics">
+                            <div class="metric">
+                                <span>Failed Logins</span>
+                                <span id="failedLogins">0</span>
+                            </div>
+                            <div class="metric">
+                                <span>Blocked IPs</span>
+                                <span id="blockedIPs">0</span>
+                            </div>
+                            <div class="metric">
+                                <span>Security Score</span>
+                                <span id="securityScore">A+</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="admin-section">
+                <div class="admin-section-header">
+                    <h2>📈 <span data-i18n="admin.recentActivity">Recent Activity</span></h2>
+                    <div class="admin-section-controls">
+                        <button class="admin-btn-secondary" onclick="refreshActivity()">
+                            <span data-i18n="common.refresh">Refresh</span>
+                        </button>
+                        <button class="admin-btn-secondary" onclick="viewAllActivity()">
+                            View All
+                        </button>
+                    </div>
+                </div>
+                <div class="admin-activity-list" id="activityList">
+                    <div class="admin-activity-item">
+                        <div class="admin-activity-icon">👤</div>
+                        <div class="admin-activity-content">
+                            <div class="admin-activity-title">New user registered</div>
+                            <div class="admin-activity-time">2 minutes ago</div>
+                        </div>
+                        <div class="admin-activity-status success">Success</div>
+                    </div>
+                    <div class="admin-activity-item">
+                        <div class="admin-activity-icon">🏷️</div>
+                        <div class="admin-activity-content">
+                            <div class="admin-activity-title">New auction created</div>
+                            <div class="admin-activity-time">5 minutes ago</div>
+                        </div>
+                        <div class="admin-activity-status pending">Pending Review</div>
+                    </div>
+                    <div class="admin-activity-item">
+                        <div class="admin-activity-icon">💰</div>
+                        <div class="admin-activity-content">
+                            <div class="admin-activity-title">Bid placed on "Vintage Watch"</div>
+                            <div class="admin-activity-time">8 minutes ago</div>
+                        </div>
+                        <div class="admin-activity-status success">Success</div>
+                    </div>
+                    <div class="admin-activity-item">
+                        <div class="admin-activity-icon">🔒</div>
+                        <div class="admin-activity-content">
+                            <div class="admin-activity-title">Security scan completed</div>
+                            <div class="admin-activity-time">15 minutes ago</div>
+                        </div>
+                        <div class="admin-activity-status success">No Issues</div>
+                    </div>
                 </div>
             </div>
 
