@@ -12,16 +12,18 @@ import java.util.concurrent.TimeUnit
 
 object ApiClient {
 
-    // API Configuration - Environment-based URL selection
+    // API Configuration - Use production URL for both debug and release
+    // TODO: Change this to your deployed backend URL
     private const val PRODUCTION_URL = "https://zubid-2025.onrender.com/"
-    private const val DEVELOPMENT_URL = "http://10.0.2.2:5000/"
+    private const val LOCAL_DEVELOPMENT_URL = "http://10.0.2.2:5000/"
 
-    // Use BuildConfig to determine environment (set in build.gradle)
-    private val BASE_URL = if (BuildConfig.DEBUG) DEVELOPMENT_URL else PRODUCTION_URL
+    // For now, always use production URL since local backend isn't running
+    // Change to LOCAL_DEVELOPMENT_URL if you want to test with local backend
+    private val BASE_URL = PRODUCTION_URL
 
     // SECURITY: Only enable detailed logging in debug builds to prevent sensitive data exposure
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
-        level = if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.BODY else HttpLoggingInterceptor.Level.NONE
+        level = HttpLoggingInterceptor.Level.BODY  // Enable full logging for debugging network issues
     }
 
     // Cookie storage for session-based authentication
