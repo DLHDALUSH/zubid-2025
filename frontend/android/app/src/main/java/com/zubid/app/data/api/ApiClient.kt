@@ -12,14 +12,16 @@ import java.util.concurrent.TimeUnit
 
 object ApiClient {
 
-    // API Configuration - Use production URL for both debug and release
-    // TODO: Change this to your deployed backend URL
-    private const val PRODUCTION_URL = "https://zubid-2025.onrender.com/"
+    // API Configuration - Multi-environment setup
+    // PRODUCTION: DuckDNS Custom Domain (Primary Platform)
+    private const val PRODUCTION_URL = "https://zubidauction.duckdns.org/"
+    // DEVELOPMENT: Render Cloud Platform (Development/Testing)
+    private const val DEVELOPMENT_URL = "https://zubid-2025.onrender.com/"
+    // LOCAL: Local development server
     private const val LOCAL_DEVELOPMENT_URL = "http://10.0.2.2:5000/"
 
-    // For now, always use production URL since local backend isn't running
-    // Change to LOCAL_DEVELOPMENT_URL if you want to test with local backend
-    private val BASE_URL = PRODUCTION_URL
+    // Use PRODUCTION_URL for release builds, DEVELOPMENT_URL for debug builds
+    private val BASE_URL = if (BuildConfig.DEBUG) DEVELOPMENT_URL else PRODUCTION_URL
 
     // SECURITY: Only enable detailed logging in debug builds to prevent sensitive data exposure
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
