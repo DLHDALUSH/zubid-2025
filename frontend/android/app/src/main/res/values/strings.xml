@@ -17,6 +17,27 @@
     <string name="nav_help">Help &amp; Support</string>
     <string name="nav_logout">Logout</string>
 
+    <!-- Help & Support -->
+    <string name="help_support">Help &amp; Support</string>
+    <string name="help_support_header">How can we help you?</string>
+    <string name="help_support_subtitle">Find answers to common questions or get in touch with our support team.</string>
+    <string name="frequently_asked_questions">Frequently Asked Questions</string>
+    <string name="faq_description">Find answers to common questions about using ZUBID</string>
+    <string name="user_guide">User Guide</string>
+    <string name="user_guide_description">Learn how to use all features of the ZUBID app</string>
+    <string name="contact_support">Contact Support</string>
+    <string name="contact_support_description">Get help from our support team via email</string>
+    <string name="report_bug">Report a Bug</string>
+    <string name="report_bug_description">Let us know about any issues you\'ve encountered</string>
+    <string name="feature_request">Request a Feature</string>
+    <string name="feature_request_description">Suggest new features or improvements</string>
+    <string name="terms_of_service">Terms of Service</string>
+    <string name="terms_description">Read our terms and conditions</string>
+    <string name="privacy_policy">Privacy Policy</string>
+    <string name="privacy_description">Learn how we protect your privacy</string>
+    <string name="about_app">About ZUBID</string>
+    <string name="about_description">App version and information</string>
+
     <!-- Auth -->
     <string name="login">Login</string>
     <string name="register">Register</string>
@@ -111,7 +132,6 @@
     <string name="security">Security</string>
     <string name="enable_biometric">Enable Biometric Login</string>
     <string name="clear_cache">Clear Cache</string>
-    <string name="privacy_policy">Privacy Policy</string>
     <string name="terms">Terms of Service</string>
     <string name="about">About</string>
     <string name="other">Other</string>

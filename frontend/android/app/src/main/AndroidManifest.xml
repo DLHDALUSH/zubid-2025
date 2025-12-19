@@ -89,6 +89,12 @@
             android:label="Settings"
             android:theme="@style/AppTheme" />
 
+        <!-- Help Activity -->
+        <activity
+            android:name=".ui.activity.HelpActivity"
+            android:label="@string/help_support"
+            android:theme="@style/AppTheme" />
+
         <!-- Payment Activity -->
         <activity
             android:name=".ui.activity.PaymentActivity"

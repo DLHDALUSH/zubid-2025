@@ -103,7 +103,7 @@ class MainActivity : AppCompatActivity() {
                     startActivity(Intent(this, com.zubid.app.ui.activity.SettingsActivity::class.java))
                 }
                 R.id.nav_help -> {
-                    Toast.makeText(this, "Help & Support", Toast.LENGTH_SHORT).show()
+                    startActivity(Intent(this, com.zubid.app.ui.activity.HelpActivity::class.java))
                 }
                 R.id.nav_logout -> {
                     logout()
