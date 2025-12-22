@@ -74,7 +74,7 @@ python -c "from app import app, db; app.app_context().push(); db.create_all()"
 
 # 7. Set permissions
 sudo chown -R www-data:www-data /opt/zubid
-sudo chmod -R 775 backend/uploads backend/logs backend/instance
+sudo chmod -R 775 /opt/zubid/backend/uploads /opt/zubid/backend/logs /opt/zubid/backend/instance
 
 # 8. Restart service
 sudo systemctl restart zubid
