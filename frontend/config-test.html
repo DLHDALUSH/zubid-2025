@@ -143,51 +143,54 @@
 
     <script src="config.production.js"></script>
     <script>
-        // Display configuration information
-        document.getElementById('currentDomain').textContent = window.location.hostname;
-        document.getElementById('apiBaseUrl').textContent = window.API_BASE_URL || 'Not set';
-        document.getElementById('baseUrl').textContent = window.API_BASE || 'Not set';
-        
-        // Environment detection
-        document.getElementById('isLocalhost').textContent = window.ZUBID_CONFIG?.isLocalhost ? 'Yes' : 'No';
-        document.getElementById('isDevelopmentServer').textContent = window.ZUBID_CONFIG?.isDevelopmentServer ? 'Yes' : 'No';
-        document.getElementById('isProductionServer').textContent = window.ZUBID_CONFIG?.isProductionServer ? 'Yes' : 'No';
-        document.getElementById('isMobileApp').textContent = window.ZUBID_CONFIG?.isMobileApp ? 'Yes' : 'No';
-        document.getElementById('debugMode').textContent = window.DEBUG_MODE ? 'Enabled' : 'Disabled';
-        
-        // Configuration URLs
-        const productionApiElement = document.getElementById('productionApi');
-        const developmentApiElement = document.getElementById('developmentApi');
-        
-        if (typeof PRODUCTION_API_URL !== 'undefined') {
-            productionApiElement.textContent = PRODUCTION_API_URL;
-        } else {
-            productionApiElement.textContent = 'Not available (old config)';
-            productionApiElement.style.color = '#dc3545';
-        }
-        
-        if (typeof DEVELOPMENT_API_URL !== 'undefined') {
-            developmentApiElement.textContent = DEVELOPMENT_API_URL;
-        } else {
-            developmentApiElement.textContent = 'Not available (old config)';
-            developmentApiElement.style.color = '#dc3545';
-        }
-        
-        // Set environment status
-        const statusElement = document.getElementById('environmentStatus');
-        if (window.ZUBID_CONFIG?.isProductionServer) {
-            statusElement.textContent = 'Production';
-            statusElement.className = 'status production';
-        } else if (window.ZUBID_CONFIG?.isDevelopmentServer) {
-            statusElement.textContent = 'Development';
-            statusElement.className = 'status development';
-        } else if (window.ZUBID_CONFIG?.isLocalhost) {
-            statusElement.textContent = 'Local';
-            statusElement.className = 'status local';
-        } else {
-            statusElement.textContent = 'Unknown';
-            statusElement.className = 'status';
-        }
+        // Wait for config to load, then display information
+        setTimeout(() => {
+            // Display configuration information
+            document.getElementById('currentDomain').textContent = window.location.hostname;
+            document.getElementById('apiBaseUrl').textContent = window.API_BASE_URL || 'Not set';
+            document.getElementById('baseUrl').textContent = window.API_BASE || 'Not set';
+
+            // Environment detection
+            document.getElementById('isLocalhost').textContent = window.ZUBID_CONFIG?.isLocalhost ? 'Yes' : 'No';
+            document.getElementById('isDevelopmentServer').textContent = window.ZUBID_CONFIG?.isDevelopmentServer ? 'Yes' : 'No';
+            document.getElementById('isProductionServer').textContent = window.ZUBID_CONFIG?.isProductionServer ? 'Yes' : 'No';
+            document.getElementById('isMobileApp').textContent = window.ZUBID_CONFIG?.isMobileApp ? 'Yes' : 'No';
+            document.getElementById('debugMode').textContent = window.DEBUG_MODE ? 'Enabled' : 'Disabled';
+
+            // Configuration URLs
+            const productionApiElement = document.getElementById('productionApi');
+            const developmentApiElement = document.getElementById('developmentApi');
+
+            if (typeof PRODUCTION_API_URL !== 'undefined') {
+                productionApiElement.textContent = PRODUCTION_API_URL;
+            } else {
+                productionApiElement.textContent = 'Not available (old config)';
+                productionApiElement.style.color = '#dc3545';
+            }
+
+            if (typeof DEVELOPMENT_API_URL !== 'undefined') {
+                developmentApiElement.textContent = DEVELOPMENT_API_URL;
+            } else {
+                developmentApiElement.textContent = 'Not available (old config)';
+                developmentApiElement.style.color = '#dc3545';
+            }
+
+            // Set environment status
+            const statusElement = document.getElementById('environmentStatus');
+            if (window.ZUBID_CONFIG?.isProductionServer) {
+                statusElement.textContent = 'Production';
+                statusElement.className = 'status production';
+            } else if (window.ZUBID_CONFIG?.isDevelopmentServer) {
+                statusElement.textContent = 'Development';
+                statusElement.className = 'status development';
+            } else if (window.ZUBID_CONFIG?.isLocalhost) {
+                statusElement.textContent = 'Local';
+                statusElement.className = 'status local';
+            } else {
+                statusElement.textContent = 'Unknown';
+                statusElement.className = 'status';
+            }
+        }, 100); // Wait 100ms for config to load
 
         // Test API connection
         async function testApiConnection() {
