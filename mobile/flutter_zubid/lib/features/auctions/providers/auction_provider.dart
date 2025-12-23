@@ -4,6 +4,7 @@ import '../../../core/network/api_client.dart';
 import '../../../core/utils/logger.dart';
 import '../data/models/auction_model.dart';
 import '../data/models/category_model.dart';
+import '../data/models/auction_search_filters.dart';
 import '../data/repositories/auction_repository.dart';
 
 // Repository provider

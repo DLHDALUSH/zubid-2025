@@ -11,25 +11,17 @@ class OrdersRepository {
   Future<PurchaseResponse> purchaseAuction(PurchaseRequest request) async {
     try {
       AppLogger.info('Processing purchase for auction: ${request.auctionId}');
-      
+
       final result = await _apiClient.post(
         '/auctions/${request.auctionId}/purchase',
         data: request.toJson(),
       );
-      
-      return result.when(
-        success: (data) {
-          final response = PurchaseResponse.fromJson(data);
-          AppLogger.info('Purchase initiated successfully: ${response.message}');
-          return response;
-        },
-        failure: (error) {
-          AppLogger.error('Failed to process purchase for auction ${request.auctionId}', error);
-          throw Exception(error.message);
-        },
-      );
+
+      final response = PurchaseResponse.fromJson(result.data);
+      AppLogger.info('Purchase initiated successfully: ${response.message}');
+      return response;
     } catch (e) {
-      AppLogger.error('Error processing purchase for auction ${request.auctionId}', e);
+      AppLogger.error('Error processing purchase for auction ${request.auctionId}', error: e);
       rethrow;
     }
   }
@@ -38,25 +30,17 @@ class OrdersRepository {
   Future<PaymentConfirmationResponse> confirmPayment(PaymentConfirmationRequest request) async {
     try {
       AppLogger.info('Confirming payment for order: ${request.orderId}');
-      
+
       final result = await _apiClient.post(
         '/orders/${request.orderId}/confirm-payment',
         data: request.toJson(),
       );
-      
-      return result.when(
-        success: (data) {
-          final response = PaymentConfirmationResponse.fromJson(data);
-          AppLogger.info('Payment confirmation processed: ${response.message}');
-          return response;
-        },
-        failure: (error) {
-          AppLogger.error('Failed to confirm payment for order ${request.orderId}', error);
-          throw Exception(error.message);
-        },
-      );
+
+      final response = PaymentConfirmationResponse.fromJson(result.data);
+      AppLogger.info('Payment confirmation processed: ${response.message}');
+      return response;
     } catch (e) {
-      AppLogger.error('Error confirming payment for order ${request.orderId}', e);
+      AppLogger.error('Error confirming payment for order ${request.orderId}', error: e);
       rethrow;
     }
   }
@@ -77,22 +61,14 @@ class OrdersRepository {
       };
       
       final result = await _apiClient.get('/user/orders', queryParameters: queryParams);
-      
-      return result.when(
-        success: (data) {
-          final List<dynamic> ordersJson = data['orders'] ?? [];
-          final orders = ordersJson.map((json) => OrderModel.fromJson(json)).toList();
-          
-          AppLogger.info('Successfully fetched ${orders.length} user orders');
-          return orders;
-        },
-        failure: (error) {
-          AppLogger.error('Failed to fetch user orders', error);
-          throw Exception('Failed to load your orders: ${error.message}');
-        },
-      );
+
+      final List<dynamic> ordersJson = result.data['orders'] ?? [];
+      final orders = ordersJson.map((json) => OrderModel.fromJson(json)).toList();
+
+      AppLogger.info('Successfully fetched ${orders.length} user orders');
+      return orders;
     } catch (e) {
-      AppLogger.error('Error fetching user orders', e);
+      AppLogger.error('Error fetching user orders', error: e);
       rethrow;
     }
   }
@@ -103,20 +79,12 @@ class OrdersRepository {
       AppLogger.info('Fetching order details: $orderId');
       
       final result = await _apiClient.get('/orders/$orderId');
-      
-      return result.when(
-        success: (data) {
-          final order = OrderModel.fromJson(data['order']);
-          AppLogger.info('Successfully fetched order: ${order.orderNumber}');
-          return order;
-        },
-        failure: (error) {
-          AppLogger.error('Failed to fetch order $orderId', error);
-          throw Exception('Failed to load order details: ${error.message}');
-        },
-      );
+
+      final order = OrderModel.fromJson(result.data['order']);
+      AppLogger.info('Successfully fetched order: ${order.orderNumber}');
+      return order;
     } catch (e) {
-      AppLogger.error('Error fetching order $orderId', e);
+      AppLogger.error('Error fetching order $orderId', error: e);
       rethrow;
     }
   }
@@ -131,17 +99,9 @@ class OrdersRepository {
         data: request.toJson(),
       );
       
-      result.when(
-        success: (data) {
-          AppLogger.info('Successfully cancelled order: ${request.orderId}');
-        },
-        failure: (error) {
-          AppLogger.error('Failed to cancel order ${request.orderId}', error);
-          throw Exception(error.message);
-        },
-      );
+      AppLogger.info('Successfully cancelled order: ${request.orderId}');
     } catch (e) {
-      AppLogger.error('Error cancelling order ${request.orderId}', e);
+      AppLogger.error('Error cancelling order ${request.orderId}', error: e);
       rethrow;
     }
   }
@@ -153,19 +113,11 @@ class OrdersRepository {
       
       final result = await _apiClient.get('/orders/$orderId/tracking');
       
-      return result.when(
-        success: (data) {
-          final tracking = OrderTrackingResponse.fromJson(data);
-          AppLogger.info('Successfully fetched tracking info for order: $orderId');
-          return tracking;
-        },
-        failure: (error) {
-          AppLogger.error('Failed to fetch tracking info for order $orderId', error);
-          throw Exception('Failed to load tracking information: ${error.message}');
-        },
-      );
+      final tracking = OrderTrackingResponse.fromJson(result.data);
+      AppLogger.info('Successfully fetched tracking info for order: $orderId');
+      return tracking;
     } catch (e) {
-      AppLogger.error('Error fetching tracking info for order $orderId', e);
+      AppLogger.error('Error fetching tracking info for order $orderId', error: e);
       rethrow;
     }
   }
@@ -182,19 +134,11 @@ class OrdersRepository {
         },
       );
       
-      return result.when(
-        success: (data) {
-          final summary = PurchaseSummary.fromJson(data);
-          AppLogger.info('Successfully fetched purchase summary for auction: $auctionId');
-          return summary;
-        },
-        failure: (error) {
-          AppLogger.error('Failed to fetch purchase summary for auction $auctionId', error);
-          throw Exception('Failed to calculate purchase total: ${error.message}');
-        },
-      );
+      final summary = PurchaseSummary.fromJson(result.data);
+      AppLogger.info('Successfully fetched purchase summary for auction: $auctionId');
+      return summary;
     } catch (e) {
-      AppLogger.error('Error fetching purchase summary for auction $auctionId', e);
+      AppLogger.error('Error fetching purchase summary for auction $auctionId', error: e);
       rethrow;
     }
   }

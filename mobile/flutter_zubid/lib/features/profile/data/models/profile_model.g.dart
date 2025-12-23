@@ -43,13 +43,15 @@ class ProfileModelAdapter extends TypeAdapter<ProfileModel> {
       memberSince: fields[23] as DateTime,
       lastActive: fields[24] as DateTime?,
       preferences: (fields[25] as Map?)?.cast<String, dynamic>(),
+      createdAt: fields[26] as DateTime?,
+      updatedAt: fields[27] as DateTime?,
     );
   }
 
   @override
   void write(BinaryWriter writer, ProfileModel obj) {
     writer
-      ..writeByte(26)
+      ..writeByte(28)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -101,7 +103,11 @@ class ProfileModelAdapter extends TypeAdapter<ProfileModel> {
       ..writeByte(24)
       ..write(obj.lastActive)
       ..writeByte(25)
-      ..write(obj.preferences);
+      ..write(obj.preferences)
+      ..writeByte(26)
+      ..write(obj.createdAt)
+      ..writeByte(27)
+      ..write(obj.updatedAt);
   }
 
   @override
@@ -120,7 +126,7 @@ class ProfileModelAdapter extends TypeAdapter<ProfileModel> {
 // **************************************************************************
 
 ProfileModel _$ProfileModelFromJson(Map<String, dynamic> json) => ProfileModel(
-      id: json['id'] as int,
+      id: (json['id'] as num).toInt(),
       username: json['username'] as String,
       email: json['email'] as String,
       firstName: json['first_name'] as String?,
@@ -142,14 +148,20 @@ ProfileModel _$ProfileModelFromJson(Map<String, dynamic> json) => ProfileModel(
       phoneVerified: json['phone_verified'] as bool? ?? false,
       profileCompleted: json['profile_completed'] as bool? ?? false,
       rating: (json['rating'] as num?)?.toDouble(),
-      totalBids: json['total_bids'] as int? ?? 0,
-      totalWins: json['total_wins'] as int? ?? 0,
+      totalBids: (json['total_bids'] as num?)?.toInt() ?? 0,
+      totalWins: (json['total_wins'] as num?)?.toInt() ?? 0,
       totalSpent: (json['total_spent'] as num?)?.toDouble() ?? 0.0,
       memberSince: DateTime.parse(json['member_since'] as String),
       lastActive: json['last_active'] == null
           ? null
           : DateTime.parse(json['last_active'] as String),
       preferences: json['preferences'] as Map<String, dynamic>?,
+      createdAt: json['created_at'] == null
+          ? null
+          : DateTime.parse(json['created_at'] as String),
+      updatedAt: json['updated_at'] == null
+          ? null
+          : DateTime.parse(json['updated_at'] as String),
     );
 
 Map<String, dynamic> _$ProfileModelToJson(ProfileModel instance) =>
@@ -180,4 +192,6 @@ Map<String, dynamic> _$ProfileModelToJson(ProfileModel instance) =>
       'member_since': instance.memberSince.toIso8601String(),
       'last_active': instance.lastActive?.toIso8601String(),
       'preferences': instance.preferences,
+      'created_at': instance.createdAt?.toIso8601String(),
+      'updated_at': instance.updatedAt?.toIso8601String(),
     };

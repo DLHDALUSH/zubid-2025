@@ -118,49 +118,58 @@ class AuctionModel extends HiveObject {
 
   // Additional seller fields
   @HiveField(28)
-  @JsonKey(name: 'seller_username')
-  final String? sellerUsername;
-
-  @HiveField(29)
   @JsonKey(name: 'seller_avatar')
   final String? sellerAvatar;
 
-  @HiveField(30)
-  @JsonKey(name: 'seller_rating')
-  final double? sellerRating;
-
-  @HiveField(31)
+  @HiveField(29)
   @JsonKey(name: 'seller_verified')
   final bool? sellerVerified;
 
   // Additional shipping fields
-  @HiveField(32)
+  @HiveField(30)
   @JsonKey(name: 'shipping_method')
   final String? shippingMethod;
 
-  @HiveField(33)
+  @HiveField(31)
   @JsonKey(name: 'estimated_delivery')
   final String? estimatedDelivery;
 
-  @HiveField(34)
+  @HiveField(32)
   @JsonKey(name: 'ships_from')
   final String? shipsFrom;
 
-  @HiveField(35)
+  @HiveField(33)
   @JsonKey(name: 'ships_to')
   final String? shipsTo;
 
-  @HiveField(36)
+  @HiveField(34)
   @JsonKey(name: 'handling_time')
   final String? handlingTime;
 
-  @HiveField(37)
+  @HiveField(35)
   @JsonKey(name: 'return_policy')
   final String? returnPolicy;
 
-  @HiveField(38)
+  @HiveField(36)
   @JsonKey(name: 'shipping_notes')
   final String? shippingNotes;
+
+  // Additional computed properties
+  @HiveField(37)
+  @JsonKey(name: 'images')
+  final List<String>? images;
+
+  @HiveField(38)
+  @JsonKey(name: 'minimum_bid')
+  final double? minimumBid;
+
+  @HiveField(39)
+  @JsonKey(name: 'current_bid')
+  final double? currentBid;
+
+  @HiveField(40)
+  @JsonKey(name: 'has_sold')
+  final bool? hasSold;
 
   AuctionModel({
     required this.id,
@@ -191,9 +200,7 @@ class AuctionModel extends HiveObject {
     this.location,
     required this.createdAt,
     required this.updatedAt,
-    this.sellerUsername,
     this.sellerAvatar,
-    this.sellerRating,
     this.sellerVerified,
     this.shippingMethod,
     this.estimatedDelivery,
@@ -202,6 +209,10 @@ class AuctionModel extends HiveObject {
     this.handlingTime,
     this.returnPolicy,
     this.shippingNotes,
+    this.images,
+    this.minimumBid,
+    this.currentBid,
+    this.hasSold,
   });
 
   factory AuctionModel.fromJson(Map<String, dynamic> json) => _$AuctionModelFromJson(json);
@@ -282,6 +293,19 @@ class AuctionModel extends HiveObject {
   String get returnPolicyValue => returnPolicy ?? '';
   String get shippingNotesValue => shippingNotes ?? '';
 
+  // Formatted price getters
+  String get formattedBuyNowPrice => buyNowPrice != null ? '\$${buyNowPrice!.toStringAsFixed(2)}' : 'N/A';
+  String get formattedCurrentBid => currentBid != null ? '\$${currentBid!.toStringAsFixed(2)}' : 'N/A';
+  String get formattedMinimumBid => minimumBid != null ? '\$${minimumBid!.toStringAsFixed(2)}' : 'N/A';
+
+  // Shipping object for compatibility
+  ShippingInfo get shipping => ShippingInfo(
+    hasShippingCost: shippingCost != null && shippingCost! > 0,
+    shippingCost: shippingCost ?? 0.0,
+    hasReturnPolicy: returnPolicy != null && returnPolicy!.isNotEmpty,
+    returnPolicy: returnPolicy ?? '',
+  );
+
   AuctionModel copyWith({
     int? id,
     String? title,
@@ -343,4 +367,19 @@ class AuctionModel extends HiveObject {
       updatedAt: updatedAt ?? this.updatedAt,
     );
   }
+}
+
+// Helper class for shipping information compatibility
+class ShippingInfo {
+  final bool hasShippingCost;
+  final double shippingCost;
+  final bool hasReturnPolicy;
+  final String returnPolicy;
+
+  const ShippingInfo({
+    required this.hasShippingCost,
+    required this.shippingCost,
+    required this.hasReturnPolicy,
+    required this.returnPolicy,
+  });
 }

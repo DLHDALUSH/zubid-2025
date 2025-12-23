@@ -6,6 +6,7 @@ import '../../../../core/network/api_result.dart';
 import '../../../../core/utils/logger.dart';
 import '../models/payment_method_model.dart';
 import '../models/payment_request_model.dart';
+import '../models/add_payment_method_request.dart';
 import '../models/transaction_model.dart';
 
 class PaymentRepository {

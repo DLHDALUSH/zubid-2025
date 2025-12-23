@@ -77,16 +77,17 @@ class CategoryModelAdapter extends TypeAdapter<CategoryModel> {
 // JsonSerializableGenerator
 // **************************************************************************
 
-CategoryModel _$CategoryModelFromJson(Map<String, dynamic> json) => CategoryModel(
-      id: json['id'] as int,
+CategoryModel _$CategoryModelFromJson(Map<String, dynamic> json) =>
+    CategoryModel(
+      id: (json['id'] as num).toInt(),
       name: json['name'] as String,
       description: json['description'] as String,
-      parentId: json['parent_id'] as int?,
+      parentId: (json['parent_id'] as num?)?.toInt(),
       iconUrl: json['icon_url'] as String?,
       imageUrl: json['image_url'] as String?,
-      auctionCount: json['auction_count'] as int,
+      auctionCount: (json['auction_count'] as num).toInt(),
       isActive: json['is_active'] as bool,
-      sortOrder: json['sort_order'] as int,
+      sortOrder: (json['sort_order'] as num).toInt(),
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
       subcategories: (json['subcategories'] as List<dynamic>?)
@@ -108,42 +109,4 @@ Map<String, dynamic> _$CategoryModelToJson(CategoryModel instance) =>
       'created_at': instance.createdAt.toIso8601String(),
       'updated_at': instance.updatedAt.toIso8601String(),
       'subcategories': instance.subcategories,
-    };
-
-AuctionSearchFilters _$AuctionSearchFiltersFromJson(
-        Map<String, dynamic> json) =>
-    AuctionSearchFilters(
-      categoryId: json['category_id'] as int?,
-      minPrice: (json['min_price'] as num?)?.toDouble(),
-      maxPrice: (json['max_price'] as num?)?.toDouble(),
-      hasBuyNow: json['has_buy_now'] as bool?,
-      hasReserve: json['has_reserve'] as bool?,
-      condition: json['condition'] as String?,
-      location: json['location'] as String?,
-      sellerId: json['seller_id'] as int?,
-      endingSoon: json['ending_soon'] as bool?,
-      newlyListed: json['newly_listed'] as bool?,
-      featuredOnly: json['featured_only'] as bool?,
-      watchedOnly: json['watched_only'] as bool?,
-      sortBy: json['sortBy'] as String?,
-      sortOrder: json['sortOrder'] as String?,
-    );
-
-Map<String, dynamic> _$AuctionSearchFiltersToJson(
-        AuctionSearchFilters instance) =>
-    <String, dynamic>{
-      'category_id': instance.categoryId,
-      'min_price': instance.minPrice,
-      'max_price': instance.maxPrice,
-      'has_buy_now': instance.hasBuyNow,
-      'has_reserve': instance.hasReserve,
-      'condition': instance.condition,
-      'location': instance.location,
-      'seller_id': instance.sellerId,
-      'ending_soon': instance.endingSoon,
-      'newly_listed': instance.newlyListed,
-      'featured_only': instance.featuredOnly,
-      'watched_only': instance.watchedOnly,
-      'sortBy': instance.sortBy,
-      'sortOrder': instance.sortOrder,
     };

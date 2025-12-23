@@ -299,7 +299,7 @@ class _BuyNowScreenState extends ConsumerState<BuyNowScreen> {
         context.go('/order-confirmation');
       }
     } catch (e) {
-      AppLogger.error('Purchase failed', e);
+      AppLogger.error('Purchase failed', error: e);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

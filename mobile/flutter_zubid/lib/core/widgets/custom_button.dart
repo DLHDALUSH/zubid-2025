@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 
+enum ButtonVariant { filled, outlined, text }
+
 class CustomButton extends StatelessWidget {
   final String text;
   final VoidCallback? onPressed;
   final bool isLoading;
   final bool isOutlined;
+  final ButtonVariant? variant;
   final IconData? icon;
   final Color? backgroundColor;
   final Color? textColor;
@@ -19,6 +22,7 @@ class CustomButton extends StatelessWidget {
     this.onPressed,
     this.isLoading = false,
     this.isOutlined = false,
+    this.variant,
     this.icon,
     this.backgroundColor,
     this.textColor,
@@ -32,17 +36,33 @@ class CustomButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    
-    final effectiveBackgroundColor = backgroundColor ?? 
-        (isOutlined ? Colors.transparent : colorScheme.primary);
-    
-    final effectiveTextColor = textColor ?? 
-        (isOutlined ? colorScheme.primary : colorScheme.onPrimary);
+
+    // Determine button type based on variant or isOutlined
+    final isOutlinedButton = variant == ButtonVariant.outlined || isOutlined;
+    final isTextButton = variant == ButtonVariant.text;
+
+    final effectiveBackgroundColor = backgroundColor ??
+        (isOutlinedButton || isTextButton ? Colors.transparent : colorScheme.primary);
+
+    final effectiveTextColor = textColor ??
+        (isOutlinedButton || isTextButton ? colorScheme.primary : colorScheme.onPrimary);
 
     return SizedBox(
       width: width,
       height: height,
-      child: isOutlined
+      child: isTextButton
+          ? TextButton(
+              onPressed: isLoading ? null : onPressed,
+              style: TextButton.styleFrom(
+                foregroundColor: effectiveTextColor,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(borderRadius),
+                ),
+                padding: padding,
+              ),
+              child: _buildButtonContent(effectiveTextColor),
+            )
+          : isOutlinedButton
           ? OutlinedButton(
               onPressed: isLoading ? null : onPressed,
               style: OutlinedButton.styleFrom(

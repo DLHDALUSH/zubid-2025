@@ -18,6 +18,8 @@ class AppConfig {
       return 'https://zubid-2025.onrender.com/api';
     }
   }
+
+  static String get apiUrl => baseUrl;
   
   static String get websocketUrl {
     if (isProduction) {
@@ -31,6 +33,11 @@ class AppConfig {
   static const Duration connectTimeout = Duration(seconds: 30);
   static const Duration receiveTimeout = Duration(seconds: 30);
   static const Duration sendTimeout = Duration(seconds: 30);
+
+  // Timeout values in milliseconds for Dio
+  static int get connectTimeoutMs => connectTimeout.inMilliseconds;
+  static int get receiveTimeoutMs => receiveTimeout.inMilliseconds;
+  static int get apiTimeout => sendTimeout.inMilliseconds;
   
   // Cache Configuration
   static const Duration cacheExpiry = Duration(hours: 24);
@@ -116,8 +123,8 @@ class AppConfig {
   // Support
   static const String supportEmail = 'support@zubidauction.com';
   static const String supportPhone = '+964-xxx-xxx-xxxx';
-  static const String privacyPolicyUrl = '$baseUrl/privacy-policy';
-  static const String termsOfServiceUrl = '$baseUrl/terms-of-service';
+  static String get privacyPolicyUrl => '$baseUrl/privacy-policy';
+  static String get termsOfServiceUrl => '$baseUrl/terms-of-service';
   
   // Firebase Configuration (if using Firebase)
   static const String firebaseProjectId = 'zubid-auction';

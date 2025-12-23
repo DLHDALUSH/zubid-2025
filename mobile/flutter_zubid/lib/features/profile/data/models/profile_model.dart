@@ -100,6 +100,14 @@ class ProfileModel {
   @HiveField(25)
   final Map<String, dynamic>? preferences;
 
+  @HiveField(26)
+  @JsonKey(name: 'created_at')
+  final DateTime? createdAt;
+
+  @HiveField(27)
+  @JsonKey(name: 'updated_at')
+  final DateTime? updatedAt;
+
   const ProfileModel({
     required this.id,
     required this.username,
@@ -127,6 +135,8 @@ class ProfileModel {
     required this.memberSince,
     this.lastActive,
     this.preferences,
+    this.createdAt,
+    this.updatedAt,
   });
 
   factory ProfileModel.fromJson(Map<String, dynamic> json) =>
@@ -264,4 +274,14 @@ class ProfileModel {
 
   @override
   String toString() => 'ProfileModel(id: $id, username: $username, email: $email)';
+
+  // Computed property to check if profile is complete
+  bool get isComplete {
+    return firstName != null &&
+        lastName != null &&
+        phoneNumber != null &&
+        address != null &&
+        city != null &&
+        country != null;
+  }
 }

@@ -83,7 +83,7 @@ class BuyNowNotifier extends StateNotifier<BuyNowState> {
       // For now, we'll skip the API call and use a placeholder
       AppLogger.info('Updating purchase summary');
     } catch (e) {
-      AppLogger.error('Failed to update purchase summary', e);
+      AppLogger.error('Failed to update purchase summary', error: e);
     }
   }
 
@@ -124,7 +124,7 @@ class BuyNowNotifier extends StateNotifier<BuyNowState> {
         return false;
       }
     } catch (e) {
-      AppLogger.error('Purchase failed for auction ${auction.id}', e);
+      AppLogger.error('Purchase failed for auction ${auction.id}', error: e);
       state = state.copyWith(
         isProcessing: false,
         error: e.toString(),
@@ -154,7 +154,7 @@ class BuyNowNotifier extends StateNotifier<BuyNowState> {
       
       AppLogger.info('Purchase summary loaded successfully');
     } catch (e) {
-      AppLogger.error('Failed to load purchase summary for auction $auctionId', e);
+      AppLogger.error('Failed to load purchase summary for auction $auctionId', error: e);
       // Don't set error state for summary loading failure
     }
   }

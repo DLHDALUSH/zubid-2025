@@ -96,7 +96,7 @@ class _SortBottomSheetState extends State<SortBottomSheet> {
           const SizedBox(height: 16),
           
           // Sort Options
-          ...._sortOptions.map((option) => _buildSortOption(option)),
+          ..._sortOptions.map((option) => _buildSortOption(option)),
           
           const SizedBox(height: 16),
           

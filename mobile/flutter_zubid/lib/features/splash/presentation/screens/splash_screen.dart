@@ -135,7 +135,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     
     try {
       // Check if user is logged in
-      final token = await StorageService.getToken();
+      final token = await StorageService.getAuthToken();
       final authState = ref.read(authProvider);
       
       if (token != null && authState.user != null) {
@@ -436,4 +436,22 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       ),
     );
   }
+}
+
+class _AccentRingPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.white.withOpacity(0.2)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2;
+
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = size.width / 2;
+
+    canvas.drawCircle(center, radius, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

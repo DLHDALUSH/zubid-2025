@@ -56,12 +56,12 @@ class AppLogger {
   }
   
   /// Network request logging
-  static void network(String method, String url, {int? statusCode, String? response}) {
+  static void network(String method, String url, {int? statusCode, String? response, String? tag}) {
     if (_currentLogLevel <= _debugLevel) {
       final color = _getStatusCodeColor(statusCode);
       final message = '$color🌐 $method $url${statusCode != null ? ' [$statusCode]' : ''}$_reset';
       developer.log(message, name: '${tag ?? _tag}_NETWORK');
-      
+
       if (response != null && response.isNotEmpty) {
         developer.log('📄 Response: $response', name: '${tag ?? _tag}_NETWORK');
       }

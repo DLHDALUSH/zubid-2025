@@ -218,13 +218,13 @@ class BillingAddressAdapter extends TypeAdapter<BillingAddress> {
 // **************************************************************************
 
 OrderModel _$OrderModelFromJson(Map<String, dynamic> json) => OrderModel(
-      id: json['id'] as int,
+      id: (json['id'] as num).toInt(),
       orderNumber: json['order_number'] as String,
-      userId: json['user_id'] as int,
-      auctionId: json['auction_id'] as int,
+      userId: (json['user_id'] as num).toInt(),
+      auctionId: (json['auction_id'] as num).toInt(),
       auctionTitle: json['auction_title'] as String,
       auctionImage: json['auction_image'] as String?,
-      sellerId: json['seller_id'] as int,
+      sellerId: (json['seller_id'] as num).toInt(),
       sellerName: json['seller_name'] as String,
       purchasePrice: (json['purchase_price'] as num).toDouble(),
       shippingCost: (json['shipping_cost'] as num).toDouble(),
@@ -233,10 +233,12 @@ OrderModel _$OrderModelFromJson(Map<String, dynamic> json) => OrderModel(
       paymentMethod: json['payment_method'] as String,
       paymentStatus: json['payment_status'] as String,
       orderStatus: json['order_status'] as String,
-      shippingAddress: ShippingAddress.fromJson(json['shipping_address'] as Map<String, dynamic>),
+      shippingAddress: ShippingAddress.fromJson(
+          json['shipping_address'] as Map<String, dynamic>),
       billingAddress: json['billing_address'] == null
           ? null
-          : BillingAddress.fromJson(json['billing_address'] as Map<String, dynamic>),
+          : BillingAddress.fromJson(
+              json['billing_address'] as Map<String, dynamic>),
       trackingNumber: json['tracking_number'] as String?,
       estimatedDelivery: json['estimated_delivery'] == null
           ? null
@@ -251,7 +253,8 @@ OrderModel _$OrderModelFromJson(Map<String, dynamic> json) => OrderModel(
           : DateTime.parse(json['delivered_at'] as String),
     );
 
-Map<String, dynamic> _$OrderModelToJson(OrderModel instance) => <String, dynamic>{
+Map<String, dynamic> _$OrderModelToJson(OrderModel instance) =>
+    <String, dynamic>{
       'id': instance.id,
       'order_number': instance.orderNumber,
       'user_id': instance.userId,
@@ -267,8 +270,8 @@ Map<String, dynamic> _$OrderModelToJson(OrderModel instance) => <String, dynamic
       'payment_method': instance.paymentMethod,
       'payment_status': instance.paymentStatus,
       'order_status': instance.orderStatus,
-      'shipping_address': instance.shippingAddress.toJson(),
-      'billing_address': instance.billingAddress?.toJson(),
+      'shipping_address': instance.shippingAddress,
+      'billing_address': instance.billingAddress,
       'tracking_number': instance.trackingNumber,
       'estimated_delivery': instance.estimatedDelivery?.toIso8601String(),
       'created_at': instance.createdAt.toIso8601String(),
@@ -277,7 +280,8 @@ Map<String, dynamic> _$OrderModelToJson(OrderModel instance) => <String, dynamic
       'delivered_at': instance.deliveredAt?.toIso8601String(),
     };
 
-ShippingAddress _$ShippingAddressFromJson(Map<String, dynamic> json) => ShippingAddress(
+ShippingAddress _$ShippingAddressFromJson(Map<String, dynamic> json) =>
+    ShippingAddress(
       fullName: json['full_name'] as String,
       addressLine1: json['address_line_1'] as String,
       addressLine2: json['address_line_2'] as String?,
@@ -288,7 +292,8 @@ ShippingAddress _$ShippingAddressFromJson(Map<String, dynamic> json) => Shipping
       phoneNumber: json['phone_number'] as String?,
     );
 
-Map<String, dynamic> _$ShippingAddressToJson(ShippingAddress instance) => <String, dynamic>{
+Map<String, dynamic> _$ShippingAddressToJson(ShippingAddress instance) =>
+    <String, dynamic>{
       'full_name': instance.fullName,
       'address_line_1': instance.addressLine1,
       'address_line_2': instance.addressLine2,
@@ -299,7 +304,8 @@ Map<String, dynamic> _$ShippingAddressToJson(ShippingAddress instance) => <Strin
       'phone_number': instance.phoneNumber,
     };
 
-BillingAddress _$BillingAddressFromJson(Map<String, dynamic> json) => BillingAddress(
+BillingAddress _$BillingAddressFromJson(Map<String, dynamic> json) =>
+    BillingAddress(
       fullName: json['full_name'] as String,
       addressLine1: json['address_line_1'] as String,
       addressLine2: json['address_line_2'] as String?,
@@ -309,7 +315,8 @@ BillingAddress _$BillingAddressFromJson(Map<String, dynamic> json) => BillingAdd
       country: json['country'] as String,
     );
 
-Map<String, dynamic> _$BillingAddressToJson(BillingAddress instance) => <String, dynamic>{
+Map<String, dynamic> _$BillingAddressToJson(BillingAddress instance) =>
+    <String, dynamic>{
       'full_name': instance.fullName,
       'address_line_1': instance.addressLine1,
       'address_line_2': instance.addressLine2,

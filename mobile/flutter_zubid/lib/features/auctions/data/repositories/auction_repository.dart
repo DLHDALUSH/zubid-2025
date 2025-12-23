@@ -5,6 +5,8 @@ import '../../../../core/network/api_result.dart';
 import '../../../../core/utils/logger.dart';
 import '../models/auction_model.dart';
 import '../models/category_model.dart';
+import '../models/auction_search_filters.dart';
+import '../models/bid_model.dart';
 
 class AuctionRepository {
   final ApiClient _apiClient;
@@ -248,6 +250,45 @@ class AuctionRepository {
       }
     } catch (e) {
       AppLogger.error('Error fetching watchlist', error: e);
+      return ApiResult.error('Network error: ${e.toString()}');
+    }
+  }
+
+  // Get single auction by ID
+  Future<ApiResult<AuctionModel>> getAuction(String auctionId) async {
+    try {
+      AppLogger.info('Fetching auction: $auctionId');
+
+      final response = await _apiClient.get('/auctions/$auctionId');
+
+      if (response.statusCode == 200) {
+        final auction = AuctionModel.fromJson(response.data);
+        return ApiResult.success(auction);
+      } else {
+        return ApiResult.error('Failed to fetch auction');
+      }
+    } catch (e) {
+      AppLogger.error('Error fetching auction', error: e);
+      return ApiResult.error('Network error: ${e.toString()}');
+    }
+  }
+
+  // Get auction bids
+  Future<ApiResult<List<BidModel>>> getAuctionBids(String auctionId) async {
+    try {
+      AppLogger.info('Fetching bids for auction: $auctionId');
+
+      final response = await _apiClient.get('/auctions/$auctionId/bids');
+
+      if (response.statusCode == 200) {
+        final List<dynamic> bidsJson = response.data['bids'] ?? [];
+        final bids = bidsJson.map((json) => BidModel.fromJson(json)).toList();
+        return ApiResult.success(bids);
+      } else {
+        return ApiResult.error('Failed to fetch auction bids');
+      }
+    } catch (e) {
+      AppLogger.error('Error fetching auction bids', error: e);
       return ApiResult.error('Network error: ${e.toString()}');
     }
   }

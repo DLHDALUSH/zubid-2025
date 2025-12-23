@@ -80,7 +80,7 @@ class AuctionCreationNotifier extends StateNotifier<AuctionCreationState> {
           categories: categories,
         );
       },
-      failure: (error) {
+      error: (error) {
         state = state.copyWith(
           isLoading: false,
           error: error,
@@ -153,7 +153,7 @@ class AuctionCreationNotifier extends StateNotifier<AuctionCreationState> {
         AppLogger.info('Images uploaded successfully: ${imageUrls.length}');
         return true;
       },
-      failure: (error) {
+      error: (error) {
         state = state.copyWith(
           isUploading: false,
           uploadProgress: 0.0,
@@ -218,7 +218,7 @@ class AuctionCreationNotifier extends StateNotifier<AuctionCreationState> {
         AppLogger.info('Auction created successfully: ${response.auctionId}');
         return true;
       },
-      failure: (error) {
+      error: (error) {
         state = state.copyWith(
           isLoading: false,
           error: error,

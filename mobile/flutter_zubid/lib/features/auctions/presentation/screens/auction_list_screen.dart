@@ -4,15 +4,16 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/widgets/loading_overlay.dart';
 import '../../../../core/utils/logger.dart';
+import '../../../profile/presentation/providers/profile_provider.dart';
 import '../../data/models/auction_model.dart';
 import '../../data/models/category_model.dart';
+import '../../data/models/auction_search_filters.dart';
 import '../providers/auction_provider.dart';
 import '../widgets/auction_card.dart';
 import '../widgets/auction_list_item.dart';
 import '../widgets/search_bar_widget.dart';
 import '../widgets/filter_bottom_sheet.dart';
 import '../widgets/sort_bottom_sheet.dart';
-import '../../data/models/category_model.dart';
 
 enum ViewMode { grid, list }
 
@@ -69,11 +70,13 @@ class _AuctionListScreenState extends ConsumerState<AuctionListScreen> {
       filters = AuctionSearchFilters(categoryId: widget.categoryId);
     }
 
-    notifier.loadAuctions(
-      search: widget.initialSearch,
-      filters: filters,
-      refresh: true,
-    );
+    if (filters != null) {
+      notifier.applyFilters(filters);
+    } else if (widget.initialSearch != null && widget.initialSearch!.isNotEmpty) {
+      notifier.searchAuctions(widget.initialSearch!);
+    } else {
+      notifier.loadAuctions(refresh: true);
+    }
   }
 
   void _onScroll() {

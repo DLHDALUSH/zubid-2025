@@ -162,12 +162,12 @@ class _MyAuctionsScreenState extends ConsumerState<MyAuctionsScreen>
       case 'sold':
         title = 'No Sold Items';
         subtitle = 'Your sold auctions will appear here.';
-        icon = Icons.sold;
+        icon = Icons.check_circle;
         break;
       case 'draft':
         title = 'No Draft Auctions';
         subtitle = 'Your draft auctions will appear here.';
-        icon = Icons.draft;
+        icon = Icons.drafts;
         break;
       default:
         title = 'No Auctions';
@@ -254,9 +254,9 @@ class _MyAuctionsScreenState extends ConsumerState<MyAuctionsScreen>
       case 'active':
         return auctions.where((auction) => auction.isActive).toList();
       case 'ended':
-        return auctions.where((auction) => auction.hasEnded && !auction.hasSold).toList();
+        return auctions.where((auction) => auction.hasEnded && !(auction.hasSold ?? false)).toList();
       case 'sold':
-        return auctions.where((auction) => auction.hasSold).toList();
+        return auctions.where((auction) => auction.hasSold ?? false).toList();
       case 'draft':
         return auctions.where((auction) => auction.status == 'draft').toList();
       default:

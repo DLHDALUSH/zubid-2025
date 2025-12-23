@@ -146,41 +146,4 @@ class BidModel {
   }
 }
 
-// Bid Request Model for API calls
-@JsonSerializable()
-class PlaceBidRequest {
-  @JsonKey(name: 'auction_id')
-  final String auctionId;
-  
-  final double amount;
-  
-  @JsonKey(name: 'is_auto_bid')
-  final bool isAutoBid;
-  
-  @JsonKey(name: 'max_bid_amount')
-  final double? maxBidAmount;
 
-  const PlaceBidRequest({
-    required this.auctionId,
-    required this.amount,
-    this.isAutoBid = false,
-    this.maxBidAmount,
-  });
-
-  factory PlaceBidRequest.fromJson(Map<String, dynamic> json) => _$PlaceBidRequestFromJson(json);
-  Map<String, dynamic> toJson() => _$PlaceBidRequestToJson(this);
-}
-
-// Buy Now Request Model
-@JsonSerializable()
-class BuyNowRequest {
-  @JsonKey(name: 'auction_id')
-  final String auctionId;
-
-  const BuyNowRequest({
-    required this.auctionId,
-  });
-
-  factory BuyNowRequest.fromJson(Map<String, dynamic> json) => _$BuyNowRequestFromJson(json);
-  Map<String, dynamic> toJson() => _$BuyNowRequestToJson(this);
-}

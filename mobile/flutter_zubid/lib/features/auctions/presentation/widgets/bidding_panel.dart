@@ -31,7 +31,7 @@ class _BiddingPanelState extends ConsumerState<BiddingPanel> {
   @override
   void initState() {
     super.initState();
-    _bidController.text = widget.auction.minimumBid.toStringAsFixed(2);
+    _bidController.text = (widget.auction.minimumBid ?? 0.0).toStringAsFixed(2);
   }
 
   @override
@@ -191,7 +191,7 @@ class _BiddingPanelState extends ConsumerState<BiddingPanel> {
                 ),
               ),
               Text(
-                '\$${widget.auction.minimumBid.toStringAsFixed(2)}',
+                '\$${(widget.auction.minimumBid ?? 0.0).toStringAsFixed(2)}',
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w600,
                 ),
@@ -206,9 +206,9 @@ class _BiddingPanelState extends ConsumerState<BiddingPanel> {
   Widget _buildQuickBidButtons(ThemeData theme) {
     final quickBids = [
       widget.auction.minimumBid,
-      widget.auction.minimumBid + 5,
-      widget.auction.minimumBid + 10,
-      widget.auction.minimumBid + 25,
+      (widget.auction.minimumBid ?? 0.0) + 5,
+      (widget.auction.minimumBid ?? 0.0) + 10,
+      (widget.auction.minimumBid ?? 0.0) + 25,
     ];
 
     return Column(
@@ -229,13 +229,13 @@ class _BiddingPanelState extends ConsumerState<BiddingPanel> {
                 double.tryParse(_bidController.text) == amount;
             
             return FilterChip(
-              label: Text('\$${amount.toStringAsFixed(2)}'),
+              label: Text('\$${(amount ?? 0.0).toStringAsFixed(2)}'),
               selected: isSelected,
               onSelected: (selected) {
                 if (selected) {
                   setState(() {
                     _isCustomBid = false;
-                    _bidController.text = amount.toStringAsFixed(2);
+                    _bidController.text = (amount ?? 0.0).toStringAsFixed(2);
                   });
                 }
               },
@@ -265,7 +265,7 @@ class _BiddingPanelState extends ConsumerState<BiddingPanel> {
                 setState(() {
                   _isCustomBid = value;
                   if (!value) {
-                    _bidController.text = widget.auction.minimumBid.toStringAsFixed(2);
+                    _bidController.text = (widget.auction.minimumBid ?? 0.0).toStringAsFixed(2);
                   }
                 });
               },
@@ -292,8 +292,8 @@ class _BiddingPanelState extends ConsumerState<BiddingPanel> {
               return 'Please enter a valid amount';
             }
             
-            if (bidAmount < widget.auction.minimumBid) {
-              return 'Bid must be at least \$${widget.auction.minimumBid.toStringAsFixed(2)}';
+            if (bidAmount < (widget.auction.minimumBid ?? 0.0)) {
+              return 'Bid must be at least \$${(widget.auction.minimumBid ?? 0.0).toStringAsFixed(2)}';
             }
             
             return null;

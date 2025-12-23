@@ -37,10 +37,10 @@ class AuctionCreationRepository {
         return ApiResult.failure(createResponse.message);
       }
     } on DioException catch (e) {
-      AppLogger.error('Auction creation error', e);
+      AppLogger.error('Auction creation error', error: e);
       return ApiResult.failure(_handleDioError(e));
     } catch (e) {
-      AppLogger.error('Unexpected auction creation error', e);
+      AppLogger.error('Unexpected auction creation error', error: e);
       return ApiResult.failure('Failed to create auction');
     }
   }
@@ -81,10 +81,10 @@ class AuctionCreationRepository {
       AppLogger.info('Images uploaded successfully: ${imageUrls.length} URLs');
       return ApiResult.success(imageUrls);
     } on DioException catch (e) {
-      AppLogger.error('Image upload error', e);
+      AppLogger.error('Image upload error', error: e);
       return ApiResult.failure(_handleDioError(e));
     } catch (e) {
-      AppLogger.error('Unexpected image upload error', e);
+      AppLogger.error('Unexpected image upload error', error: e);
       return ApiResult.failure('Failed to upload images');
     }
   }
@@ -116,10 +116,10 @@ class AuctionCreationRepository {
       AppLogger.info('Fetched ${auctions.length} user auctions');
       return ApiResult.success(auctions);
     } on DioException catch (e) {
-      AppLogger.error('Get user auctions error', e);
+      AppLogger.error('Get user auctions error', error: e);
       return ApiResult.failure(_handleDioError(e));
     } catch (e) {
-      AppLogger.error('Unexpected get user auctions error', e);
+      AppLogger.error('Unexpected get user auctions error', error: e);
       return ApiResult.failure('Failed to fetch auctions');
     }
   }
@@ -142,10 +142,10 @@ class AuctionCreationRepository {
       AppLogger.info('Auction updated successfully: $auctionId');
       return ApiResult.success(auction);
     } on DioException catch (e) {
-      AppLogger.error('Update auction error', e);
+      AppLogger.error('Update auction error', error: e);
       return ApiResult.failure(_handleDioError(e));
     } catch (e) {
-      AppLogger.error('Unexpected update auction error', e);
+      AppLogger.error('Unexpected update auction error', error: e);
       return ApiResult.failure('Failed to update auction');
     }
   }
@@ -160,10 +160,10 @@ class AuctionCreationRepository {
       AppLogger.info('Auction deleted successfully: $auctionId');
       return ApiResult.success(true);
     } on DioException catch (e) {
-      AppLogger.error('Delete auction error', e);
+      AppLogger.error('Delete auction error', error: e);
       return ApiResult.failure(_handleDioError(e));
     } catch (e) {
-      AppLogger.error('Unexpected delete auction error', e);
+      AppLogger.error('Unexpected delete auction error', error: e);
       return ApiResult.failure('Failed to delete auction');
     }
   }
@@ -180,10 +180,10 @@ class AuctionCreationRepository {
       AppLogger.info('Auction ended early successfully: $auctionId');
       return ApiResult.success(auction);
     } on DioException catch (e) {
-      AppLogger.error('End auction early error', e);
+      AppLogger.error('End auction early error', error: e);
       return ApiResult.failure(_handleDioError(e));
     } catch (e) {
-      AppLogger.error('Unexpected end auction early error', e);
+      AppLogger.error('Unexpected end auction early error', error: e);
       return ApiResult.failure('Failed to end auction');
     }
   }
@@ -202,10 +202,10 @@ class AuctionCreationRepository {
       AppLogger.info('Fetched ${categories.length} categories');
       return ApiResult.success(categories);
     } on DioException catch (e) {
-      AppLogger.error('Get categories error', e);
+      AppLogger.error('Get categories error', error: e);
       return ApiResult.failure(_handleDioError(e));
     } catch (e) {
-      AppLogger.error('Unexpected get categories error', e);
+      AppLogger.error('Unexpected get categories error', error: e);
       return ApiResult.failure('Failed to fetch categories');
     }
   }

@@ -80,7 +80,7 @@ class ProfilePhotoPicker extends StatelessWidget {
                         color: theme.colorScheme.onPrimary,
                         size: 20,
                       ),
-                      onPressed: _showPhotoOptions,
+                      onPressed: () => _showPhotoOptions(context),
                       constraints: const BoxConstraints(
                         minWidth: 36,
                         minHeight: 36,
@@ -99,7 +99,7 @@ class ProfilePhotoPicker extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 TextButton.icon(
-                  onPressed: _showPhotoOptions,
+                  onPressed: () => _showPhotoOptions(context),
                   icon: const Icon(Icons.photo_camera),
                   label: Text(
                     selectedImage != null || currentPhotoUrl != null
@@ -174,7 +174,7 @@ class ProfilePhotoPicker extends StatelessWidget {
     );
   }
 
-  void _showPhotoOptions() {
+  void _showPhotoOptions(BuildContext context) {
     showModalBottomSheet(
       context: context,
       builder: (context) => SafeArea(

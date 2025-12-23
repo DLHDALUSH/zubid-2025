@@ -67,33 +67,7 @@ class PaymentResponse {
   bool get isPending => status == 'pending';
 }
 
-@JsonSerializable()
-class AddPaymentMethodRequest {
-  final String type; // 'fib', 'zain_cash', 'visa', 'mastercard', 'card', 'paypal', 'bank_transfer'
-  final String? token; // Payment gateway token
-  final CardDetails? cardDetails;
-  final PayPalDetails? paypalDetails;
-  final BankDetails? bankDetails;
-  final FibDetails? fibDetails;
-  final ZainCashDetails? zainCashDetails;
-  final bool setAsDefault;
 
-  const AddPaymentMethodRequest({
-    required this.type,
-    this.token,
-    this.cardDetails,
-    this.paypalDetails,
-    this.bankDetails,
-    this.fibDetails,
-    this.zainCashDetails,
-    this.setAsDefault = false,
-  });
-
-  factory AddPaymentMethodRequest.fromJson(Map<String, dynamic> json) =>
-      _$AddPaymentMethodRequestFromJson(json);
-
-  Map<String, dynamic> toJson() => _$AddPaymentMethodRequestToJson(this);
-}
 
 @JsonSerializable()
 class CardDetails {

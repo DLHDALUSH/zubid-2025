@@ -203,7 +203,7 @@ class PurchaseSummaryCard extends ConsumerWidget {
         ? auction.shipping.shippingCost 
         : 9.99;
     final taxRate = 0.085; // 8.5%
-    final tax = itemPrice * taxRate;
+    final tax = (itemPrice ?? 0.0) * taxRate;
     return '\$${tax.toStringAsFixed(2)}';
   }
 
@@ -213,8 +213,8 @@ class PurchaseSummaryCard extends ConsumerWidget {
         ? auction.shipping.shippingCost 
         : 9.99;
     final taxRate = 0.085; // 8.5%
-    final tax = itemPrice * taxRate;
-    final total = itemPrice + shippingCost + tax;
+    final tax = (itemPrice ?? 0.0) * taxRate;
+    final total = (itemPrice ?? 0.0) + shippingCost + tax;
     return '\$${total.toStringAsFixed(2)}';
   }
 }

@@ -8,6 +8,9 @@ sealed class ApiResult<T> {
   /// Create a failure result
   const factory ApiResult.failure(String message, {String? code, dynamic error}) = ApiFailure<T>;
 
+  /// Create an error result (alias for failure)
+  const factory ApiResult.error(String message, {String? code, dynamic error}) = ApiFailure<T>;
+
   /// Check if the result is successful
   bool get isSuccess => this is ApiSuccess<T>;
 
@@ -105,8 +108,19 @@ sealed class ApiResult<T> {
   ) {
     return switch (this) {
       ApiSuccess<T>(data: final data) => onSuccess(data),
-      ApiFailure<T>(message: final message, code: final code, error: final error) => 
+      ApiFailure<T>(message: final message, code: final code, error: final error) =>
         onFailure(message, code, error),
+    };
+  }
+
+  /// When method for pattern matching (similar to fold but with different parameter names)
+  R when<R>({
+    required R Function(T data) success,
+    required R Function(String error) error,
+  }) {
+    return switch (this) {
+      ApiSuccess<T>(data: final data) => success(data),
+      ApiFailure<T>(message: final message) => error(message),
     };
   }
 

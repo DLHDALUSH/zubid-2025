@@ -10,7 +10,7 @@ import '../../../../core/widgets/loading_overlay.dart';
 import '../../../../core/utils/logger.dart';
 import '../widgets/profile_photo_picker.dart';
 import '../providers/profile_provider.dart';
-import '../../data/models/update_profile_model.dart';
+import '../../data/models/update_profile_request_model.dart';
 
 class EditProfileScreen extends ConsumerStatefulWidget {
   const EditProfileScreen({super.key});

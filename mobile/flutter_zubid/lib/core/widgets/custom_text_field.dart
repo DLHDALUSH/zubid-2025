@@ -4,7 +4,10 @@ import 'package:flutter/services.dart';
 class CustomTextField extends StatefulWidget {
   final TextEditingController? controller;
   final String? label;
+  final String? labelText;
   final String? hint;
+  final String? hintText;
+  final String? prefixText;
   final IconData? prefixIcon;
   final Widget? suffixIcon;
   final bool obscureText;
@@ -29,7 +32,10 @@ class CustomTextField extends StatefulWidget {
     super.key,
     this.controller,
     this.label,
+    this.labelText,
     this.hint,
+    this.hintText,
+    this.prefixText,
     this.prefixIcon,
     this.suffixIcon,
     this.obscureText = false,
@@ -90,9 +96,9 @@ class _CustomTextFieldState extends State<CustomTextField> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (widget.label != null) ...[
+        if (widget.label != null || widget.labelText != null) ...[
           Text(
-            widget.label!,
+            widget.label ?? widget.labelText!,
             style: theme.textTheme.labelMedium?.copyWith(
               color: colorScheme.onSurface,
               fontWeight: FontWeight.w500,
@@ -121,10 +127,11 @@ class _CustomTextFieldState extends State<CustomTextField> {
             color: widget.enabled ? colorScheme.onSurface : colorScheme.onSurface.withOpacity(0.6),
           ),
           decoration: InputDecoration(
-            hintText: widget.hint,
+            hintText: widget.hintText ?? widget.hint,
             hintStyle: theme.textTheme.bodyLarge?.copyWith(
               color: colorScheme.onSurface.withOpacity(0.6),
             ),
+            prefixText: widget.prefixText,
             prefixIcon: widget.prefixIcon != null
                 ? Icon(
                     widget.prefixIcon,

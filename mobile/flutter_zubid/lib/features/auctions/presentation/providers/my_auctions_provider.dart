@@ -77,7 +77,7 @@ class MyAuctionsNotifier extends StateNotifier<MyAuctionsState> {
         }
         AppLogger.info('Loaded ${auctions.length} user auctions');
       },
-      failure: (error) {
+      error: (error) {
         state = state.copyWith(
           isLoading: false,
           error: error,
@@ -116,7 +116,7 @@ class MyAuctionsNotifier extends StateNotifier<MyAuctionsState> {
         AppLogger.info('Auction deleted successfully: $auctionId');
         return true;
       },
-      failure: (error) {
+      error: (error) {
         state = state.copyWith(
           isLoading: false,
           error: error,
@@ -147,7 +147,7 @@ class MyAuctionsNotifier extends StateNotifier<MyAuctionsState> {
         AppLogger.info('Auction ended early successfully: $auctionId');
         return true;
       },
-      failure: (error) {
+      error: (error) {
         state = state.copyWith(
           isLoading: false,
           error: error,
@@ -192,12 +192,12 @@ final activeAuctionsProvider = Provider<List<AuctionModel>>((ref) {
 
 final endedAuctionsProvider = Provider<List<AuctionModel>>((ref) {
   final auctions = ref.watch(myAuctionsProvider).auctions;
-  return auctions.where((auction) => auction.hasEnded && !auction.hasSold).toList();
+  return auctions.where((auction) => auction.hasEnded && !(auction.hasSold ?? false)).toList();
 });
 
 final soldAuctionsProvider = Provider<List<AuctionModel>>((ref) {
   final auctions = ref.watch(myAuctionsProvider).auctions;
-  return auctions.where((auction) => auction.hasSold).toList();
+  return auctions.where((auction) => auction.hasSold ?? false).toList();
 });
 
 final draftAuctionsProvider = Provider<List<AuctionModel>>((ref) {

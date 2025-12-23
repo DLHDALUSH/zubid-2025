@@ -45,22 +45,26 @@ class AuctionModelAdapter extends TypeAdapter<AuctionModel> {
       location: fields[25] as String?,
       createdAt: fields[26] as DateTime,
       updatedAt: fields[27] as DateTime,
-      sellerAvatar: fields[29] as String?,
-      sellerVerified: fields[31] as bool?,
-      shippingMethod: fields[32] as String?,
-      estimatedDelivery: fields[33] as String?,
-      shipsFrom: fields[34] as String?,
-      shipsTo: fields[35] as String?,
-      handlingTime: fields[36] as String?,
-      returnPolicy: fields[37] as String?,
-      shippingNotes: fields[38] as String?,
+      sellerAvatar: fields[28] as String?,
+      sellerVerified: fields[29] as bool?,
+      shippingMethod: fields[30] as String?,
+      estimatedDelivery: fields[31] as String?,
+      shipsFrom: fields[32] as String?,
+      shipsTo: fields[33] as String?,
+      handlingTime: fields[34] as String?,
+      returnPolicy: fields[35] as String?,
+      shippingNotes: fields[36] as String?,
+      images: (fields[37] as List?)?.cast<String>(),
+      minimumBid: fields[38] as double?,
+      currentBid: fields[39] as double?,
+      hasSold: fields[40] as bool?,
     );
   }
 
   @override
   void write(BinaryWriter writer, AuctionModel obj) {
     writer
-      ..writeByte(39)
+      ..writeByte(41)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -117,24 +121,32 @@ class AuctionModelAdapter extends TypeAdapter<AuctionModel> {
       ..write(obj.createdAt)
       ..writeByte(27)
       ..write(obj.updatedAt)
-      ..writeByte(29)
+      ..writeByte(28)
       ..write(obj.sellerAvatar)
-      ..writeByte(31)
+      ..writeByte(29)
       ..write(obj.sellerVerified)
-      ..writeByte(32)
+      ..writeByte(30)
       ..write(obj.shippingMethod)
-      ..writeByte(33)
+      ..writeByte(31)
       ..write(obj.estimatedDelivery)
-      ..writeByte(34)
+      ..writeByte(32)
       ..write(obj.shipsFrom)
-      ..writeByte(35)
+      ..writeByte(33)
       ..write(obj.shipsTo)
-      ..writeByte(36)
+      ..writeByte(34)
       ..write(obj.handlingTime)
-      ..writeByte(37)
+      ..writeByte(35)
       ..write(obj.returnPolicy)
+      ..writeByte(36)
+      ..write(obj.shippingNotes)
+      ..writeByte(37)
+      ..write(obj.images)
       ..writeByte(38)
-      ..write(obj.shippingNotes);
+      ..write(obj.minimumBid)
+      ..writeByte(39)
+      ..write(obj.currentBid)
+      ..writeByte(40)
+      ..write(obj.hasSold);
   }
 
   @override
@@ -153,7 +165,7 @@ class AuctionModelAdapter extends TypeAdapter<AuctionModel> {
 // **************************************************************************
 
 AuctionModel _$AuctionModelFromJson(Map<String, dynamic> json) => AuctionModel(
-      id: json['id'] as int,
+      id: (json['id'] as num).toInt(),
       title: json['title'] as String,
       description: json['description'] as String,
       startingPrice: (json['starting_price'] as num).toDouble(),
@@ -163,16 +175,18 @@ AuctionModel _$AuctionModelFromJson(Map<String, dynamic> json) => AuctionModel(
       startTime: DateTime.parse(json['start_time'] as String),
       endTime: DateTime.parse(json['end_time'] as String),
       status: json['status'] as String,
-      categoryId: json['category_id'] as int,
+      categoryId: (json['category_id'] as num).toInt(),
       categoryName: json['category_name'] as String,
-      sellerId: json['seller_id'] as int,
+      sellerId: (json['seller_id'] as num).toInt(),
       sellerUsername: json['seller_username'] as String,
       sellerRating: (json['seller_rating'] as num?)?.toDouble(),
-      imageUrls: (json['image_urls'] as List<dynamic>).map((e) => e as String).toList(),
+      imageUrls: (json['image_urls'] as List<dynamic>)
+          .map((e) => e as String)
+          .toList(),
       thumbnailUrl: json['thumbnail_url'] as String?,
-      bidCount: json['bid_count'] as int,
-      viewCount: json['view_count'] as int,
-      watchCount: json['watch_count'] as int,
+      bidCount: (json['bid_count'] as num).toInt(),
+      viewCount: (json['view_count'] as num).toInt(),
+      watchCount: (json['watch_count'] as num).toInt(),
       isFeatured: json['is_featured'] as bool,
       isWatched: json['is_watched'] as bool,
       shippingCost: (json['shipping_cost'] as num?)?.toDouble(),
@@ -190,6 +204,11 @@ AuctionModel _$AuctionModelFromJson(Map<String, dynamic> json) => AuctionModel(
       handlingTime: json['handling_time'] as String?,
       returnPolicy: json['return_policy'] as String?,
       shippingNotes: json['shipping_notes'] as String?,
+      images:
+          (json['images'] as List<dynamic>?)?.map((e) => e as String).toList(),
+      minimumBid: (json['minimum_bid'] as num?)?.toDouble(),
+      currentBid: (json['current_bid'] as num?)?.toDouble(),
+      hasSold: json['has_sold'] as bool?,
     );
 
 Map<String, dynamic> _$AuctionModelToJson(AuctionModel instance) =>
@@ -231,4 +250,8 @@ Map<String, dynamic> _$AuctionModelToJson(AuctionModel instance) =>
       'handling_time': instance.handlingTime,
       'return_policy': instance.returnPolicy,
       'shipping_notes': instance.shippingNotes,
+      'images': instance.images,
+      'minimum_bid': instance.minimumBid,
+      'current_bid': instance.currentBid,
+      'has_sold': instance.hasSold,
     };

@@ -24,8 +24,8 @@ class ApiClient {
   void _setupBaseOptions() {
     _dio.options = BaseOptions(
       baseUrl: AppConfig.apiUrl,
-      connectTimeout: Duration(milliseconds: AppConfig.connectTimeout),
-      receiveTimeout: Duration(milliseconds: AppConfig.receiveTimeout),
+      connectTimeout: Duration(milliseconds: AppConfig.connectTimeoutMs),
+      receiveTimeout: Duration(milliseconds: AppConfig.receiveTimeoutMs),
       sendTimeout: Duration(milliseconds: AppConfig.apiTimeout),
       headers: {
         'Content-Type': 'application/json',

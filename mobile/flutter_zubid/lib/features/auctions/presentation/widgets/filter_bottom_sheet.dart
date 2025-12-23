@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+import '../../data/models/auction_search_filters.dart';
 import '../../data/models/category_model.dart';
 
 class FilterBottomSheet extends StatefulWidget {

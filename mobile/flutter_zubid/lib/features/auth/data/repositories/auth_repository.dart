@@ -8,6 +8,15 @@ import '../../../../core/network/api_client.dart';
 import '../../../../core/network/api_result.dart';
 import '../models/user_model.dart';
 import '../models/auth_response_model.dart';
+import '../models/login_request_model.dart';
+import '../models/register_request_model.dart';
+import '../models/forgot_password_request_model.dart';
+import '../models/refresh_token_request_model.dart';
+import '../models/reset_password_request_model.dart';
+import '../models/change_password_request_model.dart';
+import '../models/verify_email_request_model.dart';
+import '../models/resend_verification_request_model.dart';
+import '../models/login_request_model.dart';
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
   return AuthRepository(ref.read(apiClientProvider));
@@ -56,7 +65,7 @@ class AuthRepository {
   /// Register user
   Future<ApiResult<AuthResponseModel>> register(RegisterRequestModel request) async {
     try {
-      AppLogger.auth('Attempting registration', userId: request.username);
+      AppLogger.auth('Attempting registration', userId: request.email);
       
       final response = await _apiClient.post(
         '/auth/register',
@@ -66,7 +75,7 @@ class AuthRepository {
       final authResponse = AuthResponseModel.fromJson(response.data);
       
       if (authResponse.success) {
-        AppLogger.auth('Registration successful', userId: request.username, success: true);
+        AppLogger.auth('Registration successful', userId: request.email, success: true);
         
         // If auto-login after registration
         if (authResponse.token != null && authResponse.user != null) {
@@ -79,11 +88,11 @@ class AuthRepository {
         
         return ApiResult.success(authResponse);
       } else {
-        AppLogger.auth('Registration failed', userId: request.username, success: false);
+        AppLogger.auth('Registration failed', userId: request.email, success: false);
         return ApiResult.failure(authResponse.message);
       }
     } on DioException catch (e) {
-      AppLogger.auth('Registration error', userId: request.username, success: false);
+      AppLogger.auth('Registration error', userId: request.email, success: false);
       return _handleDioError(e);
     } catch (e, stackTrace) {
       AppLogger.error('Unexpected registration error', error: e, stackTrace: stackTrace);

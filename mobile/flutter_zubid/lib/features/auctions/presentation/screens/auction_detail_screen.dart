@@ -89,7 +89,7 @@ class _AuctionDetailScreenState extends ConsumerState<AuctionDetailScreen> {
           pinned: true,
           flexibleSpace: FlexibleSpaceBar(
             background: AuctionImageGallery(
-              images: auction.images,
+              images: auction.images ?? [],
               heroTag: 'auction-${auction.id}',
             ),
           ),
@@ -179,7 +179,7 @@ class _AuctionDetailScreenState extends ConsumerState<AuctionDetailScreen> {
               style: theme.textTheme.bodyMedium,
             ),
             
-            if (auction.condition.isNotEmpty) ...[
+            if (auction.condition?.isNotEmpty == true) ...[
               const SizedBox(height: 16),
               Row(
                 children: [

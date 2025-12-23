@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/utils/logger.dart';
 import '../../data/models/payment_method_model.dart';
 import '../../data/models/payment_request_model.dart';
+import '../../data/models/add_payment_method_request.dart';
 import '../../data/repositories/payment_repository.dart';
 
 class PaymentMethodsState {
@@ -59,7 +60,7 @@ class PaymentMethodsNotifier extends StateNotifier<PaymentMethodsState> {
         );
         AppLogger.info('Loaded ${paymentMethods.length} payment methods');
       },
-      failure: (error) {
+      error: (error) {
         state = state.copyWith(
           isLoading: false,
           error: error,
@@ -90,7 +91,7 @@ class PaymentMethodsNotifier extends StateNotifier<PaymentMethodsState> {
         AppLogger.info('Added payment method: ${paymentMethod.id}');
         return true;
       },
-      failure: (error) {
+      error: (error) {
         state = state.copyWith(
           isLoading: false,
           error: error,
@@ -125,7 +126,7 @@ class PaymentMethodsNotifier extends StateNotifier<PaymentMethodsState> {
         AppLogger.info('Deleted payment method: $paymentMethodId');
         return true;
       },
-      failure: (error) {
+      error: (error) {
         state = state.copyWith(
           isLoading: false,
           error: error,
@@ -161,7 +162,7 @@ class PaymentMethodsNotifier extends StateNotifier<PaymentMethodsState> {
         AppLogger.info('Set default payment method: $paymentMethodId');
         return true;
       },
-      failure: (error) {
+      error: (error) {
         state = state.copyWith(
           isLoading: false,
           error: error,

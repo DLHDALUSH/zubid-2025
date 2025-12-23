@@ -103,7 +103,7 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
         }
         AppLogger.info('Loaded ${transactions.length} transactions');
       },
-      failure: (error) {
+      error: (error) {
         state = state.copyWith(
           isLoading: false,
           error: error,
@@ -148,7 +148,7 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
         AppLogger.info('Retrieved transaction: $transactionId');
         return transaction;
       },
-      failure: (error) {
+      error: (error) {
         AppLogger.error('Failed to get transaction: $error');
         return null;
       },

@@ -7,7 +7,10 @@ import '../../../../core/network/api_client.dart';
 import '../../../../core/network/api_result.dart';
 import '../../../../core/utils/logger.dart';
 import '../models/profile_model.dart';
-import '../models/update_profile_model.dart';
+import '../models/update_profile_request_model.dart';
+import '../models/update_profile_response_model.dart';
+import '../models/upload_photo_request_model.dart';
+import '../models/upload_photo_response_model.dart';
 
 final profileRepositoryProvider = Provider<ProfileRepository>((ref) {
   final apiClient = ref.read(apiClientProvider);
@@ -22,11 +25,11 @@ class ProfileRepository {
   /// Get user profile
   Future<ApiResult<ProfileModel>> getProfile() async {
     try {
-      AppLogger.network('GET /api/profile');
+      AppLogger.network('GET', '/api/profile');
       
       final response = await _apiClient.dio.get('/api/profile');
       
-      AppLogger.network('Profile fetch successful', data: response.data);
+      AppLogger.network('GET', '/api/profile', statusCode: 200, response: 'Profile fetch successful');
       
       final profile = ProfileModel.fromJson(response.data['profile']);
       return ApiResult.success(profile);
@@ -43,14 +46,14 @@ class ProfileRepository {
   /// Update user profile
   Future<ApiResult<ProfileModel>> updateProfile(UpdateProfileRequestModel request) async {
     try {
-      AppLogger.network('PUT /api/profile', data: request.toJson());
+      AppLogger.network('PUT', '/api/profile');
       
       final response = await _apiClient.dio.put(
         '/api/profile',
         data: request.toJson(),
       );
       
-      AppLogger.network('Profile update successful', data: response.data);
+      AppLogger.network('PUT', '/api/profile', statusCode: 200, response: 'Profile update successful');
       
       final updateResponse = UpdateProfileResponseModel.fromJson(response.data);
       
@@ -73,7 +76,7 @@ class ProfileRepository {
   /// Upload profile photo
   Future<ApiResult<String>> uploadProfilePhoto(File imageFile) async {
     try {
-      AppLogger.network('POST /api/profile/photo');
+      AppLogger.network('POST', '/api/profile/photo');
       
       // Convert image to base64
       final bytes = await imageFile.readAsBytes();
@@ -81,18 +84,14 @@ class ProfileRepository {
       final fileName = imageFile.path.split('/').last;
       final fileType = fileName.split('.').last.toLowerCase();
       
-      final request = UploadPhotoRequestModel(
-        photoFile: base64Image,
-        fileName: fileName,
-        fileType: fileType,
-      );
+      final request = UploadPhotoRequestModel.fromFile(imageFile);
       
       final response = await _apiClient.dio.post(
         '/api/profile/photo',
         data: request.toJson(),
       );
       
-      AppLogger.network('Photo upload successful', data: response.data);
+      AppLogger.network('POST', '/api/profile/photo', statusCode: 200, response: 'Photo upload successful');
       
       final uploadResponse = UploadPhotoResponseModel.fromJson(response.data);
       
@@ -114,11 +113,11 @@ class ProfileRepository {
   /// Delete profile photo
   Future<ApiResult<bool>> deleteProfilePhoto() async {
     try {
-      AppLogger.network('DELETE /api/profile/photo');
-      
+      AppLogger.network('DELETE', '/api/profile/photo');
+
       final response = await _apiClient.dio.delete('/api/profile/photo');
-      
-      AppLogger.network('Photo deletion successful', data: response.data);
+
+      AppLogger.network('DELETE', '/api/profile/photo', statusCode: 200, response: 'Photo deletion successful');
       
       return ApiResult.success(true);
       
@@ -137,8 +136,8 @@ class ProfileRepository {
     required String newPassword,
   }) async {
     try {
-      AppLogger.network('POST /api/profile/change-password');
-      
+      AppLogger.network('POST', '/api/profile/change-password');
+
       final response = await _apiClient.dio.post(
         '/api/profile/change-password',
         data: {
@@ -146,8 +145,8 @@ class ProfileRepository {
           'new_password': newPassword,
         },
       );
-      
-      AppLogger.network('Password change successful');
+
+      AppLogger.network('POST', '/api/profile/change-password', statusCode: 200, response: 'Password change successful');
       
       return ApiResult.success(true);
       
@@ -163,14 +162,14 @@ class ProfileRepository {
   /// Verify email
   Future<ApiResult<bool>> verifyEmail(String token) async {
     try {
-      AppLogger.network('POST /api/profile/verify-email');
-      
+      AppLogger.network('POST', '/api/profile/verify-email');
+
       final response = await _apiClient.dio.post(
         '/api/profile/verify-email',
         data: {'token': token},
       );
-      
-      AppLogger.network('Email verification successful');
+
+      AppLogger.network('POST', '/api/profile/verify-email', statusCode: 200, response: 'Email verification successful');
       
       return ApiResult.success(true);
       
@@ -186,11 +185,11 @@ class ProfileRepository {
   /// Resend email verification
   Future<ApiResult<bool>> resendEmailVerification() async {
     try {
-      AppLogger.network('POST /api/profile/resend-verification');
-      
+      AppLogger.network('POST', '/api/profile/resend-verification');
+
       final response = await _apiClient.dio.post('/api/profile/resend-verification');
-      
-      AppLogger.network('Email verification resent successfully');
+
+      AppLogger.network('POST', '/api/profile/resend-verification', statusCode: 200, response: 'Email verification resent successfully');
       
       return ApiResult.success(true);
       

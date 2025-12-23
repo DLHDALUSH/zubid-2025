@@ -6,6 +6,7 @@ import '../../../../core/utils/logger.dart';
 import '../../../../core/widgets/custom_button.dart';
 import '../../../../core/widgets/custom_text_field.dart';
 import '../../../../core/widgets/loading_overlay.dart';
+import '../../data/models/login_request_model.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/auth_header.dart';
 import '../widgets/social_login_buttons.dart';
@@ -42,11 +43,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       'rememberMe': _rememberMe,
     });
 
-    final success = await ref.read(authProvider.notifier).login(
-      _usernameController.text.trim(),
-      _passwordController.text,
+    final request = LoginRequestModel(
+      username: _usernameController.text.trim(),
+      password: _passwordController.text,
       rememberMe: _rememberMe,
     );
+
+    final success = await ref.read(authProvider.notifier).login(request);
 
     if (success && mounted) {
       AppLogger.userAction('Login successful - navigating to home');

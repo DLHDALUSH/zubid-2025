@@ -10,6 +10,7 @@ import '../widgets/auth_header.dart';
 import '../widgets/social_login_buttons.dart';
 import '../providers/auth_provider.dart';
 import '../../data/models/auth_response_model.dart';
+import '../../data/models/register_request_model.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -345,19 +346,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     AppLogger.userAction('Registration attempted for ${_emailController.text}');
 
     final request = RegisterRequestModel(
-      username: _usernameController.text.trim(),
+
       email: _emailController.text.trim(),
       password: _passwordController.text,
-      confirmPassword: _confirmPasswordController.text,
-      firstName: _firstNameController.text.trim().isNotEmpty
-          ? _firstNameController.text.trim()
-          : null,
-      lastName: _lastNameController.text.trim().isNotEmpty
-          ? _lastNameController.text.trim()
-          : null,
-      phoneNumber: _phoneController.text.trim().isNotEmpty
-          ? _phoneController.text.trim()
-          : null,
+
+      firstName: _firstNameController.text.trim(),
+      lastName: _lastNameController.text.trim(),
+      phoneNumber: _phoneController.text.trim(),
       idNumber: _idNumberController.text.trim().isNotEmpty
           ? _idNumberController.text.trim()
           : null,

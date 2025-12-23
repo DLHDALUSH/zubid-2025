@@ -8,7 +8,7 @@ part of 'purchase_request_model.dart';
 
 PurchaseRequest _$PurchaseRequestFromJson(Map<String, dynamic> json) =>
     PurchaseRequest(
-      auctionId: json['auction_id'] as int,
+      auctionId: (json['auction_id'] as num).toInt(),
       paymentMethod: json['payment_method'] as String,
       shippingAddress: ShippingAddress.fromJson(
           json['shipping_address'] as Map<String, dynamic>),
@@ -23,8 +23,8 @@ Map<String, dynamic> _$PurchaseRequestToJson(PurchaseRequest instance) =>
     <String, dynamic>{
       'auction_id': instance.auctionId,
       'payment_method': instance.paymentMethod,
-      'shipping_address': instance.shippingAddress.toJson(),
-      'billing_address': instance.billingAddress?.toJson(),
+      'shipping_address': instance.shippingAddress,
+      'billing_address': instance.billingAddress,
       'use_shipping_as_billing': instance.useShippingAsBilling,
     };
 
@@ -44,7 +44,7 @@ Map<String, dynamic> _$PurchaseResponseToJson(PurchaseResponse instance) =>
     <String, dynamic>{
       'success': instance.success,
       'message': instance.message,
-      'order': instance.order?.toJson(),
+      'order': instance.order,
       'payment_url': instance.paymentUrl,
       'payment_intent_id': instance.paymentIntentId,
       'client_secret': instance.clientSecret,
@@ -53,7 +53,7 @@ Map<String, dynamic> _$PurchaseResponseToJson(PurchaseResponse instance) =>
 PaymentConfirmationRequest _$PaymentConfirmationRequestFromJson(
         Map<String, dynamic> json) =>
     PaymentConfirmationRequest(
-      orderId: json['order_id'] as int,
+      orderId: (json['order_id'] as num).toInt(),
       paymentIntentId: json['payment_intent_id'] as String,
       paymentMethodId: json['payment_method_id'] as String?,
     );
@@ -82,14 +82,14 @@ Map<String, dynamic> _$PaymentConfirmationResponseToJson(
     <String, dynamic>{
       'success': instance.success,
       'message': instance.message,
-      'order': instance.order?.toJson(),
+      'order': instance.order,
       'payment_status': instance.paymentStatus,
     };
 
 OrderCancellationRequest _$OrderCancellationRequestFromJson(
         Map<String, dynamic> json) =>
     OrderCancellationRequest(
-      orderId: json['order_id'] as int,
+      orderId: (json['order_id'] as num).toInt(),
       reason: json['reason'] as String,
     );
 
@@ -103,7 +103,7 @@ Map<String, dynamic> _$OrderCancellationRequestToJson(
 OrderTrackingResponse _$OrderTrackingResponseFromJson(
         Map<String, dynamic> json) =>
     OrderTrackingResponse(
-      orderId: json['order_id'] as int,
+      orderId: (json['order_id'] as num).toInt(),
       trackingNumber: json['tracking_number'] as String,
       carrier: json['carrier'] as String,
       trackingUrl: json['tracking_url'] as String?,
@@ -126,7 +126,7 @@ Map<String, dynamic> _$OrderTrackingResponseToJson(
       'tracking_url': instance.trackingUrl,
       'status': instance.status,
       'estimated_delivery': instance.estimatedDelivery?.toIso8601String(),
-      'tracking_events': instance.trackingEvents.map((e) => e.toJson()).toList(),
+      'tracking_events': instance.trackingEvents,
     };
 
 TrackingEvent _$TrackingEventFromJson(Map<String, dynamic> json) =>

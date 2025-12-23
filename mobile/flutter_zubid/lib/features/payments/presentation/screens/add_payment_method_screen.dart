@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../providers/payment_methods_provider.dart';
 import '../../data/models/payment_request_model.dart';
+import '../../data/models/add_payment_method_request.dart';
 
 class AddPaymentMethodScreen extends ConsumerStatefulWidget {
   const AddPaymentMethodScreen({super.key});
@@ -36,6 +37,11 @@ class _AddPaymentMethodScreenState extends ConsumerState<AddPaymentMethodScreen>
   final _cardExpMonthController = TextEditingController();
   final _cardExpYearController = TextEditingController();
   final _cardCvcController = TextEditingController();
+
+  // Additional controllers for compatibility
+  final _expiryController = TextEditingController();
+  final _cvvController = TextEditingController();
+  final _cardHolderNameController = TextEditingController();
 
   @override
   void dispose() {
@@ -362,3 +368,189 @@ class _AddPaymentMethodScreenState extends ConsumerState<AddPaymentMethodScreen>
       ],
     );
   }
+
+  Widget _buildCardForm() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '${_selectedType.toUpperCase()} Card Details',
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        TextFormField(
+          controller: _cardNumberController,
+          decoration: const InputDecoration(
+            labelText: 'Card Number',
+            hintText: '1234 5678 9012 3456',
+            prefixIcon: Icon(Icons.credit_card),
+          ),
+          keyboardType: TextInputType.number,
+          inputFormatters: [
+            FilteringTextInputFormatter.digitsOnly,
+            LengthLimitingTextInputFormatter(16),
+          ],
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'Please enter your card number';
+            }
+            if (value.length < 13 || value.length > 16) {
+              return 'Please enter a valid card number';
+            }
+            return null;
+          },
+        ),
+        const SizedBox(height: 16),
+
+        Row(
+          children: [
+            Expanded(
+              child: TextFormField(
+                controller: _expiryController,
+                decoration: const InputDecoration(
+                  labelText: 'Expiry Date',
+                  hintText: 'MM/YY',
+                  prefixIcon: Icon(Icons.calendar_today),
+                ),
+                keyboardType: TextInputType.number,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(4),
+                ],
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter expiry date';
+                  }
+                  if (value.length != 4) {
+                    return 'Please enter valid expiry (MMYY)';
+                  }
+                  return null;
+                },
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: TextFormField(
+                controller: _cvvController,
+                decoration: const InputDecoration(
+                  labelText: 'CVV',
+                  hintText: '123',
+                  prefixIcon: Icon(Icons.security),
+                ),
+                obscureText: true,
+                keyboardType: TextInputType.number,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(4),
+                ],
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter CVV';
+                  }
+                  if (value.length < 3 || value.length > 4) {
+                    return 'Please enter valid CVV';
+                  }
+                  return null;
+                },
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+
+        TextFormField(
+          controller: _cardHolderNameController,
+          decoration: const InputDecoration(
+            labelText: 'Cardholder Name',
+            hintText: 'Enter name as shown on card',
+            prefixIcon: Icon(Icons.person),
+          ),
+          textCapitalization: TextCapitalization.words,
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'Please enter cardholder name';
+            }
+            return null;
+          },
+        ),
+      ],
+    );
+  }
+
+  Future<void> _addPaymentMethod() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    try {
+      AddPaymentMethodRequest request;
+
+      switch (_selectedType) {
+        case 'fib':
+          request = AddPaymentMethodRequest.fib(
+            fibAccountNumber: _fibAccountController.text,
+            fibHolderName: _fibHolderNameController.text,
+            fibPhoneNumber: '+964${_fibPhoneController.text}',
+            fibBranch: _fibBranchController.text.isNotEmpty ? _fibBranchController.text : '',
+            fibIban: _fibIbanController.text.isNotEmpty ? _fibIbanController.text : '',
+            isDefault: _setAsDefault,
+          );
+          break;
+        case 'zain_cash':
+          request = AddPaymentMethodRequest.zainCash(
+            zainPhoneNumber: '+964${_zainPhoneController.text}',
+            zainPin: _zainPinController.text,
+            zainHolderName: _zainHolderNameController.text.isNotEmpty ? _zainHolderNameController.text : '',
+            isDefault: _setAsDefault,
+          );
+          break;
+        case 'visa':
+          request = AddPaymentMethodRequest.visa(
+            cardNumber: _cardNumberController.text,
+            cardHolderName: _cardHolderNameController.text,
+            expiryMonth: _cardExpMonthController.text,
+            expiryYear: _cardExpYearController.text,
+            cvv: _cardCvcController.text,
+            isDefault: _setAsDefault,
+          );
+          break;
+        case 'mastercard':
+          request = AddPaymentMethodRequest.mastercard(
+            cardNumber: _cardNumberController.text,
+            cardHolderName: _cardHolderNameController.text,
+            expiryMonth: _cardExpMonthController.text,
+            expiryYear: _cardExpYearController.text,
+            cvv: _cardCvcController.text,
+            isDefault: _setAsDefault,
+          );
+          break;
+        default:
+          throw Exception('Invalid payment method type');
+      }
+
+      await ref.read(paymentMethodsProvider.notifier).addPaymentMethod(request);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Payment method added successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        Navigator.of(context).pop();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to add payment method: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+}

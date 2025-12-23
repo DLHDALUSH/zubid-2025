@@ -24,7 +24,7 @@ class OrderConfirmationScreen extends ConsumerWidget {
         automaticallyImplyLeading: false,
       ),
       body: order == null
-          ? _buildErrorState(theme)
+          ? _buildErrorState(context, theme)
           : SingleChildScrollView(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -63,7 +63,7 @@ class OrderConfirmationScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildErrorState(ThemeData theme) {
+  Widget _buildErrorState(BuildContext context, ThemeData theme) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
