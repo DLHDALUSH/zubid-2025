@@ -10,6 +10,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
 
   # UI & Design
   cupertino_icons: ^1.0.6
@@ -46,10 +48,12 @@ dependencies:
   local_auth: ^2.1.7
   crypto: ^3.0.3
   flutter_secure_storage: ^9.0.0
+  google_sign_in: ^6.1.6
+  sign_in_with_apple: ^5.0.0
 
   # Media & Files
   image_picker: ^1.0.4
-  # file_picker: ^6.1.1  # Temporarily disabled due to v1 embedding issues
+  file_picker: ^6.1.1
   permission_handler: ^11.1.0
   path_provider: ^2.1.1
 
@@ -60,7 +64,7 @@ dependencies:
   # Push Notifications
   firebase_core: ^2.24.2
   firebase_messaging: ^14.7.9
-  # flutter_local_notifications: ^16.3.0  # Temporarily disabled due to build issues
+  flutter_local_notifications: ^16.3.0
 
   # Payment Integration
   # stripe_payment: ^1.1.4  # Discontinued - replaced by flutter_stripe
@@ -84,7 +88,7 @@ dependencies:
 
   # QR Code
   qr_flutter: ^4.1.0
-  # qr_code_scanner: ^1.0.1  # Temporarily disabled due to build issues
+  qr_code_scanner: ^1.0.1
 
   # Maps & Location
   geolocator: ^10.1.0
@@ -112,6 +116,7 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  generate: true # Enable automatic localization generation
   
   assets:
     - assets/images/

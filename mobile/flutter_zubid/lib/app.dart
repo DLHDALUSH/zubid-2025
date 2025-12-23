@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'core/config/theme_config.dart';
 import 'core/utils/app_router.dart';
+import 'l10n/app_localizations.dart';
 
 class ZubidApp extends ConsumerWidget {
   const ZubidApp({super.key});
@@ -18,11 +20,17 @@ class ZubidApp extends ConsumerWidget {
       darkTheme: ThemeConfig.darkTheme,
       themeMode: ThemeMode.system,
       routerConfig: router,
-      supportedLocales: const [
-        Locale('en', 'US'),
-        Locale('ar', 'SA'),
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
       ],
-      // TODO: Add localizations delegates if you plan to support multiple languages
+      supportedLocales: const [
+        Locale('en', ''), // English
+        Locale('ar', ''), // Arabic
+        Locale('ku', ''), // Kurdish
+      ],
     );
   }
 }

@@ -131,9 +131,7 @@ class UserModel {
   }
 
   /// Get display name
-  String get displayName {
-    return fullName.isNotEmpty ? fullName : username;
-  }
+  String get displayName => fullName.isNotEmpty ? fullName : username;
 
   /// Check if user is admin
   bool get isAdmin => role == 'admin' || role == 'super_admin';
@@ -143,38 +141,39 @@ class UserModel {
 
   /// Check if profile is complete
   bool get isProfileComplete {
-    return firstName != null &&
-        lastName != null &&
-        phoneNumber != null &&
-        address != null &&
-        city != null &&
-        country != null;
+    return firstName?.isNotEmpty == true &&
+        lastName?.isNotEmpty == true &&
+        phoneNumber?.isNotEmpty == true &&
+        address?.isNotEmpty == true &&
+        city?.isNotEmpty == true &&
+        country?.isNotEmpty == true;
   }
 
   /// Get profile completion percentage
   double get profileCompletionPercentage {
     int completedFields = 0;
-    int totalFields = 8;
+    const int totalFields = 8;
 
-    if (firstName != null && firstName!.isNotEmpty) completedFields++;
-    if (lastName != null && lastName!.isNotEmpty) completedFields++;
-    if (phoneNumber != null && phoneNumber!.isNotEmpty) completedFields++;
-    if (profilePhotoUrl != null && profilePhotoUrl!.isNotEmpty) completedFields++;
-    if (address != null && address!.isNotEmpty) completedFields++;
-    if (city != null && city!.isNotEmpty) completedFields++;
-    if (country != null && country!.isNotEmpty) completedFields++;
+    if (firstName?.isNotEmpty == true) completedFields++;
+    if (lastName?.isNotEmpty == true) completedFields++;
+    if (phoneNumber?.isNotEmpty == true) completedFields++;
+    if (profilePhotoUrl?.isNotEmpty == true) completedFields++;
+    if (address?.isNotEmpty == true) completedFields++;
+    if (city?.isNotEmpty == true) completedFields++;
+    if (country?.isNotEmpty == true) completedFields++;
     if (dateOfBirth != null) completedFields++;
 
+    if (totalFields == 0) return 0.0;
     return (completedFields / totalFields) * 100;
   }
 
   /// Get user initials for avatar
   String get initials {
     String initials = '';
-    if (firstName != null && firstName!.isNotEmpty) {
+    if (firstName?.isNotEmpty == true) {
       initials += firstName![0].toUpperCase();
     }
-    if (lastName != null && lastName!.isNotEmpty) {
+    if (lastName?.isNotEmpty == true) {
       initials += lastName![0].toUpperCase();
     }
     if (initials.isEmpty) {

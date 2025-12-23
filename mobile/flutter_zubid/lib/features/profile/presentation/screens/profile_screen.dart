@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/widgets/loading_overlay.dart';
 import '../../../../core/utils/logger.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../widgets/profile_header.dart';
 import '../widgets/profile_stats.dart';
 import '../widgets/profile_menu.dart';
@@ -221,8 +222,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       try {
         AppLogger.userAction('User logout initiated');
         
-        // TODO: Implement logout logic
-        // await ref.read(authProvider.notifier).logout();
+        await ref.read(authProvider.notifier).logout();
         
         if (mounted) {
           context.go('/login');

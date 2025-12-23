@@ -1,7 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/config/app_config.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../../../core/utils/logger.dart';
 import '../../../../core/network/api_client.dart';
@@ -16,7 +15,6 @@ import '../models/reset_password_request_model.dart';
 import '../models/change_password_request_model.dart';
 import '../models/verify_email_request_model.dart';
 import '../models/resend_verification_request_model.dart';
-import '../models/login_request_model.dart';
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
   return AuthRepository(ref.read(apiClientProvider));
@@ -217,7 +215,7 @@ class AuthRepository {
         data: request.toJson(),
       );
 
-      final authResponse = AuthResponseModel.fromJson(response.data);
+      final authResponse = AuthResponseModel.fromJson(response..data);
       AppLogger.auth('Email verification response', success: authResponse.success);
       
       return ApiResult.success(authResponse);
@@ -286,13 +284,17 @@ class AuthRepository {
       AppLogger.auth('Getting current user');
       
       final response = await _apiClient.get('/auth/me');
-      final user = UserModel.fromJson(response.data['user']);
-      
-      // Update stored user data
-      await StorageService.saveUserData(user);
-      
-      AppLogger.auth('Current user retrieved', userId: user.id.toString());
-      return ApiResult.success(user);
+      if (response.data != null && response.data['user'] != null) {
+        final user = UserModel.fromJson(response.data['user']);
+        
+        // Update stored user data
+        await StorageService.saveUserData(user);
+        
+        AppLogger.auth('Current user retrieved', userId: user.id.toString());
+        return ApiResult.success(user);
+      } else {
+        return ApiResult.failure('Invalid user data received');
+      }
     } on DioException catch (e) {
       AppLogger.auth('Get current user error');
       return _handleDioError(e);
@@ -311,27 +313,24 @@ class AuthRepository {
         return ApiResult.failure('Connection timeout. Please check your internet connection.');
       
       case DioExceptionType.badResponse:
+        final message = e.response?.data?['message'] ?? 'A server error occurred.';
         final statusCode = e.response?.statusCode;
-        final message = e.response?.data?['message'] ?? 'Server error occurred';
-        
+
         if (statusCode == 401) {
-          return ApiResult.failure('Invalid credentials or session expired');
+          return ApiResult.failure('Invalid credentials or session expired. Please log in again.');
         } else if (statusCode == 403) {
-          return ApiResult.failure('Access denied');
-        } else if (statusCode == 422) {
-          return ApiResult.failure(message);
-        } else {
-          return ApiResult.failure(message);
+          return ApiResult.failure('You do not have permission to perform this action.');
         }
+        return ApiResult.failure(message);
       
       case DioExceptionType.cancel:
-        return ApiResult.failure('Request was cancelled');
+        return ApiResult.failure('The request was cancelled.');
       
       case DioExceptionType.connectionError:
-        return ApiResult.failure('No internet connection');
+        return ApiResult.failure('No internet connection. Please check your network.');
       
       default:
-        return ApiResult.failure('An unexpected error occurred');
+        return ApiResult.failure('An unexpected error occurred. Please try again later.');
     }
   }
 }

@@ -2,327 +2,159 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class ThemeConfig {
-  // Color Palette
-  static const Color primaryColor = Color(0xFF2E7D32); // Green
-  static const Color primaryLightColor = Color(0xFF4CAF50);
-  static const Color primaryDarkColor = Color(0xFF1B5E20);
-  
-  static const Color secondaryColor = Color(0xFFFF6B35); // Orange
-  static const Color secondaryLightColor = Color(0xFFFF8A65);
-  static const Color secondaryDarkColor = Color(0xFFE64A19);
-  
-  static const Color accentColor = Color(0xFF2196F3); // Blue
-  static const Color errorColor = Color(0xFFE53935);
-  static const Color warningColor = Color(0xFFFF9800);
-  static const Color successColor = Color(0xFF4CAF50);
-  static const Color infoColor = Color(0xFF2196F3);
-  
-  // Neutral Colors
-  static const Color backgroundColor = Color(0xFFFAFAFA);
-  static const Color surfaceColor = Color(0xFFFFFFFF);
-  static const Color cardColor = Color(0xFFFFFFFF);
-  
-  // Text Colors
-  static const Color textPrimaryColor = Color(0xFF212121);
-  static const Color textSecondaryColor = Color(0xFF757575);
-  static const Color textHintColor = Color(0xFFBDBDBD);
-  static const Color textDisabledColor = Color(0xFF9E9E9E);
-  
-  // Border Colors
-  static const Color borderColor = Color(0xFFE0E0E0);
-  static const Color dividerColor = Color(0xFFEEEEEE);
-  
-  // Shadow Colors
-  static const Color shadowColor = Color(0x1A000000);
-  static const Color lightShadowColor = Color(0x0D000000);
-  
-  // Gradient Colors
-  static const LinearGradient primaryGradient = LinearGradient(
-    colors: [primaryColor, primaryLightColor],
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-  );
-  
-  static const LinearGradient secondaryGradient = LinearGradient(
-    colors: [secondaryColor, secondaryLightColor],
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
+  // Font Families
+  static const String poppinsFont = 'Poppins';
+  static const String interFont = 'Inter';
+
+  // Light Theme Colors
+  static const _LightColors {
+    static const primary = Color(0xFF2E7D32);
+    static const onPrimary = Colors.white;
+    static const primaryContainer = Color(0xFF4CAF50);
+    static const secondary = Color(0xFFFF6B35);
+    static const onSecondary = Colors.white;
+    static const secondaryContainer = Color(0xFFFF8A65);
+    static const surface = Color(0xFFFFFFFF);
+    static const onSurface = Color(0xFF212121);
+    static const background = Color(0xFFFAFAFA);
+    static const onBackground = Color(0xFF212121);
+    static const error = Color(0xFFE53935);
+    static const onError = Colors.white;
+    static const textPrimary = Color(0xFF212121);
+    static const textSecondary = Color(0xFF757575);
+    static const textHint = Color(0xFFBDBDBD);
+    static const border = Color(0xFFE0E0E0);
+    static const divider = Color(0xFFEEEEEE);
+  }
+
+  // Dark Theme Colors
+  static const _DarkColors {
+    static const primary = Color(0xFF4CAF50);
+    static const onPrimary = Colors.black;
+    static const primaryContainer = Color(0xFF2E7D32);
+    static const secondary = Color(0xFFFF8A65);
+    static const onSecondary = Colors.black;
+    static const secondaryContainer = Color(0xFFFF6B35);
+    static const surface = Color(0xFF1E1E1E);
+    static const onSurface = Color(0xFFE0E0E0);
+    static const background = Color(0xFF121212);
+    static const onBackground = Color(0xFFE0E0E0);
+    static const error = Color(0xFFEF9A9A);
+    static const onError = Color(0xFF6f1d1b);
+    static const textPrimary = Color(0xFFE0E0E0);
+    static const textSecondary = Color(0xFFBDBDBD);
+    static const textHint = Color(0xFF9E9E9E);
+    static const border = Color(0xFF424242);
+    static const divider = Color(0xFF424242);
+  }
+
+  // Common ThemeData
+  static final _commonTheme = ThemeData(
+    useMaterial3: true,
+    fontFamily: poppinsFont,
   );
 
   // Light Theme
   static ThemeData get lightTheme {
-    return ThemeData(
-      useMaterial3: true,
+    return _commonTheme.copyWith(
       brightness: Brightness.light,
-      
-      // Color Scheme
       colorScheme: const ColorScheme.light(
-        primary: primaryColor,
-        primaryContainer: primaryLightColor,
-        secondary: secondaryColor,
-        secondaryContainer: secondaryLightColor,
-        surface: surfaceColor,
-        background: backgroundColor,
-        error: errorColor,
-        onPrimary: Colors.white,
-        onSecondary: Colors.white,
-        onSurface: textPrimaryColor,
-        onBackground: textPrimaryColor,
-        onError: Colors.white,
+        primary: _LightColors.primary,
+        onPrimary: _LightColors.onPrimary,
+        primaryContainer: _LightColors.primaryContainer,
+        secondary: _LightColors.secondary,
+        onSecondary: _LightColors.onSecondary,
+        secondaryContainer: _LightColors.secondaryContainer,
+        surface: _LightColors.surface,
+        onSurface: _LightColors.onSurface,
+        background: _LightColors.background,
+        onBackground: _LightColors.onBackground,
+        error: _LightColors.error,
+        onError: _LightColors.onError,
       ),
-      
-      // App Bar Theme
       appBarTheme: const AppBarTheme(
-        backgroundColor: Colors.white,
-        foregroundColor: textPrimaryColor,
+        backgroundColor: _LightColors.surface,
+        foregroundColor: _LightColors.textPrimary,
         elevation: 0,
         centerTitle: true,
-        titleTextStyle: TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.w600,
-          color: textPrimaryColor,
-          fontFamily: 'Poppins',
-        ),
-        systemOverlayStyle: SystemUiOverlayStyle(
-          statusBarColor: Colors.transparent,
-          statusBarIconBrightness: Brightness.dark,
-        ),
+        systemOverlayStyle: SystemUiOverlayStyle.dark,
       ),
-      
-      // Card Theme
-      cardTheme: CardThemeData(
-        color: cardColor,
-        elevation: 2,
-        shadowColor: shadowColor,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-      ),
-      
-      // Elevated Button Theme
-      elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: primaryColor,
-          foregroundColor: Colors.white,
-          elevation: 2,
-          shadowColor: shadowColor,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-          textStyle: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            fontFamily: 'Poppins',
-          ),
-        ),
-      ),
-      
-      // Outlined Button Theme
-      outlinedButtonTheme: OutlinedButtonThemeData(
-        style: OutlinedButton.styleFrom(
-          foregroundColor: primaryColor,
-          side: const BorderSide(color: primaryColor, width: 1.5),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-          textStyle: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            fontFamily: 'Poppins',
-          ),
-        ),
-      ),
-      
-      // Text Button Theme
-      textButtonTheme: TextButtonThemeData(
-        style: TextButton.styleFrom(
-          foregroundColor: primaryColor,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          textStyle: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            fontFamily: 'Poppins',
-          ),
-        ),
-      ),
-      
-      // Input Decoration Theme
-      inputDecorationTheme: InputDecorationTheme(
-        filled: true,
-        fillColor: Colors.grey[50],
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: borderColor),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: borderColor),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: primaryColor, width: 2),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: errorColor),
-        ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-        hintStyle: const TextStyle(
-          color: textHintColor,
-          fontSize: 14,
-          fontFamily: 'Inter',
-        ),
-        labelStyle: const TextStyle(
-          color: textSecondaryColor,
-          fontSize: 14,
-          fontFamily: 'Inter',
-        ),
-      ),
-      
-      // Text Theme
-      textTheme: const TextTheme(
-        displayLarge: TextStyle(
-          fontSize: 32,
-          fontWeight: FontWeight.bold,
-          color: textPrimaryColor,
-          fontFamily: 'Poppins',
-        ),
-        displayMedium: TextStyle(
-          fontSize: 28,
-          fontWeight: FontWeight.bold,
-          color: textPrimaryColor,
-          fontFamily: 'Poppins',
-        ),
-        displaySmall: TextStyle(
-          fontSize: 24,
-          fontWeight: FontWeight.w600,
-          color: textPrimaryColor,
-          fontFamily: 'Poppins',
-        ),
-        headlineLarge: TextStyle(
-          fontSize: 22,
-          fontWeight: FontWeight.w600,
-          color: textPrimaryColor,
-          fontFamily: 'Poppins',
-        ),
-        headlineMedium: TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.w600,
-          color: textPrimaryColor,
-          fontFamily: 'Poppins',
-        ),
-        headlineSmall: TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.w600,
-          color: textPrimaryColor,
-          fontFamily: 'Poppins',
-        ),
-        titleLarge: TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w600,
-          color: textPrimaryColor,
-          fontFamily: 'Poppins',
-        ),
-        titleMedium: TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w500,
-          color: textPrimaryColor,
-          fontFamily: 'Poppins',
-        ),
-        titleSmall: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w500,
-          color: textPrimaryColor,
-          fontFamily: 'Poppins',
-        ),
-        bodyLarge: TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.normal,
-          color: textPrimaryColor,
-          fontFamily: 'Inter',
-        ),
-        bodyMedium: TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.normal,
-          color: textPrimaryColor,
-          fontFamily: 'Inter',
-        ),
-        bodySmall: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.normal,
-          color: textSecondaryColor,
-          fontFamily: 'Inter',
-        ),
-        labelLarge: TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w500,
-          color: textPrimaryColor,
-          fontFamily: 'Inter',
-        ),
-        labelMedium: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w500,
-          color: textSecondaryColor,
-          fontFamily: 'Inter',
-        ),
-        labelSmall: TextStyle(
-          fontSize: 10,
-          fontWeight: FontWeight.w500,
-          color: textSecondaryColor,
-          fontFamily: 'Inter',
-        ),
-      ),
-      
-      // Bottom Navigation Bar Theme
-      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-        backgroundColor: Colors.white,
-        selectedItemColor: primaryColor,
-        unselectedItemColor: textSecondaryColor,
-        type: BottomNavigationBarType.fixed,
-        elevation: 8,
-        selectedLabelStyle: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-          fontFamily: 'Inter',
-        ),
-        unselectedLabelStyle: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.normal,
-          fontFamily: 'Inter',
-        ),
-      ),
-      
-      // Divider Theme
-      dividerTheme: const DividerThemeData(
-        color: dividerColor,
-        thickness: 1,
-        space: 1,
-      ),
-      
-      // Icon Theme
-      iconTheme: const IconThemeData(
-        color: textSecondaryColor,
-        size: 24,
-      ),
-      
-      // Primary Icon Theme
-      primaryIconTheme: const IconThemeData(
-        color: Colors.white,
-        size: 24,
-      ),
+      inputDecorationTheme: _inputDecorationTheme(isDark: false),
+      textTheme: _textTheme(_LightColors.textPrimary, _LightColors.textSecondary),
+      // Add other specific light theme properties here
     );
   }
 
-  // Dark Theme (Future Implementation)
+  // Dark Theme
   static ThemeData get darkTheme {
-    return lightTheme.copyWith(
+    return _commonTheme.copyWith(
       brightness: Brightness.dark,
-      // Dark theme implementation will be added later
+      colorScheme: const ColorScheme.dark(
+        primary: _DarkColors.primary,
+        onPrimary: _DarkColors.onPrimary,
+        primaryContainer: _DarkColors.primaryContainer,
+        secondary: _DarkColors.secondary,
+        onSecondary: _DarkColors.onSecondary,
+        secondaryContainer: _DarkColors.secondaryContainer,
+        surface: _DarkColors.surface,
+        onSurface: _DarkColors.onSurface,
+        background: _DarkColors.background,
+        onBackground: _DarkColors.onBackground,
+        error: _DarkColors.error,
+        onError: _DarkColors.onError,
+      ),
+      scaffoldBackgroundColor: _DarkColors.background,
+      appBarTheme: const AppBarTheme(
+        backgroundColor: _DarkColors.background,
+        foregroundColor: _DarkColors.textPrimary,
+        elevation: 0,
+        centerTitle: true,
+        systemOverlayStyle: SystemUiOverlayStyle.light,
+      ),
+      inputDecorationTheme: _inputDecorationTheme(isDark: true),
+      textTheme: _textTheme(_DarkColors.textPrimary, _DarkColors.textSecondary),
+      // Add other specific dark theme properties here
+    );
+  }
+
+  static InputDecorationTheme _inputDecorationTheme({required bool isDark}) {
+    return InputDecorationTheme(
+      filled: true,
+      fillColor: isDark ? _DarkColors.surface : Colors.grey[50],
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: isDark ? _DarkColors.border : _LightColors.border),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: isDark ? _DarkColors.border : _LightColors.border),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: isDark ? _DarkColors.primary : _LightColors.primary, width: 2),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: isDark ? _DarkColors.error : _LightColors.error),
+      ),
+      hintStyle: TextStyle(color: isDark ? _DarkColors.textHint : _LightColors.textHint, fontFamily: interFont),
+      labelStyle: TextStyle(color: isDark ? _DarkColors.textSecondary : _LightColors.textSecondary, fontFamily: interFont),
+    );
+  }
+
+  static TextTheme _textTheme(Color primary, Color secondary) {
+    return TextTheme(
+      displayLarge: TextStyle(fontFamily: poppinsFont, fontWeight: FontWeight.bold, color: primary),
+      displayMedium: TextStyle(fontFamily: poppinsFont, fontWeight: FontWeight.bold, color: primary),
+      displaySmall: TextStyle(fontFamily: poppinsFont, fontWeight: FontWeight.w600, color: primary),
+      headlineMedium: TextStyle(fontFamily: poppinsFont, fontWeight: FontWeight.w600, color: primary),
+      headlineSmall: TextStyle(fontFamily: poppinsFont, fontWeight: FontWeight.w600, color: primary),
+      titleLarge: TextStyle(fontFamily: poppinsFont, fontWeight: FontWeight.w600, color: primary),
+      bodyLarge: TextStyle(fontFamily: interFont, color: primary),
+      bodyMedium: TextStyle(fontFamily: interFont, color: primary),
+      bodySmall: TextStyle(fontFamily: interFont, color: secondary),
+      labelLarge: TextStyle(fontFamily: interFont, fontWeight: FontWeight.w500, color: primary),
+      labelSmall: TextStyle(fontFamily: interFont, color: secondary),
     );
   }
 }
