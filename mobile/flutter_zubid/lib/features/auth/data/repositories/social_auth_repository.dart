@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:sign_in_with_apple/sign_in_with_apple.dart';
+// import 'package:sign_in_with_apple/sign_in_with_apple.dart';  // Temporarily disabled
 
 import '../../../../core/network/api_result.dart';
 import '../../../../core/utils/logger.dart';
@@ -49,8 +49,13 @@ class SocialAuthRepository {
     }
   }
 
-  /// Sign in with Apple
+  /// Sign in with Apple - Temporarily disabled
   Future<ApiResult<AuthResponseModel>> signInWithApple() async {
+    // Temporarily disabled due to build issues
+    AppLogger.userAction('Apple sign-in attempted - currently disabled');
+    return ApiResult.failure('Apple sign-in temporarily disabled');
+
+    /*
     try {
       AppLogger.userAction('Apple sign-in attempted');
 
@@ -79,5 +84,6 @@ class SocialAuthRepository {
       AppLogger.error('Apple sign-in error', error: e, stackTrace: stackTrace);
       return ApiResult.failure('An unexpected error occurred during Apple sign-in');
     }
+    */
   }
 }

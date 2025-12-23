@@ -2,56 +2,52 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class ThemeConfig {
-  // Font Families
-  static const String poppinsFont = 'Poppins';
-  static const String interFont = 'Inter';
+  // Font Families - Using system fonts for now
+  static const String? poppinsFont = null; // Use system font
+  static const String? interFont = null; // Use system font
 
   // Light Theme Colors
-  static const _LightColors {
-    static const primary = Color(0xFF2E7D32);
-    static const onPrimary = Colors.white;
-    static const primaryContainer = Color(0xFF4CAF50);
-    static const secondary = Color(0xFFFF6B35);
-    static const onSecondary = Colors.white;
-    static const secondaryContainer = Color(0xFFFF8A65);
-    static const surface = Color(0xFFFFFFFF);
-    static const onSurface = Color(0xFF212121);
-    static const background = Color(0xFFFAFAFA);
-    static const onBackground = Color(0xFF212121);
-    static const error = Color(0xFFE53935);
-    static const onError = Colors.white;
-    static const textPrimary = Color(0xFF212121);
-    static const textSecondary = Color(0xFF757575);
-    static const textHint = Color(0xFFBDBDBD);
-    static const border = Color(0xFFE0E0E0);
-    static const divider = Color(0xFFEEEEEE);
-  }
+  static const _lightPrimary = Color(0xFF2E7D32);
+  static const _lightOnPrimary = Colors.white;
+  static const _lightPrimaryContainer = Color(0xFF4CAF50);
+  static const _lightSecondary = Color(0xFFFF6B35);
+  static const _lightOnSecondary = Colors.white;
+  static const _lightSecondaryContainer = Color(0xFFFF8A65);
+  static const _lightSurface = Color(0xFFFFFFFF);
+  static const _lightOnSurface = Color(0xFF212121);
+  static const _lightBackground = Color(0xFFFAFAFA);
+  static const _lightOnBackground = Color(0xFF212121);
+  static const _lightError = Color(0xFFE53935);
+  static const _lightOnError = Colors.white;
+  static const _lightTextPrimary = Color(0xFF212121);
+  static const _lightTextSecondary = Color(0xFF757575);
+  static const _lightTextHint = Color(0xFFBDBDBD);
+  static const _lightBorder = Color(0xFFE0E0E0);
+  static const _lightDivider = Color(0xFFEEEEEE);
 
   // Dark Theme Colors
-  static const _DarkColors {
-    static const primary = Color(0xFF4CAF50);
-    static const onPrimary = Colors.black;
-    static const primaryContainer = Color(0xFF2E7D32);
-    static const secondary = Color(0xFFFF8A65);
-    static const onSecondary = Colors.black;
-    static const secondaryContainer = Color(0xFFFF6B35);
-    static const surface = Color(0xFF1E1E1E);
-    static const onSurface = Color(0xFFE0E0E0);
-    static const background = Color(0xFF121212);
-    static const onBackground = Color(0xFFE0E0E0);
-    static const error = Color(0xFFEF9A9A);
-    static const onError = Color(0xFF6f1d1b);
-    static const textPrimary = Color(0xFFE0E0E0);
-    static const textSecondary = Color(0xFFBDBDBD);
-    static const textHint = Color(0xFF9E9E9E);
-    static const border = Color(0xFF424242);
-    static const divider = Color(0xFF424242);
-  }
+  static const _darkPrimary = Color(0xFF4CAF50);
+  static const _darkOnPrimary = Colors.black;
+  static const _darkPrimaryContainer = Color(0xFF2E7D32);
+  static const _darkSecondary = Color(0xFFFF8A65);
+  static const _darkOnSecondary = Colors.black;
+  static const _darkSecondaryContainer = Color(0xFFFF6B35);
+  static const _darkSurface = Color(0xFF1E1E1E);
+  static const _darkOnSurface = Color(0xFFE0E0E0);
+  static const _darkBackground = Color(0xFF121212);
+  static const _darkOnBackground = Color(0xFFE0E0E0);
+  static const _darkError = Color(0xFFEF9A9A);
+  static const _darkOnError = Color(0xFF6f1d1b);
+  static const _darkTextPrimary = Color(0xFFE0E0E0);
+  static const _darkTextSecondary = Color(0xFFBDBDBD);
+  static const _darkTextHint = Color(0xFF9E9E9E);
+  static const _darkBorder = Color(0xFF424242);
+  static const _darkDivider = Color(0xFF424242);
 
   // Common ThemeData
   static final _commonTheme = ThemeData(
     useMaterial3: true,
-    fontFamily: poppinsFont,
+    // fontFamily: poppinsFont, // Disabled to use system font
   );
 
   // Light Theme
@@ -59,28 +55,28 @@ class ThemeConfig {
     return _commonTheme.copyWith(
       brightness: Brightness.light,
       colorScheme: const ColorScheme.light(
-        primary: _LightColors.primary,
-        onPrimary: _LightColors.onPrimary,
-        primaryContainer: _LightColors.primaryContainer,
-        secondary: _LightColors.secondary,
-        onSecondary: _LightColors.onSecondary,
-        secondaryContainer: _LightColors.secondaryContainer,
-        surface: _LightColors.surface,
-        onSurface: _LightColors.onSurface,
-        background: _LightColors.background,
-        onBackground: _LightColors.onBackground,
-        error: _LightColors.error,
-        onError: _LightColors.onError,
+        primary: _lightPrimary,
+        onPrimary: _lightOnPrimary,
+        primaryContainer: _lightPrimaryContainer,
+        secondary: _lightSecondary,
+        onSecondary: _lightOnSecondary,
+        secondaryContainer: _lightSecondaryContainer,
+        surface: _lightSurface,
+        onSurface: _lightOnSurface,
+        background: _lightBackground,
+        onBackground: _lightOnBackground,
+        error: _lightError,
+        onError: _lightOnError,
       ),
       appBarTheme: const AppBarTheme(
-        backgroundColor: _LightColors.surface,
-        foregroundColor: _LightColors.textPrimary,
+        backgroundColor: _lightSurface,
+        foregroundColor: _lightTextPrimary,
         elevation: 0,
         centerTitle: true,
         systemOverlayStyle: SystemUiOverlayStyle.dark,
       ),
       inputDecorationTheme: _inputDecorationTheme(isDark: false),
-      textTheme: _textTheme(_LightColors.textPrimary, _LightColors.textSecondary),
+      textTheme: _textTheme(_lightTextPrimary, _lightTextSecondary),
       // Add other specific light theme properties here
     );
   }
@@ -90,29 +86,29 @@ class ThemeConfig {
     return _commonTheme.copyWith(
       brightness: Brightness.dark,
       colorScheme: const ColorScheme.dark(
-        primary: _DarkColors.primary,
-        onPrimary: _DarkColors.onPrimary,
-        primaryContainer: _DarkColors.primaryContainer,
-        secondary: _DarkColors.secondary,
-        onSecondary: _DarkColors.onSecondary,
-        secondaryContainer: _DarkColors.secondaryContainer,
-        surface: _DarkColors.surface,
-        onSurface: _DarkColors.onSurface,
-        background: _DarkColors.background,
-        onBackground: _DarkColors.onBackground,
-        error: _DarkColors.error,
-        onError: _DarkColors.onError,
+        primary: _darkPrimary,
+        onPrimary: _darkOnPrimary,
+        primaryContainer: _darkPrimaryContainer,
+        secondary: _darkSecondary,
+        onSecondary: _darkOnSecondary,
+        secondaryContainer: _darkSecondaryContainer,
+        surface: _darkSurface,
+        onSurface: _darkOnSurface,
+        background: _darkBackground,
+        onBackground: _darkOnBackground,
+        error: _darkError,
+        onError: _darkOnError,
       ),
-      scaffoldBackgroundColor: _DarkColors.background,
+      scaffoldBackgroundColor: _darkBackground,
       appBarTheme: const AppBarTheme(
-        backgroundColor: _DarkColors.background,
-        foregroundColor: _DarkColors.textPrimary,
+        backgroundColor: _darkBackground,
+        foregroundColor: _darkTextPrimary,
         elevation: 0,
         centerTitle: true,
         systemOverlayStyle: SystemUiOverlayStyle.light,
       ),
       inputDecorationTheme: _inputDecorationTheme(isDark: true),
-      textTheme: _textTheme(_DarkColors.textPrimary, _DarkColors.textSecondary),
+      textTheme: _textTheme(_darkTextPrimary, _darkTextSecondary),
       // Add other specific dark theme properties here
     );
   }
@@ -120,41 +116,41 @@ class ThemeConfig {
   static InputDecorationTheme _inputDecorationTheme({required bool isDark}) {
     return InputDecorationTheme(
       filled: true,
-      fillColor: isDark ? _DarkColors.surface : Colors.grey[50],
+      fillColor: isDark ? _darkSurface : Colors.grey[50],
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: isDark ? _DarkColors.border : _LightColors.border),
+        borderSide: BorderSide(color: isDark ? _darkBorder : _lightBorder),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: isDark ? _DarkColors.border : _LightColors.border),
+        borderSide: BorderSide(color: isDark ? _darkBorder : _lightBorder),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: isDark ? _DarkColors.primary : _LightColors.primary, width: 2),
+        borderSide: BorderSide(color: isDark ? _darkPrimary : _lightPrimary, width: 2),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: isDark ? _DarkColors.error : _LightColors.error),
+        borderSide: BorderSide(color: isDark ? _darkError : _lightError),
       ),
-      hintStyle: TextStyle(color: isDark ? _DarkColors.textHint : _LightColors.textHint, fontFamily: interFont),
-      labelStyle: TextStyle(color: isDark ? _DarkColors.textSecondary : _LightColors.textSecondary, fontFamily: interFont),
+      hintStyle: TextStyle(color: isDark ? _darkTextHint : _lightTextHint),
+      labelStyle: TextStyle(color: isDark ? _darkTextSecondary : _lightTextSecondary),
     );
   }
 
   static TextTheme _textTheme(Color primary, Color secondary) {
     return TextTheme(
-      displayLarge: TextStyle(fontFamily: poppinsFont, fontWeight: FontWeight.bold, color: primary),
-      displayMedium: TextStyle(fontFamily: poppinsFont, fontWeight: FontWeight.bold, color: primary),
-      displaySmall: TextStyle(fontFamily: poppinsFont, fontWeight: FontWeight.w600, color: primary),
-      headlineMedium: TextStyle(fontFamily: poppinsFont, fontWeight: FontWeight.w600, color: primary),
-      headlineSmall: TextStyle(fontFamily: poppinsFont, fontWeight: FontWeight.w600, color: primary),
-      titleLarge: TextStyle(fontFamily: poppinsFont, fontWeight: FontWeight.w600, color: primary),
-      bodyLarge: TextStyle(fontFamily: interFont, color: primary),
-      bodyMedium: TextStyle(fontFamily: interFont, color: primary),
-      bodySmall: TextStyle(fontFamily: interFont, color: secondary),
-      labelLarge: TextStyle(fontFamily: interFont, fontWeight: FontWeight.w500, color: primary),
-      labelSmall: TextStyle(fontFamily: interFont, color: secondary),
+      displayLarge: TextStyle(fontWeight: FontWeight.bold, color: primary),
+      displayMedium: TextStyle(fontWeight: FontWeight.bold, color: primary),
+      displaySmall: TextStyle(fontWeight: FontWeight.w600, color: primary),
+      headlineMedium: TextStyle(fontWeight: FontWeight.w600, color: primary),
+      headlineSmall: TextStyle(fontWeight: FontWeight.w600, color: primary),
+      titleLarge: TextStyle(fontWeight: FontWeight.w600, color: primary),
+      bodyLarge: TextStyle(color: primary),
+      bodyMedium: TextStyle(color: primary),
+      bodySmall: TextStyle(color: secondary),
+      labelLarge: TextStyle(fontWeight: FontWeight.w500, color: primary),
+      labelSmall: TextStyle(color: secondary),
     );
   }
 }

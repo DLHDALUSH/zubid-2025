@@ -9,6 +9,7 @@ import 'core/config/environment.dart';
 import 'core/services/notification_service.dart';
 import 'core/services/storage_service.dart';
 import 'core/utils/logger.dart';
+import 'firebase_options.dart';
 import 'features/auctions/data/models/auction_model.dart';
 import 'features/auctions/data/models/bid_model.dart';
 import 'features/auctions/data/models/category_model.dart';
@@ -20,31 +21,60 @@ import 'features/payments/data/models/transaction_model.dart';
 import 'features/profile/data/models/profile_model.dart';
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Set system UI and orientation
+  _setSystemUI();
+
+  // Initialize basic services with error handling
+  await _initializeServices();
+
+  runApp(
+    const ProviderScope(
+      child: ZubidApp(),
+    ),
+  );
+}
+
+Future<void> _initializeServices() async {
   try {
-    WidgetsFlutterBinding.ensureInitialized();
-
-    // Set system UI and orientation
-    _setSystemUI();
-    
-    // Initialize environment and services
+    // Initialize environment
     EnvironmentConfig.printConfig();
-    await Firebase.initializeApp();
-    await StorageService.init();
-    await NotificationService.init();
 
-    // Initialize Hive and register adapters
-    await _initHive();
+    // Initialize Firebase with error handling
+    try {
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+    } catch (e) {
+      print('Firebase initialization failed: $e');
+      // Continue without Firebase for now
+    }
 
-    AppLogger.info('ZUBID Mobile App Starting...');
+    // Initialize storage
+    try {
+      await StorageService.init();
+    } catch (e) {
+      print('Storage initialization failed: $e');
+    }
 
-    runApp(
-      const ProviderScope(
-        child: ZubidApp(),
-      ),
-    );
-  } catch (error, stackTrace) {
-    AppLogger.error('Error during app initialization', error: error, stackTrace: stackTrace);
-    // Optionally, show a fallback UI
+    // Initialize notifications
+    try {
+      await NotificationService.init();
+    } catch (e) {
+      print('Notification service initialization failed: $e');
+    }
+
+    // Initialize Hive
+    try {
+      await _initHive();
+    } catch (e) {
+      print('Hive initialization failed: $e');
+    }
+
+    print('ZUBID Mobile App Starting...');
+  } catch (error) {
+    print('Service initialization error: $error');
   }
 }
 
@@ -64,15 +94,70 @@ void _setSystemUI() {
 }
 
 Future<void> _initHive() async {
-  await Hive.initFlutter();
-  Hive.registerAdapter(UserModelAdapter());
-  Hive.registerAdapter(AuctionModelAdapter());
-  Hive.registerAdapter(BidModelAdapter());
-  Hive.registerAdapter(CategoryModelAdapter());
-  Hive.registerAdapter(ProfileModelAdapter());
-  Hive.registerAdapter(OrderModelAdapter());
-  Hive.registerAdapter(ShippingAddressAdapter());
-  Hive.registerAdapter(BillingAddressAdapter());
-  Hive.registerAdapter(PaymentMethodModelAdapter());
-  Hive.registerAdapter(TransactionModelAdapter());
+  try {
+    await Hive.initFlutter();
+
+    // Register adapters with error handling
+    try {
+      Hive.registerAdapter(UserModelAdapter());
+    } catch (e) {
+      print('UserModelAdapter registration failed: $e');
+    }
+
+    try {
+      Hive.registerAdapter(AuctionModelAdapter());
+    } catch (e) {
+      print('AuctionModelAdapter registration failed: $e');
+    }
+
+    try {
+      Hive.registerAdapter(BidModelAdapter());
+    } catch (e) {
+      print('BidModelAdapter registration failed: $e');
+    }
+
+    try {
+      Hive.registerAdapter(CategoryModelAdapter());
+    } catch (e) {
+      print('CategoryModelAdapter registration failed: $e');
+    }
+
+    try {
+      Hive.registerAdapter(ProfileModelAdapter());
+    } catch (e) {
+      print('ProfileModelAdapter registration failed: $e');
+    }
+
+    try {
+      Hive.registerAdapter(OrderModelAdapter());
+    } catch (e) {
+      print('OrderModelAdapter registration failed: $e');
+    }
+
+    try {
+      Hive.registerAdapter(ShippingAddressAdapter());
+    } catch (e) {
+      print('ShippingAddressAdapter registration failed: $e');
+    }
+
+    try {
+      Hive.registerAdapter(BillingAddressAdapter());
+    } catch (e) {
+      print('BillingAddressAdapter registration failed: $e');
+    }
+
+    try {
+      Hive.registerAdapter(PaymentMethodModelAdapter());
+    } catch (e) {
+      print('PaymentMethodModelAdapter registration failed: $e');
+    }
+
+    try {
+      Hive.registerAdapter(TransactionModelAdapter());
+    } catch (e) {
+      print('TransactionModelAdapter registration failed: $e');
+    }
+  } catch (e) {
+    print('Hive initialization failed: $e');
+  }
 }

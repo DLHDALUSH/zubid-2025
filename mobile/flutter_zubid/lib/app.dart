@@ -11,26 +11,53 @@ class ZubidApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final router = ref.watch(appRouterProvider);
+    try {
+      final router = ref.watch(appRouterProvider);
 
-    return MaterialApp.router(
-      title: 'ZUBID - Auction Platform',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeConfig.lightTheme,
-      darkTheme: ThemeConfig.darkTheme,
-      themeMode: ThemeMode.system,
-      routerConfig: router,
-      localizationsDelegates: const [
-        AppLocalizations.delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
-      supportedLocales: const [
-        Locale('en', ''), // English
-        Locale('ar', ''), // Arabic
-        Locale('ku', ''), // Kurdish
-      ],
-    );
+      return MaterialApp.router(
+        title: 'ZUBID - Auction Platform',
+        debugShowCheckedModeBanner: false,
+        theme: ThemeConfig.lightTheme,
+        darkTheme: ThemeConfig.darkTheme,
+        themeMode: ThemeMode.system,
+        routerConfig: router,
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: const [
+          Locale('en', ''), // English
+          Locale('ar', ''), // Arabic
+          Locale('ku', ''), // Kurdish
+        ],
+      );
+    } catch (error) {
+      // Fallback UI if router or theme fails
+      return MaterialApp(
+        title: 'ZUBID - Auction Platform',
+        debugShowCheckedModeBanner: false,
+        home: Scaffold(
+          body: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.gavel, size: 64, color: Colors.green),
+                const SizedBox(height: 16),
+                const Text(
+                  'ZUBID',
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                const Text('Auction Platform'),
+                const SizedBox(height: 16),
+                Text('Loading error: $error'),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
   }
 }

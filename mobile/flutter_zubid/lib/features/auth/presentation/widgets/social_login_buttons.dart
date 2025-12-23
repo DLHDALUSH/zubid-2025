@@ -83,7 +83,7 @@ class _SocialLoginButton extends StatelessWidget {
       width: double.infinity,
       child: OutlinedButton.icon(
         onPressed: onPressed,
-        icon: Image.asset(icon, width: 20, height: 20),
+        icon: _buildIcon(icon),
         label: Text(text),
         style: OutlinedButton.styleFrom(
           padding: const EdgeInsets.symmetric(vertical: 16),
@@ -92,5 +92,40 @@ class _SocialLoginButton extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Widget _buildIcon(String iconPath) {
+    // Fallback to icons if assets are missing
+    if (iconPath.contains('google')) {
+      return Container(
+        width: 20,
+        height: 20,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(4),
+        ),
+        child: const Icon(
+          Icons.g_mobiledata,
+          size: 16,
+          color: Colors.blue,
+        ),
+      );
+    } else if (iconPath.contains('apple')) {
+      return const Icon(
+        Icons.apple,
+        size: 20,
+        color: Colors.black,
+      );
+    }
+
+    // Try to load the asset, fallback to generic icon
+    try {
+      return Image.asset(iconPath, width: 20, height: 20);
+    } catch (e) {
+      return const Icon(
+        Icons.login,
+        size: 20,
+      );
+    }
   }
 }

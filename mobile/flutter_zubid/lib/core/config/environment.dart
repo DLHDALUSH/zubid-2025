@@ -31,7 +31,7 @@ class EnvironmentConfig {
   static String get apiBaseUrl {
     switch (current) {
       case Environment.development:
-        return 'https://zubid-2025.onrender.com/api';
+        return 'https://zubid-2025.onrender.com/api'; // Use remote for now
       case Environment.staging:
         return 'https://zubid-staging.onrender.com/api';
       case Environment.production:
@@ -42,7 +42,7 @@ class EnvironmentConfig {
   static String get websocketUrl {
     switch (current) {
       case Environment.development:
-        return 'wss://zubid-2025.onrender.com';
+        return 'wss://zubid-2025.onrender.com'; // Use remote for now
       case Environment.staging:
         return 'wss://zubid-staging.onrender.com';
       case Environment.production:

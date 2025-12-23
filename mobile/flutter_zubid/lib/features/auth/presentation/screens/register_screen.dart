@@ -66,7 +66,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     }
 
     final request = RegisterRequestModel(
-      username: _usernameController.text.trim(),
       email: _emailController.text.trim(),
       password: _passwordController.text,
       firstName: _firstNameController.text.trim(),

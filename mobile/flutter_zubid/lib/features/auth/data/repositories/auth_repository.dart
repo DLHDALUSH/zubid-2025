@@ -215,7 +215,7 @@ class AuthRepository {
         data: request.toJson(),
       );
 
-      final authResponse = AuthResponseModel.fromJson(response..data);
+      final authResponse = AuthResponseModel.fromJson(response.data);
       AppLogger.auth('Email verification response', success: authResponse.success);
       
       return ApiResult.success(authResponse);
