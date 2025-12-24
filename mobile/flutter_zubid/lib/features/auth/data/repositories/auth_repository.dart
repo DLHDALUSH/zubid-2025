@@ -142,7 +142,7 @@ class AuthRepository {
       return ApiResult.success(authResponse);
     } on DioException catch (e) {
       AppLogger.auth('Reset password error');
-      return _handleDioError(e);
+      return await _handleDioError(e);
     } catch (e, stackTrace) {
       AppLogger.error('Unexpected reset password error', error: e, stackTrace: stackTrace);
       return ApiResult.failure('An unexpected error occurred');
@@ -165,7 +165,7 @@ class AuthRepository {
       return ApiResult.success(authResponse);
     } on DioException catch (e) {
       AppLogger.auth('Change password error');
-      return _handleDioError(e);
+      return await _handleDioError(e);
     } catch (e, stackTrace) {
       AppLogger.error('Unexpected change password error', error: e, stackTrace: stackTrace);
       return ApiResult.failure('An unexpected error occurred');
@@ -203,7 +203,7 @@ class AuthRepository {
       }
     } on DioException catch (e) {
       AppLogger.auth('Token refresh error');
-      return _handleDioError(e);
+      return await _handleDioError(e);
     } catch (e, stackTrace) {
       AppLogger.error('Unexpected token refresh error', error: e, stackTrace: stackTrace);
       return ApiResult.failure('An unexpected error occurred');
@@ -226,7 +226,7 @@ class AuthRepository {
       return ApiResult.success(authResponse);
     } on DioException catch (e) {
       AppLogger.auth('Email verification error');
-      return _handleDioError(e);
+      return await _handleDioError(e);
     } catch (e, stackTrace) {
       AppLogger.error('Unexpected email verification error', error: e, stackTrace: stackTrace);
       return ApiResult.failure('An unexpected error occurred');
@@ -249,7 +249,7 @@ class AuthRepository {
       return ApiResult.success(authResponse);
     } on DioException catch (e) {
       AppLogger.auth('Resend verification error');
-      return _handleDioError(e);
+      return await _handleDioError(e);
     } catch (e, stackTrace) {
       AppLogger.error('Unexpected resend verification error', error: e, stackTrace: stackTrace);
       return ApiResult.failure('An unexpected error occurred');
@@ -302,7 +302,7 @@ class AuthRepository {
       }
     } on DioException catch (e) {
       AppLogger.auth('Get current user error');
-      return _handleDioError(e);
+      return await _handleDioError(e);
     } catch (e, stackTrace) {
       AppLogger.error('Unexpected get current user error', error: e, stackTrace: stackTrace);
       return ApiResult.failure('An unexpected error occurred');

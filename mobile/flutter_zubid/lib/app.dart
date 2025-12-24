@@ -4,6 +4,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'core/config/theme_config.dart';
 import 'core/utils/app_router.dart';
+import 'core/widgets/connectivity_banner.dart';
 import 'l10n/app_localizations.dart';
 
 class ZubidApp extends ConsumerWidget {
@@ -32,6 +33,9 @@ class ZubidApp extends ConsumerWidget {
           Locale('ar', ''), // Arabic
           Locale('ku', ''), // Kurdish
         ],
+        builder: (context, child) {
+          return ConnectivityBanner(child: child ?? const SizedBox.shrink());
+        },
       );
     } catch (error) {
       // Fallback UI if router or theme fails

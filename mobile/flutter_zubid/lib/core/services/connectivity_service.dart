@@ -25,9 +25,9 @@ enum ConnectivityStatus {
 class ConnectivityService {
   final Connectivity _connectivity = Connectivity();
   final InternetConnectionChecker _internetChecker = InternetConnectionChecker();
-  
+
   late final StreamController<ConnectivityStatus> _statusController;
-  StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
+  StreamSubscription<ConnectivityResult>? _connectivitySubscription;
   Timer? _checkTimer;
 
   ConnectivityService() {
@@ -51,18 +51,18 @@ class ConnectivityService {
     _checkConnectivity();
   }
 
-  void _onConnectivityChanged(List<ConnectivityResult> results) {
-    AppLogger.info('Connectivity changed: $results');
-    
+  void _onConnectivityChanged(ConnectivityResult result) {
+    AppLogger.info('Connectivity changed: $result');
+
     // Cancel any existing timer
     _checkTimer?.cancel();
-    
+
     // If no connectivity, immediately report disconnected
-    if (results.contains(ConnectivityResult.none)) {
+    if (result == ConnectivityResult.none) {
       _statusController.add(ConnectivityStatus.disconnected);
       return;
     }
-    
+
     // If we have some form of connectivity, check internet access
     _statusController.add(ConnectivityStatus.checking);
     _checkTimer = Timer(const Duration(seconds: 1), _checkInternetAccess);
@@ -71,8 +71,8 @@ class ConnectivityService {
   Future<void> _checkConnectivity() async {
     try {
       _statusController.add(ConnectivityStatus.checking);
-      final results = await _connectivity.checkConnectivity();
-      _onConnectivityChanged(results);
+      final result = await _connectivity.checkConnectivity();
+      _onConnectivityChanged(result);
     } catch (e) {
       AppLogger.error('Failed to check connectivity', error: e);
       _statusController.add(ConnectivityStatus.disconnected);
@@ -109,11 +109,11 @@ class ConnectivityService {
 
   Future<bool> isConnected() async {
     try {
-      final results = await _connectivity.checkConnectivity();
-      if (results.contains(ConnectivityResult.none)) {
+      final result = await _connectivity.checkConnectivity();
+      if (result == ConnectivityResult.none) {
         return false;
       }
-      
+
       return await _internetChecker.hasConnection;
     } catch (e) {
       AppLogger.error('Error checking connection status', error: e);
