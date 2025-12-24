@@ -34,11 +34,15 @@ class AuthRepository {
   Future<ApiResult<AuthResponseModel>> login(LoginRequestModel request) async {
     try {
       AppLogger.auth('Attempting login', userId: request.username);
+      AppLogger.debug('Login request data: ${request.toJson()}');
 
       final response = await _apiClient.post(
         '/login',
         data: request.toJson(),
       );
+
+      AppLogger.debug('Login response status: ${response.statusCode}');
+      AppLogger.debug('Login response data: ${response.data}');
 
       final authResponse = AuthResponseModel.fromJson(response.data);
 
@@ -65,11 +69,12 @@ class AuthRepository {
         return ApiResult.failure(authResponse.message);
       }
     } on DioException catch (e) {
-      AppLogger.auth('Login error', userId: request.username, success: false);
+      AppLogger.auth('Login DioException', userId: request.username, success: false);
+      AppLogger.error('DioException details: type=${e.type}, message=${e.message}, statusCode=${e.response?.statusCode}, data=${e.response?.data}');
       return await _handleDioError(e);
     } catch (e, stackTrace) {
-      AppLogger.error('Unexpected login error', error: e, stackTrace: stackTrace);
-      return ApiResult.failure('An unexpected error occurred during login');
+      AppLogger.error('Unexpected login error: $e', error: e, stackTrace: stackTrace);
+      return ApiResult.failure('An unexpected error occurred during login: $e');
     }
   }
 
@@ -77,37 +82,47 @@ class AuthRepository {
   Future<ApiResult<AuthResponseModel>> register(RegisterRequestModel request) async {
     try {
       AppLogger.auth('Attempting registration', userId: request.email);
-      
+      AppLogger.debug('Registration request data: ${request.toJson()}');
+
       final response = await _apiClient.post(
         '/register',
         data: request.toJson(),
       );
 
+      AppLogger.debug('Registration response status: ${response.statusCode}');
+      AppLogger.debug('Registration response data: ${response.data}');
+
       final authResponse = AuthResponseModel.fromJson(response.data);
-      
+
       if (authResponse.success) {
         AppLogger.auth('Registration successful', userId: request.email, success: true);
-        
-        // If auto-login after registration
-        if (authResponse.token != null && authResponse.user != null) {
-          await StorageService.saveAuthToken(authResponse.token!);
+
+        // If auto-login after registration (backend may auto-login)
+        if (authResponse.user != null) {
+          if (authResponse.token != null) {
+            await StorageService.saveAuthToken(authResponse.token!);
+          } else {
+            // Session-based auth
+            await StorageService.saveAuthToken('session_auth');
+          }
           if (authResponse.refreshToken != null) {
             await StorageService.saveRefreshToken(authResponse.refreshToken!);
           }
           await StorageService.saveUserData(authResponse.user!);
         }
-        
+
         return ApiResult.success(authResponse);
       } else {
         AppLogger.auth('Registration failed', userId: request.email, success: false);
         return ApiResult.failure(authResponse.message);
       }
     } on DioException catch (e) {
-      AppLogger.auth('Registration error', userId: request.email, success: false);
+      AppLogger.auth('Registration DioException', userId: request.email, success: false);
+      AppLogger.error('DioException details: type=${e.type}, message=${e.message}, statusCode=${e.response?.statusCode}, data=${e.response?.data}');
       return await _handleDioError(e);
     } catch (e, stackTrace) {
-      AppLogger.error('Unexpected registration error', error: e, stackTrace: stackTrace);
-      return ApiResult.failure('An unexpected error occurred during registration');
+      AppLogger.error('Unexpected registration error: $e', error: e, stackTrace: stackTrace);
+      return ApiResult.failure('An unexpected error occurred during registration: $e');
     }
   }
 
@@ -333,7 +348,8 @@ class AuthRepository {
         return ApiResult.failure('Connection timeout. Please check your internet connection.');
 
       case DioExceptionType.badResponse:
-        final message = e.response?.data?['message'] ?? 'A server error occurred.';
+        // Backend returns 'error' for errors, 'message' for success messages
+        final message = e.response?.data?['error'] ?? e.response?.data?['message'] ?? 'A server error occurred.';
         final statusCode = e.response?.statusCode;
 
         if (statusCode == 401) {

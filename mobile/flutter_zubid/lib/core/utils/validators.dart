@@ -39,7 +39,7 @@ class Validators {
     return null;
   }
 
-  /// Validator for password fields
+  /// Validator for password fields - matches backend requirements
   static String? password(String? value, {int minLength = 8}) {
     final emptyCheck = notEmpty(value, message: 'Please enter a password');
     if (emptyCheck != null) return emptyCheck;
@@ -47,16 +47,19 @@ class Validators {
     if (value!.length < minLength) {
       return 'Password must be at least $minLength characters long';
     }
-    // Uncomment the following lines to enforce more complex password requirements
-    // if (!RegExp(r'^(?=.*[a-z])').hasMatch(value)) {
-    //   return 'Password must contain at least one lowercase letter';
-    // }
-    // if (!RegExp(r'^(?=.*[A-Z])').hasMatch(value)) {
-    //   return 'Password must contain at least one uppercase letter';
-    // }
-    // if (!RegExp(r'^(?=.*\d)').hasMatch(value)) {
-    //   return 'Password must contain at least one number';
-    // }
+    // Backend requires: lowercase, uppercase, digit, special character
+    if (!RegExp(r'[a-z]').hasMatch(value)) {
+      return 'Password must contain at least one lowercase letter';
+    }
+    if (!RegExp(r'[A-Z]').hasMatch(value)) {
+      return 'Password must contain at least one uppercase letter';
+    }
+    if (!RegExp(r'[0-9]').hasMatch(value)) {
+      return 'Password must contain at least one number';
+    }
+    if (!RegExp(r'[!@#$%^&*()_+\-=\[\]{}|;:,.<>?]').hasMatch(value)) {
+      return 'Password must contain at least one special character';
+    }
     return null;
   }
 
@@ -67,6 +70,21 @@ class Validators {
 
     if (value != password) {
       return 'Passwords do not match';
+    }
+    return null;
+  }
+
+  /// Validator for phone number fields
+  static String? phone(String? value) {
+    final emptyCheck = notEmpty(value, message: 'Please enter a phone number');
+    if (emptyCheck != null) return emptyCheck;
+
+    // Remove spaces and dashes for validation
+    final cleaned = value!.replaceAll(RegExp(r'[\s\-\(\)]'), '');
+
+    // Check if it starts with + or is all digits
+    if (!RegExp(r'^\+?[0-9]{7,15}$').hasMatch(cleaned)) {
+      return 'Please enter a valid phone number';
     }
     return null;
   }

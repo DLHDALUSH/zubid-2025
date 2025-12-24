@@ -9,13 +9,15 @@ part of 'register_request_model.dart';
 RegisterRequestModel _$RegisterRequestModelFromJson(
         Map<String, dynamic> json) =>
     RegisterRequestModel(
-      firstName: json['firstName'] as String,
-      lastName: json['lastName'] as String,
+      username: json['username'] as String,
       email: json['email'] as String,
       password: json['password'] as String,
-      phoneNumber: json['phoneNumber'] as String,
-      idNumber: json['idNumber'] as String?,
-      address: json['address'] as String?,
+      phoneNumber: json['phone'] as String,
+      idNumber: json['id_number'] as String,
+      birthDate: json['birth_date'] as String,
+      address: json['address'] as String,
+      firstName: json['firstName'] as String?,
+      lastName: json['lastName'] as String?,
       city: json['city'] as String?,
       country: json['country'] as String?,
       acceptTerms: json['acceptTerms'] as bool? ?? false,
@@ -24,13 +26,15 @@ RegisterRequestModel _$RegisterRequestModelFromJson(
 Map<String, dynamic> _$RegisterRequestModelToJson(
         RegisterRequestModel instance) =>
     <String, dynamic>{
-      'firstName': instance.firstName,
-      'lastName': instance.lastName,
+      'username': instance.username,
       'email': instance.email,
       'password': instance.password,
-      'phoneNumber': instance.phoneNumber,
-      'idNumber': instance.idNumber,
+      'phone': instance.phoneNumber,
+      'id_number': instance.idNumber,
+      'birth_date': instance.birthDate,
       'address': instance.address,
+      'firstName': instance.firstName,
+      'lastName': instance.lastName,
       'city': instance.city,
       'country': instance.country,
       'acceptTerms': instance.acceptTerms,

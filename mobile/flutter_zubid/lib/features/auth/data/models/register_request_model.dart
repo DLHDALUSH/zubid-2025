@@ -4,25 +4,32 @@ part 'register_request_model.g.dart';
 
 @JsonSerializable()
 class RegisterRequestModel {
-  final String firstName;
-  final String lastName;
+  final String username;
   final String email;
   final String password;
+  @JsonKey(name: 'phone')
   final String phoneNumber;
-  final String? idNumber;
-  final String? address;
+  @JsonKey(name: 'id_number')
+  final String idNumber;
+  @JsonKey(name: 'birth_date')
+  final String birthDate;
+  final String address;
+  final String? firstName;
+  final String? lastName;
   final String? city;
   final String? country;
   final bool acceptTerms;
 
   const RegisterRequestModel({
-    required this.firstName,
-    required this.lastName,
+    required this.username,
     required this.email,
     required this.password,
     required this.phoneNumber,
-    this.idNumber,
-    this.address,
+    required this.idNumber,
+    required this.birthDate,
+    required this.address,
+    this.firstName,
+    this.lastName,
     this.city,
     this.country,
     this.acceptTerms = false,
