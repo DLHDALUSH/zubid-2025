@@ -31,9 +31,9 @@ class EnvironmentConfig {
   static String get apiBaseUrl {
     switch (current) {
       case Environment.development:
-        return 'https://zubid-2025.onrender.com/api'; // Use remote for now
+        return 'https://zubidauction.duckdns.org/api'; // Use production server
       case Environment.staging:
-        return 'https://zubid-staging.onrender.com/api';
+        return 'https://zubidauction.duckdns.org/api';
       case Environment.production:
         return 'https://zubidauction.duckdns.org/api';
     }
@@ -42,9 +42,9 @@ class EnvironmentConfig {
   static String get websocketUrl {
     switch (current) {
       case Environment.development:
-        return 'wss://zubid-2025.onrender.com'; // Use remote for now
+        return 'wss://zubidauction.duckdns.org'; // Use production server
       case Environment.staging:
-        return 'wss://zubid-staging.onrender.com';
+        return 'wss://zubidauction.duckdns.org';
       case Environment.production:
         return 'wss://zubidauction.duckdns.org';
     }

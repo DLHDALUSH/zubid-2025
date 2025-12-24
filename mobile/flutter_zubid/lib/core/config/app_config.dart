@@ -12,21 +12,15 @@ class AppConfig {
   
   // API Configuration
   static String get baseUrl {
-    if (isProduction) {
-      return 'https://zubidauction.duckdns.org/api';
-    } else {
-      return 'https://zubid-2025.onrender.com/api';
-    }
+    // Use production server for all environments
+    return 'https://zubidauction.duckdns.org/api';
   }
 
   static String get apiUrl => baseUrl;
-  
+
   static String get websocketUrl {
-    if (isProduction) {
-      return 'wss://zubidauction.duckdns.org';
-    } else {
-      return 'wss://zubid-2025.onrender.com';
-    }
+    // Use production server for all environments
+    return 'wss://zubidauction.duckdns.org';
   }
   
   // Timeouts

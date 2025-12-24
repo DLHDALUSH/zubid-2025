@@ -215,8 +215,148 @@ class AuctionModel extends HiveObject {
     this.hasSold,
   });
 
-  factory AuctionModel.fromJson(Map<String, dynamic> json) => _$AuctionModelFromJson(json);
+  factory AuctionModel.fromJson(Map<String, dynamic> json) {
+    // Handle the API's mixed field naming and type inconsistencies
+    return AuctionModel(
+      id: _parseId(json['id']),
+      title: json['title'] ?? json['item_name'] ?? '',
+      description: json['description'] ?? '',
+      startingPrice: _parseDouble(json['starting_price'] ?? json['startingPrice'] ?? json['starting_bid']),
+      currentPrice: _parseDouble(json['current_price'] ?? json['currentPrice'] ?? json['current_bid']),
+      buyNowPrice: _parseDoubleNullable(json['buy_now_price'] ?? json['buyNowPrice']),
+      reservePrice: _parseDoubleNullable(json['reserve_price'] ?? json['reservePrice']),
+      startTime: _parseDateTime(json['start_time'] ?? json['startTime']) ?? DateTime.now(),
+      endTime: _parseDateTime(json['end_time'] ?? json['endTime']) ?? DateTime.now().add(Duration(days: 7)),
+      status: json['status'] ?? 'active',
+      categoryId: _parseId(json['category_id'] ?? json['categoryId']),
+      categoryName: json['category_name'] ?? json['categoryName'] ?? '',
+      sellerId: _parseId(json['seller_id'] ?? json['sellerId']),
+      sellerUsername: json['seller_username'] ?? json['sellerUsername'] ?? json['seller_name'] ?? '',
+      sellerRating: _parseDoubleNullable(json['seller_rating'] ?? json['sellerRating']),
+      imageUrls: _parseImageUrls(json),
+      thumbnailUrl: json['thumbnail_url'] ?? json['thumbnailUrl'] ?? json['imageUrl'] ?? json['image_url'] ?? json['featured_image_url'],
+      bidCount: _parseInt(json['bid_count'] ?? json['bidCount'] ?? 0),
+      viewCount: _parseInt(json['view_count'] ?? json['viewCount'] ?? 0),
+      watchCount: _parseInt(json['watch_count'] ?? json['watchCount'] ?? 0),
+      isFeatured: _parseBool(json['is_featured'] ?? json['isFeatured'] ?? json['featured']),
+      isWatched: _parseBool(json['is_watched'] ?? json['isWatched'] ?? json['isWishlisted']),
+      shippingCost: _parseDoubleNullable(json['shipping_cost'] ?? json['shippingCost']),
+      shippingInfo: json['shipping_info'] ?? json['shippingInfo'],
+      condition: json['condition'] ?? json['item_condition'],
+      location: json['location'],
+      createdAt: _parseDateTime(json['created_at'] ?? json['createdAt']) ?? DateTime.now(),
+      updatedAt: _parseDateTime(json['updated_at'] ?? json['updatedAt']) ?? DateTime.now(),
+      sellerAvatar: json['seller_avatar'] ?? json['sellerAvatar'],
+      sellerVerified: _parseBoolNullable(json['seller_verified'] ?? json['sellerVerified']),
+      shippingMethod: json['shipping_method'] ?? json['shippingMethod'],
+      estimatedDelivery: json['estimated_delivery'] ?? json['estimatedDelivery'],
+      shipsFrom: json['ships_from'] ?? json['shipsFrom'],
+      shipsTo: json['ships_to'] ?? json['shipsTo'],
+      handlingTime: json['handling_time'] ?? json['handlingTime'],
+      returnPolicy: json['return_policy'] ?? json['returnPolicy'],
+      shippingNotes: json['shipping_notes'] ?? json['shippingNotes'],
+      images: _parseImageUrlsNullable(json),
+      minimumBid: _parseDoubleNullable(json['minimum_bid'] ?? json['minimumBid']),
+      currentBid: _parseDoubleNullable(json['current_bid'] ?? json['currentBid']),
+      hasSold: _parseBoolNullable(json['has_sold'] ?? json['hasSold']),
+    );
+  }
+
   Map<String, dynamic> toJson() => _$AuctionModelToJson(this);
+
+  // Helper methods for parsing API response
+  static int _parseId(dynamic value) {
+    if (value == null) return 0;
+    if (value is int) return value;
+    if (value is String) return int.tryParse(value) ?? 0;
+    if (value is double) return value.toInt();
+    return 0;
+  }
+
+  static int _parseInt(dynamic value) {
+    if (value == null) return 0;
+    if (value is int) return value;
+    if (value is String) return int.tryParse(value) ?? 0;
+    if (value is double) return value.toInt();
+    return 0;
+  }
+
+  static double _parseDouble(dynamic value) {
+    if (value == null) return 0.0;
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    if (value is String) return double.tryParse(value) ?? 0.0;
+    return 0.0;
+  }
+
+  static double? _parseDoubleNullable(dynamic value) {
+    if (value == null) return null;
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    if (value is String) return double.tryParse(value);
+    return null;
+  }
+
+  static bool _parseBool(dynamic value) {
+    if (value == null) return false;
+    if (value is bool) return value;
+    if (value is String) return value.toLowerCase() == 'true' || value == '1';
+    if (value is int) return value == 1;
+    return false;
+  }
+
+  static bool? _parseBoolNullable(dynamic value) {
+    if (value == null) return null;
+    if (value is bool) return value;
+    if (value is String) return value.toLowerCase() == 'true' || value == '1';
+    if (value is int) return value == 1;
+    return null;
+  }
+
+  static DateTime? _parseDateTime(dynamic value) {
+    if (value == null) return null;
+    if (value is String) {
+      try {
+        return DateTime.parse(value);
+      } catch (e) {
+        return null;
+      }
+    }
+    if (value is int) {
+      // Handle timestamp in milliseconds
+      return DateTime.fromMillisecondsSinceEpoch(value);
+    }
+    return null;
+  }
+
+  static List<String> _parseImageUrls(Map<String, dynamic> json) {
+    // Try multiple possible field names for image URLs
+    final imageUrls = <String>[];
+
+    // Check for image_urls array
+    if (json['image_urls'] is List) {
+      imageUrls.addAll((json['image_urls'] as List).map((e) => e.toString()));
+    } else if (json['imageUrls'] is List) {
+      imageUrls.addAll((json['imageUrls'] as List).map((e) => e.toString()));
+    } else if (json['images'] is List) {
+      imageUrls.addAll((json['images'] as List).map((e) => e.toString()));
+    }
+
+    // If no array found, check for single image fields
+    if (imageUrls.isEmpty) {
+      final singleImage = json['imageUrl'] ?? json['image_url'] ?? json['featured_image_url'];
+      if (singleImage != null) {
+        imageUrls.add(singleImage.toString());
+      }
+    }
+
+    return imageUrls;
+  }
+
+  static List<String>? _parseImageUrlsNullable(Map<String, dynamic> json) {
+    final urls = _parseImageUrls(json);
+    return urls.isEmpty ? null : urls;
+  }
 
   // Computed properties
   bool get isActive => status == 'active';

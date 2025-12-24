@@ -14,8 +14,8 @@ import '../widgets/social_login_buttons.dart';
 
 // Route constants for better maintainability
 const String _homeRoute = '/home';
-const String _forgotPasswordRoute = '/auth/forgot-password';
-const String _registerRoute = '/auth/register';
+const String _forgotPasswordRoute = '/forgot-password';
+const String _registerRoute = '/register';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});

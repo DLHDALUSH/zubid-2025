@@ -10,6 +10,10 @@ class AppRoutes {
   static const String register = '/register';
   static const String forgotPassword = '/forgot-password';
 
+  // Legal
+  static const String termsOfService = '/terms-of-service';
+  static const String privacyPolicy = '/privacy-policy';
+
   // Main App
   static const String home = '/home';
 

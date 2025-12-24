@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/services/storage_service.dart';
+import '../../../../core/services/connectivity_service.dart';
 import '../../../../core/utils/logger.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/network/api_result.dart';
@@ -17,13 +18,17 @@ import '../models/verify_email_request_model.dart';
 import '../models/resend_verification_request_model.dart';
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
-  return AuthRepository(ref.read(apiClientProvider));
+  return AuthRepository(
+    ref.read(apiClientProvider),
+    ref.read(connectivityServiceProvider),
+  );
 });
 
 class AuthRepository {
   final ApiClient _apiClient;
+  final ConnectivityService _connectivityService;
 
-  AuthRepository(this._apiClient);
+  AuthRepository(this._apiClient, this._connectivityService);
 
   /// Login user
   Future<ApiResult<AuthResponseModel>> login(LoginRequestModel request) async {
@@ -53,7 +58,7 @@ class AuthRepository {
       }
     } on DioException catch (e) {
       AppLogger.auth('Login error', userId: request.username, success: false);
-      return _handleDioError(e);
+      return await _handleDioError(e);
     } catch (e, stackTrace) {
       AppLogger.error('Unexpected login error', error: e, stackTrace: stackTrace);
       return ApiResult.failure('An unexpected error occurred during login');
@@ -91,7 +96,7 @@ class AuthRepository {
       }
     } on DioException catch (e) {
       AppLogger.auth('Registration error', userId: request.email, success: false);
-      return _handleDioError(e);
+      return await _handleDioError(e);
     } catch (e, stackTrace) {
       AppLogger.error('Unexpected registration error', error: e, stackTrace: stackTrace);
       return ApiResult.failure('An unexpected error occurred during registration');
@@ -114,7 +119,7 @@ class AuthRepository {
       return ApiResult.success(authResponse);
     } on DioException catch (e) {
       AppLogger.auth('Forgot password error');
-      return _handleDioError(e);
+      return await _handleDioError(e);
     } catch (e, stackTrace) {
       AppLogger.error('Unexpected forgot password error', error: e, stackTrace: stackTrace);
       return ApiResult.failure('An unexpected error occurred');
@@ -304,14 +309,14 @@ class AuthRepository {
     }
   }
 
-  /// Handle Dio errors
-  ApiResult<T> _handleDioError<T>(DioException e) {
+  /// Handle Dio errors with better connectivity diagnostics
+  Future<ApiResult<T>> _handleDioError<T>(DioException e) async {
     switch (e.type) {
       case DioExceptionType.connectionTimeout:
       case DioExceptionType.sendTimeout:
       case DioExceptionType.receiveTimeout:
         return ApiResult.failure('Connection timeout. Please check your internet connection.');
-      
+
       case DioExceptionType.badResponse:
         final message = e.response?.data?['message'] ?? 'A server error occurred.';
         final statusCode = e.response?.statusCode;
@@ -322,13 +327,25 @@ class AuthRepository {
           return ApiResult.failure('You do not have permission to perform this action.');
         }
         return ApiResult.failure(message);
-      
+
       case DioExceptionType.cancel:
         return ApiResult.failure('The request was cancelled.');
-      
+
       case DioExceptionType.connectionError:
-        return ApiResult.failure('No internet connection. Please check your network.');
-      
+        // Check if we have internet connectivity
+        final isConnected = await _connectivityService.isConnected();
+        if (!isConnected) {
+          return ApiResult.failure('No internet connection. Please check your network settings.');
+        }
+
+        // Check if we can reach the server specifically
+        final canReachServer = await _connectivityService.canReachServer('zubidauction.duckdns.org');
+        if (!canReachServer) {
+          return ApiResult.failure('Cannot reach server. Please try again later or check if the server is available.');
+        }
+
+        return ApiResult.failure('Connection error. Please try again.');
+
       default:
         return ApiResult.failure('An unexpected error occurred. Please try again later.');
     }

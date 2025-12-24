@@ -23,6 +23,8 @@ import '../../features/payments/presentation/screens/transaction_history_screen.
 import '../../features/profile/presentation/screens/edit_profile_screen.dart';
 import '../../features/profile/presentation/screens/profile_screen.dart';
 import '../../features/splash/presentation/screens/splash_screen.dart';
+import '../../features/legal/presentation/screens/terms_of_service_screen.dart';
+import '../../features/legal/presentation/screens/privacy_policy_screen.dart';
 import '../widgets/error_screen.dart';
 import 'app_routes.dart';
 
@@ -120,6 +122,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.adminDashboard,
         builder: (context, state) => const AdminDashboardScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.termsOfService,
+        builder: (context, state) => const TermsOfServiceScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.privacyPolicy,
+        builder: (context, state) => const PrivacyPolicyScreen(),
       ),
     ],
     errorBuilder: (context, state) => ErrorScreen(

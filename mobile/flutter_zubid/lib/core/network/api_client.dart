@@ -82,6 +82,26 @@ class ApiClient {
             error.message ?? 'Unknown error',
           );
 
+          // Handle DNS/Connection errors with retry
+          if (error.type == DioExceptionType.connectionError ||
+              error.type == DioExceptionType.unknown ||
+              (error.message?.contains('Failed host lookup') ?? false)) {
+
+            AppLogger.warning('Network connectivity issue detected, attempting retry...');
+
+            // Wait a bit before retry
+            await Future.delayed(const Duration(seconds: 2));
+
+            try {
+              final response = await _dio.fetch(error.requestOptions);
+              handler.resolve(response);
+              return;
+            } catch (retryError) {
+              AppLogger.error('Retry failed', error: retryError);
+              // Continue with original error handling
+            }
+          }
+
           // Handle token refresh for 401 errors
           if (error.response?.statusCode == 401) {
             final refreshed = await _handleTokenRefresh();
@@ -92,7 +112,7 @@ class ApiClient {
               if (token != null) {
                 options.headers['Authorization'] = 'Bearer $token';
               }
-              
+
               try {
                 final response = await _dio.fetch(options);
                 handler.resolve(response);
@@ -102,7 +122,7 @@ class ApiClient {
               }
             }
           }
-          
+
           handler.next(error);
         },
       ),

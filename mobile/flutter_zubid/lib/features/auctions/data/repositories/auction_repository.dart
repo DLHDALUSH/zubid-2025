@@ -37,7 +37,7 @@ class AuctionRepository {
       }
 
       final response = await _apiClient.get(
-        '/api/auctions',
+        '/auctions',
         queryParameters: queryParams,
       );
 
@@ -66,7 +66,7 @@ class AuctionRepository {
     try {
       AppLogger.info('Fetching auction details for ID: $id');
 
-      final response = await _apiClient.get('/api/auctions/$id');
+      final response = await _apiClient.get('/auctions/$id');
 
       if (response.statusCode == 200) {
         final data = response.data as Map<String, dynamic>;
@@ -92,7 +92,7 @@ class AuctionRepository {
       AppLogger.info('Fetching featured auctions');
 
       final response = await _apiClient.get(
-        '/api/auctions/featured',
+        '/auctions/featured',
         queryParameters: {'limit': limit},
       );
 
@@ -124,7 +124,7 @@ class AuctionRepository {
       AppLogger.info('Fetching ending soon auctions');
 
       final response = await _apiClient.get(
-        '/api/auctions/ending-soon',
+        '/auctions/ending-soon',
         queryParameters: {'limit': limit},
       );
 
