@@ -15,7 +15,10 @@ class AuthProvider extends ChangeNotifier {
 
   Future<void> checkAuth() async {
     _isLoading = true;
-    notifyListeners();
+    // Use post frame callback to avoid notifyListeners during build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      notifyListeners();
+    });
 
     try {
       print('[AUTH] Checking authentication...');
@@ -39,7 +42,9 @@ class AuthProvider extends ChangeNotifier {
       _error = null;
     } finally {
       _isLoading = false;
-      notifyListeners();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        notifyListeners();
+      });
     }
   }
 

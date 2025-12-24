@@ -91,7 +91,12 @@ class _AuthWrapperState extends State<AuthWrapper> {
     } finally {
       if (mounted) {
         print('[AUTH_WRAPPER] Setting _isChecking = false');
-        setState(() => _isChecking = false);
+        // Use post frame callback to avoid setState during build
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            setState(() => _isChecking = false);
+          }
+        });
       }
     }
   }
