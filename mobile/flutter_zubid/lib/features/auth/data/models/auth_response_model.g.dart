@@ -1,0 +1,29 @@
+// GENERATED CODE - DO NOT MODIFY BY HAND
+
+part of 'auth_response_model.dart';
+
+// **************************************************************************
+// JsonSerializableGenerator
+// **************************************************************************
+
+AuthResponseModel _$AuthResponseModelFromJson(Map<String, dynamic> json) =>
+    AuthResponseModel(
+      success: json['success'] as bool,
+      message: json['message'] as String,
+      token: json['token'] as String?,
+      refreshToken: json['refreshToken'] as String?,
+      user: json['user'] == null
+          ? null
+          : UserModel.fromJson(json['user'] as Map<String, dynamic>),
+      errors: json['errors'] as Map<String, dynamic>?,
+    );
+
+Map<String, dynamic> _$AuthResponseModelToJson(AuthResponseModel instance) =>
+    <String, dynamic>{
+      'success': instance.success,
+      'message': instance.message,
+      'token': instance.token,
+      'refreshToken': instance.refreshToken,
+      'user': instance.user,
+      'errors': instance.errors,
+    };

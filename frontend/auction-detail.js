@@ -62,12 +62,12 @@ function dataUriToBlobUrl(dataUri) {
 // Helper function to convert image URLs
 function convertImageUrl(imageUrl) {
     if (!imageUrl) return SVG_PLACEHOLDER;
-    
+
     const urlString = String(imageUrl).trim();
     if (urlString === '' || urlString === 'null' || urlString === 'undefined') {
         return SVG_PLACEHOLDER;
     }
-    
+
     // Data URIs - convert to blob URL for better browser support
     if (urlString.startsWith('data:image/')) {
         const blobUrl = dataUriToBlobUrl(urlString);
@@ -77,14 +77,14 @@ function convertImageUrl(imageUrl) {
         // Fallback to data URI if conversion fails
         return urlString;
     }
-    
+
     // Absolute URLs - return as-is
     if (urlString.startsWith('http://') || urlString.startsWith('https://')) {
         return urlString;
     }
-    
+
     // Relative URLs - construct full URL
-    const baseUrl = (window.API_BASE_URL || 'http://localhost:5000/api').replace('/api', '');
+    const baseUrl = window.API_BASE || (window.location.hostname === 'localhost' ? 'http://localhost:5000' : window.location.origin);
     const relativeUrl = urlString.startsWith('/') ? urlString : '/' + urlString;
     return baseUrl + relativeUrl;
 }
@@ -213,8 +213,9 @@ async function loadAuctionDetail() {
         // Show error in loading indicator
         if (loadingIndicator) {
             const errorMsg = error.message || 'Failed to load auction details';
+            const safeErrorMsg = escapeHtml(errorMsg);
             loadingIndicator.innerHTML = `<div class="error-state">
-                <p><strong>Error:</strong> ${errorMsg}</p>
+                <p><strong>Error:</strong> ${safeErrorMsg}</p>
                 <p>Please check:</p>
                 <ul style="text-align: left; display: inline-block; margin: 1rem 0;">
                     <li>Is the backend server running on port 5000?</li>
@@ -305,23 +306,56 @@ function displayAuctionDetail(auction) {
     document.getElementById('bidCount').textContent = auction.bid_count || 0;
     
     // Set market price if available
+    console.log('Market Price from API:', auction.market_price);
+    console.log('Real Price from API:', auction.real_price);
+
     const marketPriceStat = document.getElementById('marketPriceStat');
     const marketPriceEl = document.getElementById('marketPrice');
-    if (auction.market_price) {
-        marketPriceEl.textContent = `$${auction.market_price.toFixed(2)}`;
-        marketPriceStat.style.display = 'block';
-    } else {
-        marketPriceStat.style.display = 'none';
+    if (marketPriceStat && marketPriceEl) {
+        if (auction.market_price && auction.market_price > 0) {
+            marketPriceEl.textContent = `$${parseFloat(auction.market_price).toFixed(2)}`;
+            marketPriceStat.style.display = 'block';
+            console.log('Market Price displayed:', auction.market_price);
+        } else {
+            marketPriceStat.style.display = 'none';
+        }
     }
-    
+
     // Set real price (Buy It Now) if available
     const realPriceStat = document.getElementById('realPriceStat');
     const realPriceEl = document.getElementById('realPrice');
-    if (auction.real_price) {
-        realPriceEl.textContent = `$${auction.real_price.toFixed(2)}`;
-        realPriceStat.style.display = 'block';
+    const buyNowSection = document.getElementById('buyNowSection');
+    const buyNowPriceEl = document.getElementById('buyNowPrice');
+
+    console.log('Real Price elements found:', { stat: !!realPriceStat, el: !!realPriceEl, buyNow: !!buyNowSection });
+    console.log('Real Price value:', auction.real_price, 'Type:', typeof auction.real_price);
+
+    const realPriceValue = parseFloat(auction.real_price) || 0;
+
+    if (realPriceStat && realPriceEl) {
+        if (realPriceValue > 0) {
+            realPriceEl.textContent = `$${realPriceValue.toFixed(2)}`;
+            realPriceStat.style.display = 'block';
+            realPriceStat.style.visibility = 'visible';
+            realPriceStat.style.opacity = '1';
+            console.log('✅ Real Price displayed:', realPriceValue);
+        } else {
+            realPriceStat.style.display = 'none';
+            console.log('❌ Real Price hidden - value is 0 or null');
+        }
     } else {
-        realPriceStat.style.display = 'none';
+        console.log('❌ Real Price elements NOT found in DOM');
+    }
+
+    // Show Buy Now section if real price exists and auction is active
+    if (buyNowSection && buyNowPriceEl && realPriceValue > 0 && auction.status === 'active') {
+        buyNowPriceEl.textContent = `$${realPriceValue.toFixed(2)}`;
+        buyNowSection.style.display = 'block';
+        // Store the real price for use in buyNow function
+        window.currentAuctionRealPrice = realPriceValue;
+        console.log('✅ Buy Now section displayed with price:', realPriceValue);
+    } else if (buyNowSection) {
+        buyNowSection.style.display = 'none';
     }
     
     // Set warning section
@@ -494,7 +528,7 @@ function convertToEmbedUrl(url) {
     // Check if it's a local upload (starts with /uploads/)
     if (url.startsWith('/uploads/')) {
         // Construct full URL for local videos
-        const baseUrl = (window.API_BASE_URL || 'http://localhost:5000/api').replace('/api', '');
+        const baseUrl = window.API_BASE || (window.location.hostname === 'localhost' ? 'http://localhost:5000' : window.location.origin);
         return baseUrl + url;
     }
     
@@ -533,7 +567,7 @@ function convertToEmbedUrl(url) {
             return url;
         }
         // If relative URL, construct full URL
-        const baseUrl = (window.API_BASE_URL || 'http://localhost:5000/api').replace('/api', '');
+        const baseUrl = window.API_BASE || (window.location.hostname === 'localhost' ? 'http://localhost:5000' : window.location.origin);
         return baseUrl + (url.startsWith('/') ? url : '/' + url);
     }
     
@@ -569,12 +603,14 @@ function showVideo() {
                 else if (embedUrl.includes('.m4v')) videoType = 'video/mp4';
             }
             
-            videoContainer.innerHTML = `
-                <video id="localVideoPlayer" controls style="width: 100%; height: 100%; border-radius: 20px; background: #000;" preload="metadata">
-                    <source src="${embedUrl}" type="${videoType}">
-                    Your browser does not support the video tag.
-                </video>
-            `;
+	            const safeEmbedUrl = escapeHtml(embedUrl || '');
+	            const safeVideoType = escapeHtml(videoType || 'video/mp4');
+	            videoContainer.innerHTML = `
+	                <video id="localVideoPlayer" controls style="width: 100%; height: 100%; border-radius: 20px; background: #000;" preload="metadata">
+	                    <source src="${safeEmbedUrl}" type="${safeVideoType}">
+	                    Your browser does not support the video tag.
+	                </video>
+	            `;
         } else {
             // For YouTube/Vimeo, use iframe
             videoPlayer.src = embedUrl;
@@ -638,6 +674,86 @@ function toggleAutoBid() {
     } else {
         autoBidAmount.style.display = 'none';
         autoBidInfo.style.display = 'none';
+    }
+}
+
+// Buy Now - Purchase at real price instantly
+async function buyNow() {
+    if (!currentUser) {
+        showToast('Please login to purchase this item', 'error');
+        showLogin();
+        return;
+    }
+
+    if (!auctionData || !window.currentAuctionRealPrice) {
+        showToast('Unable to process purchase. Please refresh the page.', 'error');
+        return;
+    }
+
+    const realPrice = window.currentAuctionRealPrice;
+
+    // Confirm purchase
+    const confirmed = confirm(`Are you sure you want to buy this item for $${realPrice.toFixed(2)}?\n\nThis will immediately end the auction and you will be the winner.`);
+
+    if (!confirmed) {
+        return;
+    }
+
+    try {
+        // Disable button during processing
+        const buyNowBtn = document.querySelector('.btn-buy-now');
+        if (buyNowBtn) {
+            buyNowBtn.disabled = true;
+            buyNowBtn.innerHTML = '<span class="btn-icon">⏳</span><span class="btn-text">Processing...</span>';
+        }
+
+        const response = await fetch(`${window.API_BASE_URL || (window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : window.location.origin + '/api')}/auctions/${auctionData.id}/buy-now`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            showToast('🎉 Congratulations! You purchased this item!', 'success');
+
+            // Hide buy now section
+            const buyNowSection = document.getElementById('buyNowSection');
+            if (buyNowSection) {
+                buyNowSection.style.display = 'none';
+            }
+
+            // Refresh auction details
+            await loadAuctionDetail();
+
+            // Show payment redirect option
+            setTimeout(() => {
+                if (confirm('Would you like to go to payments to complete your purchase?')) {
+                    window.location.href = 'payments.html';
+                }
+            }, 1000);
+        } else {
+            showToast(data.error || 'Failed to complete purchase', 'error');
+
+            // Re-enable button
+            if (buyNowBtn) {
+                buyNowBtn.disabled = false;
+                buyNowBtn.innerHTML = '<span class="btn-icon">💰</span><span class="btn-text">Buy Now</span>';
+            }
+        }
+    } catch (error) {
+        console.error('Error processing buy now:', error);
+        showToast('Error processing purchase. Please try again.', 'error');
+
+        // Re-enable button
+        const buyNowBtn = document.querySelector('.btn-buy-now');
+        if (buyNowBtn) {
+            buyNowBtn.disabled = false;
+            buyNowBtn.innerHTML = '<span class="btn-icon">💰</span><span class="btn-text">Buy Now</span>';
+        }
     }
 }
 
@@ -836,15 +952,16 @@ function updateCurrentWinner(winnerBid) {
     }
     
     if (winnerDisplay) {
-        const isCurrentUser = currentUser && winnerBid.user_id === currentUser.id;
-        winnerDisplay.innerHTML = `
-            <div class="winner-announcement ${isCurrentUser ? 'your-winner' : ''}">
-                <h3>🏆 Current Highest Bid</h3>
-                <p><strong>${winnerBid.username}</strong> is currently winning with <strong>$${winnerBid.amount.toFixed(2)}</strong></p>
-                ${isCurrentUser ? '<p class="congratulations">Congratulations! You are currently the highest bidder!</p>' : 
-                  '<p class="outbid-notice">Place a higher bid to become the winner!</p>'}
-            </div>
-        `;
+	        const isCurrentUser = currentUser && winnerBid.user_id === currentUser.id;
+	        const safeUsername = escapeHtml(winnerBid.username || 'Unknown');
+	        winnerDisplay.innerHTML = `
+	            <div class="winner-announcement ${isCurrentUser ? 'your-winner' : ''}">
+	                <h3>🏆 Current Highest Bid</h3>
+	                <p><strong>${safeUsername}</strong> is currently winning with <strong>$${winnerBid.amount.toFixed(2)}</strong></p>
+	                ${isCurrentUser ? '<p class="congratulations">Congratulations! You are currently the highest bidder!</p>' : 
+	                  '<p class="outbid-notice">Place a higher bid to become the winner!</p>'}
+	            </div>
+	        `;
     }
 }
 
@@ -974,17 +1091,18 @@ function startRealTimeUpdates() {
                     try {
                         const bids = await BidAPI.getByAuctionId(auctionId);
                         const winner = bids.find(b => b.user_id === updatedAuction.winner_id);
-                        if (winner) {
-                            const winnerInfo = document.getElementById('winnerInfo');
-                            if (winnerInfo) {
-                                const isCurrentUser = currentUser && winner.user_id === currentUser.id;
-                                winnerInfo.innerHTML = `
-                                    <div class="winner-announcement-final ${isCurrentUser ? 'your-winner' : ''}">
-                                        <h3>🎉 Auction Winner</h3>
-                                        <p><strong>${winner.username}</strong> won with a bid of <strong>$${winner.amount.toFixed(2)}</strong></p>
-                                        ${isCurrentUser ? '<p class="congratulations">Congratulations! You won this auction!</p>' : ''}
-                                    </div>
-                                `;
+	                        if (winner) {
+	                            const winnerInfo = document.getElementById('winnerInfo');
+	                            if (winnerInfo) {
+	                                const isCurrentUser = currentUser && winner.user_id === currentUser.id;
+	                                const safeUsername = escapeHtml(winner.username || 'Unknown');
+	                                winnerInfo.innerHTML = `
+	                                    <div class="winner-announcement-final ${isCurrentUser ? 'your-winner' : ''}">
+	                                        <h3>🎉 Auction Winner</h3>
+	                                        <p><strong>${safeUsername}</strong> won with a bid of <strong>$${winner.amount.toFixed(2)}</strong></p>
+	                                        ${isCurrentUser ? '<p class="congratulations">Congratulations! You won this auction!</p>' : ''}
+	                                    </div>
+	                                `;
                                 
                                 if (isCurrentUser) {
                                     showToast('🎉 Congratulations! You won this auction!', 'success');

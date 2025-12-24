@@ -208,7 +208,9 @@ function updateDatePickerDisplay(dateInput) {
 // Authentication functions
 async function checkAuth() {
     try {
+        console.log('[AUTH] Checking authentication...');
         const response = await UserAPI.getProfile();
+        console.log('[AUTH] Auth check successful, user:', response.username, 'role:', response.role);
         currentUser = response;
         updateNavAuth(true);
         if (document.getElementById('userName')) {
@@ -216,6 +218,7 @@ async function checkAuth() {
         }
         // Show admin link if user is admin
         if (response.role === 'admin') {
+            console.log('[AUTH] User is admin, showing admin link');
             const navMenu = document.getElementById('navMenu');
             if (navMenu) {
                 let adminLink = document.getElementById('adminLink');
@@ -225,10 +228,9 @@ async function checkAuth() {
                     adminLink.className = 'nav-link';
                     adminLink.id = 'adminLink';
                     adminLink.textContent = (window.i18n && window.i18n.t) ? window.i18n.t('messages.admin', 'Admin') : 'Admin';
-                    const navUser = document.getElementById('navUser');
-                    if (navUser && navUser.parentNode) {
-                        navMenu.insertBefore(adminLink, navUser);
-                    }
+                    // Safely insert admin link - append to navMenu instead of using insertBefore
+                    // to avoid errors when navUser is not a direct child of navMenu
+                    navMenu.appendChild(adminLink);
                 }
                 adminLink.style.display = 'block';
             }
@@ -238,15 +240,17 @@ async function checkAuth() {
                 adminLink.style.display = 'none';
             }
         }
-        
+
         // Load user-specific sections after authentication
         if (document.getElementById('myAuctionsSection')) {
             loadMyAuctions();
             loadMyBids();
         }
     } catch (error) {
+        console.error('[AUTH] Auth check failed:', error);
         // Silently handle authentication errors (401) - user is just not logged in
         if (error.status === 401 || error.message.includes('Authentication required')) {
+            console.log('[AUTH] User not authenticated (401)');
             updateNavAuth(false);
             currentUser = null;
         } else {
@@ -260,42 +264,107 @@ async function checkAuth() {
 }
 
 function updateNavAuth(isAuthenticated) {
-    const navAuth = document.getElementById('navAuth');
-    const navUser = document.getElementById('navUser');
-    const myBidsLink = document.getElementById('myBidsLink');
-    const paymentsLink = document.getElementById('paymentsLink');
-    const returnRequestsLink = document.getElementById('returnRequestsLink');
-    
-    if (navAuth && navUser) {
-        if (isAuthenticated) {
-            navAuth.style.display = 'none';
-            navUser.style.display = 'flex';
-            // Show My Bids link
-            if (myBidsLink) myBidsLink.style.display = 'inline-block';
-            // Show Payments link
-            if (paymentsLink) paymentsLink.style.display = 'inline-block';
-            // Show Return Requests link
-            if (returnRequestsLink) returnRequestsLink.style.display = 'inline-block';
+	const navAuth = document.getElementById('navAuth');
+	const navUser = document.getElementById('navUser');
+	const myBidsNavLink = document.getElementById('myBidsNavLink');
+	const notificationsWrapper = document.getElementById('notificationsWrapper');
+	const userName = document.getElementById('userName');
+	const userAvatar = document.getElementById('userAvatar');
+
+	// Mobile-only nav items (inside the "More" dropdown)
+	const mobileLoginItem = document.getElementById('mobileLoginItem');
+	const mobileSignUpItem = document.getElementById('mobileSignUpItem');
+	const mobileAuthDivider = document.getElementById('mobileAuthDivider');
+	const mobileProfileItem = document.getElementById('mobileProfileItem');
+	const mobilePaymentsItem = document.getElementById('mobilePaymentsItem');
+	const mobileReturnRequestsItem = document.getElementById('mobileReturnRequestsItem');
+	const mobileLogoutItem = document.getElementById('mobileLogoutItem');
+
+	    if (navAuth && navUser) {
+	        if (isAuthenticated) {
+	            navAuth.style.display = 'none';
+	            navUser.style.display = 'block';
+	
+	            // Show My Bids link in main nav
+	            if (myBidsNavLink) {
+	                myBidsNavLink.style.display = 'flex';
+	            }
+
+            // Show notifications
+            if (notificationsWrapper) {
+                notificationsWrapper.style.display = 'block';
+            }
+
+            // Mobile "More" menu: hide guest actions, show authenticated actions
+            if (mobileLoginItem) mobileLoginItem.style.display = 'none';
+            if (mobileSignUpItem) mobileSignUpItem.style.display = 'none';
+            if (mobileAuthDivider) mobileAuthDivider.style.display = 'none';
+
+            if (mobileProfileItem) mobileProfileItem.style.display = 'flex';
+            if (mobilePaymentsItem) mobilePaymentsItem.style.display = 'flex';
+            if (mobileReturnRequestsItem) mobileReturnRequestsItem.style.display = 'flex';
+            if (mobileLogoutItem) mobileLogoutItem.style.display = 'flex';
+
+            // Update user info
+            if (currentUser) {
+                if (userName) {
+                    userName.textContent = currentUser.username || 'User';
+                }
+                if (userAvatar) {
+                    if (currentUser.profile_photo) {
+                        userAvatar.src = currentUser.profile_photo;
+                        userAvatar.style.display = 'block';
+                    } else {
+                        // Use default avatar
+                        userAvatar.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="%23ff6600" stroke-width="2"%3E%3Cpath d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"%3E%3C/path%3E%3Ccircle cx="12" cy="7" r="4"%3E%3C/circle%3E%3C/svg%3E';
+                        userAvatar.style.display = 'block';
+                    }
+                }
+            }
         } else {
             navAuth.style.display = 'flex';
             navUser.style.display = 'none';
+
+            // Hide My Account dropdown
+            if (myAccountDropdown) {
+                myAccountDropdown.style.display = 'none';
+            }
+
             // Hide My Bids link
-            if (myBidsLink) myBidsLink.style.display = 'none';
+            if (myBidsNavLink) {
+                myBidsNavLink.style.display = 'none';
+            }
+
             // Hide Payments link
-            if (paymentsLink) paymentsLink.style.display = 'none';
-            // Hide Return Requests link
-            if (returnRequestsLink) returnRequestsLink.style.display = 'none';
+            if (paymentsNavLink) {
+                paymentsNavLink.style.display = 'none';
+            }
+
+            // Hide notifications
+            if (notificationsWrapper) {
+                notificationsWrapper.style.display = 'none';
+            }
+
+            // Mobile "More" menu: show guest actions, hide authenticated actions
+            if (mobileLoginItem) mobileLoginItem.style.display = 'block';
+            if (mobileSignUpItem) mobileSignUpItem.style.display = 'block';
+            if (mobileAuthDivider) mobileAuthDivider.style.display = 'block';
+
+            if (mobileProfileItem) mobileProfileItem.style.display = 'none';
+            if (mobilePaymentsItem) mobilePaymentsItem.style.display = 'none';
+            if (mobileReturnRequestsItem) mobileReturnRequestsItem.style.display = 'none';
+            if (mobileLogoutItem) mobileLogoutItem.style.display = 'none';
         }
     }
 }
 
 async function handleLogin(event) {
     event.preventDefault();
-    
-    // Check if backend is reachable first
-    try {
-        const API_BASE = (window.API_BASE_URL || 'http://localhost:5000/api').replace('/api', '');
-        const testResponse = await fetch(`${API_BASE}/api/test`);
+
+	    // Check if backend is reachable first
+	    try {
+	        const API_BASE = window.API_BASE || (typeof API_BASE_URL !== 'undefined' ? API_BASE_URL.replace('/api', '') : window.location.origin);
+        const testResponse = await fetch(`${API_BASE}/api/health`);
         if (!testResponse.ok) {
             throw new Error('Backend server is not responding correctly');
         }
@@ -304,51 +373,61 @@ async function handleLogin(event) {
         debugError('Backend connection error:', error);
         return;
     }
-    
-    const username = document.getElementById('loginUsername').value;
-    const password = document.getElementById('loginPassword').value;
-    
-    const submitBtn = event.target.querySelector('button[type="submit"]');
-    const originalText = submitBtn.textContent;
-    submitBtn.disabled = true;
-    submitBtn.textContent = (window.i18n && window.i18n.t) ? window.i18n.t('auth.loggingIn', 'Logging in...') : 'Logging in...';
-    
-    try {
-        const response = await UserAPI.login(username, password);
-        currentUser = response.user;
-        updateNavAuth(true);
-        if (document.getElementById('userName')) {
-            document.getElementById('userName').textContent = response.user.username;
-        }
-        closeModal('loginModal');
-        const successMsg = (window.i18n && window.i18n.t) ? window.i18n.t('auth.loginSuccess', 'Login successful!') : 'Login successful!';
-        showToast(successMsg, 'success');
-        
-        // Load user-specific sections immediately after login
-        if (document.getElementById('myAuctionsSection')) {
-            loadMyAuctions();
-            loadMyBids();
-        }
-        
-        // Reload page to update UI
-        setTimeout(() => window.location.reload(), 1000);
-    } catch (error) {
-        debugError('Login error:', error);
-        const errorMsg = (window.i18n && window.i18n.t) ? (error.message || window.i18n.t('auth.loginFailed', 'Login failed. Please check your credentials.')) : (error.message || 'Login failed. Please check your credentials.');
-        showToast(errorMsg, 'error');
-    } finally {
-        submitBtn.disabled = false;
-        submitBtn.textContent = originalText;
-    }
+	    
+	    const username = document.getElementById('loginUsername').value;
+	    const password = document.getElementById('loginPassword').value;
+	    
+	    const submitBtn = event.target.querySelector('button[type="submit"]');
+	    const originalText = submitBtn.textContent;
+	    submitBtn.disabled = true;
+	    submitBtn.textContent = (window.i18n && window.i18n.t) ? window.i18n.t('auth.loggingIn', 'Logging in...') : 'Logging in...';
+	    
+	    try {
+	        console.log('[LOGIN] Attempting login for user:', username);
+	        const response = await UserAPI.login(username, password);
+	        console.log('[LOGIN] Login successful, response:', response);
+	        currentUser = response.user;
+	        updateNavAuth(true);
+	        if (document.getElementById('userName')) {
+	            document.getElementById('userName').textContent = response.user.username;
+	        }
+	        closeModal('loginModal');
+	        const successMsg = (window.i18n && window.i18n.t) ? window.i18n.t('auth.loginSuccess', 'Login successful!') : 'Login successful!';
+	        showToast(successMsg, 'success');
+
+	        // Load user-specific sections immediately after login (home page)
+	        if (document.getElementById('myAuctionsSection')) {
+	            loadMyAuctions();
+	            loadMyBids();
+	        }
+
+	        // Re-run auth check to sync navbar and account menus without full reload
+	        try {
+	            console.log('[LOGIN] Running post-login auth check...');
+	            await checkAuth();
+	            console.log('[LOGIN] Post-login auth check successful');
+	        } catch (e) {
+	            console.error('[LOGIN] Post-login auth check failed:', e);
+	            debugError('Post-login auth check failed:', e);
+	        }
+	    } catch (error) {
+	        console.error('[LOGIN] Login error:', error);
+	        debugError('Login error:', error);
+	        const errorMsg = (window.i18n && window.i18n.t) ? (error.message || window.i18n.t('auth.loginFailed', 'Login failed. Please check your credentials.')) : (error.message || 'Login failed. Please check your credentials.');
+	        showToast(errorMsg, 'error');
+	    } finally {
+	        submitBtn.disabled = false;
+	        submitBtn.textContent = originalText;
+	    }
 }
 
 async function handleRegister(event) {
     event.preventDefault();
-    
-    // Check if backend is reachable first
-    try {
-        const API_BASE = (window.API_BASE_URL || 'http://localhost:5000/api').replace('/api', '');
-        const testResponse = await fetch(`${API_BASE}/api/test`);
+
+	    // Check if backend is reachable first
+	    try {
+	        const API_BASE = window.API_BASE || (typeof API_BASE_URL !== 'undefined' ? API_BASE_URL.replace('/api', '') : window.location.origin);
+        const testResponse = await fetch(`${API_BASE}/api/health`);
         if (!testResponse.ok) {
             throw new Error('Backend server is not responding correctly');
         }
@@ -357,7 +436,7 @@ async function handleRegister(event) {
         debugError('Backend connection error:', error);
         return;
     }
-    
+
     // Validate password before submission
     const password = document.getElementById('registerPassword').value;
     const passwordValidation = validatePassword(password);
@@ -380,11 +459,11 @@ async function handleRegister(event) {
     formData.append('address', document.getElementById('registerAddress').value);
     formData.append('phone', document.getElementById('registerPhone').value);
     
-    // Add profile photo if selected
-    const photoInput = document.getElementById('profilePhoto');
-    if (photoInput.files && photoInput.files.length > 0) {
-        formData.append('profile_photo', photoInput.files[0]);
-    }
+	    // Add profile photo if selected (if the field exists in the layout)
+	    const photoInput = document.getElementById('profilePhoto');
+	    if (photoInput && photoInput.files && photoInput.files.length > 0) {
+	        formData.append('profile_photo', photoInput.files[0]);
+	    }
     
     // Show loading
     const submitBtn = event.target.querySelector('button[type="submit"]');
@@ -479,28 +558,33 @@ function handlePhotoSelect(event) {
 
 // Remove photo
 function removePhoto() {
-    const photoInput = document.getElementById('profilePhoto');
-    const previewImg = document.getElementById('photoPreviewImg');
-    const placeholder = document.querySelector('.photo-placeholder');
-    const removeBtn = document.getElementById('photoRemoveBtn');
-    
-    photoInput.value = '';
-    previewImg.src = '';
-    previewImg.style.display = 'none';
-    if (placeholder) placeholder.style.display = 'flex';
-    if (removeBtn) removeBtn.style.display = 'none';
-}
+	    // Make this function safe even when the photo fields are not present
+	    const photoInput = document.getElementById('profilePhoto');
+	    const previewImg = document.getElementById('photoPreviewImg');
+	    const placeholder = document.querySelector('.photo-placeholder');
+	    const removeBtn = document.getElementById('photoRemoveBtn');
+	    
+	    if (photoInput) {
+	        photoInput.value = '';
+	    }
+	    if (previewImg) {
+	        previewImg.src = '';
+	        previewImg.style.display = 'none';
+	    }
+	    if (placeholder) placeholder.style.display = 'flex';
+	    if (removeBtn) removeBtn.style.display = 'none';
+	}
 
 async function logout() {
-    try {
-        await UserAPI.logout();
-        currentUser = null;
-        updateNavAuth(false);
-        showToast('Logged out successfully', 'success');
-        window.location.href = 'index.html';
-    } catch (error) {
-        showToast('Logout failed', 'error');
-    }
+	try {
+		await UserAPI.logout();
+		currentUser = null;
+		updateNavAuth(false);
+		showToast('You have been signed out.', 'success');
+		window.location.href = 'index.html';
+	} catch (error) {
+		showToast('Sign out failed. Please try again.', 'error');
+	}
 }
 
 // Modal functions
@@ -617,16 +701,16 @@ function resetRegistrationForm() {
 }
 
 async function logout() {
-    try {
-        await UserAPI.logout();
-        currentUser = null;
-        updateNavAuth(false);
-        showToast('Logged out successfully', 'success');
-        window.location.href = 'index.html';
-    } catch (error) {
-        debugError('Logout error:', error);
-        showToast('Logout failed', 'error');
-    }
+	try {
+		await UserAPI.logout();
+		currentUser = null;
+		updateNavAuth(false);
+		showToast('You have been signed out.', 'success');
+		window.location.href = 'index.html';
+	} catch (error) {
+		debugError('Logout error:', error);
+		showToast('Sign out failed. Please try again.', 'error');
+	}
 }
 
 function closeModal(modalId) {
@@ -656,17 +740,49 @@ window.onclick = function(event) {
     });
 };
 
-// Toast notification
-function showToast(message, type = 'info') {
-    const toast = document.getElementById('toast');
-    toast.textContent = message;
-    toast.className = `toast ${type}`;
-    toast.style.display = 'block';
-    
-    setTimeout(() => {
-        toast.style.display = 'none';
-    }, 3000);
-}
+	// Toast notification
+	function showToast(message, type = 'info') {
+	    const toast = document.getElementById('toast');
+	    if (!toast) {
+	        // Fallback if toast element is missing
+	        if (typeof alert !== 'undefined') {
+	            alert(message);
+	        } else {
+	            console.log(`[${type}]`, message);
+	        }
+	        return;
+	    }
+	    toast.textContent = message;
+	    toast.className = `toast ${type}`;
+	    toast.style.display = 'block';
+	    
+	    setTimeout(() => {
+	        toast.style.display = 'none';
+	    }, 3000);
+	}
+
+	// Generic notification helper used by the multi-step registration form
+	// This was previously undefined, which broke the Sign Up flow.
+	function showNotification(message, type = 'error') {
+	    try {
+	        // Prefer the enhanced ToastManager if available
+	        if (typeof window !== 'undefined' && window.ToastManager && typeof window.ToastManager.show === 'function') {
+	            window.ToastManager.show(message, type);
+	            return;
+	        }
+	    } catch (e) {
+	        // Ignore and fall back
+	    }
+	    
+	    // Fallback to basic toast implementation
+	    if (typeof showToast === 'function') {
+	        showToast(message, type);
+	    } else if (typeof alert !== 'undefined') {
+	        alert(message);
+	    } else {
+	        console.log(`[${type}]`, message);
+	    }
+	}
 
 function showWelcomeMessage(welcomeMessage, username) {
     // Create or get welcome modal
@@ -696,11 +812,13 @@ function showWelcomeMessage(welcomeMessage, username) {
         document.body.appendChild(welcomeModal);
     }
     
-    // Format the welcome message (preserve line breaks)
+    // Format the welcome message (preserve line breaks) - SECURITY: Escape HTML to prevent XSS
     const messageContent = document.getElementById('welcomeMessageContent');
     if (messageContent) {
+        // Escape HTML first to prevent XSS attacks
+        const escapedMessage = escapeHtml(welcomeMessage);
         // Convert newlines to <br> tags and preserve formatting
-        const formattedMessage = welcomeMessage
+        const formattedMessage = escapedMessage
             .replace(/\n\n/g, '</p><p>')
             .replace(/\n/g, '<br>');
         messageContent.innerHTML = `<p>${formattedMessage}</p>`;
@@ -716,14 +834,63 @@ function showWelcomeMessage(welcomeMessage, username) {
 // Mobile menu toggle
 function toggleMobileMenu() {
     const navMenu = document.getElementById('navMenu');
+    const toggle = document.querySelector('.mobile-menu-toggle');
     navMenu.classList.toggle('active');
+    toggle.classList.toggle('active');
 }
+
+// Initialize dropdown menus
+document.addEventListener('DOMContentLoaded', () => {
+    // Handle dropdown toggles on mobile
+    const dropdownToggles = document.querySelectorAll('.dropdown-toggle');
+    dropdownToggles.forEach(toggle => {
+        toggle.addEventListener('click', (e) => {
+            if (window.innerWidth <= 768) {
+                e.preventDefault();
+                const dropdown = toggle.closest('.nav-dropdown');
+                dropdown.classList.toggle('active');
+            }
+        });
+    });
+
+    // Handle user menu toggle on mobile
+    const userMenuToggle = document.querySelector('.user-menu-toggle');
+    if (userMenuToggle) {
+        userMenuToggle.addEventListener('click', (e) => {
+            if (window.innerWidth <= 768) {
+                e.preventDefault();
+                const navUser = document.getElementById('navUser');
+                navUser.classList.toggle('active');
+            }
+        });
+    }
+
+    // Close mobile menu when clicking outside
+    document.addEventListener('click', (e) => {
+        const navMenu = document.getElementById('navMenu');
+        const toggle = document.querySelector('.mobile-menu-toggle');
+
+        if (navMenu && toggle && navMenu.classList.contains('active')) {
+            if (!navMenu.contains(e.target) && !toggle.contains(e.target)) {
+                navMenu.classList.remove('active');
+                toggle.classList.remove('active');
+            }
+        }
+    });
+});
 
 // Carousel functions
 let currentSlide = 0;
 let carouselInterval;
+let isLoadingCarousel = false;
+let isLoadingFeaturedAuctions = false;
 
 async function loadFeaturedCarousel() {
+    if (isLoadingCarousel) {
+        console.log('[CAROUSEL] Already loading, skipping...');
+        return;
+    }
+    isLoadingCarousel = true;
     try {
         const featured = await AuctionAPI.getFeatured();
         const carousel = document.getElementById('featuredCarousel');
@@ -832,10 +999,12 @@ async function loadFeaturedCarousel() {
             // Create overlay
             const overlay = document.createElement('div');
             overlay.className = 'carousel-overlay';
+            // SECURITY: Validate auction ID to prevent XSS in onclick handler
+            const safeAuctionId = Number(auction.id) || 0;
             overlay.innerHTML = `
                 <h2>${escapeHtml(auction.item_name || 'Auction')}</h2>
                 <p>Current Bid: $${(auction.current_bid || 0).toFixed(2)}</p>
-                <button class="btn btn-primary" onclick="window.location.href='auction-detail.html?id=${auction.id}'">View Auction</button>
+                <button class="btn btn-primary" onclick="window.location.href='auction-detail.html?id=${safeAuctionId}'">View Auction</button>
             `;
             
             item.appendChild(img);
@@ -852,6 +1021,8 @@ async function loadFeaturedCarousel() {
         startCarousel();
     } catch (error) {
         debugError('Error loading carousel:', error);
+    } finally {
+        isLoadingCarousel = false;
     }
 }
 
@@ -891,12 +1062,17 @@ function startCarousel() {
 
 // Load featured auctions for homepage
 async function loadFeaturedAuctions() {
+    if (isLoadingFeaturedAuctions) {
+        console.log('[FEATURED] Already loading, skipping...');
+        return;
+    }
+    isLoadingFeaturedAuctions = true;
     try {
         const response = await AuctionAPI.getAll({ featured: 'true', status: 'active', per_page: 6 });
         const container = document.getElementById('featuredAuctions');
-        
+
         if (!container) return;
-        
+
         if (response.auctions && response.auctions.length > 0) {
             // Debug logging
             if (window.DEBUG_MODE) {
@@ -905,9 +1081,9 @@ async function loadFeaturedAuctions() {
                     console.log('Auction:', auction.id, auction.item_name, 'image_url:', auction.image_url, 'featured_image_url:', auction.featured_image_url);
                 });
             }
-            
+
             container.innerHTML = response.auctions.map(auction => createAuctionCard(auction)).join('');
-            
+
             // Initialize previous auctions state for change detection
             if (!window.previousFeaturedAuctionsState) {
                 window.previousFeaturedAuctionsState = {};
@@ -919,9 +1095,11 @@ async function loadFeaturedAuctions() {
                     bid_count: auction.bid_count
                 };
             });
-            
-            // Start auto-refresh for featured auctions
-            startFeaturedAuctionsRefresh();
+
+            // Start auto-refresh for featured auctions (only once!)
+            if (!window.featuredRefreshInterval) {
+                startFeaturedAuctionsRefresh();
+            }
         } else {
             const noAuctionsMsg = (window.i18n && window.i18n.t) ? window.i18n.t('messages.noFeaturedAuctions', 'No featured auctions available') : 'No featured auctions available';
             container.innerHTML = '<p>' + noAuctionsMsg + '</p>';
@@ -929,58 +1107,17 @@ async function loadFeaturedAuctions() {
     } catch (error) {
         debugError('Error loading featured auctions:', error);
         console.error('Full error:', error);
+    } finally {
+        isLoadingFeaturedAuctions = false;
     }
 }
 
-// Auto-refresh featured auctions when prices change or auctions end
+// Auto-refresh featured auctions - DISABLED to prevent flickering
+// Prices will update on page refresh instead
 function startFeaturedAuctionsRefresh() {
-    if (window.featuredRefreshInterval) clearInterval(window.featuredRefreshInterval);
-    
-    window.featuredRefreshInterval = setInterval(async () => {
-        try {
-            const response = await AuctionAPI.getAll({ featured: 'true', status: 'active', per_page: 6 });
-            const container = document.getElementById('featuredAuctions');
-            
-            if (!container) return;
-            
-            // Initialize state if not exists
-            if (!window.previousFeaturedAuctionsState) {
-                window.previousFeaturedAuctionsState = {};
-            }
-            
-            let needsRefresh = false;
-            
-            if (response.auctions && response.auctions.length > 0) {
-                response.auctions.forEach(auction => {
-                    const prevAuction = window.previousFeaturedAuctionsState[auction.id];
-                    
-                    // Check if auction just ended
-                    if (prevAuction && prevAuction.status === 'active' && auction.status === 'ended') {
-                        needsRefresh = true;
-                    }
-                    
-                    // Check if price increased
-                    if (prevAuction && prevAuction.current_bid !== auction.current_bid && auction.current_bid > prevAuction.current_bid) {
-                        needsRefresh = true;
-                    }
-                    
-                    // Store current state
-                    window.previousFeaturedAuctionsState[auction.id] = {
-                        status: auction.status,
-                        current_bid: auction.current_bid,
-                        bid_count: auction.bid_count
-                    };
-                });
-            }
-            
-            // If any auction ended or price changed, refresh the page
-            if (needsRefresh) {
-                window.location.reload();
-            }
-        } catch (error) {
-            debugError('Error checking featured auctions:', error);
-        }
-    }, 5000); // Check every 5 seconds
+    // Disabled - was causing flickering and unnecessary server load
+    // Users can manually refresh or navigate to see updated prices
+    return;
 }
 
 // Load categories
@@ -991,12 +1128,20 @@ async function loadCategories() {
         
         if (!container) return;
         
-        container.innerHTML = categories.map(cat => `
-            <div class="category-card" onclick="filterByCategory(${cat.id})">
-                <h3>${cat.name}</h3>
-                <p>${cat.description || ''}</p>
-            </div>
-        `).join('');
+        container.innerHTML = categories
+            .map(cat => {
+                const safeId = Number(cat.id) || 0;
+                const rawName = (cat.name || '').replace(/\s+/g, ' ').trim();
+                const safeName = escapeHtml(rawName);
+                const safeDescription = escapeHtml(cat.description || '');
+                return `
+                    <div class="category-card" onclick="filterByCategory(${safeId})">
+                        <h3>${safeName}</h3>
+                        <p>${safeDescription}</p>
+                    </div>
+                `;
+            })
+            .join('');
     } catch (error) {
         debugError('Error loading categories:', error);
     }
@@ -1023,31 +1168,40 @@ async function loadMyAuctions() {
         const auctions = await AuctionAPI.getUserAuctions();
         debugLog('User auctions loaded:', auctions);
         
-        if (auctions && auctions.length > 0) {
-            debugLog(`Showing ${auctions.length} user auctions`);
-            section.style.display = 'block';
-            container.innerHTML = auctions.map(auction => `
-                <div class="auction-card" onclick="window.location.href='auction-detail.html?id=${auction.id}'">
-                    <div class="auction-card-content">
-                        <h3>${auction.item_name}</h3>
-                        <div class="auction-stats">
-                            <div class="stat">
-                                <label>Current Bid</label>
-                                <span class="price">$${(auction.current_bid || 0).toFixed(2)}</span>
-                            </div>
-                            <div class="stat">
-                                <label>Status</label>
-                                <span class="status-badge ${auction.status || 'active'}">${auction.status || 'active'}</span>
-                            </div>
-                            <div class="stat">
-                                <label>Bids</label>
-                                <span>${auction.bid_count || 0}</span>
-                            </div>
-                        </div>
-                        <button class="btn btn-primary btn-block">View Auction</button>
-                    </div>
-                </div>
-            `).join('');
+	    	if (auctions && auctions.length > 0) {
+	    	    debugLog(`Showing ${auctions.length} user auctions`);
+	    	    section.style.display = 'block';
+	    	    container.innerHTML = auctions.map(auction => {
+	    	        const safeTitle = escapeHtml(auction.item_name || '');
+	    	        const rawStatus = auction.status || 'active';
+	    	        const allowedStatuses = ['active', 'ended', 'cancelled', 'pending'];
+	    	        const safeStatusClass = allowedStatuses.includes(rawStatus) ? rawStatus : 'other';
+	    	        const safeStatusLabel = escapeHtml(rawStatus);
+	    	        const safeAuctionId = Number(auction.id) || 0;
+
+	    	        return `
+	    	        <div class="auction-card" onclick="window.location.href='auction-detail.html?id=${safeAuctionId}'">
+	    	            <div class="auction-card-content">
+	    	                <h3>${safeTitle}</h3>
+	    	                <div class="auction-stats">
+	    	                    <div class="stat">
+	    	                        <label>Current Bid</label>
+	    	                        <span class="price">$${(auction.current_bid || 0).toFixed(2)}</span>
+	    	                    </div>
+	    	                    <div class="stat">
+	    	                        <label>Status</label>
+	    	                        <span class="status-badge ${safeStatusClass}">${safeStatusLabel}</span>
+	    	                    </div>
+	    	                    <div class="stat">
+	    	                        <label>Bids</label>
+	    	                        <span>${auction.bid_count || 0}</span>
+	    	                    </div>
+	    	                </div>
+	    	                <button class="btn btn-primary btn-block">View Auction</button>
+	    	            </div>
+	    	        </div>
+	    	    `;
+	    	    }).join('');
         } else {
             debugLog('No user auctions found');
             // Show section even if empty with a message
@@ -1110,7 +1264,7 @@ async function loadMyBids() {
             
             debugLog(`Showing ${uniqueBids.length} unique bids (from ${bids.length} total bids)`);
             
-            container.innerHTML = uniqueBids.map(bid => {
+	            container.innerHTML = uniqueBids.map(bid => {
                 // Check if user won (for ended auctions) or is winning (for active auctions)
                 let statusBadge = '';
                 let bidClass = 'losing-bid';
@@ -1141,12 +1295,15 @@ async function loadMyBids() {
                     bidClass = 'losing-bid';
                 }
                 
+	                const safeAuctionName = escapeHtml(bid.auction_name || 'Unknown Auction');
+	                const safeAuctionId = Number(bid.auction_id) || 0;
+	                
                 return `
-                <div class="bid-history-item ${bidClass}" onclick="window.location.href='auction-detail.html?id=${bid.auction_id}'">
+	                <div class="bid-history-item ${bidClass}" onclick="window.location.href='auction-detail.html?id=${safeAuctionId}'">
                     <div class="bid-info">
                         <div>
                             <div class="bid-header">
-                                <strong>${bid.auction_name || 'Unknown Auction'}</strong>
+	                                <strong>${safeAuctionName}</strong>
                                 ${statusBadge}
                             </div>
                             <div class="bid-details">
@@ -1230,21 +1387,34 @@ function getImageUrl(imageUrl) {
         }
     }
     
-    // Handle relative URLs - get base URL from API_BASE_URL or default
-    let baseUrl = 'http://localhost:5000';
-    try {
-        if (typeof API_BASE_URL !== 'undefined' && API_BASE_URL) {
-            baseUrl = String(API_BASE_URL).replace('/api', '').replace(/\/$/, '');
-        } else if (typeof window !== 'undefined' && window.API_BASE_URL) {
-            baseUrl = String(window.API_BASE_URL).replace('/api', '').replace(/\/$/, '');
-        }
-    } catch (e) {
-        console.warn('Could not determine base URL, using default:', e);
-    }
-    
-    // Ensure relative URL starts with /
+    // Handle relative URLs - get base URL from window.API_BASE or origin
+    const baseUrl = window.API_BASE || (window.location.hostname === 'localhost' ? 'http://localhost:5000' : window.location.origin);
     const relativeUrl = urlString.startsWith('/') ? urlString : '/' + urlString;
-    
+    return baseUrl + relativeUrl;
+}
+
+// Unified image URL converter for all image types (profile, auction, featured)
+function convertImageUrlUnified(imageUrl) {
+    if (!imageUrl) return SVG_PLACEHOLDER_SVG;
+
+    const urlString = String(imageUrl).trim();
+    if (urlString === '' || urlString === 'null' || urlString === 'undefined') {
+        return SVG_PLACEHOLDER_SVG;
+    }
+
+    // Data URIs - return as-is
+    if (urlString.startsWith('data:image/')) {
+        return urlString;
+    }
+
+    // Absolute URLs - return as-is
+    if (urlString.startsWith('http://') || urlString.startsWith('https://')) {
+        return urlString;
+    }
+
+    // Relative URLs - construct full URL
+    const baseUrl = window.API_BASE || (window.location.hostname === 'localhost' ? 'http://localhost:5000' : window.location.origin);
+    const relativeUrl = urlString.startsWith('/') ? urlString : '/' + urlString;
     return baseUrl + relativeUrl;
 }
 
@@ -1352,6 +1522,11 @@ function closeCameraModal() {
 }
 
 function resetCameraUI() {
+    // Helper for translations (safe if i18n not loaded yet)
+    const t = (window.i18n && window.i18n.t)
+        ? window.i18n.t
+        : (key, def) => def || key;
+
     // Reset captured image state variables FIRST to prevent stale data
     // This ensures that when the modal is reopened, we start with a clean slate
     // This is critical for finishBiometricCapture() to correctly determine mode
@@ -1367,12 +1542,11 @@ function resetCameraUI() {
     
     // Set initial capture mode and title based on page structure
     let initialMode = 'id_front';
-    let initialTitle = 'Scan ID Card Front';
+    let initialTitle = t('register.scanIdCard', 'Scan ID Card');
     
     if (!hasStepIdFront && hasStepId) {
         // Other pages (auctions.html, create-auction.html, etc.) use single ID mode
         initialMode = 'id';
-        initialTitle = 'Scan ID Card';
     }
     
     // Reset UI state
@@ -1778,29 +1952,136 @@ async function capturePhoto() {
                 captureBtn.innerHTML = '<span id="captureIcon">📸</span> Capture Photo';
             };
             
+            // Check if already loaded
             if (previewImg.complete) {
                 verifyImage();
             } else {
+                // Wait for load event
                 previewImg.onload = verifyImage;
                 previewImg.onerror = () => {
                     debugError('ID Card image failed to load');
                     showToast('ID Card image failed to load. Please recapture.', 'error');
                     updateStepStatus('id', false);
                     capturedIdCardFront = null;
-                    if (idCardPreview) {
-                        idCardPreview.src = '';
-                        idCardPreview.removeAttribute('src');
-                        if (idCardPreview.parentElement) {
-                            idCardPreview.parentElement.style.display = 'none';
-                        }
-                    }
+                    updateIdCardFrontPreview(null);
                     captureBtn.disabled = false;
                     captureBtn.innerHTML = '<span id="captureIcon">📸</span> Capture Photo';
                 };
                 
+                // Timeout after 3 seconds
                 setTimeout(() => {
                     if (!imageVerified) {
-                        verifyImage();
+                        verifyImage(); // Final check
+                    }
+                }, 3000);
+            }
+        } else {
+            // If preview element doesn't exist, just validate data
+            if (imageData && imageData.length > 100) {
+                updateStepStatus('id', true);
+                setTimeout(() => {
+                    if (!capturedSelfie) {
+                        showToast('ID Card captured! Now take your selfie', 'success');
+                        startCamera('selfie');
+                    }
+                }, 500);
+            }
+            captureBtn.disabled = false;
+            captureBtn.innerHTML = '<span id="captureIcon">📸</span> Capture Photo';
+        }
+        
+    } else if (currentCaptureMode === 'id') {
+        // Handle single ID card capture mode (used in auctions.html, create-auction.html, etc.)
+        // Validate image data before saving
+        if (!imageData || !imageData.startsWith('data:image/')) {
+            showToast('Failed to capture ID Card. Please try again.', 'error');
+            captureBtn.disabled = false;
+            captureBtn.innerHTML = '<span id="captureIcon">📸</span> Capture Photo';
+            return;
+        }
+        
+        // Save the captured image (use capturedIdCardFront for single ID card mode)
+        capturedIdCardFront = imageData;
+        debugLog('ID Card captured (single mode), data length:', imageData.length);
+        
+        // Update preview - try both preview element IDs for compatibility
+        const idCardPreview = document.getElementById('idCardPreview');
+        if (idCardPreview) {
+            // For pages with single ID preview (auctions.html, create-auction.html, etc.)
+            idCardPreview.src = imageData;
+            if (idCardPreview.parentElement) {
+                idCardPreview.parentElement.style.display = 'block';
+            }
+            const container = document.getElementById('capturedImages');
+            if (container) {
+                container.style.display = 'block';
+            }
+        } else {
+            // Fallback to ID front preview if idCardPreview doesn't exist
+            updateIdCardFrontPreview(imageData);
+        }
+        
+        // Process ID card with OCR
+        setTimeout(async () => {
+            try {
+                showToast('Scanning ID card...', 'info');
+                const extractedData = await processIDCardWithOCR(imageData, 'front');
+                
+                // Auto-fill form fields with extracted data
+                if (extractedData) {
+                    autoFillRegistrationForm(extractedData);
+                }
+            } catch (error) {
+                debugError('OCR processing error:', error);
+                showToast('OCR processing failed. Please enter information manually.', 'error');
+            }
+        }, 100);
+        
+        // Wait for image to load in preview before marking complete
+        const previewImg = idCardPreview || document.getElementById('idCardFrontPreview');
+        if (previewImg) {
+            let imageVerified = false;
+            
+            const verifyImage = () => {
+                if (previewImg.complete && previewImg.naturalWidth > 0) {
+                    imageVerified = true;
+                    debugLog('ID Card image verified as loaded (single mode)');
+                    updateStepStatus('id', true);
+                    
+                    // Move to selfie capture
+                    setTimeout(() => {
+                        if (!capturedSelfie) {
+                            showToast('ID Card captured! Now take your selfie', 'success');
+                            startCamera('selfie');
+                        }
+                    }, 500);
+                } else {
+                    debugWarn('ID Card image not loading properly');
+                }
+                captureBtn.disabled = false;
+                captureBtn.innerHTML = '<span id="captureIcon">📸</span> Capture Photo';
+            };
+            
+            // Check if already loaded
+            if (previewImg.complete) {
+                verifyImage();
+            } else {
+                // Wait for load event
+                previewImg.onload = verifyImage;
+                previewImg.onerror = () => {
+                    debugError('ID Card image failed to load');
+                    showToast('ID Card image failed to load. Please recapture.', 'error');
+                    updateStepStatus('id', false);
+                    capturedIdCardFront = null;
+                    updateIdCardFrontPreview(null);
+                    captureBtn.disabled = false;
+                    captureBtn.innerHTML = '<span id="captureIcon">📸</span> Capture Photo';
+                };
+                
+                // Timeout after 3 seconds
+                setTimeout(() => {
+                    if (!imageVerified) {
+                        verifyImage(); // Final check
                     }
                 }, 3000);
             }
@@ -1820,26 +2101,99 @@ async function capturePhoto() {
         }
         
     } else if (currentCaptureMode === 'selfie') {
+        // Validate image data before saving
+        if (!imageData || !imageData.startsWith('data:image/')) {
+            showToast('Failed to capture selfie. Please try again.', 'error');
+            if (captureBtn) {
+                captureBtn.disabled = false;
+                captureBtn.innerHTML = '<span id="captureIcon">📸</span> Capture Photo';
+            }
+            return;
+        }
+
+        // Save the captured image
         capturedSelfie = imageData;
+        debugLog('Selfie captured, data length:', imageData.length);
+
+        // Update preview - this will validate and display the image
         updateSelfiePreview(imageData);
-        updateStepStatus('selfie', true);
-        showToast('Selfie captured!', 'success');
-        
-        // Stop camera and show done button
-        stopCamera();
-        document.getElementById('videoStream').style.display = 'none';
-        document.getElementById('cameraPlaceholder').style.display = 'block';
-        document.getElementById('captureControls').style.display = 'none';
-        
-        // Show done button - check for both two-step and single ID card modes
-        // If capturedIdCardBack is null, we're in single ID card mode (only front captured)
-        // Otherwise, we're in two-step mode (both front and back captured)
-        const allCaptured = capturedIdCardBack === null
-            ? (capturedIdCardFront && capturedSelfie)
-            : (capturedIdCardFront && capturedIdCardBack && capturedSelfie);
-            
-        if (allCaptured) {
-            document.getElementById('cameraActions').style.display = 'block';
+
+        // Wait a moment to ensure image loads before processing
+        setTimeout(async () => {
+            // Process selfie image
+            try {
+                showToast('Processing selfie...', 'info');
+                const processedData = await processSelfieImage(imageData);
+
+                // Auto-fill form fields with extracted data
+                if (processedData) {
+                    autoFillRegistrationForm(processedData);
+                }
+            } catch (error) {
+                debugError('Selfie processing error:', error);
+                showToast('Selfie processing failed. Please enter information manually.', 'error');
+            }
+        }, 100);
+
+        // Wait for image to load in preview before marking complete
+        const selfiePreviewImg = document.getElementById('selfiePreview');
+        if (selfiePreviewImg) {
+            // Set up image load verification
+            let imageVerified = false;
+
+            const verifyImage = () => {
+                if (selfiePreviewImg.complete && selfiePreviewImg.naturalWidth > 0) {
+                    imageVerified = true;
+                    debugLog('Selfie image verified as loaded');
+                    updateStepStatus('selfie', true);
+
+                    // Finish biometric capture process
+                    finishBiometricCapture();
+                } else {
+                    debugWarn('Selfie image not loading properly');
+                }
+
+                if (captureBtn) {
+                    captureBtn.disabled = false;
+                    captureBtn.innerHTML = '<span id="captureIcon">📸</span> Capture Photo';
+                }
+            };
+
+            if (selfiePreviewImg.complete) {
+                verifyImage();
+            } else {
+                selfiePreviewImg.onload = verifyImage;
+                selfiePreviewImg.onerror = () => {
+                    debugError('Selfie image failed to load');
+                    showToast('Selfie image failed to load. Please recapture.', 'error');
+                    updateStepStatus('selfie', false);
+                    capturedSelfie = null;
+                    updateSelfiePreview(null);
+
+                    if (captureBtn) {
+                        captureBtn.disabled = false;
+                        captureBtn.innerHTML = '<span id="captureIcon">📸</span> Capture Photo';
+                    }
+                };
+
+                // Timeout after 3 seconds
+                setTimeout(() => {
+                    if (!imageVerified) {
+                        verifyImage(); // Final check
+                    }
+                }, 3000);
+            }
+        } else {
+            // If preview element doesn't exist, just validate data
+            if (imageData && imageData.length > 100) {
+                updateStepStatus('selfie', true);
+                finishBiometricCapture();
+            }
+
+            if (captureBtn) {
+                captureBtn.disabled = false;
+                captureBtn.innerHTML = '<span id="captureIcon">📸</span> Capture Photo';
+            }
         }
     }
     
@@ -2078,6 +2432,11 @@ function updateSelfiePreview(imageData) {
 }
 
 function updateStepStatus(step, completed) {
+    // Helper for translations (safe if i18n not loaded yet)
+    const t = (window.i18n && window.i18n.t)
+        ? window.i18n.t
+        : (key, def) => def || key;
+
     // Map step names to element IDs - support both naming conventions
     // index.html uses: stepIdFront, stepIdBack, stepSelfie
     // Other pages use: stepId, stepSelfie
@@ -2113,10 +2472,10 @@ function updateStepStatus(step, completed) {
         
         if (completed) {
             stepElement.classList.add('completed');
-            statusElement.textContent = '✅ Completed';
+            statusElement.textContent = t('register.doneShort', '✅ Completed');
             statusElement.style.color = 'var(--success-color)';
         } else {
-            statusElement.textContent = 'Pending';
+            statusElement.textContent = t('register.pending', 'Pending');
             statusElement.style.color = '#a0a0c0';
         }
     }
@@ -2146,19 +2505,72 @@ function updateStepUI() {
     updateStepStatus('selfie', !!capturedSelfie);
 }
 
-// Process ID card image with OCR
+// Lazy-load Tesseract.js once when OCR is first needed
+let tesseractLoadPromise = null;
+
+function loadTesseractScript() {
+    if (typeof Tesseract !== 'undefined') {
+        return Promise.resolve(Tesseract);
+    }
+    if (tesseractLoadPromise) return tesseractLoadPromise;
+
+    tesseractLoadPromise = new Promise((resolve, reject) => {
+        try {
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1/dist/tesseract.min.js';
+            script.async = true;
+            script.onload = () => {
+                if (typeof Tesseract !== 'undefined') {
+                    resolve(Tesseract);
+                } else {
+                    reject(new Error('Tesseract.js loaded but global Tesseract is undefined'));
+                }
+            };
+            script.onerror = (err) => {
+                if (typeof debugError === 'function') {
+                    debugError('Failed to load Tesseract.js', err);
+                }
+                reject(new Error('Failed to load Tesseract.js'));
+            };
+            document.head.appendChild(script);
+        } catch (err) {
+            if (typeof debugError === 'function') {
+                debugError('Error while injecting Tesseract.js script', err);
+            }
+            reject(err);
+        }
+    });
+
+    return tesseractLoadPromise;
+}
+
+// Process ID card image with OCR (now uses lazy-loaded Tesseract.js)
 async function processIDCardWithOCR(imageData, side = 'front') {
     try {
-        // Check if Tesseract is available
         if (typeof Tesseract === 'undefined') {
-            debugWarn('Tesseract.js not loaded, skipping OCR');
+            try {
+                await loadTesseractScript();
+            } catch (loadError) {
+                if (typeof debugError === 'function') {
+                    debugError('Tesseract.js load error:', loadError);
+                }
+                if (typeof showToast === 'function') {
+                    showToast('OCR engine could not be loaded. Please enter details manually.', 'warning');
+                }
+                return null;
+            }
+        }
+
+        if (typeof Tesseract === 'undefined') {
+            if (typeof debugWarn === 'function') {
+                debugWarn('Tesseract.js not available after loading, skipping OCR');
+            }
             return null;
         }
-        
+
         const sideText = side === 'front' ? 'front' : 'back';
         showToast(`Extracting text from ID card ${sideText}...`, 'info');
-        
-        // Use Tesseract to recognize text from the image
+
         const { data: { text } } = await Tesseract.recognize(imageData, 'eng', {
             logger: (info) => {
                 if (info.status === 'recognizing text') {
@@ -2167,16 +2579,22 @@ async function processIDCardWithOCR(imageData, side = 'front') {
                 }
             }
         });
-        
+
         debugLog('OCR Extracted Text:', text);
-        
-        // Parse the extracted text to find name, birth date, and ID number
+
         const extractedData = parseIDCardText(text);
-        
+
         return extractedData;
     } catch (error) {
-        console.error('OCR processing error:', error);
-        throw error;
+        if (typeof debugError === 'function') {
+            debugError('OCR processing error:', error);
+        } else {
+            console.error('OCR processing error:', error);
+        }
+        if (typeof showToast === 'function') {
+            showToast('Failed to process ID card. Please enter details manually.', 'error');
+        }
+        return null;
     }
 }
 
@@ -2761,3 +3179,414 @@ function resetBiometricUI() {
     debugLog('Biometric UI reset complete');
 }
 
+// ===== MULTI-STEP FORM FUNCTIONS =====
+let currentStep = 1;
+const totalSteps = 3;
+
+function nextStep() {
+    if (validateStep(currentStep)) {
+        if (currentStep < totalSteps) {
+            const currentStepEl = document.getElementById(`step${currentStep}`);
+            const nextStepEl = document.getElementById(`step${currentStep + 1}`);
+
+            if (currentStepEl && nextStepEl) {
+                currentStepEl.style.display = 'none';
+                currentStep++;
+                nextStepEl.style.display = 'block';
+                updateStepButtons();
+                window.scrollTo(0, 0);
+            }
+        }
+    }
+}
+
+function previousStep() {
+    if (currentStep > 1) {
+        const currentStepEl = document.getElementById(`step${currentStep}`);
+        const prevStepEl = document.getElementById(`step${currentStep - 1}`);
+
+        if (currentStepEl && prevStepEl) {
+            currentStepEl.style.display = 'none';
+            currentStep--;
+            prevStepEl.style.display = 'block';
+            updateStepButtons();
+            window.scrollTo(0, 0);
+        }
+    }
+}
+
+function updateStepButtons() {
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const submitBtn = document.getElementById('submitBtn');
+
+    // Safely check if buttons exist before updating
+    if (!prevBtn || !nextBtn || !submitBtn) {
+        console.warn('Multi-step form buttons not found on this page');
+        return;
+    }
+
+    if (currentStep === 1) {
+        prevBtn.style.display = 'none';
+    } else {
+        prevBtn.style.display = 'flex';
+    }
+
+    if (currentStep === totalSteps) {
+        nextBtn.style.display = 'none';
+        submitBtn.style.display = 'flex';
+    } else {
+        nextBtn.style.display = 'flex';
+        submitBtn.style.display = 'none';
+    }
+}
+
+function validateStep(step) {
+    const username = document.getElementById('registerUsername').value.trim();
+    const email = document.getElementById('registerEmail').value.trim();
+    const password = document.getElementById('registerPassword').value;
+    const idNumber = document.getElementById('registerIdNumber').value.trim();
+    const birthDate = document.getElementById('registerBirthDate').value;
+    const phone = document.getElementById('registerPhone').value.trim();
+    const address = document.getElementById('registerAddress').value.trim();
+
+    if (step === 1) {
+        if (!username) {
+            showNotification('Please enter a username', 'error');
+            return false;
+        }
+        if (!email) {
+            showNotification('Please enter an email address', 'error');
+            return false;
+        }
+        if (!isValidEmail(email)) {
+            showNotification('Please enter a valid email address', 'error');
+            return false;
+        }
+        if (!password) {
+            showNotification('Please enter a password', 'error');
+            return false;
+        }
+        if (!isPasswordStrong(password)) {
+            showNotification('Password does not meet all requirements', 'error');
+            return false;
+        }
+        return true;
+    } else if (step === 2) {
+        if (!idNumber) {
+            showNotification('Please enter your ID number or passport', 'error');
+            return false;
+        }
+        if (!birthDate) {
+            showNotification('Please select your date of birth', 'error');
+            return false;
+        }
+        return true;
+    } else if (step === 3) {
+        if (!phone) {
+            showNotification('Please enter your phone number', 'error');
+            return false;
+        }
+        if (!address) {
+            showNotification('Please enter your address', 'error');
+            return false;
+        }
+        return true;
+    }
+    return true;
+}
+
+function isValidEmail(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+}
+
+function isPasswordStrong(password) {
+    const hasLength = password.length >= 8;
+    const hasLower = /[a-z]/.test(password);
+    const hasUpper = /[A-Z]/.test(password);
+    const hasNumber = /[0-9]/.test(password);
+    const hasSpecial = /[!@#$%^&*()_+\-=\[\]{}|;:,.<>?]/.test(password);
+
+    return hasLength && hasLower && hasUpper && hasNumber && hasSpecial;
+}
+
+// Initialize multi-step form on modal open
+function initializeMultiStepForm() {
+    const step1 = document.getElementById('step1');
+    const step2 = document.getElementById('step2');
+    const step3 = document.getElementById('step3');
+
+    // Only proceed if all steps exist
+    if (!step1 || !step2 || !step3) {
+        console.warn('Multi-step form elements not found on this page');
+        return;
+    }
+
+    currentStep = 1;
+    step1.style.display = 'block';
+    step2.style.display = 'none';
+    step3.style.display = 'none';
+    updateStepButtons();
+}
+
+// Reset form when modal is closed
+function resetMultiStepForm() {
+    const step1 = document.getElementById('step1');
+    const step2 = document.getElementById('step2');
+    const step3 = document.getElementById('step3');
+    const registerForm = document.getElementById('registerForm');
+
+    // Only proceed if all steps exist
+    if (!step1 || !step2 || !step3 || !registerForm) {
+        console.warn('Multi-step form elements not found on this page');
+        return;
+    }
+
+    currentStep = 1;
+    registerForm.reset();
+    step1.style.display = 'block';
+    step2.style.display = 'none';
+    step3.style.display = 'none';
+    updateStepButtons();
+}
+
+// Override showRegister to initialize multi-step form
+const originalShowRegister = window.showRegister;
+window.showRegister = function() {
+    if (originalShowRegister) {
+        originalShowRegister();
+    }
+    initializeMultiStepForm();
+};
+
+// Override closeModalAndReset to reset multi-step form
+const originalCloseModalAndReset = window.closeModalAndReset;
+window.closeModalAndReset = function(modalId) {
+    if (modalId === 'registerModal') {
+        resetMultiStepForm();
+    }
+    if (originalCloseModalAndReset) {
+        originalCloseModalAndReset(modalId);
+    }
+};
+
+// ==========================================
+// PASSWORD MANAGEMENT FUNCTIONS
+// ==========================================
+
+// Store reset identifier for password reset flow
+let resetIdentifier = '';
+let resetType = 'email';
+
+// Open modal helper
+function openModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.style.display = 'block';
+    }
+}
+
+// Show forgot password modal
+function showForgotPassword() {
+    closeModal('loginModal');
+    showForgotStep1();
+    openModal('forgotPasswordModal');
+}
+
+// Make openModal globally available
+window.openModal = openModal;
+
+// Toggle between email and phone reset method
+function toggleResetMethod(method) {
+    resetType = method;
+    const emailGroup = document.getElementById('forgotEmailGroup');
+    const phoneGroup = document.getElementById('forgotPhoneGroup');
+
+    if (method === 'phone') {
+        emailGroup.style.display = 'none';
+        phoneGroup.style.display = 'block';
+        document.getElementById('forgotEmail').value = '';
+    } else {
+        emailGroup.style.display = 'block';
+        phoneGroup.style.display = 'none';
+        document.getElementById('forgotPhone').value = '';
+    }
+}
+
+// Show step 1 of forgot password
+function showForgotStep1() {
+    document.getElementById('forgotStep1').style.display = 'block';
+    document.getElementById('forgotStep2').style.display = 'none';
+    // Reset form
+    document.getElementById('forgotEmail').value = '';
+    document.getElementById('forgotPhone').value = '';
+    document.getElementById('resetCode').value = '';
+    document.getElementById('newPassword').value = '';
+    document.getElementById('confirmNewPassword').value = '';
+}
+
+// Handle forgot password form submission
+async function handleForgotPassword(event) {
+    event.preventDefault();
+
+    const email = document.getElementById('forgotEmail').value.trim();
+    const phone = document.getElementById('forgotPhone').value.trim();
+
+    if (resetType === 'email' && !email) {
+        showToast('Please enter your email address', 'error');
+        return;
+    }
+
+    if (resetType === 'phone' && !phone) {
+        showToast('Please enter your phone number', 'error');
+        return;
+    }
+
+    const submitBtn = event.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<span class="loading-spinner"></span> Sending...';
+    submitBtn.disabled = true;
+
+    try {
+        const response = await UserAPI.forgotPassword(
+            resetType === 'email' ? email : phone,
+            resetType
+        );
+
+        resetIdentifier = resetType === 'email' ? email : phone;
+
+        // Show reset code for testing (remove in production)
+        if (response.reset_code) {
+            showToast(`Reset code: ${response.reset_code}`, 'success', 10000);
+        } else {
+            showToast('Reset code sent! Check your ' + (resetType === 'email' ? 'email' : 'phone'), 'success');
+        }
+
+        // Show step 2
+        document.getElementById('forgotStep1').style.display = 'none';
+        document.getElementById('forgotStep2').style.display = 'block';
+
+    } catch (error) {
+        showToast(error.message || 'Failed to send reset code', 'error');
+    } finally {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    }
+}
+
+// Handle reset password form submission
+async function handleResetPassword(event) {
+    event.preventDefault();
+
+    const code = document.getElementById('resetCode').value.trim();
+    const newPassword = document.getElementById('newPassword').value;
+    const confirmPassword = document.getElementById('confirmNewPassword').value;
+
+    if (!code || code.length !== 6) {
+        showToast('Please enter the 6-digit reset code', 'error');
+        return;
+    }
+
+    if (!newPassword) {
+        showToast('Please enter a new password', 'error');
+        return;
+    }
+
+    if (newPassword.length < 8) {
+        showToast('Password must be at least 8 characters', 'error');
+        return;
+    }
+
+    if (newPassword !== confirmPassword) {
+        showToast('Passwords do not match', 'error');
+        return;
+    }
+
+    const submitBtn = event.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<span class="loading-spinner"></span> Resetting...';
+    submitBtn.disabled = true;
+
+    try {
+        await UserAPI.resetPassword(resetIdentifier, code, newPassword, resetType);
+
+        showToast('Password reset successful! Please login with your new password.', 'success');
+        closeModal('forgotPasswordModal');
+
+        // Reset form
+        showForgotStep1();
+
+        // Show login modal
+        setTimeout(() => {
+            showLogin();
+        }, 1000);
+
+    } catch (error) {
+        showToast(error.message || 'Failed to reset password', 'error');
+    } finally {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    }
+}
+
+// Handle change password form submission (for logged-in users)
+async function handleChangePassword(event) {
+    event.preventDefault();
+
+    const currentPassword = document.getElementById('currentPassword').value;
+    const newPassword = document.getElementById('newPasswordProfile')?.value || document.getElementById('newPassword')?.value;
+    const confirmPassword = document.getElementById('confirmNewPasswordProfile')?.value || document.getElementById('confirmNewPassword')?.value;
+
+    if (!currentPassword) {
+        showToast('Please enter your current password', 'error');
+        return;
+    }
+
+    if (!newPassword) {
+        showToast('Please enter a new password', 'error');
+        return;
+    }
+
+    if (newPassword.length < 8) {
+        showToast('New password must be at least 8 characters', 'error');
+        return;
+    }
+
+    if (newPassword !== confirmPassword) {
+        showToast('New passwords do not match', 'error');
+        return;
+    }
+
+    const submitBtn = event.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<span class="loading-spinner"></span> Changing...';
+    submitBtn.disabled = true;
+
+    try {
+        await UserAPI.changePassword(currentPassword, newPassword);
+
+        showToast('Password changed successfully!', 'success');
+
+        // Clear form
+        document.getElementById('currentPassword').value = '';
+        if (document.getElementById('newPasswordProfile')) {
+            document.getElementById('newPasswordProfile').value = '';
+            document.getElementById('confirmNewPasswordProfile').value = '';
+        }
+
+    } catch (error) {
+        showToast(error.message || 'Failed to change password', 'error');
+    } finally {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    }
+}
+
+// Make functions globally available
+window.showForgotPassword = showForgotPassword;
+window.toggleResetMethod = toggleResetMethod;
+window.showForgotStep1 = showForgotStep1;
+window.handleForgotPassword = handleForgotPassword;
+window.handleResetPassword = handleResetPassword;
+window.handleChangePassword = handleChangePassword;

@@ -2,45 +2,244 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
     <title>Auction Details - ZUBID</title>
+	    <meta name="description" content="View detailed information, photos, bid history and time remaining for a ZUBID auction.">
+	    <meta property="og:title" content="Auction Details - ZUBID">
+	    <meta property="og:description" content="View detailed information, photos, bid history and time remaining for a ZUBID auction.">
+	    <meta property="og:type" content="website">
+	    <meta property="og:image" content="icons/icon-512x512.png">
+	    <meta name="twitter:card" content="summary_large_image">
+	    <meta name="twitter:title" content="Auction Details - ZUBID">
+	    <meta name="twitter:description" content="View detailed information, photos, bid history and time remaining for a ZUBID auction.">
+	    <meta name="twitter:image" content="icons/icon-512x512.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css?v=20250116-enhanced-enhanced">
+    <link rel="stylesheet" href="styles.css?v=20251210-responsive-fix">
     <!-- Enhanced Utilities -->
-    <script src="utils.js"></script>
-    <script src="enhanced-utils.js"></script>
-    <script src="performance.js"></script>
-    <script src="accessibility.js"></script>
-    <!-- Tesseract.js for OCR -->
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1/dist/tesseract.min.js"></script>
+	    <script src="utils.js" defer></script>
+	    <script src="enhanced-utils.js" defer></script>
+	    <script src="performance.js" defer></script>
+	    <script src="accessibility.js" defer></script>
+	    <script src="i18n.js" defer></script>
+	    <!-- Theme & Notifications -->
+	    <script src="theme.js" defer></script>
+	    <script src="notifications.js" defer></script>
 </head>
 <body>
     <!-- Navigation -->
     <nav class="navbar">
-        <div class="container">
+        <div class="nav-container">
             <div class="nav-brand">
-                <h1>ZUBID</h1>
+                <a href="index.html">
+                    <h1>ZUBID</h1>
+                    <span class="brand-tagline">Premium Auction Platform</span>
+                </a>
             </div>
+
             <div class="nav-menu" id="navMenu">
-                <a href="index.html" class="nav-link">Home</a>
-                <a href="auctions.html" class="nav-link">Auctions</a>
-                <a href="how-to-bid.html" class="nav-link">How to Bid</a>
-                <a href="contact-us.html" class="nav-link">Contact Us</a>
-                <a href="my-bids.html" class="nav-link" id="myBidsLink" style="display: none;">My Bids</a>
-                <a href="payments.html" class="nav-link" id="paymentsLink" style="display: none;">Payments</a>
-                <a href="profile.html" class="nav-link">Profile</a>
-                <div class="nav-auth" id="navAuth">
-                    <button class="btn btn-outline" onclick="showLogin()">Login</button>
-                    <button class="btn btn-primary" onclick="showRegister()">Sign Up</button>
+                <div class="nav-links">
+                    <a href="index.html" class="nav-link" data-i18n="nav.home">
+                        <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                        </svg>
+                        <span>Home</span>
+                    </a>
+
+                    <a href="auctions.html" class="nav-link active" data-i18n="nav.auctions">
+                        <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="9" cy="21" r="1"></circle>
+                            <circle cx="20" cy="21" r="1"></circle>
+                            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                        </svg>
+                        <span>Auctions</span>
+                    </a>
+
+                    <!-- My Account Dropdown (shown when logged in) -->
+                    <div class="nav-dropdown" id="myAccountDropdown" style="display: none;">
+                        <button class="nav-link dropdown-toggle">
+                            <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                            <span data-i18n="nav.myAccount">My Account</span>
+                            <svg class="dropdown-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </button>
+                        <div class="dropdown-menu">
+                            <a href="profile.html" class="dropdown-item">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="12" cy="7" r="4"></circle>
+                                </svg>
+                                <span data-i18n="nav.profile">Profile</span>
+                            </a>
+                            <a href="my-bids.html" class="dropdown-item">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="9 11 12 14 22 4"></polyline>
+                                    <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                                </svg>
+                                <span data-i18n="nav.myBids">My Bids</span>
+                            </a>
+                            <a href="payments.html" class="dropdown-item">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                                    <line x1="1" y1="10" x2="23" y2="10"></line>
+                                </svg>
+                                <span data-i18n="nav.payments">Payments</span>
+                            </a>
+                            <a href="return-requests.html" class="dropdown-item">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="1 4 1 10 7 10"></polyline>
+                                    <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+                                </svg>
+                                <span>Return Requests</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Info Dropdown -->
+                    <div class="nav-dropdown">
+                        <button class="nav-link dropdown-toggle">
+                            <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="16" x2="12" y2="12"></line>
+                                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                            </svg>
+                            <span data-i18n="messages.info">Info</span>
+                            <svg class="dropdown-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </button>
+                        <div class="dropdown-menu">
+                            <a href="how-to-bid.html" class="dropdown-item">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                                </svg>
+                                <span data-i18n="messages.howToBid">How to Bid</span>
+                            </a>
+                            <a href="contact-us.html" class="dropdown-item">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                                </svg>
+                                <span data-i18n="messages.contactUs">Contact Us</span>
+                            </a>
+                        </div>
+                    </div>
                 </div>
-                <div class="nav-user" id="navUser" style="display: none;">
-                    <span id="userName"></span>
-                    <button class="btn btn-outline" onclick="logout()">Logout</button>
+
+                <div class="nav-actions">
+                    <!-- Theme Toggle -->
+                    <button class="theme-toggle" title="Toggle Dark Mode" aria-label="Toggle theme">
+                        <svg class="sun-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="5"></circle>
+                            <line x1="12" y1="1" x2="12" y2="3"></line>
+                            <line x1="12" y1="21" x2="12" y2="23"></line>
+                            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                            <line x1="1" y1="12" x2="3" y2="12"></line>
+                            <line x1="21" y1="12" x2="23" y2="12"></line>
+                            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                        </svg>
+                        <svg class="moon-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                        </svg>
+                    </button>
+
+                    <!-- Notifications -->
+                    <div class="notifications-wrapper" id="notificationsWrapper" style="display: none;">
+                        <button class="notifications-btn" title="Notifications" aria-label="Notifications">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                            </svg>
+                            <span class="notification-badge" data-count="0">0</span>
+                        </button>
+                        <div class="notifications-dropdown">
+                            <div class="notifications-header">
+                                <h3>🔔 Notifications</h3>
+                                <div class="notifications-header-actions">
+                                    <button class="mark-all-read-btn">Mark all read</button>
+                                </div>
+                            </div>
+                            <div class="notifications-list"></div>
+                            <div class="notifications-footer">
+                                <a href="#" class="view-all-notifications-btn">View All Notifications</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Language Switcher -->
+                    <div class="language-switcher" id="languageSwitcher">
+                        <button class="language-switcher-btn" onclick="toggleLanguageDropdown()">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="2" y1="12" x2="22" y2="12"></line>
+                                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                            </svg>
+                            <span id="currentLangDisplay">EN</span>
+                        </button>
+                        <div class="language-dropdown" id="languageDropdown">
+                            <div class="language-option active" data-lang="en" onclick="changeLang('en')">
+                                <span>English</span>
+                            </div>
+                            <div class="language-option" data-lang="ku" onclick="changeLang('ku')">
+                                <span>کوردی</span>
+                            </div>
+                            <div class="language-option" data-lang="ar" onclick="changeLang('ar')">
+                                <span>العربية</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Auth Buttons -->
+                    <div class="nav-auth" id="navAuth">
+                        <button class="btn btn-outline" onclick="showLogin()" data-i18n="nav.login">Login</button>
+                        <button class="btn btn-primary" onclick="showRegister()" data-i18n="nav.signUp">Sign Up</button>
+                    </div>
+
+                    <!-- User Menu -->
+                    <div class="nav-user" id="navUser" style="display: none;">
+                        <div class="user-menu-toggle">
+                            <img id="userAvatar" src="" alt="User" class="user-avatar">
+                            <span id="userName"></span>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </div>
+                        <div class="user-dropdown">
+                            <a href="profile.html" class="user-dropdown-item">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="12" cy="7" r="4"></circle>
+                                </svg>
+                                <span data-i18n="nav.profile">Profile</span>
+                            </a>
+                            <div class="dropdown-divider"></div>
+                            <button class="user-dropdown-item logout-btn" onclick="logout()">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                                    <polyline points="16 17 21 12 16 7"></polyline>
+                                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                                </svg>
+                                <span data-i18n="nav.logout">Logout</span>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
+
+            <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
         </div>
     </nav>
 
@@ -110,9 +309,9 @@
                                 <label>Market Price</label>
                                 <span class="market-price" id="marketPrice">$0.00</span>
                             </div>
-                            <div class="stat" id="realPriceStat" style="display: none;">
-                                <label>Real Price / Buy It Now</label>
-                                <span class="real-price" id="realPrice" style="color: var(--primary-color); font-weight: 700;">$0.00</span>
+                            <div class="stat real-price-stat" id="realPriceStat" style="display: none;">
+                                <label>💰 Real Price / Buy It Now</label>
+                                <span class="real-price" id="realPrice">$0.00</span>
                             </div>
                             <div class="stat">
                                 <label>Total Bids</label>
@@ -126,6 +325,31 @@
                     </div>
                 </div>
                 
+                <!-- Buy It Now Section -->
+                <div class="buy-now-section" id="buyNowSection" style="display: none;">
+                    <div class="buy-now-card">
+                        <div class="buy-now-header">
+                            <span class="buy-now-icon">⚡</span>
+                            <h3>Buy It Now</h3>
+                        </div>
+                        <div class="buy-now-content">
+                            <p class="buy-now-description">Skip the bidding and get this item instantly!</p>
+                            <div class="buy-now-price">
+                                <span class="price-label">Instant Price</span>
+                                <span class="price-value" id="buyNowPrice">$0.00</span>
+                            </div>
+                            <button class="btn-buy-now" onclick="buyNow()">
+                                <span class="btn-icon">💰</span>
+                                <span class="btn-text">Buy Now</span>
+                            </button>
+                            <p class="buy-now-note">🔒 Secure instant purchase</p>
+                        </div>
+                    </div>
+                    <div class="section-divider">
+                        <span>OR</span>
+                    </div>
+                </div>
+
                 <!-- Bidding Section -->
                 <div class="bidding-section">
                     <h2>Place a Bid</h2>
@@ -324,10 +548,76 @@
     <!-- Notification Toast -->
     <div class="toast" id="toast"></div>
 
+    <!-- Premium Mobile Bottom Navigation -->
+    <nav class="mobile-bottom-nav" id="mobileBottomNav">
+        <div class="mobile-bottom-nav-container">
+            <a href="index.html" class="mobile-nav-item ripple" data-page="home">
+                <span class="mobile-nav-icon">🏠</span>
+                <span class="mobile-nav-label">Home</span>
+            </a>
+            <a href="auctions.html" class="mobile-nav-item active ripple" data-page="auctions">
+                <span class="mobile-nav-icon">🔨</span>
+                <span class="mobile-nav-label">Auctions</span>
+            </a>
+            <a href="#" class="mobile-nav-item mobile-nav-action ripple" id="mobileBidBtn">
+                <span class="mobile-nav-icon">💰</span>
+            </a>
+            <a href="profile.html" class="mobile-nav-item ripple" data-page="profile">
+                <span class="mobile-nav-icon">👤</span>
+                <span class="mobile-nav-label">Profile</span>
+            </a>
+            <a href="#" class="mobile-nav-item ripple" id="mobileShareBtn">
+                <span class="mobile-nav-icon">📤</span>
+                <span class="mobile-nav-label">Share</span>
+            </a>
+        </div>
+    </nav>
+
+    <script src="config.production.js"></script>
     <script src="api.js"></script>
     <script src="app.js"></script>
     <script src="social-share.js"></script>
     <script src="auction-detail.js"></script>
+
+    <script>
+        // Mobile Bottom Navigation for Auction Detail
+        (function() {
+            const bidBtn = document.getElementById('mobileBidBtn');
+            if (bidBtn) {
+                bidBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const bidInput = document.querySelector('#bidAmount, .bid-input');
+                    if (bidInput) {
+                        bidInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        setTimeout(() => bidInput.focus(), 300);
+                    }
+                });
+            }
+
+            const shareBtn = document.getElementById('mobileShareBtn');
+            if (shareBtn) {
+                shareBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    if (navigator.share) {
+                        navigator.share({
+                            title: document.title,
+                            url: window.location.href
+                        }).catch(() => {});
+                    } else {
+                        // Fallback: copy to clipboard
+                        navigator.clipboard.writeText(window.location.href).then(() => {
+                            const toast = document.getElementById('toast');
+                            if (toast) {
+                                toast.textContent = 'Link copied to clipboard!';
+                                toast.classList.add('show');
+                                setTimeout(() => toast.classList.remove('show'), 3000);
+                            }
+                        });
+                    }
+                });
+            }
+        })();
+    </script>
 </body>
 </html>
 

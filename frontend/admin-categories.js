@@ -81,7 +81,7 @@ async function handleAddCategory(event) {
     const description = document.getElementById('categoryDescription').value;
     
     try {
-        const API_BASE = (window.API_BASE_URL || 'http://localhost:5000/api').replace('/api', '');
+        const API_BASE = window.API_BASE || (window.location.hostname === 'localhost' ? 'http://localhost:5000' : window.location.origin);
         const response = await fetch(`${API_BASE}/api/admin/categories`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -106,7 +106,9 @@ function editCategory(categoryId, name, description) {
     document.getElementById('editCategoryId').value = categoryId;
     document.getElementById('editCategoryName').value = name;
     document.getElementById('editCategoryDescription').value = description;
-    document.getElementById('editCategoryModal').style.display = 'block';
+    const modal = document.getElementById('editCategoryModal');
+    modal.classList.add('active');
+    modal.style.display = 'flex';
 }
 
 async function handleUpdateCategory(event) {
@@ -117,7 +119,7 @@ async function handleUpdateCategory(event) {
     const description = document.getElementById('editCategoryDescription').value;
     
     try {
-        const API_BASE = (window.API_BASE_URL || 'http://localhost:5000/api').replace('/api', '');
+        const API_BASE = window.API_BASE || (window.location.hostname === 'localhost' ? 'http://localhost:5000' : window.location.origin);
         const response = await fetch(`${API_BASE}/api/admin/categories/${categoryId}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
@@ -144,7 +146,7 @@ async function deleteCategory(categoryId) {
     }
     
     try {
-        const API_BASE = (window.API_BASE_URL || 'http://localhost:5000/api').replace('/api', '');
+        const API_BASE = window.API_BASE || (window.location.hostname === 'localhost' ? 'http://localhost:5000' : window.location.origin);
         const response = await fetch(`${API_BASE}/api/admin/categories/${categoryId}`, {
             method: 'DELETE',
             credentials: 'include'
@@ -163,13 +165,18 @@ async function deleteCategory(categoryId) {
 }
 
 function closeModal(modalId) {
-    document.getElementById(modalId).style.display = 'none';
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.classList.remove('active');
+        modal.style.display = 'none';
+    }
 }
 
 window.onclick = function(event) {
-    const modals = document.querySelectorAll('.modal');
+    const modals = document.querySelectorAll('.admin-modal, .modal');
     modals.forEach(modal => {
         if (event.target === modal) {
+            modal.classList.remove('active');
             modal.style.display = 'none';
         }
     });

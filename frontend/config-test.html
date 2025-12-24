@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZUBID Configuration Test</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .config-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 4px solid #007bff;
+        }
+        .config-item {
+            margin: 10px 0;
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+            border: 1px solid #e9ecef;
+        }
+        .label {
+            font-weight: bold;
+            color: #495057;
+        }
+        .value {
+            color: #007bff;
+            font-family: monospace;
+            background: #f8f9fa;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+        .status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .status.production { background: #28a745; color: white; }
+        .status.development { background: #ffc107; color: #212529; }
+        .status.local { background: #6c757d; color: white; }
+        .refresh-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        .refresh-btn:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 ZUBID Configuration Test</h1>
+        
+        <div class="config-section">
+            <h3>🌐 Current Environment</h3>
+            <div class="config-item">
+                <span class="label">Current Domain:</span>
+                <span class="value" id="currentDomain"></span>
+                <span class="status" id="environmentStatus"></span>
+            </div>
+            <div class="config-item">
+                <span class="label">API Base URL:</span>
+                <span class="value" id="apiBaseUrl"></span>
+            </div>
+            <div class="config-item">
+                <span class="label">Base URL:</span>
+                <span class="value" id="baseUrl"></span>
+            </div>
+        </div>
+
+        <div class="config-section">
+            <h3>🔍 Environment Detection</h3>
+            <div class="config-item">
+                <span class="label">Is Localhost:</span>
+                <span class="value" id="isLocalhost"></span>
+            </div>
+            <div class="config-item">
+                <span class="label">Is Development Server:</span>
+                <span class="value" id="isDevelopmentServer"></span>
+            </div>
+            <div class="config-item">
+                <span class="label">Is Production Server:</span>
+                <span class="value" id="isProductionServer"></span>
+            </div>
+            <div class="config-item">
+                <span class="label">Is Mobile App:</span>
+                <span class="value" id="isMobileApp"></span>
+            </div>
+            <div class="config-item">
+                <span class="label">Debug Mode:</span>
+                <span class="value" id="debugMode"></span>
+            </div>
+        </div>
+
+        <div class="config-section">
+            <h3>🎯 Configuration URLs</h3>
+            <div class="config-item">
+                <span class="label">Production API:</span>
+                <span class="value" id="productionApi"></span>
+            </div>
+            <div class="config-item">
+                <span class="label">Development API:</span>
+                <span class="value" id="developmentApi"></span>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 30px;">
+            <button class="refresh-btn" onclick="location.reload()">🔄 Refresh</button>
+            <button class="refresh-btn" onclick="testApiConnection()">🧪 Test API</button>
+        </div>
+
+        <div id="apiTestResult" style="margin-top: 20px;"></div>
+    </div>
+
+    <script src="config.production.js"></script>
+    <script>
+        // Wait for config to load, then display information
+        setTimeout(() => {
+            // Display configuration information
+            document.getElementById('currentDomain').textContent = window.location.hostname;
+            document.getElementById('apiBaseUrl').textContent = window.API_BASE_URL || 'Not set';
+            document.getElementById('baseUrl').textContent = window.API_BASE || 'Not set';
+
+            // Environment detection
+            document.getElementById('isLocalhost').textContent = window.ZUBID_CONFIG?.isLocalhost ? 'Yes' : 'No';
+            document.getElementById('isDevelopmentServer').textContent = window.ZUBID_CONFIG?.isDevelopmentServer ? 'Yes' : 'No';
+            document.getElementById('isProductionServer').textContent = window.ZUBID_CONFIG?.isProductionServer ? 'Yes' : 'No';
+            document.getElementById('isMobileApp').textContent = window.ZUBID_CONFIG?.isMobileApp ? 'Yes' : 'No';
+            document.getElementById('debugMode').textContent = window.DEBUG_MODE ? 'Enabled' : 'Disabled';
+
+            // Configuration URLs
+            const productionApiElement = document.getElementById('productionApi');
+            const developmentApiElement = document.getElementById('developmentApi');
+
+            if (typeof PRODUCTION_API_URL !== 'undefined') {
+                productionApiElement.textContent = PRODUCTION_API_URL;
+            } else {
+                productionApiElement.textContent = 'Not available (old config)';
+                productionApiElement.style.color = '#dc3545';
+            }
+
+            if (typeof DEVELOPMENT_API_URL !== 'undefined') {
+                developmentApiElement.textContent = DEVELOPMENT_API_URL;
+            } else {
+                developmentApiElement.textContent = 'Not available (old config)';
+                developmentApiElement.style.color = '#dc3545';
+            }
+
+            // Set environment status
+            const statusElement = document.getElementById('environmentStatus');
+            if (window.ZUBID_CONFIG?.isProductionServer) {
+                statusElement.textContent = 'Production';
+                statusElement.className = 'status production';
+            } else if (window.ZUBID_CONFIG?.isDevelopmentServer) {
+                statusElement.textContent = 'Development';
+                statusElement.className = 'status development';
+            } else if (window.ZUBID_CONFIG?.isLocalhost) {
+                statusElement.textContent = 'Local';
+                statusElement.className = 'status local';
+            } else {
+                statusElement.textContent = 'Unknown';
+                statusElement.className = 'status';
+            }
+        }, 100); // Wait 100ms for config to load
+
+        // Test API connection
+        async function testApiConnection() {
+            const resultDiv = document.getElementById('apiTestResult');
+            resultDiv.innerHTML = '<div class="config-section"><h3>🧪 API Connection Test</h3><p>Testing connection...</p></div>';
+            
+            try {
+                const response = await fetch(window.API_BASE_URL + '/health');
+                const data = await response.json();
+                
+                resultDiv.innerHTML = `
+                    <div class="config-section">
+                        <h3>✅ API Connection Test - SUCCESS</h3>
+                        <div class="config-item">
+                            <span class="label">Status:</span>
+                            <span class="value">${data.status}</span>
+                        </div>
+                        <div class="config-item">
+                            <span class="label">Database:</span>
+                            <span class="value">${data.database}</span>
+                        </div>
+                        <div class="config-item">
+                            <span class="label">Timestamp:</span>
+                            <span class="value">${data.timestamp}</span>
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="config-section">
+                        <h3>❌ API Connection Test - FAILED</h3>
+                        <div class="config-item">
+                            <span class="label">Error:</span>
+                            <span class="value" style="color: #dc3545;">${error.message}</span>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

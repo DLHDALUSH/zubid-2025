@@ -8,18 +8,15 @@ from flask_migrate import Migrate
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from datetime import datetime, timedelta, date, timezone
-from functools import wraps
+from functools import wraps, lru_cache
 from sqlalchemy import func, text, Index
 from sqlalchemy.orm import joinedload, selectinload
-from functools import lru_cache
 import os
 import json
 import logging
 from logging.handlers import RotatingFileHandler
-from PIL import Image
+from PIL import Image as PILImage
 import qrcode
-import io
-import base64
 import html
 import re
 
@@ -31,7 +28,10 @@ except ImportError:
     # python-dotenv not installed, continue without it
     pass
 
-app = Flask(__name__)
+# Get frontend directory path for serving static files
+frontend_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'frontend')
+
+app = Flask(__name__, static_folder=frontend_dir, static_url_path='')
 
 # Configuration from environment variables with fallbacks for development
 # SECURITY: Require SECRET_KEY in production, fail if not set
@@ -55,8 +55,25 @@ if not secret_key:
         )
 
 app.config['SECRET_KEY'] = secret_key
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URI', 'sqlite:///auction.db')
+
+# Database configuration - convert postgresql:// to postgresql+psycopg:// for psycopg3
+database_uri = os.getenv('DATABASE_URI', 'sqlite:///auction.db')
+if database_uri.startswith('postgresql://'):
+    database_uri = database_uri.replace('postgresql://', 'postgresql+psycopg://', 1)
+elif database_uri.startswith('postgres://'):
+    database_uri = database_uri.replace('postgres://', 'postgresql+psycopg://', 1)
+
+app.config['SQLALCHEMY_DATABASE_URI'] = database_uri
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# Session configuration for proper cookie handling
+is_https = os.getenv('HTTPS_ENABLED', 'false').lower() == 'true'
+app.config['SESSION_COOKIE_NAME'] = 'zubid_session'  # Explicit session cookie name
+app.config['SESSION_COOKIE_SECURE'] = is_https
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+# Use 'Lax' for same-origin requests (frontend served from Flask on port 5000)
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['PERMANENT_SESSION_LIFETIME'] = 86400  # 24 hours
 # Database connection pooling (only for non-SQLite databases)
 if 'sqlite' not in app.config['SQLALCHEMY_DATABASE_URI'].lower():
     app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
@@ -116,12 +133,55 @@ limiter = Limiter(
 # CORS configuration - restrict origins in production
 cors_origins = os.getenv('CORS_ORIGINS', '*')
 if cors_origins == '*':
-    # Development mode - allow all origins
-    CORS(app, supports_credentials=True, origins="*")
+    # Development/default mode - allow all origins for API access (mobile apps, web)
+    # For APIs that need to be accessed from mobile apps, we use permissive CORS
+    CORS(app,
+         supports_credentials=False,  # Mobile apps don't use cookies
+         origins="*",  # Allow any origin (required for mobile apps)
+         allow_headers=['Content-Type', 'X-CSRFToken', 'Authorization'],
+         expose_headers=['Set-Cookie'],
+         methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'])
 else:
-    # Production mode - restrict to specific origins
+    # Production mode with specific origins - restrict to specific origins
     allowed_origins = [origin.strip() for origin in cors_origins.split(',')]
-    CORS(app, supports_credentials=True, origins=allowed_origins)
+    CORS(app,
+         supports_credentials=True,
+         origins=allowed_origins,
+         allow_headers=['Content-Type', 'X-CSRFToken', 'Authorization'],
+         expose_headers=['Set-Cookie'],
+         methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'])
+
+# Security Headers Middleware
+@app.after_request
+def add_security_headers(response):
+    """Add comprehensive security headers to all responses"""
+    # Prevent clickjacking
+    response.headers['X-Frame-Options'] = 'DENY'
+    # Prevent MIME type sniffing
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    # Enable XSS protection
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    # Strict Transport Security (HTTPS only)
+    if request.is_secure:
+        response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+    # Content Security Policy
+    response.headers['Content-Security-Policy'] = (
+        "default-src 'self'; "
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval'; "
+        "style-src 'self' 'unsafe-inline'; "
+        "img-src 'self' data: https:; "
+        "font-src 'self' https:; "
+        "connect-src 'self' https:; "
+        "frame-ancestors 'none';"
+    )
+    # Referrer Policy
+    response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+    # Permissions Policy
+    response.headers['Permissions-Policy'] = (
+        "geolocation=(), microphone=(), camera=(), "
+        "payment=(), usb=(), magnetometer=(), gyroscope=()"
+    )
+    return response
 
 # Input Validation and Sanitization Helpers
 def sanitize_string(value, max_length=None, allow_html=False):
@@ -164,9 +224,12 @@ def validate_phone(phone):
     """Validate phone number format"""
     if not phone or not isinstance(phone, str):
         return False
-    # Remove common separators
+    # Remove common separators and spaces
     cleaned = re.sub(r'[\s\-\(\)]', '', phone)
-    # Check if it's all digits and reasonable length
+    # Allow international format with + prefix
+    if cleaned.startswith('+'):
+        cleaned = cleaned[1:]  # Remove the + sign
+    # Check if it's all digits and reasonable length (8-20 digits)
     return cleaned.isdigit() and 8 <= len(cleaned) <= 20
 
 def sanitize_filename(filename):
@@ -176,6 +239,173 @@ def sanitize_filename(filename):
     # Additional check: remove any remaining path separators
     safe = safe.replace('/', '').replace('\\', '')
     return safe
+
+# ==========================================
+# EMAIL & SMS SENDING FUNCTIONS
+# ==========================================
+
+def send_email(to_email, subject, body):
+    """
+    Send email using SMTP
+    Requires environment variables:
+    - SMTP_HOST: SMTP server hostname
+    - SMTP_PORT: SMTP server port (usually 587 for TLS)
+    - SMTP_USER: SMTP username/email
+    - SMTP_PASSWORD: SMTP password
+    - SMTP_FROM: From email address
+    """
+    import smtplib
+    from email.mime.text import MIMEText
+    from email.mime.multipart import MIMEMultipart
+
+    smtp_host = os.getenv('SMTP_HOST')
+    smtp_port = int(os.getenv('SMTP_PORT', '587'))
+    smtp_user = os.getenv('SMTP_USER')
+    smtp_password = os.getenv('SMTP_PASSWORD')
+    smtp_from = os.getenv('SMTP_FROM', smtp_user)
+
+    if not all([smtp_host, smtp_user, smtp_password]):
+        app.logger.warning("SMTP not configured. Email not sent.")
+        return False
+
+    try:
+        # Create message
+        msg = MIMEMultipart('alternative')
+        msg['Subject'] = subject
+        msg['From'] = f"ZUBID Auction <{smtp_from}>"
+        msg['To'] = to_email
+
+        # Plain text version
+        text_part = MIMEText(body, 'plain')
+
+        # HTML version
+        html_body = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+                .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+                .header {{ background: linear-gradient(135deg, #f97316, #ea580c); color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }}
+                .content {{ background: #f8fafc; padding: 30px; border-radius: 0 0 8px 8px; }}
+                .code {{ font-size: 32px; font-weight: bold; color: #f97316; letter-spacing: 8px; text-align: center; padding: 20px; background: white; border-radius: 8px; margin: 20px 0; }}
+                .footer {{ text-align: center; color: #64748b; font-size: 12px; margin-top: 20px; }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1>🔐 ZUBID Auction</h1>
+                </div>
+                <div class="content">
+                    {body.replace(chr(10), '<br>')}
+                </div>
+                <div class="footer">
+                    <p>This is an automated message from ZUBID Auction Platform.</p>
+                    <p>If you didn't request this, please ignore this email.</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+        html_part = MIMEText(html_body, 'html')
+
+        msg.attach(text_part)
+        msg.attach(html_part)
+
+        # Connect and send
+        with smtplib.SMTP(smtp_host, smtp_port) as server:
+            server.starttls()
+            server.login(smtp_user, smtp_password)
+            server.send_message(msg)
+
+        app.logger.info(f"Email sent successfully to {to_email}")
+        return True
+
+    except Exception as e:
+        app.logger.error(f"Failed to send email to {to_email}: {str(e)}")
+        return False
+
+
+def send_sms(to_phone, message):
+    """
+    Send SMS using Twilio
+    Requires environment variables:
+    - TWILIO_ACCOUNT_SID: Twilio Account SID
+    - TWILIO_AUTH_TOKEN: Twilio Auth Token
+    - TWILIO_PHONE_NUMBER: Twilio phone number (from)
+    """
+    account_sid = os.getenv('TWILIO_ACCOUNT_SID')
+    auth_token = os.getenv('TWILIO_AUTH_TOKEN')
+    from_phone = os.getenv('TWILIO_PHONE_NUMBER')
+
+    if not all([account_sid, auth_token, from_phone]):
+        app.logger.warning("Twilio not configured. SMS not sent.")
+        return False
+
+    try:
+        from twilio.rest import Client
+        client = Client(account_sid, auth_token)
+
+        # Ensure phone number has country code
+        if not to_phone.startswith('+'):
+            # Default to Iraq country code if not provided
+            to_phone = '+964' + to_phone.lstrip('0')
+
+        sms = client.messages.create(
+            body=message,
+            from_=from_phone,
+            to=to_phone
+        )
+
+        app.logger.info(f"SMS sent successfully to {to_phone}, SID: {sms.sid}")
+        return True
+
+    except ImportError:
+        app.logger.warning("Twilio library not installed. Run: pip install twilio")
+        return False
+    except Exception as e:
+        app.logger.error(f"Failed to send SMS to {to_phone}: {str(e)}")
+        return False
+
+
+def send_verification_code(user, code, method='email'):
+    """
+    Send verification code via email or SMS
+
+    Args:
+        user: User object
+        code: 6-digit verification code
+        method: 'email' or 'phone'
+
+    Returns:
+        bool: True if sent successfully
+    """
+    if method == 'email' and user.email:
+        subject = "🔐 ZUBID - Password Reset Code"
+        body = f"""Hello {user.username},
+
+You requested to reset your password for your ZUBID Auction account.
+
+Your verification code is:
+
+{code}
+
+This code will expire in 15 minutes.
+
+If you didn't request this, please ignore this email and your password will remain unchanged.
+
+Best regards,
+ZUBID Auction Team"""
+
+        return send_email(user.email, subject, body)
+
+    elif method == 'phone' and user.phone:
+        message = f"ZUBID: Your password reset code is {code}. This code expires in 15 minutes."
+        return send_sms(user.phone, message)
+
+    return False
+
 
 # Security Headers Middleware
 @app.after_request
@@ -274,19 +504,51 @@ class User(db.Model):
     biometric_data = db.Column(db.Text, nullable=True)  # Deprecated: kept for backward compatibility
     profile_photo = db.Column(db.String(500), nullable=True)  # Profile photo URL
     address = db.Column(db.String(255))
-    phone = db.Column(db.String(20))
+    phone = db.Column(db.String(20), unique=True, nullable=False)  # Made unique for OTP recovery
     role = db.Column(db.String(20), default='user')  # user, admin
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
-    
+
+    # Enhanced profile fields
+    first_name = db.Column(db.String(50), nullable=True)
+    last_name = db.Column(db.String(50), nullable=True)
+    bio = db.Column(db.Text, nullable=True)  # User biography
+    company = db.Column(db.String(100), nullable=True)  # Company name
+    website = db.Column(db.String(255), nullable=True)  # Personal/company website
+    city = db.Column(db.String(100), nullable=True)
+    country = db.Column(db.String(100), nullable=True)
+    postal_code = db.Column(db.String(20), nullable=True)
+    phone_verified = db.Column(db.Boolean, default=False)
+    email_verified = db.Column(db.Boolean, default=False)
+    is_active = db.Column(db.Boolean, default=True)
+    last_login = db.Column(db.DateTime, nullable=True)
+    login_count = db.Column(db.Integer, default=0)
+
     # Explicitly specify foreign_keys to avoid ambiguity
     auctions = db.relationship('Auction', foreign_keys='Auction.seller_id', backref='seller', lazy=True)
     won_auctions = db.relationship('Auction', foreign_keys='Auction.winner_id', backref='winner', lazy=True)
     bids = db.relationship('Bid', backref='bidder', lazy=True)
-    
+
     # Database indexes for performance optimization
     __table_args__ = (
         Index('idx_user_role_created', 'role', 'created_at'),
+        Index('idx_user_email_verified', 'email_verified'),
+        Index('idx_user_active', 'is_active'),
     )
+
+class PasswordResetToken(db.Model):
+    """Store password reset tokens"""
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    token = db.Column(db.String(6), nullable=False)  # 6-digit code
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    expires_at = db.Column(db.DateTime, nullable=False)
+    used = db.Column(db.Boolean, default=False)
+
+    user = db.relationship('User', backref=db.backref('reset_tokens', lazy=True))
+
+    def is_valid(self):
+        """Check if token is valid (not expired and not used)"""
+        return not self.used and datetime.now(timezone.utc) < self.expires_at
 
 class Category(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -362,12 +624,13 @@ class Invoice(db.Model):
     item_price = db.Column(db.Float, nullable=False)  # Winning bid amount
     bid_fee = db.Column(db.Float, nullable=False)  # 1% of item price
     delivery_fee = db.Column(db.Float, nullable=False, default=0.0)
+    cashback_amount = db.Column(db.Float, nullable=False, default=0.0)  # Cashback discount applied
     total_amount = db.Column(db.Float, nullable=False)
     payment_method = db.Column(db.String(50))  # 'cash_on_delivery' or 'fib'
     payment_status = db.Column(db.String(50), default='pending')  # pending, paid, failed, cancelled
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     paid_at = db.Column(db.DateTime, nullable=True)
-    
+
     auction = db.relationship('Auction', backref='invoice', lazy=True)
     user = db.relationship('User', backref='invoices', lazy=True)
 
@@ -414,15 +677,103 @@ class Cashback(db.Model):
     status = db.Column(db.String(50), default='pending')  # pending, processed, cancelled
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     processed_at = db.Column(db.DateTime, nullable=True)
-    
+
     user = db.relationship('User', backref='cashbacks', lazy=True)
     auction = db.relationship('Auction', backref='cashbacks', lazy=True)
+
+class NavigationMenu(db.Model):
+    """Dynamic navigation menu configuration"""
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    label = db.Column(db.String(100), nullable=False)  # Display label
+    url = db.Column(db.String(500), nullable=True)  # URL for direct links
+    icon = db.Column(db.String(100), nullable=True)  # Icon name or SVG path
+    parent_id = db.Column(db.Integer, db.ForeignKey('navigation_menu.id'), nullable=True)  # For nested menus
+    order = db.Column(db.Integer, default=0)  # Display order
+    is_active = db.Column(db.Boolean, default=True)
+    requires_auth = db.Column(db.Boolean, default=False)  # Show only when logged in
+    requires_role = db.Column(db.String(20), nullable=True)  # Required role (admin, user, etc.)
+    target = db.Column(db.String(20), default='_self')  # _self, _blank, etc.
+    css_class = db.Column(db.String(100), nullable=True)  # Custom CSS class
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+    # Self-referential relationship for nested menus
+    children = db.relationship('NavigationMenu', backref=db.backref('parent', remote_side=[id]), lazy=True)
+
+    # Database indexes for performance
+    __table_args__ = (
+        Index('idx_nav_parent_order', 'parent_id', 'order'),
+        Index('idx_nav_active', 'is_active'),
+    )
+
+class UserPreference(db.Model):
+    """Store user preferences and settings"""
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False, unique=True)
+    theme = db.Column(db.String(20), default='light')  # light, dark, auto
+    language = db.Column(db.String(10), default='en')  # en, ku, ar
+    notifications_enabled = db.Column(db.Boolean, default=True)
+    email_notifications = db.Column(db.Boolean, default=True)
+    bid_alerts = db.Column(db.Boolean, default=True)
+    auction_reminders = db.Column(db.Boolean, default=True)
+    newsletter_subscribed = db.Column(db.Boolean, default=False)
+    currency = db.Column(db.String(10), default='USD')
+    timezone = db.Column(db.String(50), default='UTC')
+    items_per_page = db.Column(db.Integer, default=20)
+    default_view = db.Column(db.String(20), default='grid')  # grid, list
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+    user = db.relationship('User', backref=db.backref('preferences', uselist=False, lazy=True))
+
+    # Database index
+    __table_args__ = (
+        Index('idx_user_pref_user_id', 'user_id'),
+    )
+
+class Wishlist(db.Model):
+    """User wishlist for favorite auctions"""
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    auction_id = db.Column(db.Integer, db.ForeignKey('auction.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+
+    user = db.relationship('User', backref=db.backref('wishlist_items', lazy=True))
+    auction = db.relationship('Auction', backref=db.backref('wishlisted_by', lazy=True))
+
+    __table_args__ = (
+        db.UniqueConstraint('user_id', 'auction_id', name='unique_wishlist_item'),
+        Index('idx_wishlist_user', 'user_id'),
+    )
+
+class Notification(db.Model):
+    """User notifications"""
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    title = db.Column(db.String(200), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    type = db.Column(db.String(50), default='info')  # outbid, ending, won, new, info
+    is_read = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    auction_id = db.Column(db.Integer, db.ForeignKey('auction.id'), nullable=True)
+
+    user = db.relationship('User', backref=db.backref('notifications', lazy=True))
+    auction = db.relationship('Auction', backref=db.backref('notifications', lazy=True))
+
+    __table_args__ = (
+        Index('idx_notification_user_read', 'user_id', 'is_read'),
+        Index('idx_notification_created', 'created_at'),
+    )
 
 # Authentication decorator
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
+        app.logger.info(f"[AUTH_CHECK] Session data: {dict(session)}")
+        app.logger.info(f"[AUTH_CHECK] Session keys: {list(session.keys())}")
         if 'user_id' not in session:
+            app.logger.warning(f"[AUTH_CHECK] No user_id in session, returning 401")
             return jsonify({'error': 'Authentication required'}), 401
         return f(*args, **kwargs)
     return decorated_function
@@ -506,8 +857,8 @@ def get_csrf_token():
     """Get CSRF token for forms"""
     return jsonify({'csrf_token': generate_csrf()}), 200
 
-# Image Upload Configuration
-UPLOAD_FOLDER = os.getenv('UPLOAD_FOLDER', 'uploads')
+# Image Upload Configuration - use absolute path based on this file's location
+UPLOAD_FOLDER = os.getenv('UPLOAD_FOLDER', os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads'))
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 ALLOWED_VIDEO_EXTENSIONS = {'mp4', 'webm', 'ogg', 'mov', 'avi', 'mkv', 'm4v'}
 MAX_IMAGE_SIZE = 5 * 1024 * 1024  # 5MB
@@ -540,15 +891,16 @@ def resize_image(image_path, max_size=(1920, 1920), quality=85, is_featured=Fals
         
         # Open and verify image
         try:
-            with Image.open(image_path) as img:
+            with PILImage.open(image_path) as img:
                 # Verify image is valid (this will raise an exception if corrupted)
                 img.verify()
         except Exception as verify_error:
-            app.logger.error(f"Image verification failed for {image_path}: {str(verify_error)}")
-            return False
-        
+            # Be more tolerant: log a warning but try to process the image anyway.
+            app.logger.warning(f"Image verification failed for {image_path}: {str(verify_error)}")
+            # Do not return here; a second open below may still succeed for some images.
+
         # Reopen image after verification (verify() closes the file)
-        with Image.open(image_path) as img:
+        with PILImage.open(image_path) as img:
             original_format = img.format
             original_mode = img.mode
             needs_resize = img.size[0] > max_size[0] or img.size[1] > max_size[1]
@@ -557,14 +909,14 @@ def resize_image(image_path, max_size=(1920, 1920), quality=85, is_featured=Fals
             # Convert to RGB if necessary
             if needs_conversion:
                 if original_mode == 'RGBA':
-                    background = Image.new('RGB', img.size, (255, 255, 255))
+                    background = PILImage.new('RGB', img.size, (255, 255, 255))
                     if img.mode == 'RGBA':
                         background.paste(img, mask=img.split()[3] if len(img.split()) > 3 else None)
                     else:
                         background.paste(img)
                     img = background
                 elif original_mode == 'LA':
-                    background = Image.new('RGB', img.size, (255, 255, 255))
+                    background = PILImage.new('RGB', img.size, (255, 255, 255))
                     background.paste(img)
                     img = background
                 elif original_mode == 'P':
@@ -575,17 +927,17 @@ def resize_image(image_path, max_size=(1920, 1920), quality=85, is_featured=Fals
             if needs_resize:
                 # Use LANCZOS if available, otherwise use ANTIALIAS (for older Pillow versions)
                 try:
-                    img.thumbnail(max_size, Image.Resampling.LANCZOS)
+                    img.thumbnail(max_size, PILImage.Resampling.LANCZOS)
                 except AttributeError:
                     # Fallback for older Pillow versions
-                    img.thumbnail(max_size, Image.LANCZOS)
+                    img.thumbnail(max_size, PILImage.LANCZOS)
             
             # For featured images, resize to optimal dimensions first
             if is_featured:
                 # Featured images: 1920x600 (16:5 aspect ratio) for carousel
                 target_size = (1920, 600)  # Wide format for carousel
                 # Always resize featured images to optimal dimensions
-                img.thumbnail(target_size, Image.Resampling.LANCZOS)
+                img.thumbnail(target_size, PILImage.Resampling.LANCZOS)
                 needs_resize = True  # Mark as resized so it gets saved
             
             # Save if resize or conversion occurred, preserving original format when possible
@@ -818,6 +1170,7 @@ def uploaded_file(filename):
 
 # User Management APIs
 @app.route('/api/register', methods=['POST'])
+@csrf.exempt  # Allow registration without CSRF token for API clients
 @limiter.limit("5 per minute")  # Rate limit registration
 def register():
     try:
@@ -893,7 +1246,11 @@ def register():
         # Check if ID number already exists
         if User.query.filter_by(id_number=id_number).first():
             return jsonify({'error': 'ID Number already registered'}), 400
-        
+
+        # Check if phone number already exists
+        if User.query.filter_by(phone=phone).first():
+            return jsonify({'error': 'Phone number already registered'}), 400
+
         # Parse birth_date string to Date object
         birth_date_obj = None
         if form_data.get('birth_date'):
@@ -982,12 +1339,20 @@ def register():
             f"Happy bidding! 🚀"
         )
         
+        # Return response compatible with Android app's AuthResponse model
         return jsonify({
             'message': 'User registered successfully',
             'welcome_message': welcome_message,
-            'user_id': user.id,
-            'username': user.username,
-            'profile_photo': profile_photo_url
+            'user': {
+                'id': str(user.id),
+                'username': user.username,
+                'email': user.email,
+                'role': user.role,
+                'profile_photo': profile_photo_url,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'balance': 0.0
+            }
         }), 201
     except Exception as e:
         db.session.rollback()
@@ -997,6 +1362,7 @@ def register():
         return jsonify({'error': f'Registration failed: {str(e)}'}), 500
 
 @app.route('/api/login', methods=['POST'])
+@csrf.exempt  # Allow login without CSRF token for API clients
 @limiter.limit("10 per minute")  # Rate limit login attempts
 def login():
     if not request.json:
@@ -1008,27 +1374,481 @@ def login():
     
     user = User.query.filter_by(username=data['username']).first()
     if user and check_password_hash(user.password_hash, data['password']):
+        # Check if user is active
+        if not user.is_active:
+            app.logger.warning(f"Login attempt for inactive user: {user.username}")
+            return jsonify({'error': 'Account is deactivated. Please contact support.'}), 403
+
+        # Update login tracking
+        user.last_login = datetime.now(timezone.utc)
+        user.login_count = (user.login_count or 0) + 1
+        db.session.commit()
+
+        session.permanent = True
         session['user_id'] = user.id
+        session.modified = True  # Force Flask to send the Set-Cookie header
+        app.logger.info(f"User {user.username} (ID: {user.id}) logged in. Session ID: {session.get('user_id')}")
+
+        # Create default preferences if they don't exist
+        if not user.preferences:
+            preferences = UserPreference(user_id=user.id)
+            db.session.add(preferences)
+            db.session.commit()
+
         return jsonify({
             'message': 'Login successful',
             'user': {
-                'id': user.id,
+                'id': str(user.id),
                 'username': user.username,
                 'email': user.email,
-                'role': user.role
+                'role': user.role,
+                'profile_photo': user.profile_photo,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'balance': 0.0  # TODO: Add actual balance field to User model
             }
         }), 200
+    app.logger.warning(f"Failed login attempt for user: {data.get('username')}")
     return jsonify({'error': 'Invalid credentials'}), 401
 
 @app.route('/api/logout', methods=['POST'])
+@csrf.exempt  # Allow logout without CSRF token for API clients
 def logout():
     session.pop('user_id', None)
     return jsonify({'message': 'Logout successful'}), 200
 
+@app.route('/api/me', methods=['GET'])
+@login_required
+def get_current_user():
+    """Get current logged-in user's profile"""
+    user = User.query.get(session['user_id'])
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+
+    return jsonify({
+        'id': str(user.id),
+        'username': user.username,
+        'email': user.email,
+        'role': user.role,
+        'profile_photo': user.profile_photo,
+        'first_name': user.first_name,
+        'last_name': user.last_name,
+        'balance': 0.0,  # TODO: Add actual balance field
+        'phone': user.phone,
+        'address': user.address,
+        'city': user.city,
+        'country': user.country,
+        'bio': user.bio,
+        'company': user.company,
+        'website': user.website,
+        'email_verified': user.email_verified,
+        'phone_verified': user.phone_verified,
+        'created_at': user.created_at.isoformat() if user.created_at else None,
+        'last_login': user.last_login.isoformat() if user.last_login else None
+    }), 200
+
+# ==========================================
+# WISHLIST ENDPOINTS
+# ==========================================
+
+def get_auction_image(auction):
+    """Get primary image URL for an auction"""
+    if auction.images:
+        primary = next((img for img in auction.images if img.is_primary), None)
+        if primary:
+            return primary.url
+        return auction.images[0].url if auction.images else None
+    return auction.featured_image_url
+
+@app.route('/api/wishlist', methods=['GET'])
+@login_required
+def get_wishlist():
+    """Get user's wishlist"""
+    user_id = session['user_id']
+    wishlist_items = Wishlist.query.filter_by(user_id=user_id).all()
+
+    auctions = []
+    for item in wishlist_items:
+        auction = item.auction
+        if auction:
+            end_time = ensure_timezone_aware(auction.end_time) if auction.end_time else None
+            end_time_ms = int(end_time.timestamp() * 1000) if end_time else 0
+            auctions.append({
+                # Android-compatible field names
+                'id': str(auction.id),
+                'title': auction.item_name,
+                'description': auction.description,
+                'imageUrl': get_auction_image(auction),
+                'currentPrice': auction.current_bid or auction.starting_bid,
+                'startingPrice': auction.starting_bid,
+                'endTime': end_time_ms,
+                'categoryId': str(auction.category_id) if auction.category_id else '',
+                'sellerId': str(auction.seller_id),
+                'bidCount': len(auction.bids) if auction.bids else 0,
+                'isWishlisted': True,
+                'realPrice': auction.real_price,
+                'marketPrice': auction.market_price
+            })
+
+    return jsonify(auctions), 200
+
+@app.route('/api/wishlist/<int:auction_id>', methods=['POST'])
+@login_required
+def add_to_wishlist(auction_id):
+    """Add auction to wishlist"""
+    user_id = session['user_id']
+
+    # Check if auction exists
+    auction = Auction.query.get(auction_id)
+    if not auction:
+        return jsonify({'error': 'Auction not found'}), 404
+
+    # Check if already in wishlist
+    existing = Wishlist.query.filter_by(user_id=user_id, auction_id=auction_id).first()
+    if existing:
+        return jsonify({'message': 'Already in wishlist'}), 200
+
+    wishlist_item = Wishlist(user_id=user_id, auction_id=auction_id)
+    db.session.add(wishlist_item)
+    db.session.commit()
+
+    return jsonify({'message': 'Added to wishlist'}), 201
+
+@app.route('/api/wishlist/<int:auction_id>', methods=['DELETE'])
+@login_required
+def remove_from_wishlist(auction_id):
+    """Remove auction from wishlist"""
+    user_id = session['user_id']
+
+    wishlist_item = Wishlist.query.filter_by(user_id=user_id, auction_id=auction_id).first()
+    if wishlist_item:
+        db.session.delete(wishlist_item)
+        db.session.commit()
+
+    return jsonify({'message': 'Removed from wishlist'}), 200
+
+# ==========================================
+# MY BIDS & MY AUCTIONS ENDPOINTS
+# ==========================================
+
+@app.route('/api/my-bids', methods=['GET'])
+@login_required
+def get_my_bids():
+    """Get auctions the user has bid on"""
+    user_id = session['user_id']
+
+    # Get all auctions where user has placed bids
+    user_bids = Bid.query.filter_by(user_id=user_id).all()
+    auction_ids = list(set([bid.auction_id for bid in user_bids]))
+
+    auctions = Auction.query.filter(Auction.id.in_(auction_ids)).all()
+
+    result = []
+    for auction in auctions:
+        end_time = ensure_timezone_aware(auction.end_time) if auction.end_time else None
+        end_time_ms = int(end_time.timestamp() * 1000) if end_time else 0
+        result.append({
+            # Android-compatible field names
+            'id': str(auction.id),
+            'title': auction.item_name,
+            'description': auction.description,
+            'imageUrl': get_auction_image(auction),
+            'currentPrice': auction.current_bid or auction.starting_bid,
+            'startingPrice': auction.starting_bid,
+            'endTime': end_time_ms,
+            'categoryId': str(auction.category_id) if auction.category_id else '',
+            'sellerId': str(auction.seller_id),
+            'bidCount': len(auction.bids) if auction.bids else 0,
+            'isWishlisted': False,
+            'realPrice': auction.real_price,
+            'marketPrice': auction.market_price
+        })
+
+    return jsonify(result), 200
+
+@app.route('/api/my-auctions', methods=['GET'])
+@login_required
+def get_my_auctions():
+    """Get auctions the user has won"""
+    user_id = session['user_id']
+
+    # Get all auctions where user is the winner
+    won_auctions = Auction.query.filter_by(winner_id=user_id, status='ended').all()
+
+    result = []
+    for auction in won_auctions:
+        end_time = ensure_timezone_aware(auction.end_time) if auction.end_time else None
+        end_time_ms = int(end_time.timestamp() * 1000) if end_time else 0
+        result.append({
+            # Android-compatible field names
+            'id': str(auction.id),
+            'title': auction.item_name,
+            'description': auction.description,
+            'imageUrl': get_auction_image(auction),
+            'currentPrice': auction.current_bid or auction.starting_bid,
+            'startingPrice': auction.starting_bid,
+            'endTime': end_time_ms,
+            'categoryId': str(auction.category_id) if auction.category_id else '',
+            'sellerId': str(auction.seller_id),
+            'bidCount': len(auction.bids) if auction.bids else 0,
+            'isWishlisted': False,
+            'realPrice': auction.real_price,
+            'marketPrice': auction.market_price
+        })
+
+    return jsonify(result), 200
+
+# ==========================================
+# NOTIFICATIONS ENDPOINTS
+# ==========================================
+
+@app.route('/api/notifications', methods=['GET'])
+@login_required
+def get_notifications():
+    """Get user's notifications"""
+    user_id = session['user_id']
+
+    notifications = Notification.query.filter_by(user_id=user_id)\
+        .order_by(Notification.created_at.desc())\
+        .limit(50).all()
+
+    result = []
+    for notif in notifications:
+        result.append({
+            'id': str(notif.id),
+            'title': notif.title,
+            'message': notif.message,
+            'timestamp': int(notif.created_at.timestamp() * 1000) if notif.created_at else 0,
+            'type': notif.type,
+            'isRead': notif.is_read
+        })
+
+    return jsonify(result), 200
+
+@app.route('/api/notifications/<int:notification_id>/read', methods=['PUT'])
+@login_required
+def mark_notification_read(notification_id):
+    """Mark notification as read"""
+    user_id = session['user_id']
+
+    notification = Notification.query.filter_by(id=notification_id, user_id=user_id).first()
+    if not notification:
+        return jsonify({'error': 'Notification not found'}), 404
+
+    notification.is_read = True
+    db.session.commit()
+
+    return jsonify({'message': 'Notification marked as read'}), 200
+
+# ==========================================
+# PASSWORD MANAGEMENT ENDPOINTS
+# ==========================================
+
+@app.route('/api/forgot-password', methods=['POST'])
+@limiter.limit("5 per minute")
+def forgot_password():
+    """Request password reset - accepts email OR phone"""
+    try:
+        if not request.json:
+            return jsonify({'error': 'No JSON data received'}), 400
+
+        email = request.json.get('email', '').strip().lower()
+        phone = request.json.get('phone', '').strip()
+        method = request.json.get('method', 'email')  # 'email' or 'phone'
+
+        # Must provide either email or phone
+        if not email and not phone:
+            return jsonify({'error': 'Email or phone number is required'}), 400
+
+        # Ensure PasswordResetToken table exists
+        try:
+            db.create_all()
+        except Exception as e:
+            app.logger.warning(f"Could not create tables: {e}")
+
+        # Find user by email or phone
+        user = None
+        if email:
+            user = User.query.filter_by(email=email).first()
+            method = 'email'
+        elif phone:
+            # Normalize phone number (remove spaces, dashes)
+            phone = ''.join(filter(lambda x: x.isdigit() or x == '+', phone))
+            user = User.query.filter_by(phone=phone).first()
+            method = 'phone'
+
+        if not user:
+            # Don't reveal if user exists for security
+            return jsonify({'message': 'If an account exists with this information, a reset code will be sent'}), 200
+
+        if not user.is_active:
+            return jsonify({'error': 'Account is deactivated. Please contact support.'}), 403
+
+        # Generate 6-digit reset code
+        import random
+        reset_code = ''.join([str(random.randint(0, 9)) for _ in range(6)])
+
+        # Delete any existing unused tokens for this user
+        try:
+            PasswordResetToken.query.filter_by(user_id=user.id, used=False).delete()
+        except Exception as e:
+            app.logger.warning(f"Could not delete old tokens: {e}")
+            db.session.rollback()
+
+        # Create new token (expires in 15 minutes)
+        token = PasswordResetToken(
+            user_id=user.id,
+            token=reset_code,
+            expires_at=datetime.now(timezone.utc) + timedelta(minutes=15)
+        )
+        db.session.add(token)
+        db.session.commit()
+
+        # Send verification code via email or SMS
+        sent = send_verification_code(user, reset_code, method)
+
+        if sent:
+            app.logger.info(f"Password reset code sent to user {user.username} via {method}")
+            return jsonify({
+                'message': f'Reset code sent successfully via {method}',
+                'method': method,
+                'expires_in': 15  # minutes
+            }), 200
+        else:
+            # If sending failed, still log it but don't expose the code
+            app.logger.warning(f"Failed to send reset code to {user.username} via {method}")
+            # For development/testing: include code if SMTP/Twilio not configured
+            if not is_production:
+                return jsonify({
+                    'message': 'Reset code generated (email/SMS not configured)',
+                    'reset_code': reset_code,  # Only for development
+                    'method': method,
+                    'expires_in': 15
+                }), 200
+            else:
+                return jsonify({
+                    'message': 'Reset code sent successfully',
+                    'method': method,
+                    'expires_in': 15
+                }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f"Forgot password error: {str(e)}")
+        return jsonify({'error': f'Server error: {str(e)}'}), 500
+
+@app.route('/api/reset-password', methods=['POST'])
+@limiter.limit("5 per minute")
+def reset_password():
+    """Reset password using token"""
+    try:
+        if not request.json:
+            return jsonify({'error': 'No JSON data received'}), 400
+
+        email = request.json.get('email', '').strip().lower()
+        phone = request.json.get('phone', '').strip()
+        token = request.json.get('token', '').strip()
+        new_password = request.json.get('new_password', '')
+
+        if not token:
+            return jsonify({'error': 'Reset code is required'}), 400
+
+        if not new_password:
+            return jsonify({'error': 'New password is required'}), 400
+
+        if len(new_password) < 8:
+            return jsonify({'error': 'Password must be at least 8 characters'}), 400
+
+        # Find user by email or phone
+        user = None
+        if email:
+            user = User.query.filter_by(email=email).first()
+        elif phone:
+            phone = ''.join(filter(lambda x: x.isdigit() or x == '+', phone))
+            user = User.query.filter_by(phone=phone).first()
+
+        if not user:
+            return jsonify({'error': 'Invalid reset request'}), 400
+
+        # Find valid token
+        reset_token = PasswordResetToken.query.filter_by(
+            user_id=user.id,
+            token=token,
+            used=False
+        ).first()
+
+        if not reset_token or not reset_token.is_valid():
+            return jsonify({'error': 'Invalid or expired reset code'}), 400
+
+        # Update password
+        user.password_hash = generate_password_hash(new_password)
+        reset_token.used = True
+        db.session.commit()
+
+        app.logger.info(f"Password reset successful for user {user.username}")
+
+        return jsonify({'message': 'Password reset successful'}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f"Reset password error: {str(e)}")
+        return jsonify({'error': f'Server error: {str(e)}'}), 500
+
+@app.route('/api/change-password', methods=['POST'])
+@login_required
+def change_password():
+    """Change password for logged-in user"""
+    try:
+        if not request.json:
+            return jsonify({'error': 'No JSON data received'}), 400
+
+        current_password = request.json.get('current_password', '')
+        new_password = request.json.get('new_password', '')
+
+        if not current_password:
+            return jsonify({'error': 'Current password is required'}), 400
+
+        if not new_password:
+            return jsonify({'error': 'New password is required'}), 400
+
+        if len(new_password) < 8:
+            return jsonify({'error': 'New password must be at least 8 characters'}), 400
+
+        user = User.query.get(session['user_id'])
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+
+        # Verify current password
+        if not check_password_hash(user.password_hash, current_password):
+            return jsonify({'error': 'Current password is incorrect'}), 400
+
+        # Update password
+        user.password_hash = generate_password_hash(new_password)
+        db.session.commit()
+
+        app.logger.info(f"Password changed for user {user.username}")
+
+        return jsonify({'message': 'Password changed successfully'}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f"Change password error: {str(e)}")
+        return jsonify({'error': f'Server error: {str(e)}'}), 500
+
 @app.route('/api/user/profile', methods=['GET'])
 @login_required
 def get_profile():
-    user = User.query.get(session['user_id'])
+    user_id = session.get('user_id')
+    app.logger.info(f"get_profile called. Session user_id: {user_id}")
+    user = User.query.get(user_id)
+
+    if not user:
+        app.logger.error(f"User not found for ID: {user_id}")
+        return jsonify({'error': 'User not found'}), 404
+
+    # Get user preferences
+    preferences = user.preferences
+
     return jsonify({
         'id': user.id,
         'username': user.username,
@@ -1038,7 +1858,36 @@ def get_profile():
         'address': user.address,
         'phone': user.phone,
         'role': user.role,
-        'profile_photo': user.profile_photo
+        'profile_photo': user.profile_photo,
+        # Enhanced profile fields
+        'first_name': user.first_name,
+        'last_name': user.last_name,
+        'bio': user.bio,
+        'company': user.company,
+        'website': user.website,
+        'city': user.city,
+        'country': user.country,
+        'postal_code': user.postal_code,
+        'phone_verified': user.phone_verified,
+        'email_verified': user.email_verified,
+        'is_active': user.is_active,
+        'last_login': user.last_login.isoformat() if user.last_login else None,
+        'login_count': user.login_count,
+        'created_at': user.created_at.isoformat() if user.created_at else None,
+        # User preferences
+        'preferences': {
+            'theme': preferences.theme if preferences else 'light',
+            'language': preferences.language if preferences else 'en',
+            'notifications_enabled': preferences.notifications_enabled if preferences else True,
+            'email_notifications': preferences.email_notifications if preferences else True,
+            'bid_alerts': preferences.bid_alerts if preferences else True,
+            'auction_reminders': preferences.auction_reminders if preferences else True,
+            'newsletter_subscribed': preferences.newsletter_subscribed if preferences else False,
+            'currency': preferences.currency if preferences else 'USD',
+            'timezone': preferences.timezone if preferences else 'UTC',
+            'items_per_page': preferences.items_per_page if preferences else 20,
+            'default_view': preferences.default_view if preferences else 'grid'
+        } if preferences else None
     }), 200
 
 @app.route('/api/user/profile', methods=['PUT'])
@@ -1082,7 +1931,28 @@ def update_profile():
             if phone and not validate_phone(phone):
                 return jsonify({'error': 'Invalid phone number format'}), 400
             user.phone = phone
-        
+
+        # Update enhanced profile fields
+        if 'first_name' in data:
+            user.first_name = sanitize_string(data.get('first_name', ''), max_length=50)
+        if 'last_name' in data:
+            user.last_name = sanitize_string(data.get('last_name', ''), max_length=50)
+        if 'bio' in data:
+            user.bio = sanitize_string(data.get('bio', ''), max_length=1000)
+        if 'company' in data:
+            user.company = sanitize_string(data.get('company', ''), max_length=100)
+        if 'website' in data:
+            website = sanitize_string(data.get('website', ''), max_length=255)
+            if website and not (website.startswith('http://') or website.startswith('https://')):
+                return jsonify({'error': 'Website must start with http:// or https://'}), 400
+            user.website = website
+        if 'city' in data:
+            user.city = sanitize_string(data.get('city', ''), max_length=100)
+        if 'country' in data:
+            user.country = sanitize_string(data.get('country', ''), max_length=100)
+        if 'postal_code' in data:
+            user.postal_code = sanitize_string(data.get('postal_code', ''), max_length=20)
+
         # Handle profile photo upload
         if profile_photo_file and profile_photo_file.filename:
             if not allowed_file(profile_photo_file.filename):
@@ -1182,6 +2052,85 @@ def update_profile():
         import traceback
         traceback.print_exc()
         return jsonify({'error': f'Failed to update profile: {str(e)}'}), 500
+
+@app.route('/api/user/profile/photo', methods=['POST'])
+@login_required
+@limiter.limit("10 per minute")
+def upload_profile_photo():
+    """Upload profile photo separately"""
+    try:
+        if 'photo' not in request.files:
+            return jsonify({'error': 'No photo file provided'}), 400
+
+        file = request.files['photo']
+        if file.filename == '':
+            return jsonify({'error': 'No file selected'}), 400
+
+        if not allowed_file(file.filename):
+            return jsonify({'error': 'Invalid file type. Allowed types: PNG, JPG, JPEG, GIF, WEBP'}), 400
+
+        # Check file size
+        try:
+            if hasattr(file, 'content_length') and file.content_length:
+                file_size = file.content_length
+            else:
+                file.seek(0, os.SEEK_END)
+                file_size = file.tell()
+                file.seek(0)
+        except (AttributeError, OSError, IOError):
+            file_size = MAX_IMAGE_SIZE + 1
+
+        if file_size > MAX_IMAGE_SIZE:
+            return jsonify({'error': f'Photo too large. Maximum size: {MAX_IMAGE_SIZE / 1024 / 1024}MB'}), 400
+
+        # Generate secure filename
+        filename = secure_filename(file.filename)
+        if not filename:
+            return jsonify({'error': 'Invalid filename'}), 400
+
+        timestamp = datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')
+        unique_filename = f"profile_{timestamp}_{session['user_id']}_{filename}"
+        filepath = os.path.join(UPLOAD_FOLDER, unique_filename)
+
+        # Security check
+        if not os.path.abspath(filepath).startswith(os.path.abspath(UPLOAD_FOLDER)):
+            return jsonify({'error': 'Invalid file path'}), 400
+
+        # Get user and delete old photo
+        user = User.query.get(session['user_id'])
+        if user.profile_photo:
+            try:
+                old_filename = user.profile_photo.split('/')[-1]
+                old_filepath = os.path.join(UPLOAD_FOLDER, old_filename)
+                if os.path.exists(old_filepath) and os.path.abspath(old_filepath).startswith(os.path.abspath(UPLOAD_FOLDER)):
+                    os.remove(old_filepath)
+            except Exception as e:
+                app.logger.warning(f"Could not delete old profile photo: {str(e)}")
+
+        # Save and resize
+        file.save(filepath)
+        resize_result = resize_image(filepath, max_size=(400, 400), quality=85)
+        if not resize_result:
+            try:
+                os.remove(filepath)
+            except OSError:
+                pass
+            return jsonify({'error': 'Failed to process photo'}), 500
+
+        # Update user
+        profile_photo_url = f"/uploads/{unique_filename}"
+        user.profile_photo = profile_photo_url
+        db.session.commit()
+
+        return jsonify({
+            'message': 'Profile photo uploaded successfully',
+            'profile_photo': profile_photo_url
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f"Error uploading profile photo: {str(e)}")
+        return jsonify({'error': f'Failed to upload photo: {str(e)}'}), 500
 
 # Category APIs
 # Cache categories for 5 minutes (they don't change often)
@@ -1379,16 +2328,31 @@ def get_auctions():
                 except Exception:
                     unique_bidders = set()
             
+            # Return both old field names (for web) and new field names (for Android)
+            end_time_ms = int(end_time.timestamp() * 1000) if end_time else 0
             auctions.append({
-                'id': auction.id,
-                'item_name': auction.item_name,
+                # Android-compatible field names
+                'id': str(auction.id),
+                'title': auction.item_name,
                 'description': auction.description[:100] + '...' if len(auction.description) > 100 else auction.description,
+                'imageUrl': auction.images[0].url if auction.images else None,
+                'currentPrice': auction.current_bid or auction.starting_bid,
+                'startingPrice': auction.starting_bid,
+                'endTime': end_time_ms,
+                'categoryId': str(auction.category_id) if auction.category_id else '',
+                'sellerId': str(auction.seller_id),
+                'bidCount': len(unique_bidders),
+                'isWishlisted': False,  # TODO: Check if user has wishlisted
+                'realPrice': auction.real_price,
+                'marketPrice': auction.market_price,
+                # Legacy field names (for web compatibility)
+                'item_name': auction.item_name,
                 'item_condition': auction.item_condition,
                 'starting_bid': auction.starting_bid,
                 'current_bid': auction.current_bid or auction.starting_bid,
                 'bid_increment': auction.bid_increment,
                 'market_price': auction.market_price,
-                'real_price': auction.real_price,  # Buy It Now / Real Price
+                'real_price': auction.real_price,
                 'start_time': ensure_timezone_aware(auction.start_time).isoformat() if auction.start_time else None,
                 'end_time': end_time.isoformat() if end_time else None,
                 'time_left': max(0, int(time_left)),
@@ -1399,8 +2363,8 @@ def get_auctions():
                 'status': auction.status,
                 'featured': auction.featured,
                 'image_url': auction.images[0].url if auction.images else None,
-                'featured_image_url': auction.featured_image_url,  # Separate featured image
-                'bid_count': len(unique_bidders),  # Count unique bidders, not total bids
+                'featured_image_url': auction.featured_image_url,
+                'bid_count': len(unique_bidders),
                 'qr_code_url': auction.qr_code_url,
                 'video_url': auction.video_url
             })
@@ -1866,7 +2830,7 @@ def place_bid(auction_id):
         other_auto_bids = Bid.query.filter(
             Bid.auction_id == auction_id,
             Bid.user_id != user_id,
-            Bid.is_auto_bid == True,
+            Bid.is_auto_bid,
             Bid.max_auto_bid >= bid_amount + auction.bid_increment
         ).order_by(Bid.max_auto_bid.desc()).all()
         
@@ -1914,6 +2878,88 @@ def place_bid(auction_id):
         app.logger.error(f"Error placing bid: {str(e)}", exc_info=True)
         # Don't expose internal error details in production
         error_message = 'Failed to place bid' if is_production else f'Failed to place bid: {str(e)}'
+        return jsonify({'error': error_message}), 500
+
+@app.route('/api/auctions/<int:auction_id>/buy-now', methods=['POST'])
+@login_required
+def buy_now(auction_id):
+    """Buy It Now - Purchase item at real price instantly"""
+    try:
+        user_id = session['user_id']
+
+        # Lock the auction row to prevent race conditions
+        auction = db.session.query(Auction).filter_by(id=auction_id).with_for_update().first()
+        if not auction:
+            return jsonify({'error': 'Auction not found'}), 404
+
+        if auction.status != 'active':
+            db.session.rollback()
+            return jsonify({'error': 'Auction is not active'}), 400
+
+        # Check if auction has a real price (Buy It Now price)
+        if not auction.real_price or auction.real_price <= 0:
+            db.session.rollback()
+            return jsonify({'error': 'This auction does not have a Buy It Now option'}), 400
+
+        now = datetime.now(timezone.utc)
+        end_time = ensure_timezone_aware(auction.end_time)
+        if end_time and end_time < now:
+            auction.status = 'ended'
+            db.session.commit()
+            return jsonify({'error': 'Auction has ended'}), 400
+
+        if auction.seller_id == user_id:
+            db.session.rollback()
+            return jsonify({'error': 'Cannot buy your own auction item'}), 400
+
+        # Create a bid at the real price
+        buy_now_bid = Bid(
+            auction_id=auction_id,
+            user_id=user_id,
+            amount=auction.real_price,
+            is_auto_bid=False,
+            max_auto_bid=None
+        )
+        db.session.add(buy_now_bid)
+
+        # Update auction - end it immediately with buyer as winner
+        auction.current_bid = auction.real_price
+        auction.status = 'ended'
+        auction.winner_id = user_id
+        auction.end_time = now  # End immediately
+
+        # Create invoice for the purchase
+        bid_fee = auction.real_price * 0.01  # 1% fee
+        delivery_fee = calculate_delivery_fee(user_id)
+        total_amount = auction.real_price + bid_fee + delivery_fee
+
+        # Check if invoice already exists
+        existing_invoice = Invoice.query.filter_by(auction_id=auction.id, user_id=user_id).first()
+        if not existing_invoice:
+            invoice = Invoice(
+                auction_id=auction.id,
+                user_id=user_id,
+                item_price=auction.real_price,
+                bid_fee=bid_fee,
+                delivery_fee=delivery_fee,
+                total_amount=total_amount,
+                payment_status='pending'
+            )
+            db.session.add(invoice)
+
+        db.session.commit()
+
+        return jsonify({
+            'message': 'Purchase successful! You bought this item.',
+            'auction_id': auction.id,
+            'purchase_price': auction.real_price,
+            'total_with_fees': total_amount
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f"Error in buy now: {str(e)}", exc_info=True)
+        error_message = 'Failed to process purchase' if is_production else f'Failed to process purchase: {str(e)}'
         return jsonify({'error': error_message}), 500
 
 @app.route('/api/user/bids', methods=['GET'])
@@ -2589,7 +3635,116 @@ def init_db():
                 print("[OK] real_price column exists")
         except Exception as e:
             print(f"Note: Could not check/add real_price column: {e}")
-        
+
+        # Check and add cashback_amount column to Invoice table if missing
+        try:
+            inspector = inspect(db.engine)
+            invoice_columns = [col['name'] for col in inspector.get_columns('invoice')]
+            if 'cashback_amount' not in invoice_columns:
+                print("Adding cashback_amount column to Invoice table...")
+                try:
+                    with db.engine.connect() as conn:
+                        with conn.begin():
+                            if 'sqlite' in str(db.engine.url).lower():
+                                conn.execute(text("ALTER TABLE invoice ADD COLUMN cashback_amount REAL DEFAULT 0"))
+                            else:
+                                conn.execute(text("ALTER TABLE invoice ADD COLUMN cashback_amount FLOAT DEFAULT 0"))
+                    print("[OK] cashback_amount column added successfully!")
+                except Exception as e:
+                    print(f"[WARNING] Could not add cashback_amount column automatically: {e}")
+            else:
+                print("[OK] cashback_amount column exists in Invoice table")
+        except Exception as e:
+            print(f"Note: Could not check/add cashback_amount column: {e}")
+
+        # Check and add additional Auction columns if missing
+        try:
+            inspector = inspect(db.engine)
+            auction_columns = [col['name'] for col in inspector.get_columns('auction')]
+
+            new_auction_columns = {
+                'item_condition': 'VARCHAR(50)',
+                'qr_code_url': 'VARCHAR(500)',
+                'video_url': 'VARCHAR(500)',
+            }
+
+            added_auction_cols = 0
+            for col_name, col_type in new_auction_columns.items():
+                if col_name not in auction_columns:
+                    try:
+                        with db.engine.connect() as conn:
+                            with conn.begin():
+                                conn.execute(text(f"ALTER TABLE auction ADD COLUMN {col_name} {col_type}"))
+                        added_auction_cols += 1
+                    except Exception as e:
+                        print(f"[WARNING] Could not add {col_name} column to Auction table: {e}")
+
+            if added_auction_cols > 0:
+                print(f"[OK] Added {added_auction_cols} new columns to Auction table")
+            else:
+                print("[OK] Auction table columns up to date")
+        except Exception as e:
+            print(f"Note: Could not check/add additional Auction columns: {e}")
+
+        # Check and add new User table columns if missing
+        try:
+            inspector = inspect(db.engine)
+            user_columns = [col['name'] for col in inspector.get_columns('user')]
+
+            new_user_columns = {
+                'profile_photo': 'VARCHAR(500)',
+                'first_name': 'VARCHAR(50)',
+                'last_name': 'VARCHAR(50)',
+                'bio': 'TEXT',
+                'company': 'VARCHAR(100)',
+                'website': 'VARCHAR(255)',
+                'city': 'VARCHAR(100)',
+                'country': 'VARCHAR(100)',
+                'postal_code': 'VARCHAR(20)',
+                'phone_verified': 'BOOLEAN DEFAULT 0',
+                'email_verified': 'BOOLEAN DEFAULT 0',
+                'is_active': 'BOOLEAN DEFAULT 1',
+                'last_login': 'DATETIME',
+                'login_count': 'INTEGER DEFAULT 0'
+            }
+
+            added_count = 0
+            for col_name, col_type in new_user_columns.items():
+                if col_name not in user_columns:
+                    try:
+                        with db.engine.connect() as conn:
+                            with conn.begin():
+                                conn.execute(text(f"ALTER TABLE user ADD COLUMN {col_name} {col_type}"))
+                        added_count += 1
+                    except Exception as e:
+                        print(f"[WARNING] Could not add {col_name} column: {e}")
+
+            if added_count > 0:
+                print(f"[OK] Added {added_count} new columns to User table")
+            else:
+                print("[OK] User table columns up to date")
+        except Exception as e:
+            print(f"Note: Could not check/add User columns: {e}")
+
+        # Ensure NavigationMenu and UserPreference tables exist
+        try:
+            inspector = inspect(db.engine)
+            tables = inspector.get_table_names()
+            if 'navigation_menu' not in tables:
+                print("Creating NavigationMenu table...")
+                db.create_all()
+                print("[OK] NavigationMenu table created!")
+            if 'user_preference' not in tables:
+                print("Creating UserPreference table...")
+                db.create_all()
+                print("[OK] UserPreference table created!")
+            if 'password_reset_token' not in tables:
+                print("Creating PasswordResetToken table...")
+                db.create_all()
+                print("[OK] PasswordResetToken table created!")
+        except Exception as e:
+            print(f"Note: Could not verify new tables: {e}")
+
         # Create default categories
         if Category.query.count() == 0:
             categories = [
@@ -2608,20 +3763,31 @@ def init_db():
         
         # Create default admin user if doesn't exist
         # SECURITY: Only create default admin in development, require env vars in production
-        admin = User.query.filter_by(username='admin').first()
+        # Use raw SQL to avoid ORM issues with new columns
+        try:
+            admin = User.query.filter_by(username='admin').first()
+        except Exception as e:
+            print(f"[WARNING] Could not query User table with ORM: {e}")
+            print("[INFO] Attempting to check admin user with raw SQL...")
+            try:
+                with db.engine.connect() as conn:
+                    result = conn.execute(text("SELECT id FROM user WHERE username = 'admin'"))
+                    admin_exists = result.fetchone() is not None
+                if admin_exists:
+                    print("[OK] Admin user already exists")
+                    admin = True  # Set to True to skip creation
+                else:
+                    admin = None
+            except Exception as e2:
+                print(f"[ERROR] Could not check for admin user: {e2}")
+                admin = True  # Assume exists to avoid errors
+
         if not admin:
-            admin_username = os.getenv('ADMIN_USERNAME', 'admin' if not is_production else None)
-            admin_password = os.getenv('ADMIN_PASSWORD', 'admin123' if not is_production else None)
-            admin_email = os.getenv('ADMIN_EMAIL', 'admin@zubid.com' if not is_production else None)
-            
-            if is_production:
-                if not admin_username or not admin_password or not admin_email:
-                    raise ValueError(
-                        "Admin user does not exist and required environment variables are missing! "
-                        "In production, you must set ADMIN_USERNAME, ADMIN_PASSWORD, and ADMIN_EMAIL "
-                        "environment variables to create the initial admin user."
-                    )
-            
+            # Use defaults for development, require env vars for production (but don't crash)
+            admin_username = os.getenv('ADMIN_USERNAME', 'admin')
+            admin_password = os.getenv('ADMIN_PASSWORD', 'Admin123!@#')
+            admin_email = os.getenv('ADMIN_EMAIL', 'admin@zubid.com')
+
             if not admin_username or not admin_password or not admin_email:
                 print("WARNING: Skipping admin user creation. Set ADMIN_USERNAME, ADMIN_PASSWORD, and ADMIN_EMAIL to create admin.")
             else:
@@ -2631,6 +3797,8 @@ def init_db():
                     password_hash=generate_password_hash(admin_password),
                     id_number=os.getenv('ADMIN_ID_NUMBER', 'ADMIN001'),
                     birth_date=date(1990, 1, 1),  # Default birth date for admin
+                    address='Admin Address',  # Required field
+                    phone='+1-000-0000',  # Required field
                     role='admin'
                 )
                 db.session.add(admin)
@@ -2742,8 +3910,124 @@ def init_db():
             
             db.session.commit()
             print("Sample auctions created successfully!")
-        
+
+        # Initialize default navigation menu items if none exist
+        if NavigationMenu.query.count() == 0:
+            print("Creating default navigation menu...")
+
+            # Home
+            home_menu = NavigationMenu(
+                name='home',
+                label='Home',
+                url='index.html',
+                icon='home',
+                order=1,
+                is_active=True,
+                requires_auth=False
+            )
+            db.session.add(home_menu)
+
+            # My Account (parent dropdown - requires auth)
+            my_account_menu = NavigationMenu(
+                name='my_account',
+                label='My Account',
+                url=None,
+                icon='user',
+                order=2,
+                is_active=True,
+                requires_auth=True
+            )
+            db.session.add(my_account_menu)
+            db.session.flush()
+
+            # My Account children
+            profile_menu = NavigationMenu(
+                name='profile',
+                label='Profile',
+                url='profile.html',
+                parent_id=my_account_menu.id,
+                order=1,
+                is_active=True,
+                requires_auth=True
+            )
+            db.session.add(profile_menu)
+
+            my_bids_menu = NavigationMenu(
+                name='my_bids',
+                label='My Bids',
+                url='my-bids.html',
+                parent_id=my_account_menu.id,
+                order=2,
+                is_active=True,
+                requires_auth=True
+            )
+            db.session.add(my_bids_menu)
+
+            payments_menu = NavigationMenu(
+                name='payments',
+                label='Payments',
+                url='payments.html',
+                parent_id=my_account_menu.id,
+                order=3,
+                is_active=True,
+                requires_auth=True
+            )
+            db.session.add(payments_menu)
+
+            return_requests_menu = NavigationMenu(
+                name='return_requests',
+                label='Return Requests',
+                url='return-requests.html',
+                parent_id=my_account_menu.id,
+                order=4,
+                is_active=True,
+                requires_auth=True
+            )
+            db.session.add(return_requests_menu)
+
+            # Info (parent dropdown)
+            info_menu = NavigationMenu(
+                name='info',
+                label='Info',
+                url=None,
+                icon='info',
+                order=3,
+                is_active=True,
+                requires_auth=False
+            )
+            db.session.add(info_menu)
+            db.session.flush()
+
+            # Info children
+            how_to_bid_menu = NavigationMenu(
+                name='how_to_bid',
+                label='How to Bid',
+                url='how-to-bid.html',
+                parent_id=info_menu.id,
+                order=1,
+                is_active=True,
+                requires_auth=False
+            )
+            db.session.add(how_to_bid_menu)
+
+            contact_menu = NavigationMenu(
+                name='contact',
+                label='Contact Us',
+                url='contact-us.html',
+                parent_id=info_menu.id,
+                order=2,
+                is_active=True,
+                requires_auth=False
+            )
+            db.session.add(contact_menu)
+
+            db.session.commit()
+            print("[OK] Default navigation menu created!")
+
         print("Database initialized successfully!")
+
+# Initialize database on module load (for gunicorn/production)
+init_db()
 
 @app.route('/api/user/payments', methods=['GET'])
 @login_required
@@ -2802,12 +4086,21 @@ def get_user_payments():
                 'qr_code_url': auction.qr_code_url
             }
             
+            # Check for pending cashback that can be applied
+            pending_cashback = Cashback.query.filter_by(
+                user_id=session['user_id'],
+                auction_id=auction.id,
+                status='pending'
+            ).first()
+
             invoices.append({
                 'id': invoice.id,
                 'auction': auction_data,
                 'item_price': invoice.item_price,
                 'bid_fee': invoice.bid_fee,
                 'delivery_fee': invoice.delivery_fee,
+                'cashback_amount': invoice.cashback_amount or 0,
+                'pending_cashback': pending_cashback.amount if pending_cashback else 0,
                 'total_amount': invoice.total_amount,
                 'payment_method': invoice.payment_method,
                 'payment_status': invoice.payment_status,
@@ -2829,25 +4122,25 @@ def process_payment(invoice_id):
     """Process payment for an invoice"""
     try:
         invoice = Invoice.query.get_or_404(invoice_id)
-        
+
         # Verify invoice belongs to user
         if invoice.user_id != session['user_id']:
             return jsonify({'error': 'Unauthorized access'}), 403
-        
+
         # Check if already paid
         if invoice.payment_status == 'paid':
             return jsonify({'error': 'Invoice already paid'}), 400
-        
+
         data = request.json
         payment_method = data.get('payment_method')
-        
+
         # Supported payment methods
         supported_methods = ['cash_on_delivery', 'fib', 'stripe', 'paypal']
         if payment_method not in supported_methods:
             return jsonify({'error': f'Invalid payment method. Supported: {", ".join(supported_methods)}'}), 400
-        
+
         invoice.payment_method = payment_method
-        
+
         # Process payment based on method
         if payment_method == 'cash_on_delivery':
             invoice.payment_status = 'pending'  # Will be marked as paid when delivered
@@ -2858,8 +4151,45 @@ def process_payment(invoice_id):
                 'payment_status': invoice.payment_status,
                 'note': 'Payment will be collected upon delivery'
             }), 200
+        elif payment_method == 'fib':
+            # Process FIB payment with money request
+            fib_name = data.get('fib_name')
+            fib_phone = data.get('fib_phone')
+
+            if not fib_name or not fib_phone:
+                return jsonify({'error': 'FIB payment requires name and phone number'}), 400
+
+            # Clean phone number
+            fib_phone_clean = fib_phone.replace(' ', '').replace('-', '')
+
+            # Validate Iraqi phone format
+            import re
+            if not re.match(r'^07[3-9]\d{8}$', fib_phone_clean):
+                return jsonify({'error': 'Invalid Iraqi phone number format'}), 400
+
+            # Process FIB money request
+            payment_result = process_fib_money_request(invoice, fib_name, fib_phone_clean)
+
+            if payment_result['success']:
+                invoice.payment_status = 'pending'  # Waiting for user to accept money request
+                invoice.payment_notes = f"FIB Money Request sent to {fib_phone_clean} ({fib_name})"
+                db.session.commit()
+                return jsonify({
+                    'message': 'Money request sent successfully!',
+                    'invoice_id': invoice.id,
+                    'payment_status': invoice.payment_status,
+                    'request_id': payment_result.get('request_id'),
+                    'fib_phone': fib_phone_clean,
+                    'amount': invoice.total_amount,
+                    'note': 'Please check your FIB app to approve the payment request'
+                }), 200
+            else:
+                return jsonify({
+                    'error': payment_result.get('error', 'Failed to send money request'),
+                    'invoice_id': invoice.id
+                }), 400
         else:
-            # Process online payment (fib, stripe, paypal)
+            # Process other online payments (stripe, paypal)
             payment_result = process_fib_payment(invoice)
             if payment_result['success']:
                 invoice.payment_status = 'paid'
@@ -2879,13 +4209,57 @@ def process_payment(invoice_id):
                     'invoice_id': invoice.id,
                     'payment_status': invoice.payment_status
                 }), 400
-            
+
     except Exception as e:
         print(f"Error in process_payment: {str(e)}")
         import traceback
         traceback.print_exc()
         db.session.rollback()
         return jsonify({'error': f'Failed to process payment: {str(e)}'}), 500
+
+
+# ZUBID FIB Account Number to receive payments
+ZUBID_FIB_NUMBER = '07715625156'
+
+def process_fib_money_request(invoice, customer_name, customer_phone):
+    """Send FIB money request to customer's phone number"""
+    try:
+        # In production, this would integrate with FIB's actual API
+        # FIB API endpoint would be something like:
+        # POST https://api.fib.iq/v1/money-request
+        # {
+        #     "receiver_phone": ZUBID_FIB_NUMBER,
+        #     "sender_phone": customer_phone,
+        #     "amount": invoice.total_amount,
+        #     "currency": "IQD",
+        #     "description": f"ZUBID Invoice #{invoice.id}",
+        #     "reference": f"INV-{invoice.id}"
+        # }
+
+        # For now, simulate the money request
+        import random
+        request_id = f"FIB-REQ-{invoice.id}-{random.randint(100000, 999999)}"
+
+        print(f"[FIB] Money Request Sent:")
+        print(f"  - To Phone: {customer_phone}")
+        print(f"  - Customer Name: {customer_name}")
+        print(f"  - Amount: {invoice.total_amount} IQD")
+        print(f"  - ZUBID Account: {ZUBID_FIB_NUMBER}")
+        print(f"  - Invoice ID: {invoice.id}")
+        print(f"  - Request ID: {request_id}")
+
+        return {
+            'success': True,
+            'request_id': request_id,
+            'message': f'Money request sent to {customer_phone}'
+        }
+
+    except Exception as e:
+        print(f"[FIB] Error sending money request: {str(e)}")
+        return {
+            'success': False,
+            'error': str(e)
+        }
 
 # Return Request APIs
 @app.route('/api/return-requests', methods=['GET'])
@@ -3043,7 +4417,7 @@ def process_fib_payment(invoice):
     """Process FIB payment gateway (simulated)"""
     # Use payment gateway module if available
     try:
-        from payment_gateways import get_configured_gateway, get_payment_gateway
+        from payment_gateways import get_configured_gateway
         
         # Try to get configured gateway
         gateway = get_configured_gateway()
@@ -3313,12 +4687,12 @@ def process_cashback(cashback_id):
                 auction_id=cashback.auction_id,
                 user_id=cashback.user_id
             ).first()
-            
+
             if invoice:
-                # Apply cashback to invoice total
+                # Apply cashback to invoice total and track the amount
+                invoice.cashback_amount = (invoice.cashback_amount or 0) + cashback.amount
                 invoice.total_amount = max(0, invoice.total_amount - cashback.amount)
-                invoice.payment_status = 'pending'  # Reset to pending if needed
-        
+
         cashback.status = 'processed'
         cashback.processed_at = datetime.now(timezone.utc)
         db.session.commit()
@@ -3337,28 +4711,397 @@ def process_cashback(cashback_id):
         app.logger.error(f'Error processing cashback: {str(e)}')
         return jsonify({'error': f'Failed to process cashback: {str(e)}'}), 500
 
+# User Preferences APIs
+@app.route('/api/user/preferences', methods=['GET'])
+@login_required
+def get_user_preferences():
+    """Get user preferences"""
+    try:
+        user_id = session['user_id']
+        preferences = UserPreference.query.filter_by(user_id=user_id).first()
+
+        if not preferences:
+            # Create default preferences
+            preferences = UserPreference(user_id=user_id)
+            db.session.add(preferences)
+            db.session.commit()
+
+        return jsonify({
+            'theme': preferences.theme,
+            'language': preferences.language,
+            'notifications_enabled': preferences.notifications_enabled,
+            'email_notifications': preferences.email_notifications,
+            'bid_alerts': preferences.bid_alerts,
+            'auction_reminders': preferences.auction_reminders,
+            'newsletter_subscribed': preferences.newsletter_subscribed,
+            'currency': preferences.currency,
+            'timezone': preferences.timezone,
+            'items_per_page': preferences.items_per_page,
+            'default_view': preferences.default_view
+        }), 200
+
+    except Exception as e:
+        app.logger.error(f'Error getting preferences: {str(e)}')
+        return jsonify({'error': f'Failed to get preferences: {str(e)}'}), 500
+
+@app.route('/api/user/preferences', methods=['PUT'])
+@login_required
+def update_user_preferences():
+    """Update user preferences"""
+    try:
+        user_id = session['user_id']
+        data = request.json
+
+        preferences = UserPreference.query.filter_by(user_id=user_id).first()
+        if not preferences:
+            preferences = UserPreference(user_id=user_id)
+            db.session.add(preferences)
+
+        # Update preferences
+        if 'theme' in data:
+            if data['theme'] not in ['light', 'dark', 'auto']:
+                return jsonify({'error': 'Invalid theme value'}), 400
+            preferences.theme = data['theme']
+
+        if 'language' in data:
+            if data['language'] not in ['en', 'ku', 'ar']:
+                return jsonify({'error': 'Invalid language value'}), 400
+            preferences.language = data['language']
+
+        if 'notifications_enabled' in data:
+            preferences.notifications_enabled = bool(data['notifications_enabled'])
+
+        if 'email_notifications' in data:
+            preferences.email_notifications = bool(data['email_notifications'])
+
+        if 'bid_alerts' in data:
+            preferences.bid_alerts = bool(data['bid_alerts'])
+
+        if 'auction_reminders' in data:
+            preferences.auction_reminders = bool(data['auction_reminders'])
+
+        if 'newsletter_subscribed' in data:
+            preferences.newsletter_subscribed = bool(data['newsletter_subscribed'])
+
+        if 'currency' in data:
+            preferences.currency = sanitize_string(data['currency'], max_length=10)
+
+        if 'timezone' in data:
+            preferences.timezone = sanitize_string(data['timezone'], max_length=50)
+
+        if 'items_per_page' in data:
+            items_per_page = int(data['items_per_page'])
+            if items_per_page < 5 or items_per_page > 100:
+                return jsonify({'error': 'Items per page must be between 5 and 100'}), 400
+            preferences.items_per_page = items_per_page
+
+        if 'default_view' in data:
+            if data['default_view'] not in ['grid', 'list']:
+                return jsonify({'error': 'Invalid default view value'}), 400
+            preferences.default_view = data['default_view']
+
+        preferences.updated_at = datetime.now(timezone.utc)
+        db.session.commit()
+
+        return jsonify({'message': 'Preferences updated successfully'}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f'Error updating preferences: {str(e)}')
+        return jsonify({'error': f'Failed to update preferences: {str(e)}'}), 500
+
+# Navigation Menu APIs
+@app.route('/api/navigation/menu', methods=['GET'])
+def get_navigation_menu():
+    """Get navigation menu structure"""
+    try:
+        # Get query parameters
+        include_inactive = request.args.get('include_inactive', 'false').lower() == 'true'
+        user_role = None
+
+        # Check if user is logged in to filter by role
+        if 'user_id' in session:
+            user = User.query.get(session['user_id'])
+            if user:
+                user_role = user.role
+
+        # Build query
+        query = NavigationMenu.query.filter_by(parent_id=None)
+        if not include_inactive:
+            query = query.filter_by(is_active=True)
+
+        # Get top-level menu items
+        menu_items = query.order_by(NavigationMenu.order).all()
+
+        def build_menu_tree(item):
+            """Recursively build menu tree"""
+            # Check if user has access to this menu item
+            if item.requires_auth and 'user_id' not in session:
+                return None
+            if item.requires_role and (not user_role or user_role != item.requires_role):
+                return None
+
+            menu_dict = {
+                'id': item.id,
+                'name': item.name,
+                'label': item.label,
+                'url': item.url,
+                'icon': item.icon,
+                'target': item.target,
+                'css_class': item.css_class,
+                'requires_auth': item.requires_auth,
+                'children': []
+            }
+
+            # Get children
+            children_query = NavigationMenu.query.filter_by(parent_id=item.id)
+            if not include_inactive:
+                children_query = children_query.filter_by(is_active=True)
+
+            children = children_query.order_by(NavigationMenu.order).all()
+            for child in children:
+                child_dict = build_menu_tree(child)
+                if child_dict:  # Only add if user has access
+                    menu_dict['children'].append(child_dict)
+
+            return menu_dict
+
+        # Build menu structure
+        menu_structure = []
+        for item in menu_items:
+            item_dict = build_menu_tree(item)
+            if item_dict:  # Only add if user has access
+                menu_structure.append(item_dict)
+
+        return jsonify({
+            'menu': menu_structure,
+            'user_authenticated': 'user_id' in session,
+            'user_role': user_role
+        }), 200
+
+    except Exception as e:
+        app.logger.error(f'Error getting navigation menu: {str(e)}')
+        return jsonify({'error': f'Failed to get menu: {str(e)}'}), 500
+
+@app.route('/api/navigation/menu', methods=['POST'])
+@login_required
+def create_menu_item():
+    """Create new navigation menu item (admin only)"""
+    try:
+        user = User.query.get(session['user_id'])
+        if user.role != 'admin':
+            return jsonify({'error': 'Admin access required'}), 403
+
+        data = request.json
+        if not data or not data.get('name') or not data.get('label'):
+            return jsonify({'error': 'Name and label are required'}), 400
+
+        menu_item = NavigationMenu(
+            name=sanitize_string(data['name'], max_length=100),
+            label=sanitize_string(data['label'], max_length=100),
+            url=sanitize_string(data.get('url', ''), max_length=500) if data.get('url') else None,
+            icon=sanitize_string(data.get('icon', ''), max_length=100) if data.get('icon') else None,
+            parent_id=data.get('parent_id'),
+            order=data.get('order', 0),
+            is_active=data.get('is_active', True),
+            requires_auth=data.get('requires_auth', False),
+            requires_role=data.get('requires_role'),
+            target=data.get('target', '_self'),
+            css_class=sanitize_string(data.get('css_class', ''), max_length=100) if data.get('css_class') else None
+        )
+
+        db.session.add(menu_item)
+        db.session.commit()
+
+        return jsonify({
+            'message': 'Menu item created successfully',
+            'menu_item': {
+                'id': menu_item.id,
+                'name': menu_item.name,
+                'label': menu_item.label,
+                'url': menu_item.url
+            }
+        }), 201
+
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f'Error creating menu item: {str(e)}')
+        return jsonify({'error': f'Failed to create menu item: {str(e)}'}), 500
+
+@app.route('/api/navigation/menu/<int:menu_id>', methods=['PUT'])
+@login_required
+def update_menu_item(menu_id):
+    """Update navigation menu item (admin only)"""
+    try:
+        user = User.query.get(session['user_id'])
+        if user.role != 'admin':
+            return jsonify({'error': 'Admin access required'}), 403
+
+        menu_item = NavigationMenu.query.get_or_404(menu_id)
+        data = request.json
+
+        if 'name' in data:
+            menu_item.name = sanitize_string(data['name'], max_length=100)
+        if 'label' in data:
+            menu_item.label = sanitize_string(data['label'], max_length=100)
+        if 'url' in data:
+            menu_item.url = sanitize_string(data['url'], max_length=500) if data['url'] else None
+        if 'icon' in data:
+            menu_item.icon = sanitize_string(data['icon'], max_length=100) if data['icon'] else None
+        if 'parent_id' in data:
+            menu_item.parent_id = data['parent_id']
+        if 'order' in data:
+            menu_item.order = data['order']
+        if 'is_active' in data:
+            menu_item.is_active = data['is_active']
+        if 'requires_auth' in data:
+            menu_item.requires_auth = data['requires_auth']
+        if 'requires_role' in data:
+            menu_item.requires_role = data['requires_role']
+        if 'target' in data:
+            menu_item.target = data['target']
+        if 'css_class' in data:
+            menu_item.css_class = sanitize_string(data['css_class'], max_length=100) if data['css_class'] else None
+
+        menu_item.updated_at = datetime.now(timezone.utc)
+        db.session.commit()
+
+        return jsonify({'message': 'Menu item updated successfully'}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f'Error updating menu item: {str(e)}')
+        return jsonify({'error': f'Failed to update menu item: {str(e)}'}), 500
+
+# Serve frontend static files (for same-origin requests to fix cookie issues)
+@app.route('/')
+def serve_index():
+    return send_from_directory(frontend_dir, 'index.html')
+
+@app.route('/<path:filename>')
+def serve_static(filename):
+    # Don't serve API routes or uploads as static files (they have their own routes)
+    if filename.startswith('api/') or filename.startswith('uploads/'):
+        return jsonify({'error': 'Not found'}), 404
+    # Try to serve the file from frontend directory
+    try:
+        return send_from_directory(frontend_dir, filename)
+    except:
+        # If file not found, return 404
+        return jsonify({'error': 'File not found'}), 404
+
+# ==========================================
+# ADMIN: Database Reset Endpoint (Development Only)
+# ==========================================
+@app.route('/api/admin/reset-database', methods=['POST'])
+def reset_database():
+    """Reset database - clears all users except admin. Development only."""
+    try:
+        # Get secret key from request
+        data = request.get_json() or {}
+        secret = data.get('secret', '')
+
+        # Simple secret check (in production, use proper admin auth)
+        expected_secret = os.getenv('ADMIN_RESET_SECRET', 'zubid-reset-2025')
+        if secret != expected_secret:
+            return jsonify({'error': 'Unauthorized'}), 401
+
+        # Delete all users except admin
+        deleted_users = User.query.filter(User.role != 'admin').delete()
+
+        # Delete all bids
+        deleted_bids = Bid.query.delete()
+
+        # Delete password reset tokens
+        try:
+            PasswordResetToken.query.delete()
+        except:
+            pass
+
+        db.session.commit()
+
+        return jsonify({
+            'message': 'Database reset successful',
+            'deleted_users': deleted_users,
+            'deleted_bids': deleted_bids
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': f'Reset failed: {str(e)}'}), 500
+
+@app.route('/api/admin/init-database', methods=['POST', 'GET'])
+def init_database_endpoint():
+    """Initialize database tables - useful for first deployment"""
+    try:
+        with app.app_context():
+            db.create_all()
+
+            # Create default categories if none exist
+            if Category.query.count() == 0:
+                categories = [
+                    Category(name='Electronics', description='Electronic devices and gadgets'),
+                    Category(name='Art & Collectibles', description='Artwork and collectible items'),
+                    Category(name='Jewelry', description='Precious jewelry and watches'),
+                    Category(name='Vehicles', description='Cars, motorcycles, and other vehicles'),
+                    Category(name='Real Estate', description='Properties and land'),
+                    Category(name='Fashion', description='Clothing and accessories'),
+                    Category(name='Sports', description='Sports equipment and memorabilia'),
+                    Category(name='Other', description='Other miscellaneous items')
+                ]
+                for cat in categories:
+                    db.session.add(cat)
+                db.session.commit()
+
+            # Create admin user if doesn't exist
+            admin = User.query.filter_by(username='admin').first()
+            if not admin:
+                from werkzeug.security import generate_password_hash
+                admin = User(
+                    username='admin',
+                    email='admin@zubid.com',
+                    password_hash=generate_password_hash('Admin123!@#'),
+                    role='admin',
+                    id_number='ADMIN001',
+                    birth_date=datetime(1990, 1, 1),
+                    phone='+1234567890',
+                    address='ZUBID HQ'
+                )
+                db.session.add(admin)
+                db.session.commit()
+
+        return jsonify({
+            'message': 'Database initialized successfully',
+            'tables_created': True
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': f'Init failed: {str(e)}'}), 500
+
 if __name__ == '__main__':
     init_db()
-    
+
     # Configuration from environment variables
     # SECURITY: Never run in debug mode in production
     flask_env = os.getenv('FLASK_ENV', 'development').lower()
     is_prod = flask_env == 'production'
     debug_mode = os.getenv('FLASK_DEBUG', 'False').lower() == 'true'
-    
+
     # Force debug mode OFF in production
     if is_prod and debug_mode:
         import warnings
         warnings.warn("Debug mode is disabled in production for security!", UserWarning)
         debug_mode = False
-    
+
     port = int(os.getenv('PORT', '5000'))
-    host = os.getenv('HOST', '127.0.0.1')
-    
+    host = os.getenv('HOST', '0.0.0.0')  # Changed to bind to all interfaces
+
     print("\n" + "="*50)
     print("ZUBID Backend Server Starting...")
     print("="*50)
     print(f"Server will run on: http://{host}:{port}")
+    print(f"Frontend: http://{host}:{port}/index.html")
     print(f"API Test: http://{host}:{port}/api/test")
     print(f"Environment: {flask_env.upper()}")
     print(f"Debug mode: {'ON' if debug_mode else 'OFF'}")

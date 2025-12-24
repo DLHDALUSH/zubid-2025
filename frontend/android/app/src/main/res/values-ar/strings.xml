@@ -1,0 +1,244 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">زوبيد</string>
+    <string name="title_activity_main">زوبيد</string>
+    <string name="package_name">com.zubid.app</string>
+    <string name="custom_url_scheme">com.zubid.app</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">الرئيسية</string>
+    <string name="nav_bids">مزايداتي</string>
+    <string name="nav_wishlist">المفضلة</string>
+    <string name="nav_wons">الفائزة</string>
+    <string name="nav_notifications">الإشعارات</string>
+    <string name="nav_categories">الأقسام</string>
+    <string name="nav_profile">حسابي</string>
+    <string name="nav_settings">الإعدادات</string>
+    <string name="nav_help">المساعدة والدعم</string>
+    <string name="nav_logout">تسجيل الخروج</string>
+
+    <!-- Auth -->
+    <string name="login">تسجيل الدخول</string>
+    <string name="register">إنشاء حساب جديد</string>
+    <string name="email">البريد الإلكتروني</string>
+    <string name="password">كلمة المرور</string>
+    <string name="confirm_password">تأكيد كلمة المرور</string>
+    <string name="full_name">الاسم الكامل</string>
+    <string name="forgot_password">هل نسيت كلمة المرور؟</string>
+    <string name="dont_have_account">ليس لديك حساب؟</string>
+    <string name="already_have_account">لديك حساب بالفعل؟</string>
+    <string name="skip">تخطي</string>
+    <string name="use_biometric">الدخول بالبصمة أو الوجه</string>
+    <string name="biometric_title">تسجيل الدخول بالبصمة</string>
+    <string name="biometric_subtitle">استخدم بصمتك أو وجهك للدخول السريع</string>
+    <string name="biometric_cancel">إلغاء</string>
+
+    <!-- Home -->
+    <string name="search_hint">ابحث في المزادات…</string>
+    <string name="all_products">جميع المنتجات</string>
+    <string name="live_auctions">المزادات الحية</string>
+    <string name="ending_soon">على وشك الانتهاء</string>
+
+    <!-- Auction -->
+    <string name="current_bid">السعر الحالي</string>
+    <string name="buy_now">اشترِ الآن</string>
+    <string name="place_bid">قدّم مزايدة</string>
+    <string name="your_bid">مزايدتك</string>
+    <string name="time_left">الوقت المتبقي</string>
+    <string name="bids">المزايدات</string>
+    <string name="auction_ended">انتهى المزاد</string>
+    <string name="you_won">مبروك! لقد فزت! 🎉</string>
+    <string name="outbid">تم تجاوز مزايدتك</string>
+    <string name="description">الوصف</string>
+    <string name="real_price">السعر الفوري</string>
+    <string name="market_price">سعر السوق</string>
+    <string name="buy_now_confirmation">تأكيد الشراء الفوري</string>
+    <string name="buy_now_message">هل تريد شراء هذا المنتج الآن بسعر %1$s؟</string>
+    <string name="yes_buy">نعم، أريد الشراء</string>
+    <string name="no_cancel">لا، تراجع</string>
+    <string name="please_login_to_buy">يرجى تسجيل الدخول أولاً للشراء</string>
+    <string name="please_login_to_bid">يرجى تسجيل الدخول أولاً للمزايدة</string>
+    <string name="enter_valid_bid">أدخل مبلغ مزايدة صحيح</string>
+    <string name="bid_must_be_higher">المزايدة يجب أن تكون أعلى من السعر الحالي</string>
+    <string name="no_description">لا يوجد وصف لهذا المنتج</string>
+    <string name="bids_count">%1$d مزايدة</string>
+
+    <!-- Payment -->
+    <string name="payment">الدفع</string>
+    <string name="select_payment">اختر طريقة الدفع</string>
+    <string name="credit_card">بطاقة ائتمانية (Stripe)</string>
+    <string name="fib_payment">FIB - مصرف العراق السريع</string>
+    <string name="google_pay">Google Pay</string>
+    <string name="zaincash_payment">زين كاش</string>
+    <string name="cash_on_delivery">الدفع عند الاستلام</string>
+    <string name="pay_now">ادفع الآن</string>
+    <string name="pay_with_google">الدفع بواسطة Google</string>
+    <string name="total_amount">المبلغ الإجمالي</string>
+    <string name="processing">جارٍ المعالجة…</string>
+    <string name="payment_success">تمت عملية الدفع بنجاح! ✓</string>
+    <string name="payment_failed">فشلت عملية الدفع</string>
+    <string name="delivery_address">عنوان التوصيل</string>
+    <string name="city">المدينة</string>
+    <string name="phone">رقم الهاتف</string>
+    <string name="notes">ملاحظات إضافية (اختياري)</string>
+
+    <!-- Profile -->
+    <string name="profile">الملف الشخصي</string>
+    <string name="edit_profile">تعديل الملف الشخصي</string>
+    <string name="change_password">تغيير كلمة المرور</string>
+    <string name="change_photo">تغيير الصورة الشخصية</string>
+    <string name="take_photo">التقاط صورة</string>
+    <string name="choose_gallery">اختيار من المعرض</string>
+    <string name="photo_updated">تم تحديث الصورة الشخصية!</string>
+    <string name="member_since">عضو منذ</string>
+    <string name="total_bids">إجمالي المزايدات</string>
+    <string name="won_auctions">المزادات الفائزة</string>
+    <string name="wishlist_count">المفضلة</string>
+
+    <!-- Settings -->
+    <string name="settings">الإعدادات</string>
+    <string name="notifications">الإشعارات</string>
+    <string name="push_notifications">إشعارات فورية</string>
+    <string name="bid_alerts">تنبيهات المزايدات</string>
+    <string name="email_updates">تحديثات البريد الإلكتروني</string>
+    <string name="appearance">المظهر</string>
+    <string name="dark_mode">الوضع الداكن</string>
+    <string name="language">اللغة</string>
+    <string name="select_language">اختر اللغة</string>
+    <string name="english">English</string>
+    <string name="arabic">العربية</string>
+    <string name="kurdish">کوردی</string>
+    <string name="security">الأمان</string>
+    <string name="enable_biometric">تفعيل الدخول بالبصمة</string>
+    <string name="clear_cache">مسح الذاكرة المؤقتة</string>
+    <string name="privacy_policy">سياسة الخصوصية</string>
+    <string name="terms">شروط الاستخدام</string>
+    <string name="about">حول التطبيق</string>
+    <string name="other">أخرى</string>
+
+    <!-- Empty States -->
+    <string name="no_bids">لم تقم بأي مزايدة بعد</string>
+    <string name="no_wishlist">قائمة المفضلة فارغة</string>
+    <string name="no_wins">لم تفز بأي مزاد بعد</string>
+    <string name="no_notifications">لا توجد إشعارات حالياً</string>
+
+    <!-- Messages -->
+    <string name="logged_out">تم تسجيل الخروج</string>
+    <string name="bid_placed">تم تسجيل مزايدتك بنجاح!</string>
+    <string name="added_wishlist">تمت الإضافة للمفضلة</string>
+    <string name="removed_wishlist">تمت الإزالة من المفضلة</string>
+    <string name="removed_from_wishlist">تمت الإزالة من المفضلة</string>
+    <string name="cache_cleared">تم مسح الذاكرة المؤقتة</string>
+    <string name="error">حدث خطأ ما</string>
+    <string name="error_generic">حدث خطأ. يرجى المحاولة مرة أخرى.</string>
+    <string name="error_network">خطأ في الشبكة. يرجى التحقق من اتصالك.</string>
+    <string name="new_bid_placed">تم تسجيل مزايدة جديدة!</string>
+    <string name="live">مباشر</string>
+    <string name="offline">غير متصل</string>
+    <string name="reconnecting">جارٍ إعادة الاتصال…</string>
+
+    <!-- Notifications -->
+    <string name="bid_notifications">إشعارات المزايدات</string>
+    <string name="message_notifications">إشعارات الرسائل</string>
+    <string name="general_notifications">إشعارات عامة</string>
+    <string name="outbid_title">تم تجاوز مزايدتك! 😱</string>
+    <string name="outbid_message">قام شخص آخر بمزايدة أعلى على %1$s. السعر الحالي: %2$s</string>
+    <string name="bid_now">زايد الآن</string>
+    <string name="auction_ending_title">المزاد على وشك الانتهاء! ⏰</string>
+    <string name="auction_ending_message">%1$s سينتهي خلال %2$d دقيقة</string>
+    <string name="won_auction_title">مبروك! 🎉</string>
+    <string name="won_auction_message">لقد فزت بـ %1$s بمبلغ %2$s</string>
+
+    <!-- Bid History -->
+    <string name="bid_history">سجل المزايدات</string>
+    <string name="show_all_bids">عرض جميع المزايدات (%1$d)</string>
+    <string name="hide_bids">إخفاء المزايدات</string>
+    <string name="no_bids_yet">لا توجد مزايدات بعد. كن أول المزايدين!</string>
+    <string name="winning_bid">الأعلى</string>
+    <string name="your_bid_label">مزايدتك</string>
+
+    <!-- Messaging -->
+    <string name="messages">الرسائل</string>
+    <string name="new_message">رسالة جديدة</string>
+    <string name="type_message">اكتب رسالتك هنا…</string>
+    <string name="send">إرسال</string>
+    <string name="no_messages">لا توجد رسائل</string>
+    <string name="contact_seller">تواصل مع البائع</string>
+    <string name="online">متصل الآن</string>
+    <string name="last_seen">آخر ظهور %1$s</string>
+    <string name="just_now">الآن</string>
+    <string name="minutes_ago">منذ %1$d دقيقة</string>
+    <string name="hours_ago">منذ %1$d ساعة</string>
+    <string name="yesterday">أمس</string>
+    <string name="today">اليوم</string>
+    <string name="start_conversation">ابدأ المحادثة</string>
+    <string name="message_sent">تم إرسال الرسالة</string>
+    <string name="unread_messages">%1$d رسائل غير مقروءة</string>
+
+    <!-- Chat Enhancements -->
+    <string name="typing">يكتب…</string>
+    <string name="is_typing">%1$s يكتب…</string>
+    <string name="read">مقروءة</string>
+    <string name="delivered">تم الإرسال</string>
+    <string name="sending">جارٍ الإرسال…</string>
+    <string name="sent">تم الإرسال</string>
+    <string name="attach_image">إرفاق صورة</string>
+    <string name="take_picture">التقاط صورة</string>
+    <string name="choose_from_gallery">اختيار من المعرض</string>
+    <string name="image_sent">تم إرسال الصورة</string>
+    <string name="failed_to_send">فشل الإرسال</string>
+    <string name="tap_to_retry">اضغط لإعادة المحاولة</string>
+    <string name="view_image">عرض الصورة</string>
+    <string name="image">صورة</string>
+    <string name="light_mode">الوضع الفاتح</string>
+    <string name="theme">المظهر</string>
+    <string name="system_default">إعدادات النظام</string>
+
+    <!-- Buttons -->
+    <string name="save">حفظ</string>
+    <string name="cancel">إلغاء</string>
+    <string name="confirm">تأكيد</string>
+    <string name="continue_btn">متابعة</string>
+    <string name="back">رجوع</string>
+    <string name="share">مشاركة</string>
+    <string name="guest_user">زائر</string>
+    <string name="tap_to_login">اضغط لتسجيل الدخول</string>
+    <string name="attach_file">إرفاق ملف</string>
+
+    <!-- Voice Messages -->
+    <string name="voice_message">رسالة صوتية</string>
+    <string name="recording">جارٍ التسجيل…</string>
+    <string name="record_voice">تسجيل رسالة صوتية</string>
+    <string name="recording_failed">فشل التسجيل</string>
+    <string name="play">تشغيل</string>
+    <string name="pause">إيقاف مؤقت</string>
+    <string name="stop">إيقاف</string>
+    <string name="voice_sent">تم إرسال الرسالة الصوتية</string>
+
+    <!-- Message Reactions -->
+    <string name="add_reaction">إضافة تفاعل</string>
+    <string name="reactions">التفاعلات</string>
+    <string name="react_to_message">تفاعل مع الرسالة</string>
+
+    <!-- Video Calling -->
+    <string name="video_call">مكالمة فيديو</string>
+    <string name="voice_call">مكالمة صوتية</string>
+    <string name="calling">جارٍ الاتصال…</string>
+    <string name="connecting">جارٍ الاتصال…</string>
+    <string name="connected">متصل</string>
+    <string name="call_ended">انتهت المكالمة</string>
+    <string name="incoming_video_call">مكالمة فيديو واردة</string>
+    <string name="incoming_voice_call">مكالمة صوتية واردة</string>
+    <string name="accept">قبول</string>
+    <string name="decline">رفض</string>
+    <string name="end_call">إنهاء المكالمة</string>
+    <string name="mute">كتم الصوت</string>
+    <string name="unmute">إلغاء الكتم</string>
+    <string name="toggle_video">تشغيل/إيقاف الكاميرا</string>
+    <string name="flip_camera">تبديل الكاميرا</string>
+    <string name="camera_flipped">تم تبديل الكاميرا</string>
+    <string name="call_duration">مدة المكالمة</string>
+    <string name="permissions_required">يتطلب إذن الكاميرا والميكروفون لإجراء مكالمات الفيديو</string>
+    <string name="is_calling_you">%1$s يتصل بك…</string>
+</resources>
+

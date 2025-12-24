@@ -13,7 +13,7 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
+/lib/
 lib64/
 parts/
 sdist/
@@ -22,6 +22,9 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+
+# Don't ignore Flutter lib folder
+!frontend_flutter/lib/
 
 # Flask
 instance/
@@ -79,3 +82,14 @@ nginx.conf.backup
 *.crt
 !nginx/*.conf.example
 
+# Node.js
+node_modules/
+frontend/node_modules/
+npm-debug.log*
+
+# Mobile builds
+frontend/www/
+frontend/ios/
+*.apk
+*.ipa
+*.aab

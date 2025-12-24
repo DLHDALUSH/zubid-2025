@@ -1,6 +1,14 @@
 // Create auction page functionality
 let html5QrcodeScanner = null;
 
+// Basic HTML escaping helper for safely displaying scanned/remote data
+function escapeHtml(text) {
+	if (text === null || text === undefined) return '';
+	const div = document.createElement('div');
+	div.textContent = String(text);
+	return div.innerHTML;
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     await loadCategories();
     
@@ -28,159 +36,598 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 });
 
-// QR Code Scanner Functions
-function startQRScanner() {
+// ==========================================
+// PREMIUM QR CODE SCANNER FUNCTIONS
+// ==========================================
+
+let currentCameraIndex = 0;
+let availableCameras = [];
+let currentScannerMode = 'upload';
+
+// Switch between Upload and Camera modes
+function switchScannerMode(mode) {
+    currentScannerMode = mode;
+    const tabUpload = document.getElementById('tabUpload');
+    const tabCamera = document.getElementById('tabCamera');
+    const uploadSection = document.getElementById('uploadSection');
+    const cameraSection = document.getElementById('cameraSection');
+
+    if (mode === 'upload') {
+        tabUpload.classList.add('active');
+        tabCamera.classList.remove('active');
+        uploadSection.style.display = 'block';
+        cameraSection.style.display = 'none';
+        stopQRScanner(); // Stop camera if running
+        updateScannerStatus('idle', 'Ready to scan image');
+    } else {
+        tabUpload.classList.remove('active');
+        tabCamera.classList.add('active');
+        uploadSection.style.display = 'none';
+        cameraSection.style.display = 'block';
+        updateScannerStatus('idle', 'Click Start Camera');
+    }
+}
+
+// Scan QR code from uploaded file
+async function scanQRFromFile(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Show preview
+    const preview = document.getElementById('uploadPreview');
+    const previewImage = document.getElementById('previewImage');
+    const dropzone = document.getElementById('qrDropzone');
+
+    previewImage.src = URL.createObjectURL(file);
+    preview.style.display = 'block';
+    dropzone.style.display = 'none';
+
+    updateScannerStatus('loading', 'Scanning QR code...');
+
+    try {
+        // Use Html5Qrcode to scan the file
+        const html5QrCode = new Html5Qrcode("qr-reader-file-temp");
+
+        const result = await html5QrCode.scanFile(file, true);
+
+        // Success!
+        playSuccessSound();
+        if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+
+        updateScannerStatus('active', 'QR Code found!');
+        onScanSuccess(result, { result: { text: result } });
+
+        html5QrCode.clear();
+
+    } catch (error) {
+        console.error('QR Scan error:', error);
+        updateScannerStatus('error', 'No QR code found in image');
+        showToast('No QR code found in the image. Please try another image.', 'error');
+    }
+}
+
+// Clear upload preview
+function clearUploadPreview() {
+    const preview = document.getElementById('uploadPreview');
+    const dropzone = document.getElementById('qrDropzone');
+    const fileInput = document.getElementById('qrFileInput');
+    const resultsDiv = document.getElementById('qr-reader-results');
+
+    preview.style.display = 'none';
+    dropzone.style.display = 'flex';
+    fileInput.value = '';
+    resultsDiv.style.display = 'none';
+    updateScannerStatus('idle', 'Ready to scan image');
+}
+
+// Setup drag and drop
+document.addEventListener('DOMContentLoaded', () => {
+    const dropzone = document.getElementById('qrDropzone');
+    if (dropzone) {
+        dropzone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropzone.classList.add('dragover');
+        });
+
+        dropzone.addEventListener('dragleave', () => {
+            dropzone.classList.remove('dragover');
+        });
+
+        dropzone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropzone.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                const fileInput = document.getElementById('qrFileInput');
+                fileInput.files = files;
+                scanQRFromFile({ target: { files: files } });
+            }
+        });
+    }
+});
+
+async function startQRScanner() {
     const qrReaderElement = document.getElementById('qr-reader');
     const startBtn = document.getElementById('startQrScanner');
     const stopBtn = document.getElementById('stopQrScanner');
+    const switchBtn = document.getElementById('switchCameraBtn');
     const resultsDiv = document.getElementById('qr-reader-results');
-    
+    const viewport = document.getElementById('qrScannerViewport');
+    const placeholder = document.getElementById('qrPlaceholder');
+    const statusDiv = document.getElementById('qrScannerStatus');
+    const statusText = document.getElementById('qrStatusText');
+
     if (!qrReaderElement) return;
-    
+
     // Check if html5Qrcode is available
     if (typeof Html5Qrcode === 'undefined') {
         showToast('QR Scanner library not loaded. Please refresh the page.', 'error');
+        updateScannerStatus('error', 'Library not loaded');
         return;
     }
-    
+
     try {
         // Clear previous scanner if exists
         if (html5QrcodeScanner) {
-            stopQRScanner();
+            try {
+                await html5QrcodeScanner.stop();
+            } catch (e) {
+                // Scanner wasn't running, ignore
+            }
+            try {
+                html5QrcodeScanner.clear();
+            } catch (e) {}
+            html5QrcodeScanner = null;
         }
-        
+
+        // Update UI to loading state
+        updateScannerStatus('loading', 'Initializing camera...');
+        if (placeholder) placeholder.classList.add('hidden');
+
         // Create new scanner instance
         html5QrcodeScanner = new Html5Qrcode("qr-reader");
-        
-        // Start scanning
-        html5QrcodeScanner.start(
-            { facingMode: "environment" }, // Use back camera
-            {
-                fps: 10,
-                qrbox: { width: 250, height: 250 },
-                aspectRatio: 1.0
-            },
-            (decodedText, decodedResult) => {
-                // Success callback
-                onScanSuccess(decodedText, decodedResult);
-            },
-            (errorMessage) => {
-                // Error callback - ignore for continuous scanning
-                // console.log('QR scan error:', errorMessage);
+
+        // Get available cameras
+        Html5Qrcode.getCameras().then(cameras => {
+            availableCameras = cameras;
+
+            // Show switch camera button if multiple cameras available
+            if (switchBtn && cameras.length > 1) {
+                switchBtn.style.display = 'flex';
             }
-        ).then(() => {
-            startBtn.style.display = 'none';
-            stopBtn.style.display = 'inline-block';
-            resultsDiv.style.display = 'none';
-            showToast('QR Scanner started. Point camera at QR code.', 'info');
-        }).catch((err) => {
-            console.error('Failed to start QR scanner:', err);
-            showToast('Failed to start camera. Please check permissions.', 'error');
+
+            // Determine which camera to use
+            const cameraConfig = cameras.length > 0
+                ? { deviceId: cameras[currentCameraIndex].id }
+                : { facingMode: "environment" };
+
+            // Start scanning with optimized settings
+            html5QrcodeScanner.start(
+                cameraConfig,
+                {
+                    fps: 15,
+                    qrbox: { width: 280, height: 280 },
+                    aspectRatio: 1.0,
+                    disableFlip: false,
+                    experimentalFeatures: {
+                        useBarCodeDetectorIfSupported: true
+                    }
+                },
+                (decodedText, decodedResult) => {
+                    // Play success sound effect
+                    playSuccessSound();
+                    // Vibrate on mobile
+                    if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+                    // Success callback
+                    onScanSuccess(decodedText, decodedResult);
+                },
+                (errorMessage) => {
+                    // Error callback - ignore for continuous scanning
+                }
+            ).then(() => {
+                // Update UI to scanning state
+                startBtn.style.display = 'none';
+                stopBtn.style.display = 'flex';
+                resultsDiv.style.display = 'none';
+                if (viewport) viewport.classList.add('scanning');
+                updateScannerStatus('active', 'Scanning for QR codes...');
+                showToast('📷 Camera active! Point at QR code.', 'info');
+            }).catch((err) => {
+                console.error('Failed to start QR scanner:', err);
+                if (placeholder) placeholder.classList.remove('hidden');
+                updateScannerStatus('error', 'Camera access denied');
+                showToast('Failed to start camera. Please check permissions.', 'error');
+            });
+        }).catch(err => {
+            console.error('Error getting cameras:', err);
+            // Fall back to environment camera
+            startWithFallback();
         });
+
     } catch (error) {
         console.error('Error starting QR scanner:', error);
+        updateScannerStatus('error', 'Scanner error');
         showToast('Failed to start QR scanner: ' + error.message, 'error');
     }
+}
+
+function startWithFallback() {
+    const viewport = document.getElementById('qrScannerViewport');
+    const startBtn = document.getElementById('startQrScanner');
+    const stopBtn = document.getElementById('stopQrScanner');
+    const resultsDiv = document.getElementById('qr-reader-results');
+
+    html5QrcodeScanner = new Html5Qrcode("qr-reader");
+
+    html5QrcodeScanner.start(
+        { facingMode: "environment" },
+        { fps: 15, qrbox: { width: 280, height: 280 }, aspectRatio: 1.0 },
+        (decodedText, decodedResult) => {
+            playSuccessSound();
+            if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+            onScanSuccess(decodedText, decodedResult);
+        },
+        () => {}
+    ).then(() => {
+        startBtn.style.display = 'none';
+        stopBtn.style.display = 'flex';
+        resultsDiv.style.display = 'none';
+        if (viewport) viewport.classList.add('scanning');
+        updateScannerStatus('active', 'Scanning for QR codes...');
+    }).catch((err) => {
+        console.error('Fallback scanner failed:', err);
+        updateScannerStatus('error', 'Camera not available');
+    });
 }
 
 function stopQRScanner() {
     const startBtn = document.getElementById('startQrScanner');
     const stopBtn = document.getElementById('stopQrScanner');
-    
+    const switchBtn = document.getElementById('switchCameraBtn');
+    const viewport = document.getElementById('qrScannerViewport');
+    const placeholder = document.getElementById('qrPlaceholder');
+
+    const resetUI = () => {
+        if (startBtn) startBtn.style.display = 'flex';
+        if (stopBtn) stopBtn.style.display = 'none';
+        if (switchBtn) switchBtn.style.display = 'none';
+        if (viewport) viewport.classList.remove('scanning');
+        if (placeholder) placeholder.classList.remove('hidden');
+        updateScannerStatus('idle', 'Scanner Idle');
+    };
+
     if (html5QrcodeScanner) {
         html5QrcodeScanner.stop().then(() => {
-            html5QrcodeScanner.clear();
+            try { html5QrcodeScanner.clear(); } catch (e) {}
             html5QrcodeScanner = null;
-            startBtn.style.display = 'inline-block';
-            stopBtn.style.display = 'none';
+            resetUI();
         }).catch((err) => {
-            console.error('Error stopping QR scanner:', err);
+            // Scanner might not be running, just reset UI
+            try { html5QrcodeScanner.clear(); } catch (e) {}
+            html5QrcodeScanner = null;
+            resetUI();
         });
+    } else {
+        resetUI();
+    }
+}
+
+function switchCamera() {
+    if (availableCameras.length <= 1) return;
+
+    currentCameraIndex = (currentCameraIndex + 1) % availableCameras.length;
+    const cameraName = availableCameras[currentCameraIndex].label || `Camera ${currentCameraIndex + 1}`;
+    showToast(`Switching to: ${cameraName}`, 'info');
+
+    if (html5QrcodeScanner) {
+        html5QrcodeScanner.stop().then(() => {
+            try { html5QrcodeScanner.clear(); } catch (e) {}
+            html5QrcodeScanner = null;
+            setTimeout(() => startQRScanner(), 300);
+        }).catch(() => {
+            html5QrcodeScanner = null;
+            setTimeout(() => startQRScanner(), 300);
+        });
+    } else {
+        setTimeout(() => startQRScanner(), 300);
+    }
+}
+
+function updateScannerStatus(state, text) {
+    const statusDiv = document.getElementById('qrScannerStatus');
+    const statusText = document.getElementById('qrStatusText');
+
+    if (statusDiv && statusText) {
+        statusDiv.classList.remove('active', 'error');
+        if (state === 'active') statusDiv.classList.add('active');
+        if (state === 'error') statusDiv.style.background = 'rgba(239, 68, 68, 0.15)';
+        else statusDiv.style.background = '';
+        statusText.textContent = text;
+    }
+}
+
+function playSuccessSound() {
+    try {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+
+        oscillator.frequency.value = 880;
+        oscillator.type = 'sine';
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.2);
+    } catch (e) {
+        // Audio not supported
     }
 }
 
 function onScanSuccess(decodedText, decodedResult) {
     // Stop scanner after successful scan
     stopQRScanner();
-    
+
     try {
         // Try to parse as JSON (our QR code format)
         let qrData;
         try {
             qrData = JSON.parse(decodedText);
         } catch (e) {
-            // If not JSON, treat as plain text
-            qrData = { raw_text: decodedText };
+            // If not JSON, treat as plain text or URL
+            if (decodedText.startsWith('http')) {
+                qrData = { url: decodedText, raw_text: decodedText };
+            } else {
+                qrData = { raw_text: decodedText };
+            }
         }
-        
+
         // Fill form with scanned data
         fillFormFromQRData(qrData);
-        
-        // Show success message
+
+        // Show success message with rich data display
         const resultsDiv = document.getElementById('qr-reader-results');
         const dataDiv = document.getElementById('qr-scanned-data');
         if (resultsDiv && dataDiv) {
             resultsDiv.style.display = 'block';
-            dataDiv.textContent = `Scanned: ${qrData.item_name || qrData.raw_text || 'QR Code'}`;
+
+	    	    // Clear previous content
+	    	    dataDiv.innerHTML = '';
+	    	
+	    	    // Format the scanned data safely
+	    	    if (qrData.item_name) {
+	    	        const p = document.createElement('p');
+	    	        p.innerHTML = `📦 <strong>Item:</strong> ${escapeHtml(qrData.item_name)}`;
+	    	        dataDiv.appendChild(p);
+	    	    }
+	    	    if (qrData.brand) {
+	    	        const p = document.createElement('p');
+	    	        p.innerHTML = `🏷️ <strong>Brand:</strong> ${escapeHtml(qrData.brand)}`;
+	    	        dataDiv.appendChild(p);
+	    	    }
+	    	    if (qrData.category) {
+	    	        const p = document.createElement('p');
+	    	        p.innerHTML = `📁 <strong>Category:</strong> ${escapeHtml(qrData.category)}`;
+	    	        dataDiv.appendChild(p);
+	    	    }
+	    	    if (qrData.price || qrData.starting_bid) {
+	    	        const p = document.createElement('p');
+	    	        const price = qrData.price || qrData.starting_bid;
+	    	        p.innerHTML = `💰 <strong>Price:</strong> $${price}`;
+	    	        dataDiv.appendChild(p);
+	    	    }
+	    	    if (qrData.condition) {
+	    	        const p = document.createElement('p');
+	    	        p.innerHTML = `✨ <strong>Condition:</strong> ${escapeHtml(qrData.condition)}`;
+	    	        dataDiv.appendChild(p);
+	    	    }
+	    	    if (qrData.url) {
+	    	        const p = document.createElement('p');
+	    	        const link = document.createElement('a');
+	    	        link.href = qrData.url;
+	    	        link.target = '_blank';
+	    	        link.rel = 'noopener noreferrer';
+	    	        const displayUrl = qrData.url.length > 40 ? `${qrData.url.substring(0, 40)}...` : qrData.url;
+	    	        link.textContent = displayUrl;
+	    	        p.append('🔗 ');
+	    	        const strong = document.createElement('strong');
+	    	        strong.textContent = 'URL:';
+	    	        p.appendChild(strong);
+	    	        p.append(' ');
+	    	        p.appendChild(link);
+	    	        dataDiv.appendChild(p);
+	    	    }
+	    	    if (!dataDiv.hasChildNodes() && qrData.raw_text) {
+	    	        const p = document.createElement('p');
+	    	        p.textContent = `📝 ${qrData.raw_text}`;
+	    	        dataDiv.appendChild(p);
+	    	    }
+	    	    if (!dataDiv.hasChildNodes()) {
+	    	        dataDiv.textContent = 'QR Code scanned successfully';
+	    	    }
         }
-        
-        showToast('QR Code scanned! Form filled automatically.', 'success');
+
+        updateScannerStatus('idle', 'Scan complete!');
+        showToast('✅ QR Code scanned! Form filled automatically.', 'success');
     } catch (error) {
         console.error('Error processing QR code:', error);
+        updateScannerStatus('error', 'Processing error');
         showToast('Error processing QR code: ' + error.message, 'error');
     }
 }
 
 function fillFormFromQRData(qrData) {
     try {
-        // Fill item name
-        if (qrData.item_name) {
+        let filledFields = [];
+
+        // ========================================
+        // PRODUCT NAME (item_name, name, title, product_name)
+        // ========================================
+        const productName = qrData.item_name || qrData.name || qrData.title || qrData.product_name || qrData.product;
+        if (productName) {
             const itemNameInput = document.getElementById('itemName');
             if (itemNameInput) {
-                itemNameInput.value = qrData.item_name;
+                itemNameInput.value = productName;
+                filledFields.push('Product Name');
             }
         }
-        
-        // Fill description
-        if (qrData.description) {
+
+        // ========================================
+        // DESCRIPTION (description, desc, details, info)
+        // ========================================
+        const description = qrData.description || qrData.desc || qrData.details || qrData.info;
+        if (description) {
             const descInput = document.getElementById('description');
             if (descInput) {
-                descInput.value = qrData.description;
+                descInput.value = description;
+                filledFields.push('Description');
             }
-        } else if (qrData.item_name) {
-            // Create a basic description from item name
+        } else if (productName) {
+            // Auto-generate description from product data
             const descInput = document.getElementById('description');
             if (descInput && !descInput.value) {
-                descInput.value = `Auction item: ${qrData.item_name}`;
+                let autoDesc = `🏷️ ${productName}`;
+                if (qrData.brand) autoDesc += `\n🏭 Brand: ${qrData.brand}`;
+                if (qrData.model) autoDesc += `\n📱 Model: ${qrData.model}`;
+                if (qrData.color) autoDesc += `\n🎨 Color: ${qrData.color}`;
+                if (qrData.size) autoDesc += `\n📏 Size: ${qrData.size}`;
+                if (qrData.material) autoDesc += `\n🧵 Material: ${qrData.material}`;
+                if (qrData.year) autoDesc += `\n📅 Year: ${qrData.year}`;
+                if (qrData.serial_number || qrData.sku) autoDesc += `\n🔢 S/N: ${qrData.serial_number || qrData.sku}`;
+                descInput.value = autoDesc;
+                filledFields.push('Description (auto-generated)');
             }
         }
-        
-        // Fill item condition if available
-        if (qrData.item_condition) {
+
+        // ========================================
+        // ITEM CONDITION (condition, item_condition, state)
+        // ========================================
+        const condition = qrData.condition || qrData.item_condition || qrData.state;
+        if (condition) {
             const conditionInput = document.getElementById('itemCondition');
             if (conditionInput) {
-                conditionInput.value = qrData.item_condition;
+                // Map common condition values to select options
+                const conditionMap = {
+                    'new': 'new', 'brand new': 'new', 'sealed': 'new', 'unused': 'new',
+                    'like new': 'like_new', 'like-new': 'like_new', 'mint': 'like_new', 'excellent': 'like_new',
+                    'good': 'good', 'very good': 'good', 'great': 'good',
+                    'fair': 'fair', 'okay': 'fair', 'average': 'fair',
+                    'used': 'used', 'pre-owned': 'used', 'preowned': 'used',
+                    'refurbished': 'refurbished', 'renewed': 'refurbished', 'restored': 'refurbished',
+                    'for parts': 'for_parts', 'parts only': 'for_parts', 'broken': 'for_parts', 'damaged': 'for_parts'
+                };
+                const normalizedCondition = conditionMap[condition.toLowerCase()] || condition.toLowerCase();
+                conditionInput.value = normalizedCondition;
+                filledFields.push('Condition');
             }
         }
-        
-        // Fill starting bid if price is available
-        if (qrData.price) {
+
+        // ========================================
+        // CATEGORY (category, category_id, type, product_type)
+        // ========================================
+        const category = qrData.category || qrData.category_id || qrData.type || qrData.product_type;
+        if (category) {
+            const categoryInput = document.getElementById('category');
+            if (categoryInput) {
+                // Try to find matching category option
+                const options = categoryInput.options;
+                for (let i = 0; i < options.length; i++) {
+                    if (options[i].value == category ||
+                        options[i].text.toLowerCase().includes(category.toLowerCase())) {
+                        categoryInput.value = options[i].value;
+                        filledFields.push('Category');
+                        break;
+                    }
+                }
+            }
+        }
+
+        // ========================================
+        // STARTING BID / PRICE (price, starting_bid, starting_price, msrp, retail_price)
+        // ========================================
+        const price = qrData.price || qrData.starting_bid || qrData.starting_price || qrData.msrp || qrData.retail_price || qrData.value;
+        if (price) {
             const startingBidInput = document.getElementById('startingBid');
             if (startingBidInput) {
-                startingBidInput.value = qrData.price;
+                // Extract numeric value from price string
+                const numericPrice = parseFloat(String(price).replace(/[^0-9.]/g, ''));
+                if (!isNaN(numericPrice)) {
+                    startingBidInput.value = numericPrice;
+                    filledFields.push('Starting Bid');
+                }
             }
         }
-        
+
+        // ========================================
+        // IMAGE URLS (images, image_urls, photos, image, photo_url)
+        // ========================================
+        const images = qrData.images || qrData.image_urls || qrData.photos ||
+                      (qrData.image ? [qrData.image] : null) ||
+                      (qrData.photo_url ? [qrData.photo_url] : null);
+        if (images && Array.isArray(images) && images.length > 0) {
+            const imageUrlsInput = document.getElementById('imageUrls');
+            if (imageUrlsInput) {
+                imageUrlsInput.value = images.join('\n');
+                filledFields.push(`Images (${images.length})`);
+                // Trigger change event to process URLs
+                imageUrlsInput.dispatchEvent(new Event('change'));
+            }
+        } else if (typeof images === 'string' && images.startsWith('http')) {
+            const imageUrlsInput = document.getElementById('imageUrls');
+            if (imageUrlsInput) {
+                imageUrlsInput.value = images;
+                filledFields.push('Image URL');
+                imageUrlsInput.dispatchEvent(new Event('change'));
+            }
+        }
+
+        // ========================================
+        // VIDEO URL (video, video_url, youtube, youtube_url)
+        // ========================================
+        const video = qrData.video || qrData.video_url || qrData.youtube || qrData.youtube_url;
+        if (video) {
+            const videoInput = document.getElementById('videoUrl');
+            if (videoInput) {
+                videoInput.value = video;
+                filledFields.push('Video URL');
+            }
+        }
+
+        // ========================================
+        // FEATURED AUCTION (featured, is_featured)
+        // ========================================
+        if (qrData.featured || qrData.is_featured) {
+            const featuredInput = document.getElementById('featured');
+            if (featuredInput) {
+                featuredInput.checked = true;
+                filledFields.push('Featured');
+            }
+        }
+
+        // ========================================
+        // SHOW FILLED FIELDS SUMMARY
+        // ========================================
+        if (filledFields.length > 0) {
+            console.log('✅ QR Scanner filled fields:', filledFields);
+            showToast(`📋 Filled: ${filledFields.join(', ')}`, 'success');
+        }
+
         // If auction_id is present, try to fetch more details from API
         if (qrData.auction_id && qrData.type === 'auction_item') {
             fetchAuctionDetails(qrData.auction_id);
         }
-        
+
         // Scroll to form after filling
         setTimeout(() => {
-            document.getElementById('createAuctionForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            const form = document.getElementById('createAuctionForm');
+            if (form) {
+                form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
         }, 300);
-        
+
     } catch (error) {
         console.error('Error filling form:', error);
         showToast('Error filling form: ' + error.message, 'error');
@@ -237,8 +684,12 @@ async function loadCategories() {
         const categories = await CategoryAPI.getAll();
         const select = document.getElementById('category');
         if (select) {
-            select.innerHTML = '<option value="">Select Category</option>' +
-                categories.map(cat => `<option value="${cat.id}">${cat.name}</option>`).join('');
+	        select.innerHTML = '<option value="">Select Category</option>' +
+	            categories.map(cat => {
+	                const safeId = Number(cat.id) || 0;
+	                const safeName = escapeHtml(cat.name || '');
+	                return `<option value="${safeId}">${safeName}</option>`;
+	            }).join('');
         }
     } catch (error) {
         console.error('Error loading categories:', error);
@@ -720,12 +1171,12 @@ async function handleVideoFileChange(event) {
     // Upload video file using VideoAPI
     try {
         const result = await VideoAPI.upload(file);
-        
-        // Construct full URL
-        const baseUrl = API_BASE_URL.replace('/api', '');
-        const fullUrl = baseUrl + result.url;
+
+        // Construct full URL using unified converter
+        const baseUrl = window.API_BASE || (window.location.hostname === 'localhost' ? 'http://localhost:5000' : window.location.origin);
+        const fullUrl = baseUrl + (result.url.startsWith('/') ? result.url : '/' + result.url);
         uploadedVideoUrl = fullUrl;
-        
+
         showToast('Video uploaded successfully!', 'success');
     } catch (error) {
         console.error('Error uploading video:', error);
@@ -780,12 +1231,20 @@ async function handleFeaturedImageChange(event) {
         // Upload featured image file with high quality flag
         try {
             const result = await ImageAPI.upload(file, true); // Pass true for featured image
-            
-            // Construct full URL
-            const baseUrl = API_BASE_URL.replace('/api', '');
-            const fullUrl = baseUrl + result.url;
+
+            // Construct full URL using unified converter
+            let baseUrl = 'http://localhost:5000';
+            try {
+                if (typeof API_BASE_URL !== 'undefined' && API_BASE_URL) {
+                    baseUrl = String(API_BASE_URL).replace('/api', '').replace(/\/$/, '');
+                }
+            } catch (e) {
+                console.warn('Error parsing API_BASE_URL:', e);
+            }
+
+            const fullUrl = baseUrl + (result.url.startsWith('/') ? result.url : '/' + result.url);
             uploadedFeaturedImageUrl = fullUrl;
-            
+
             showToast('Featured image uploaded successfully with enhanced quality!', 'success');
         } catch (error) {
             console.error('Error uploading featured image:', error);

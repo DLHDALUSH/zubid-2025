@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="40dp"
+    android:height="28dp"
+    android:viewportWidth="40"
+    android:viewportHeight="28">
+    
+    <!-- ZainCash Background -->
+    <path
+        android:fillColor="#00A651"
+        android:pathData="M0,4 L40,4 L40,24 L0,24 Z"/>
+    
+    <!-- Z letter -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M8,9 L16,9 L8,18 L16,18 L16,20 L6,20 L6,18 L14,10 L6,10 L6,9 L8,9 Z"/>
+    
+    <!-- C letter -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M22,14 C22,11 24,9 27,9 C29,9 30.5,10 31,11.5 L29,12.5 C28.5,11.5 27.8,11 27,11 C25.3,11 24,12.3 24,14 C24,15.7 25.3,17 27,17 C27.8,17 28.5,16.5 29,15.5 L31,16.5 C30.5,18 29,19 27,19 C24,19 22,17 22,14 Z"/>
+</vector>
+

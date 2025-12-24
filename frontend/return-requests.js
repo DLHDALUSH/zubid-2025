@@ -127,8 +127,9 @@ function createReturnRequestCard(request) {
         'cancelled': 'Cancelled'
     };
     
-    const statusColor = statusColors[request.status] || '#666';
-    const statusLabel = statusLabels[request.status] || request.status;
+	    const statusColor = statusColors[request.status] || '#666';
+	    const statusLabelRaw = statusLabels[request.status] || request.status || '';
+	    const statusLabel = escapeHtml(statusLabelRaw);
     
     const createdDate = new Date(request.created_at).toLocaleDateString();
     const createdTime = new Date(request.created_at).toLocaleTimeString();
@@ -141,9 +142,9 @@ function createReturnRequestCard(request) {
                     Invoice #${request.invoice_id} • Created: ${createdDate} at ${createdTime}
                 </p>
             </div>
-            <span class="status-badge" style="background: ${statusColor}; color: white; padding: 0.5rem 1rem; border-radius: 8px; font-weight: 600; font-size: 0.875rem;">
-                ${statusLabel}
-            </span>
+	            <span class="status-badge" style="background: ${statusColor}; color: white; padding: 0.5rem 1rem; border-radius: 8px; font-weight: 600; font-size: 0.875rem;">
+	                ${statusLabel}
+	            </span>
         </div>
         
         <div style="margin-bottom: 1rem;">

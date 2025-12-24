@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    
+    <!-- Orange circle background -->
+    <path
+        android:fillColor="#FF6600"
+        android:pathData="M100,100m-80,0a80,80 0,1 1,160 0a80,80 0,1 1,-160 0" />
+    
+    <!-- Gavel head -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M65,75 L95,45 L105,55 L75,85 Z" />
+    
+    <!-- Gavel handle -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M75,85 L85,95 L115,65 L105,55 Z" />
+    
+    <!-- Gavel base/sound block -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M90,110 L130,110 L130,125 L90,125 Z" />
+    
+    <!-- ZUBID text below -->
+    <path
+        android:fillColor="#FF6600"
+        android:pathData="M55,160 L85,160 L55,180 L85,180"
+        android:strokeColor="#FF6600"
+        android:strokeWidth="4"
+        android:strokeLineCap="round" />
+    
+    <path
+        android:fillColor="#FF6600"
+        android:pathData="M90,160 L90,180 Q90,175 100,175 Q110,175 110,180 L110,160"
+        android:strokeColor="#FF6600"
+        android:strokeWidth="3" />
+    
+    <path
+        android:fillColor="#FF6600"
+        android:pathData="M115,160 L115,180 Q115,170 125,170 Q135,170 135,160 L135,180"
+        android:strokeColor="#FF6600"
+        android:strokeWidth="3" />
+</vector>
+

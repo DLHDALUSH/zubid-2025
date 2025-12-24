@@ -1,125 +1,405 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
     <title>Manage Users - Admin Portal</title>
-    <link rel="stylesheet" href="styles.css?v=20250116-enhanced-enhanced">
-    <link rel="stylesheet" href="admin.css">
+    <link rel="stylesheet" href="styles.css?v=20251210-responsive-fix">
+    <link rel="stylesheet" href="admin.css?v=2.0">
+    <script src="theme.js"></script>
 </head>
 <body>
-    <!-- Navigation -->
-    <nav class="navbar">
-        <div class="container">
-            <div class="nav-brand">
-                <h1>ZUBID Admin</h1>
-            </div>
-            <div class="nav-menu">
-                <a href="admin.html" class="nav-link">Dashboard</a>
-                <a href="admin-users.html" class="nav-link active">Users</a>
-                <a href="admin-auctions.html" class="nav-link">Auctions</a>
-                <a href="admin-create-auction.html" class="nav-link">Create Auction</a>
-                <a href="admin-categories.html" class="nav-link">Categories</a>
-                <a href="index.html" class="nav-link">User Portal</a>
-                <div class="nav-user">
-                    <span id="adminUserName"></span>
-                    <button class="btn btn-outline" onclick="logout()">Logout</button>
+    <div class="admin-layout">
+        <!-- Mobile Toggle -->
+        <button class="admin-mobile-toggle" onclick="toggleSidebar()">☰</button>
+
+        <!-- Sidebar Navigation -->
+        <aside class="admin-sidebar" id="adminSidebar">
+            <div class="admin-sidebar-header">
+                <div class="admin-logo">
+                    <div class="admin-logo-icon">🏆</div>
+                    <div class="admin-logo-text">
+                        <h1>ZUBID</h1>
+                        <span data-i18n="admin.title">Admin Portal</span>
+                    </div>
                 </div>
             </div>
-        </div>
-    </nav>
 
-    <!-- Users Management -->
-    <section class="admin-section">
-        <div class="container">
-            <h1>User Management</h1>
-            
-            <!-- Search and Filters -->
-            <div class="filters-bar">
-                <input type="text" id="userSearch" placeholder="Search users by name or email..." class="filter-input">
-                <button class="btn btn-primary" onclick="loadUsers()">Search</button>
-                <button class="btn btn-outline" onclick="resetUserSearch()">Reset</button>
+            <nav class="admin-nav">
+                <div class="admin-nav-section">
+                    <div class="admin-nav-title" data-i18n="admin.dashboard">Main Menu</div>
+                    <a href="admin.html" class="admin-nav-link">
+                        <span class="icon">📊</span>
+                        <span data-i18n="admin.dashboard">Dashboard</span>
+                    </a>
+                    <a href="admin-users.html" class="admin-nav-link active">
+                        <span class="icon">👥</span>
+                        <span data-i18n="admin.users">Users</span>
+                    </a>
+                    <a href="admin-auctions.html" class="admin-nav-link">
+                        <span class="icon">🏷️</span>
+                        <span data-i18n="admin.auctions">Auctions</span>
+                    </a>
+                    <a href="admin-categories.html" class="admin-nav-link">
+                        <span class="icon">📁</span>
+                        <span data-i18n="admin.categories">Categories</span>
+                    </a>
+                    <a href="admin-financial.html" class="admin-nav-link">
+                        <span class="icon">💰</span>
+                        <span>Financial Management</span>
+                    </a>
+                    <a href="admin-system.html" class="admin-nav-link">
+                        <span class="icon">⚙️</span>
+                        <span>System Administration</span>
+                    </a>
+                    <a href="admin-security.html" class="admin-nav-link">
+                        <span class="icon">🔒</span>
+                        <span>Security & Monitoring</span>
+                    </a>
+                </div>
+
+                <div class="admin-nav-section">
+                    <div class="admin-nav-title" data-i18n="common.actions">Actions</div>
+                    <a href="admin-create-auction.html" class="admin-nav-link">
+                        <span class="icon">➕</span>
+                        <span data-i18n="admin.createAuction">Create Auction</span>
+                    </a>
+                    <a href="index.html" class="admin-nav-link">
+                        <span class="icon">🌐</span>
+                        <span data-i18n="nav.home">User Portal</span>
+                    </a>
+                </div>
+            </nav>
+
+            <div class="admin-sidebar-user">
+                <div class="admin-user-info">
+                    <div class="admin-user-avatar" id="adminAvatar">A</div>
+                    <div class="admin-user-details">
+                        <div class="admin-user-name" id="adminUserName">Admin</div>
+                        <div class="admin-user-role" data-i18n="admin.title">Administrator</div>
+                    </div>
+                    <button class="admin-logout-btn" onclick="logout()" title="Logout">🚪</button>
+                </div>
             </div>
-            
-            <!-- Users Table -->
-            <div class="table-container">
+        </aside>
+
+        <!-- Main Content -->
+        <main class="admin-main">
+            <!-- Header -->
+            <div class="admin-header">
+                <div class="admin-header-left">
+                    <h1>👥 <span>Advanced User Management</span></h1>
+                    <p>Comprehensive user management with advanced controls and analytics</p>
+                </div>
+                <div class="admin-header-right">
+                    <div class="admin-user-stats" id="userStatsIndicator">
+                        <span class="stats-item">
+                            <span class="stats-number" id="totalUsers">1,250</span>
+                            <span class="stats-label">Total Users</span>
+                        </span>
+                        <span class="stats-item">
+                            <span class="stats-number" id="activeUsers">1,180</span>
+                            <span class="stats-label">Active</span>
+                        </span>
+                        <span class="stats-item">
+                            <span class="stats-number" id="suspendedUsers">15</span>
+                            <span class="stats-label">Suspended</span>
+                        </span>
+                    </div>
+                    <button class="admin-btn-primary" onclick="exportUsers()">
+                        📊 Export Users
+                    </button>
+                    <button class="admin-theme-toggle" onclick="ThemeManager.toggle()" title="Toggle Theme">
+                        🌙
+                    </button>
+                </div>
+            </div>
+
+            <!-- User Analytics Overview -->
+            <div class="admin-section">
+                <div class="admin-section-header">
+                    <h2>📊 <span>User Analytics</span></h2>
+                    <button class="admin-btn-secondary" onclick="refreshUserAnalytics()">
+                        Refresh
+                    </button>
+                </div>
+                <div class="admin-user-analytics-grid">
+                    <div class="admin-analytics-card">
+                        <div class="analytics-header">
+                            <h3>📈 Registration Trends</h3>
+                        </div>
+                        <div class="analytics-content">
+                            <div class="trend-item">
+                                <span class="trend-label">This Month</span>
+                                <span class="trend-value positive" id="monthlyRegistrations">+45</span>
+                            </div>
+                            <div class="trend-item">
+                                <span class="trend-label">This Week</span>
+                                <span class="trend-value positive" id="weeklyRegistrations">+12</span>
+                            </div>
+                            <div class="trend-item">
+                                <span class="trend-label">Today</span>
+                                <span class="trend-value" id="dailyRegistrations">3</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="admin-analytics-card">
+                        <div class="analytics-header">
+                            <h3>🎯 User Activity</h3>
+                        </div>
+                        <div class="analytics-content">
+                            <div class="activity-metric">
+                                <span class="metric-label">Active Today</span>
+                                <div class="metric-bar">
+                                    <div class="metric-fill" style="width: 75%" id="dailyActiveBar"></div>
+                                </div>
+                                <span class="metric-percent" id="dailyActivePercent">75%</span>
+                            </div>
+                            <div class="activity-metric">
+                                <span class="metric-label">Weekly Active</span>
+                                <div class="metric-bar">
+                                    <div class="metric-fill" style="width: 85%" id="weeklyActiveBar"></div>
+                                </div>
+                                <span class="metric-percent" id="weeklyActivePercent">85%</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="admin-analytics-card">
+                        <div class="analytics-header">
+                            <h3>⚠️ User Issues</h3>
+                        </div>
+                        <div class="analytics-content">
+                            <div class="issue-item">
+                                <span class="issue-label">Pending Verifications</span>
+                                <span class="issue-count warning" id="pendingVerifications">8</span>
+                            </div>
+                            <div class="issue-item">
+                                <span class="issue-label">Reported Users</span>
+                                <span class="issue-count danger" id="reportedUsers">3</span>
+                            </div>
+                            <div class="issue-item">
+                                <span class="issue-label">Suspended Accounts</span>
+                                <span class="issue-count" id="suspendedAccounts">15</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bulk Operations -->
+            <div class="admin-section">
+                <div class="admin-section-header">
+                    <h2>⚡ <span>Bulk Operations</span></h2>
+                    <div class="admin-section-controls">
+                        <button class="admin-btn-secondary" onclick="selectAllUsers()">
+                            Select All
+                        </button>
+                        <button class="admin-btn-secondary" onclick="clearSelection()">
+                            Clear Selection
+                        </button>
+                    </div>
+                </div>
+                <div class="admin-bulk-operations">
+                    <div class="bulk-selection-info">
+                        <span id="selectedCount">0</span> users selected
+                    </div>
+                    <div class="bulk-actions">
+                        <button class="admin-btn-warning" onclick="bulkSuspendUsers()" disabled id="bulkSuspendBtn">
+                            🚫 Suspend Selected
+                        </button>
+                        <button class="admin-btn-success" onclick="bulkActivateUsers()" disabled id="bulkActivateBtn">
+                            ✅ Activate Selected
+                        </button>
+                        <button class="admin-btn-primary" onclick="bulkVerifyUsers()" disabled id="bulkVerifyBtn">
+                            ✓ Verify Selected
+                        </button>
+                        <button class="admin-btn-secondary" onclick="bulkExportUsers()" disabled id="bulkExportBtn">
+                            📊 Export Selected
+                        </button>
+                        <button class="admin-btn-danger" onclick="bulkDeleteUsers()" disabled id="bulkDeleteBtn">
+                            🗑️ Delete Selected
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Users Table Container -->
+            <div class="admin-table-container">
+                <div class="admin-table-header">
+                    <h2>👥 All Users</h2>
+                </div>
+
+                <!-- Advanced Filters -->
+                <div class="admin-advanced-filters">
+                    <div class="filter-row">
+                        <input type="text" id="userSearch" placeholder="🔍 Search users by name, email, or ID..." class="admin-filter-input">
+                        <select id="userStatusFilter" class="admin-select">
+                            <option value="all">All Status</option>
+                            <option value="active">Active</option>
+                            <option value="suspended">Suspended</option>
+                            <option value="pending">Pending Verification</option>
+                            <option value="banned">Banned</option>
+                        </select>
+                        <select id="userRoleFilter" class="admin-select">
+                            <option value="all">All Roles</option>
+                            <option value="user">Regular User</option>
+                            <option value="premium">Premium User</option>
+                            <option value="seller">Seller</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                        <select id="userSortBy" class="admin-select">
+                            <option value="created_desc">Newest First</option>
+                            <option value="created_asc">Oldest First</option>
+                            <option value="name_asc">Name A-Z</option>
+                            <option value="name_desc">Name Z-A</option>
+                            <option value="activity_desc">Most Active</option>
+                        </select>
+                    </div>
+                    <div class="filter-actions">
+                        <button class="admin-btn-primary" onclick="applyUserFilters()">
+                            🔍 Apply Filters
+                        </button>
+                        <button class="admin-btn-secondary" onclick="resetUserFilters()">
+                            🔄 Reset
+                        </button>
+                        <button class="admin-btn-secondary" onclick="toggleAdvancedFilters()">
+                            ⚙️ Advanced
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Advanced Filter Panel (Hidden by default) -->
+                <div class="admin-advanced-filter-panel" id="advancedFilterPanel" style="display: none;">
+                    <div class="filter-panel-content">
+                        <div class="filter-group">
+                            <label>Registration Date Range</label>
+                            <div class="date-range">
+                                <input type="date" id="registrationDateFrom" class="admin-input">
+                                <span>to</span>
+                                <input type="date" id="registrationDateTo" class="admin-input">
+                            </div>
+                        </div>
+                        <div class="filter-group">
+                            <label>Activity Range</label>
+                            <div class="activity-range">
+                                <input type="number" id="minAuctions" placeholder="Min auctions" class="admin-input">
+                                <input type="number" id="maxAuctions" placeholder="Max auctions" class="admin-input">
+                            </div>
+                        </div>
+                        <div class="filter-group">
+                            <label>Verification Status</label>
+                            <div class="verification-filters">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="emailVerified"> Email Verified
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="phoneVerified"> Phone Verified
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="biometricEnabled"> Biometric Enabled
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Enhanced Table -->
                 <table class="admin-table">
                     <thead>
                         <tr>
+                            <th>
+                                <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll()">
+                            </th>
                             <th>ID</th>
-                            <th>Username</th>
-                            <th>Email</th>
+                            <th>User</th>
+                            <th>Status</th>
                             <th>Role</th>
-                            <th>Biometric</th>
+                            <th>Verification</th>
+                            <th>Activity</th>
                             <th>Auctions</th>
                             <th>Bids</th>
+                            <th>Last Login</th>
                             <th>Created</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody id="usersTableBody">
                         <tr>
-                            <td colspan="9" class="loading">Loading users...</td>
+                            <td colspan="8" style="text-align: center; padding: 2rem; color: var(--admin-text-muted);">
+                                Loading users...
+                            </td>
                         </tr>
                     </tbody>
                 </table>
+
+                <!-- Pagination -->
+                <div class="admin-pagination" id="userPagination"></div>
             </div>
-            
-            <!-- Pagination -->
-            <div class="pagination" id="userPagination"></div>
-        </div>
-    </section>
+        </main>
+    </div>
 
     <!-- Edit User Modal -->
-    <div class="modal" id="editUserModal">
-        <div class="modal-content">
-            <span class="close" onclick="closeModal('editUserModal')">&times;</span>
-            <h2>Edit User</h2>
-            <form id="editUserForm" onsubmit="handleUpdateUser(event)">
-                <div class="form-group">
-                    <label>Username</label>
-                    <input type="text" id="editUsername" readonly>
-                </div>
-                <div class="form-group">
-                    <label>Email</label>
-                    <input type="email" id="editEmail" required>
-                </div>
-                <div class="form-group">
-                    <label>Role</label>
-                    <select id="editRole" required>
-                        <option value="user">User</option>
-                        <option value="admin">Admin</option>
-                    </select>
-                </div>
-                <input type="hidden" id="editUserId">
-                <div class="form-actions">
-                    <button type="submit" class="btn btn-primary">Update User</button>
-                    <button type="button" class="btn btn-outline" onclick="closeModal('editUserModal')">Cancel</button>
-                </div>
-            </form>
+    <div class="admin-modal" id="editUserModal">
+        <div class="admin-modal-content">
+            <div class="admin-modal-header">
+                <h2>✏️ Edit User</h2>
+                <button class="admin-modal-close" onclick="closeModal('editUserModal')">×</button>
+            </div>
+            <div class="admin-modal-body">
+                <form id="editUserForm" onsubmit="handleUpdateUser(event)">
+                    <div class="admin-form-group">
+                        <label>Username</label>
+                        <input type="text" id="editUsername" class="admin-input" readonly>
+                    </div>
+                    <div class="admin-form-group">
+                        <label>Email</label>
+                        <input type="email" id="editEmail" class="admin-input" required>
+                    </div>
+                    <div class="admin-form-group">
+                        <label>Role</label>
+                        <select id="editRole" class="admin-select" required>
+                            <option value="user">User</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+                    <input type="hidden" id="editUserId">
+                    <div class="admin-form-actions">
+                        <button type="submit" class="admin-btn admin-btn-primary">Update User</button>
+                        <button type="button" class="admin-btn admin-btn-outline" onclick="closeModal('editUserModal')">Cancel</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
     <!-- View Biometric Information Modal -->
-    <div class="modal" id="biometricModal" style="max-width: 900px;">
-        <div class="modal-content">
-            <span class="close" onclick="closeModal('biometricModal')">&times;</span>
-            <h2>Biometric Verification Information</h2>
-            <div id="biometricContent">
-                <div class="loading">Loading biometric information...</div>
+    <div class="admin-modal" id="biometricModal">
+        <div class="admin-modal-content" style="max-width: 900px;">
+            <div class="admin-modal-header">
+                <h2>🔐 Biometric Verification</h2>
+                <button class="admin-modal-close" onclick="closeModal('biometricModal')">×</button>
+            </div>
+            <div class="admin-modal-body" id="biometricContent">
+                <div style="text-align: center; padding: 2rem; color: var(--admin-text-muted);">
+                    Loading biometric information...
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Delete Confirmation Modal -->
-    <div class="modal" id="deleteConfirmModal">
-        <div class="modal-content" style="max-width: 500px;">
-            <h2 style="color: #e74c3c; margin-bottom: 1rem;">⚠️ Delete User</h2>
-            <p style="font-size: 1.1rem; margin-bottom: 1.5rem;">Are you sure you want to delete this account?</p>
-            <p style="color: #a0a0c0; margin-bottom: 2rem; font-size: 0.9rem;">This action cannot be undone. All user data, bids, and auctions will be permanently deleted.</p>
-            <div class="form-actions" style="justify-content: flex-end; gap: 1rem;">
-                <button type="button" class="btn btn-outline" onclick="closeDeleteConfirmModal()">No, Cancel</button>
-                <button type="button" class="btn btn-danger" id="confirmDeleteBtn" onclick="confirmDeleteUser()">Yes, Delete</button>
+    <div class="admin-modal" id="deleteConfirmModal">
+        <div class="admin-modal-content" style="max-width: 450px;">
+            <div class="admin-modal-header" style="background: rgba(239, 68, 68, 0.1);">
+                <h2 style="color: var(--admin-danger);">⚠️ Delete User</h2>
+            </div>
+            <div class="admin-modal-body" style="text-align: center;">
+                <p style="font-size: 1.1rem; margin-bottom: 1rem; color: var(--admin-text);">Are you sure you want to delete this account?</p>
+                <p style="color: var(--admin-text-muted); margin-bottom: 1.5rem; font-size: 0.85rem;">This action cannot be undone. All user data, bids, and auctions will be permanently deleted.</p>
+                <div class="admin-form-actions" style="justify-content: center;">
+                    <button type="button" class="admin-btn admin-btn-outline" onclick="closeDeleteConfirmModal()">No, Cancel</button>
+                    <button type="button" class="admin-btn admin-btn-danger" id="confirmDeleteBtn" onclick="confirmDeleteUser()">Yes, Delete</button>
+                </div>
             </div>
         </div>
     </div>
@@ -127,9 +407,17 @@
     <!-- Notification Toast -->
     <div class="toast" id="toast"></div>
 
+    <script src="config.production.js"></script>
+    <script src="i18n.js"></script>
     <script src="api.js"></script>
     <script src="admin.js"></script>
+    <script src="admin-users-enhanced.js"></script>
     <script src="admin-users.js"></script>
+    <script>
+        function toggleSidebar() {
+            document.getElementById('adminSidebar').classList.toggle('open');
+        }
+    </script>
 </body>
 </html>
 

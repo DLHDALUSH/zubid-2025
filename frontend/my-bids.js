@@ -1,4 +1,12 @@
 // My Bids page functionality
+
+// Basic HTML escaping helper for safely displaying auction titles, etc.
+function escapeHtml(text) {
+	if (text === null || text === undefined) return '';
+	const div = document.createElement('div');
+	div.textContent = String(text);
+	return div.innerHTML;
+}
 document.addEventListener('DOMContentLoaded', async () => {
     // Wait for app.js to load and check authentication
     // Check if checkAuth exists, if not wait a bit
@@ -18,7 +26,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             updateNavAuth(true);
         } catch (error) {
             updateNavAuth(false);
-            showToast('Please login to view your bids', 'error');
+	            const t = (window.i18n && window.i18n.t)
+	                ? window.i18n.t
+	                : (key, def) => def || key;
+	            showToast(t('myBidsPage.loginRequired', 'Please login to view your bids'), 'error');
             setTimeout(() => {
                 window.location.href = 'index.html';
             }, 2000);
@@ -38,14 +49,18 @@ async function loadMyBids() {
     const errorMessage = document.getElementById('errorMessage');
     
     try {
+	        const t = (window.i18n && window.i18n.t)
+	            ? window.i18n.t
+	            : (key, def) => def || key;
         if (loadingIndicator) loadingIndicator.style.display = 'block';
         if (container) container.style.display = 'none';
         if (noBids) noBids.style.display = 'none';
         if (errorMessage) errorMessage.style.display = 'none';
-        
-        if (!currentUser) {
-            throw new Error('Please login to view your bids');
-        }
+	        
+	        if (!currentUser) {
+	            const loginMsg = t('myBidsPage.loginRequired', 'Please login to view your bids');
+	            throw new Error(loginMsg);
+	        }
         
         const bids = await BidAPI.getUserBids();
         
@@ -91,56 +106,69 @@ async function loadMyBids() {
                         return new Date(b.timestamp) - new Date(a.timestamp);
                     });
                 
-                container.innerHTML = uniqueBids.map(bid => {
-                    // Check if user won (for ended auctions) or is winning (for active auctions)
-                    let statusBadge = '';
-                    let bidClass = 'losing-bid';
-                    
-                    if (bid.auction_status === 'ended') {
-                        // For ended auctions, check if user won
-                        if (bid.is_winner || (bid.winner_id && bid.amount === bid.current_bid)) {
-                            statusBadge = '<span class="winner-badge">🏆 WON</span>';
-                            bidClass = 'winner-bid';
-                        } else {
-                            statusBadge = '<span class="losing-badge">❌ OUTBID</span>';
-                            bidClass = 'losing-bid';
-                        }
-                    } else if (bid.auction_status === 'active') {
-                        // For active auctions, check if user is currently winning
-                        const isWinning = bid.is_winning || (Math.abs(bid.amount - bid.current_bid) <= 0.01);
-                        if (isWinning) {
-                            statusBadge = '<span class="winner-badge">🏆 WINNING</span>';
-                            bidClass = 'winner-bid';
-                        } else {
-                            statusBadge = '<span class="losing-badge">❌ OUTBID</span>';
-                            bidClass = 'losing-bid';
-                        }
-                    } else {
-                        // For cancelled or other statuses
-                        statusBadge = '<span class="losing-badge">❌ OUTBID</span>';
-                        bidClass = 'losing-bid';
-                    }
-                    
-                    return `
-                        <div class="bid-history-item ${bidClass}" onclick="window.location.href='auction-detail.html?id=${bid.auction_id}'">
-                            <div class="bid-info">
-                                <div>
-                                    <div class="bid-header">
-                                        <strong>${bid.auction_name || 'Unknown Auction'}</strong>
-                                        ${statusBadge}
-                                    </div>
-                                    <div class="bid-details">
-                                        <span class="bid-amount">$${(bid.amount || 0).toFixed(2)}</span>
-                                        ${bid.auction_status === 'active' ? `<span class="current-bid-info">Current: $${(bid.current_bid || 0).toFixed(2)}</span>` : ''}
-                                        ${bid.auction_status === 'ended' ? `<span class="auction-status-badge">Auction Ended</span>` : ''}
-                                        ${bid.is_auto_bid ? '<span class="auto-bid-badge">Auto-Bid</span>' : ''}
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="bid-time">${bid.timestamp ? new Date(bid.timestamp).toLocaleString() : 'Unknown time'}</div>
-                        </div>
-                    `;
-                }).join('');
+	                container.innerHTML = uniqueBids.map(bid => {
+	                    // Localized status texts
+	                    const wonText = t('myBidsPage.statusWon', 'WON');
+	                    const winningText = t('myBidsPage.statusWinning', 'WINNING');
+	                    const outbidText = t('myBidsPage.statusOutbid', 'OUTBID');
+	                    const unknownAuction = t('myBidsPage.unknownAuction', 'Unknown Auction');
+	                    const currentLabel = t('myBidsPage.currentLabel', 'Current:');
+	                    const auctionEndedBadge = t('myBidsPage.auctionEndedBadge', 'Auction Ended');
+	                    const autoBidBadge = t('myBidsPage.autoBidBadge', 'Auto-Bid');
+	                    const unknownTime = t('myBidsPage.unknownTime', 'Unknown time');
+	
+	                    // Check if user won (for ended auctions) or is winning (for active auctions)
+	                    let statusBadge = '';
+	                    let bidClass = 'losing-bid';
+	                    
+	                    if (bid.auction_status === 'ended') {
+	                        // For ended auctions, check if user won
+	                        if (bid.is_winner || (bid.winner_id && bid.amount === bid.current_bid)) {
+	                            statusBadge = `<span class="winner-badge">🏆 ${wonText}</span>`;
+	                            bidClass = 'winner-bid';
+	                        } else {
+	                            statusBadge = `<span class="losing-badge">❌ ${outbidText}</span>`;
+	                            bidClass = 'losing-bid';
+	                        }
+	                    } else if (bid.auction_status === 'active') {
+	                        // For active auctions, check if user is currently winning
+	                        const isWinning = bid.is_winning || (Math.abs(bid.amount - bid.current_bid) <= 0.01);
+	                        if (isWinning) {
+	                            statusBadge = `<span class="winner-badge">🏆 ${winningText}</span>`;
+	                            bidClass = 'winner-bid';
+	                        } else {
+	                            statusBadge = `<span class="losing-badge">❌ ${outbidText}</span>`;
+	                            bidClass = 'losing-bid';
+	                        }
+	                    } else {
+	                        // For cancelled or other statuses
+	                        statusBadge = `<span class="losing-badge">❌ ${outbidText}</span>`;
+	                        bidClass = 'losing-bid';
+	                    }
+	                    
+	                    const safeAuctionName = escapeHtml(bid.auction_name || unknownAuction);
+	                    const safeAuctionId = Number(bid.auction_id) || 0;
+	                    
+	                    return `
+	                        <div class="bid-history-item ${bidClass}" onclick="window.location.href='auction-detail.html?id=${safeAuctionId}'">
+	                            <div class="bid-info">
+	                                <div>
+	                                    <div class="bid-header">
+	                                        <strong>${safeAuctionName}</strong>
+	                                        ${statusBadge}
+	                                    </div>
+	                                    <div class="bid-details">
+	                                        <span class="bid-amount">$${(bid.amount || 0).toFixed(2)}</span>
+	                                        ${bid.auction_status === 'active' ? `<span class="current-bid-info">${currentLabel} $${(bid.current_bid || 0).toFixed(2)}</span>` : ''}
+	                                        ${bid.auction_status === 'ended' ? `<span class="auction-status-badge">${auctionEndedBadge}</span>` : ''}
+	                                        ${bid.is_auto_bid ? `<span class="auto-bid-badge">${autoBidBadge}</span>` : ''}
+	                                    </div>
+	                                </div>
+	                            </div>
+	                            <div class="bid-time">${bid.timestamp ? new Date(bid.timestamp).toLocaleString() : unknownTime}</div>
+	                        </div>
+	                    `;
+	                }).join('');
                 }
                 if (noBids) noBids.style.display = 'none';
             } else {
@@ -148,9 +176,9 @@ async function loadMyBids() {
                 if (container) container.style.display = 'none';
                 if (noBids) {
                     noBids.innerHTML = `
-                        <p style="color: var(--text-secondary); margin-bottom: 1rem; font-size: 1.125rem;">You don't have any winning bids yet.</p>
-                        <p style="color: var(--text-light); margin-bottom: 1.5rem;">Keep bidding to win amazing auctions!</p>
-                        <a href="auctions.html" class="btn btn-primary">Browse Auctions</a>
+                        <p style="color: var(--text-secondary); margin-bottom: 1rem; font-size: 1.125rem;">${t('myBidsPage.noWinningTitle', "You don't have any winning bids yet.")}</p>
+                        <p style="color: var(--text-light); margin-bottom: 1.5rem;">${t('myBidsPage.noWinningSubtitle', 'Keep bidding to win amazing auctions!')}</p>
+                        <a href="auctions.html" class="btn btn-primary">${t('myBidsPage.browseAuctions', 'Browse Auctions')}</a>
                     `;
                     noBids.style.display = 'block';
                 }
@@ -159,8 +187,8 @@ async function loadMyBids() {
             if (container) container.style.display = 'none';
             if (noBids) {
                 noBids.innerHTML = `
-                    <p style="color: var(--text-secondary); margin-bottom: 1rem; font-size: 1.125rem;">You haven't placed any bids yet.</p>
-                    <a href="auctions.html" class="btn btn-primary">Browse Auctions</a>
+                    <p style="color: var(--text-secondary); margin-bottom: 1rem; font-size: 1.125rem;">${t('myBidsPage.noBidsTitle', "You haven't placed any bids yet.")}</p>
+                    <a href="auctions.html" class="btn btn-primary">${t('myBidsPage.browseAuctions', 'Browse Auctions')}</a>
                 `;
                 noBids.style.display = 'block';
             }
@@ -172,11 +200,12 @@ async function loadMyBids() {
         if (noBids) noBids.style.display = 'none';
         
         if (errorMessage) {
-            errorMessage.textContent = error.message || 'Failed to load your bids. Please try again.';
+            const defaultMsg = 'Failed to load your bids. Please try again.';
+            errorMessage.textContent = error.message || t('myBidsPage.loadError', defaultMsg);
             errorMessage.style.display = 'block';
         }
         
-        showToast(error.message || 'Failed to load your bids', 'error');
+        showToast(error.message || t('myBidsPage.loadErrorShort', 'Failed to load your bids'), 'error');
         
         // Redirect to login if not authenticated
         if (error.message.includes('login') || error.message.includes('Authentication')) {

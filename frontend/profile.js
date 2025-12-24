@@ -172,23 +172,28 @@ function displayProfilePhoto(photoUrl) {
     const photoDisplay = document.getElementById('profilePhotoDisplay');
     const photoPlaceholder = document.getElementById('profilePhotoPlaceholder');
     const removePhotoBtn = document.getElementById('removePhotoBtn');
-    
+
     if (photoUrl) {
         if (photoDisplay) {
-            // Handle relative URLs (e.g., /uploads/profile_xxx.jpg)
+            // Use unified image URL converter for consistent handling
             let fullUrl = photoUrl;
-            if (photoUrl.startsWith('/uploads/')) {
+
+            // Handle relative URLs (e.g., /uploads/profile_xxx.jpg)
+            if (photoUrl.startsWith('/uploads/') || (!photoUrl.startsWith('http://') && !photoUrl.startsWith('https://') && !photoUrl.startsWith('data:'))) {
                 const apiBaseUrl = (typeof API_BASE_URL !== 'undefined') ? API_BASE_URL : 'http://localhost:5000/api';
                 const baseUrl = apiBaseUrl.replace('/api', '');
-                fullUrl = baseUrl + photoUrl;
+                fullUrl = baseUrl + (photoUrl.startsWith('/') ? photoUrl : '/' + photoUrl);
             }
-            
+
             photoDisplay.src = fullUrl;
             photoDisplay.style.display = 'block';
             photoDisplay.onerror = function() {
                 console.error('Failed to load profile photo:', fullUrl);
                 this.style.display = 'none';
                 if (photoPlaceholder) photoPlaceholder.style.display = 'flex';
+            };
+            photoDisplay.onload = function() {
+                console.log('✅ Profile photo loaded successfully:', fullUrl.substring(0, 100));
             };
         }
         if (photoPlaceholder) photoPlaceholder.style.display = 'none';
@@ -618,4 +623,60 @@ window.onclick = function(event) {
     }
 }
 
+// ==========================================
+// PASSWORD CHANGE FUNCTIONALITY
+// ==========================================
 
+// Handle change password form submission
+async function handleChangePassword(event) {
+    event.preventDefault();
+
+    const currentPassword = document.getElementById('currentPassword').value;
+    const newPassword = document.getElementById('newPasswordProfile').value;
+    const confirmPassword = document.getElementById('confirmNewPasswordProfile').value;
+
+    if (!currentPassword) {
+        showToast('Please enter your current password', 'error');
+        return;
+    }
+
+    if (!newPassword) {
+        showToast('Please enter a new password', 'error');
+        return;
+    }
+
+    if (newPassword.length < 8) {
+        showToast('New password must be at least 8 characters', 'error');
+        return;
+    }
+
+    if (newPassword !== confirmPassword) {
+        showToast('New passwords do not match', 'error');
+        return;
+    }
+
+    const submitBtn = event.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<span class="loading-spinner"></span> Changing...';
+    submitBtn.disabled = true;
+
+    try {
+        await UserAPI.changePassword(currentPassword, newPassword);
+
+        showToast('Password changed successfully!', 'success');
+
+        // Clear form
+        document.getElementById('currentPassword').value = '';
+        document.getElementById('newPasswordProfile').value = '';
+        document.getElementById('confirmNewPasswordProfile').value = '';
+
+    } catch (error) {
+        showToast(error.message || 'Failed to change password', 'error');
+    } finally {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    }
+}
+
+// Make function globally available
+window.handleChangePassword = handleChangePassword;

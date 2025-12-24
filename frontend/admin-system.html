@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+    <title>System Administration - Admin Portal</title>
+    <link rel="stylesheet" href="styles.css?v=20251210-responsive-fix">
+    <link rel="stylesheet" href="admin.css?v=2.0">
+    <script src="theme.js"></script>
+</head>
+<body>
+    <div class="admin-layout">
+        <!-- Mobile Toggle -->
+        <button class="admin-mobile-toggle" onclick="toggleSidebar()">☰</button>
+
+        <!-- Sidebar Navigation -->
+        <aside class="admin-sidebar" id="adminSidebar">
+            <div class="admin-sidebar-header">
+                <div class="admin-logo">
+                    <div class="admin-logo-icon">🏆</div>
+                    <div class="admin-logo-text">
+                        <h1>ZUBID</h1>
+                        <span data-i18n="admin.title">Admin Portal</span>
+                    </div>
+                </div>
+            </div>
+
+            <nav class="admin-nav">
+                <div class="admin-nav-section">
+                    <div class="admin-nav-title" data-i18n="admin.dashboard">Main Menu</div>
+                    <a href="admin.html" class="admin-nav-link">
+                        <span class="icon">📊</span>
+                        <span data-i18n="admin.dashboard">Dashboard</span>
+                    </a>
+                    <a href="admin-users.html" class="admin-nav-link">
+                        <span class="icon">👥</span>
+                        <span data-i18n="admin.users">Users</span>
+                    </a>
+                    <a href="admin-auctions.html" class="admin-nav-link">
+                        <span class="icon">🏷️</span>
+                        <span data-i18n="admin.auctions">Auctions</span>
+                    </a>
+                    <a href="admin-categories.html" class="admin-nav-link">
+                        <span class="icon">📁</span>
+                        <span data-i18n="admin.categories">Categories</span>
+                    </a>
+                    <a href="admin-financial.html" class="admin-nav-link">
+                        <span class="icon">💰</span>
+                        <span>Financial Management</span>
+                    </a>
+                    <a href="admin-system.html" class="admin-nav-link active">
+                        <span class="icon">⚙️</span>
+                        <span>System Administration</span>
+                    </a>
+                </div>
+
+                <div class="admin-nav-section">
+                    <div class="admin-nav-title" data-i18n="common.actions">Actions</div>
+                    <a href="admin-create-auction.html" class="admin-nav-link">
+                        <span class="icon">➕</span>
+                        <span data-i18n="admin.createAuction">Create Auction</span>
+                    </a>
+                    <a href="index.html" class="admin-nav-link">
+                        <span class="icon">🌐</span>
+                        <span data-i18n="nav.home">User Portal</span>
+                    </a>
+                </div>
+            </nav>
+
+            <div class="admin-sidebar-user">
+                <div class="admin-user-info">
+                    <div class="admin-user-avatar" id="adminAvatar">A</div>
+                    <div class="admin-user-details">
+                        <div class="admin-user-name" id="adminUserName">Admin</div>
+                        <div class="admin-user-role" data-i18n="admin.title">Administrator</div>
+                    </div>
+                    <button class="admin-logout-btn" onclick="logout()" title="Logout">🚪</button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="admin-main">
+            <!-- Header -->
+            <div class="admin-header">
+                <div class="admin-header-left">
+                    <h1>⚙️ <span>System Administration</span></h1>
+                    <p>Manage system settings, database, backups, and maintenance</p>
+                </div>
+                <div class="admin-header-right">
+                    <div class="admin-system-status" id="systemStatusIndicator">
+                        <span class="status-dot online"></span>
+                        <span>All Systems Operational</span>
+                    </div>
+                    <button class="admin-btn-danger" onclick="emergencyShutdown()" title="Emergency Shutdown">
+                        🚨 Emergency
+                    </button>
+                    <button class="admin-theme-toggle" onclick="ThemeManager.toggle()" title="Toggle Theme">
+                        🌙
+                    </button>
+                </div>
+            </div>
+
+            <!-- System Overview -->
+            <div class="admin-section">
+                <div class="admin-section-header">
+                    <h2>🖥️ <span>System Overview</span></h2>
+                    <button class="admin-btn-secondary" onclick="refreshSystemData()">
+                        Refresh
+                    </button>
+                </div>
+                <div class="admin-system-grid">
+                    <div class="admin-system-card">
+                        <div class="system-card-header">
+                            <h3>🚀 Performance</h3>
+                            <span class="system-status good">Good</span>
+                        </div>
+                        <div class="system-metrics">
+                            <div class="metric">
+                                <span>CPU Usage</span>
+                                <div class="metric-bar">
+                                    <div class="metric-fill" style="width: 35%" id="cpuUsage"></div>
+                                </div>
+                                <span id="cpuPercent">35%</span>
+                            </div>
+                            <div class="metric">
+                                <span>Memory Usage</span>
+                                <div class="metric-bar">
+                                    <div class="metric-fill" style="width: 68%" id="memoryUsage"></div>
+                                </div>
+                                <span id="memoryPercent">68%</span>
+                            </div>
+                            <div class="metric">
+                                <span>Disk Usage</span>
+                                <div class="metric-bar">
+                                    <div class="metric-fill" style="width: 45%" id="diskUsage"></div>
+                                </div>
+                                <span id="diskPercent">45%</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="admin-system-card">
+                        <div class="system-card-header">
+                            <h3>💾 Database</h3>
+                            <span class="system-status good">Healthy</span>
+                        </div>
+                        <div class="system-info">
+                            <div class="info-item">
+                                <span>Total Records</span>
+                                <span id="totalRecords">15,420</span>
+                            </div>
+                            <div class="info-item">
+                                <span>Database Size</span>
+                                <span id="databaseSize">245 MB</span>
+                            </div>
+                            <div class="info-item">
+                                <span>Last Backup</span>
+                                <span id="lastBackup">2 hours ago</span>
+                            </div>
+                            <div class="info-item">
+                                <span>Connection Pool</span>
+                                <span id="connectionPool">8/20</span>
+                            </div>
+                        </div>
+                        <div class="system-actions">
+                            <button class="admin-btn-sm admin-btn-primary" onclick="backupDatabase()">
+                                Backup Now
+                            </button>
+                            <button class="admin-btn-sm admin-btn-secondary" onclick="optimizeDatabase()">
+                                Optimize
+                            </button>
+                        </div>
+                    </div>
+                    <div class="admin-system-card">
+                        <div class="system-card-header">
+                            <h3>🔒 Security</h3>
+                            <span class="system-status good">Secure</span>
+                        </div>
+                        <div class="system-info">
+                            <div class="info-item">
+                                <span>Failed Logins (24h)</span>
+                                <span id="failedLogins">3</span>
+                            </div>
+                            <div class="info-item">
+                                <span>Blocked IPs</span>
+                                <span id="blockedIPs">2</span>
+                            </div>
+                            <div class="info-item">
+                                <span>SSL Certificate</span>
+                                <span id="sslStatus">Valid (90 days)</span>
+                            </div>
+                            <div class="info-item">
+                                <span>Security Score</span>
+                                <span id="securityScore">A+</span>
+                            </div>
+                        </div>
+                        <div class="system-actions">
+                            <button class="admin-btn-sm admin-btn-primary" onclick="viewSecurityLogs()">
+                                View Logs
+                            </button>
+                            <button class="admin-btn-sm admin-btn-warning" onclick="runSecurityScan()">
+                                Scan Now
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Database Management -->
+            <div class="admin-section">
+                <div class="admin-section-header">
+                    <h2>💾 <span>Database Management</span></h2>
+                    <div class="admin-section-controls">
+                        <button class="admin-btn-primary" onclick="createBackup()">
+                            Create Backup
+                        </button>
+                        <button class="admin-btn-secondary" onclick="viewBackups()">
+                            View Backups
+                        </button>
+                    </div>
+                </div>
+                <div class="admin-database-grid">
+                    <div class="admin-database-card">
+                        <div class="database-header">
+                            <h3>📊 Database Statistics</h3>
+                        </div>
+                        <div class="database-stats">
+                            <div class="stat-row">
+                                <span>Users Table</span>
+                                <span id="usersTableSize">1,250 records</span>
+                            </div>
+                            <div class="stat-row">
+                                <span>Auctions Table</span>
+                                <span id="auctionsTableSize">3,420 records</span>
+                            </div>
+                            <div class="stat-row">
+                                <span>Bids Table</span>
+                                <span id="bidsTableSize">8,750 records</span>
+                            </div>
+                            <div class="stat-row">
+                                <span>Categories Table</span>
+                                <span id="categoriesTableSize">25 records</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="admin-database-card">
+                        <div class="database-header">
+                            <h3>🔄 Recent Backups</h3>
+                        </div>
+                        <div class="backup-list" id="backupList">
+                            <div class="backup-item">
+                                <div class="backup-info">
+                                    <div class="backup-name">Auto Backup</div>
+                                    <div class="backup-date">Dec 19, 2024 - 10:00 AM</div>
+                                </div>
+                                <div class="backup-size">245 MB</div>
+                                <div class="backup-actions">
+                                    <button class="admin-btn-xs admin-btn-primary" onclick="restoreBackup('auto-20241219')">
+                                        Restore
+                                    </button>
+                                    <button class="admin-btn-xs admin-btn-secondary" onclick="downloadBackup('auto-20241219')">
+                                        Download
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="backup-item">
+                                <div class="backup-info">
+                                    <div class="backup-name">Manual Backup</div>
+                                    <div class="backup-date">Dec 18, 2024 - 3:30 PM</div>
+                                </div>
+                                <div class="backup-size">243 MB</div>
+                                <div class="backup-actions">
+                                    <button class="admin-btn-xs admin-btn-primary" onclick="restoreBackup('manual-20241218')">
+                                        Restore
+                                    </button>
+                                    <button class="admin-btn-xs admin-btn-secondary" onclick="downloadBackup('manual-20241218')">
+                                        Download
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Logs -->
+            <div class="admin-section">
+                <div class="admin-section-header">
+                    <h2>📋 <span>System Logs</span></h2>
+                    <div class="admin-section-controls">
+                        <select id="logType" class="admin-select">
+                            <option value="all">All Logs</option>
+                            <option value="error">Error Logs</option>
+                            <option value="security">Security Logs</option>
+                            <option value="access">Access Logs</option>
+                            <option value="system">System Logs</option>
+                        </select>
+                        <button class="admin-btn-secondary" onclick="refreshLogs()">
+                            Refresh
+                        </button>
+                        <button class="admin-btn-primary" onclick="exportLogs()">
+                            Export
+                        </button>
+                    </div>
+                </div>
+                <div class="admin-logs-container">
+                    <div class="logs-viewer" id="logsViewer">
+                        <div class="log-entry info">
+                            <span class="log-time">2024-12-19 10:30:15</span>
+                            <span class="log-level info">INFO</span>
+                            <span class="log-message">User authentication successful for user ID: 1234</span>
+                        </div>
+                        <div class="log-entry warning">
+                            <span class="log-time">2024-12-19 10:28:42</span>
+                            <span class="log-level warning">WARN</span>
+                            <span class="log-message">High CPU usage detected: 85%</span>
+                        </div>
+                        <div class="log-entry error">
+                            <span class="log-time">2024-12-19 10:25:33</span>
+                            <span class="log-level error">ERROR</span>
+                            <span class="log-message">Database connection timeout after 30 seconds</span>
+                        </div>
+                        <div class="log-entry info">
+                            <span class="log-time">2024-12-19 10:20:18</span>
+                            <span class="log-level info">INFO</span>
+                            <span class="log-message">New auction created: ID 5678</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Settings -->
+            <div class="admin-section">
+                <div class="admin-section-header">
+                    <h2>⚙️ <span>System Settings</span></h2>
+                    <button class="admin-btn-primary" onclick="saveSettings()">
+                        Save Changes
+                    </button>
+                </div>
+                <div class="admin-settings-grid">
+                    <div class="admin-settings-card">
+                        <div class="settings-header">
+                            <h3>🌐 General Settings</h3>
+                        </div>
+                        <div class="settings-form">
+                            <div class="form-group">
+                                <label for="siteName">Site Name</label>
+                                <input type="text" id="siteName" value="ZUBID Auction Platform" class="admin-input">
+                            </div>
+                            <div class="form-group">
+                                <label for="siteDescription">Site Description</label>
+                                <textarea id="siteDescription" class="admin-textarea">Premium auction platform for buying and selling unique items</textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="maintenanceMode">Maintenance Mode</label>
+                                <div class="toggle-switch">
+                                    <input type="checkbox" id="maintenanceMode">
+                                    <label for="maintenanceMode" class="toggle-label"></label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="admin-settings-card">
+                        <div class="settings-header">
+                            <h3>💰 Auction Settings</h3>
+                        </div>
+                        <div class="settings-form">
+                            <div class="form-group">
+                                <label for="defaultCommission">Default Commission (%)</label>
+                                <input type="number" id="defaultCommission" value="10" min="0" max="50" class="admin-input">
+                            </div>
+                            <div class="form-group">
+                                <label for="minBidIncrement">Minimum Bid Increment ($)</label>
+                                <input type="number" id="minBidIncrement" value="1" min="0.01" step="0.01" class="admin-input">
+                            </div>
+                            <div class="form-group">
+                                <label for="maxAuctionDuration">Max Auction Duration (days)</label>
+                                <input type="number" id="maxAuctionDuration" value="30" min="1" max="365" class="admin-input">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Notification Toast -->
+    <div class="toast" id="toast"></div>
+
+    <script src="config.production.js"></script>
+    <script src="i18n.js"></script>
+    <script src="api.js"></script>
+    <script src="admin.js"></script>
+    <script src="admin-system.js"></script>
+    <script>
+        // Mobile sidebar toggle
+        function toggleSidebar() {
+            document.getElementById('adminSidebar').classList.toggle('open');
+        }
+    </script>
+</body>
+</html>

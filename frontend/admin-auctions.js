@@ -26,28 +26,32 @@ async function loadAuctions(page = 1) {
                 return div.innerHTML;
             };
             
-            tbody.innerHTML = data.auctions.map(auction => {
-                const itemName = escapeHtml(auction.item_name || '');
-                const seller = escapeHtml(auction.seller || '');
-                const winnerName = escapeHtml(auction.winner_name || '');
-                const status = escapeHtml(auction.status || '');
-                const itemCode = escapeHtml(auction.item_code || `ZUBID-${String(auction.id).padStart(6, '0')}`);
-                const statusEscaped = escapeHtml(auction.status || '');
-                return `
-                <tr>
-                    <td>${auction.id}</td>
+	            tbody.innerHTML = data.auctions.map(auction => {
+	                const itemName = escapeHtml(auction.item_name || '');
+	                const seller = escapeHtml(auction.seller || '');
+	                const winnerName = escapeHtml(auction.winner_name || '');
+	                const rawStatus = auction.status || '';
+	                const statusLabel = escapeHtml(rawStatus);
+	                const allowedStatuses = ['pending', 'active', 'ended', 'cancelled', 'draft'];
+	                const safeStatusClass = allowedStatuses.includes(rawStatus) ? rawStatus : 'other';
+	                const itemCode = escapeHtml(auction.item_code || `ZUBID-${String(auction.id).padStart(6, '0')}`);
+	                const statusEscaped = statusLabel;
+	                const safeId = Number(auction.id) || 0;
+	                return `
+	                <tr>
+	                    <td>${safeId}</td>
                     <td><strong>${itemCode}</strong></td>
                     <td>${itemName}</td>
                     <td>${seller}</td>
                     <td>$${(auction.current_bid || 0).toFixed(2)}</td>
-                    <td>${auction.bid_count || 0}</td>
-                    <td><span class="status-badge ${status}">${status}</span></td>
+	                    <td>${auction.bid_count || 0}</td>
+	                    <td><span class="status-badge ${safeStatusClass}">${statusLabel}</span></td>
                     <td>${auction.featured ? '✓' : ''}</td>
-                    <td>${winnerName || '<span style="color: #999;">-</span>'}</td>
+	                    <td>${winnerName || '<span style="color: #999;">-</span>'}</td>
                     <td>${new Date(auction.end_time).toLocaleString()}</td>
                     <td class="actions">
                         <button class="btn btn-small btn-primary edit-auction-btn" 
-                                data-auction-id="${auction.id}" 
+	                                data-auction-id="${safeId}" 
                                 data-status="${statusEscaped}" 
                                 data-featured="${auction.featured ? 'true' : 'false'}">Edit</button>
                         <button class="btn btn-small btn-danger delete-auction-btn" 
@@ -95,7 +99,9 @@ function editAuction(auctionId, status, featured) {
     document.getElementById('editAuctionId').value = auctionId;
     document.getElementById('editStatus').value = status;
     document.getElementById('editFeatured').checked = featured;
-    document.getElementById('editAuctionModal').style.display = 'block';
+    const modal = document.getElementById('editAuctionModal');
+    modal.classList.add('active');
+    modal.style.display = 'flex';
 }
 
 async function handleUpdateAuction(event) {
@@ -182,7 +188,9 @@ async function loadCategoriesForCreate() {
 }
 
 function openCreateAuctionModal() {
-    document.getElementById('createAuctionModal').style.display = 'block';
+    const modal = document.getElementById('createAuctionModal');
+    modal.classList.add('active');
+    modal.style.display = 'flex';
     loadCategoriesForCreate();
     // Reset form
     document.getElementById('createAuctionForm').reset();
@@ -678,13 +686,18 @@ async function handleCreateAuction(event) {
 }
 
 function closeModal(modalId) {
-    document.getElementById(modalId).style.display = 'none';
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.classList.remove('active');
+        modal.style.display = 'none';
+    }
 }
 
 window.onclick = function(event) {
-    const modals = document.querySelectorAll('.modal');
+    const modals = document.querySelectorAll('.admin-modal, .modal');
     modals.forEach(modal => {
         if (event.target === modal) {
+            modal.classList.remove('active');
             modal.style.display = 'none';
         }
     });

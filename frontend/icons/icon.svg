@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ff6600"/>
+      <stop offset="100%" style="stop-color:#ff8533"/>
+    </linearGradient>
+  </defs>
+  <!-- Background -->
+  <rect width="512" height="512" rx="100" fill="url(#bg)"/>
+  <!-- Z Letter -->
+  <text x="256" y="340" font-family="Arial Black, sans-serif" font-size="280" font-weight="900" fill="white" text-anchor="middle">Z</text>
+  <!-- Gavel icon -->
+  <circle cx="380" cy="120" r="50" fill="rgba(255,255,255,0.3)"/>
+  <rect x="360" y="100" width="40" height="80" rx="5" fill="white" transform="rotate(-45 380 140)"/>
+</svg>
+
