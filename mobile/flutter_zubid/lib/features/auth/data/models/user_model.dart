@@ -255,8 +255,71 @@ class UserModel {
     );
   }
 
-  /// From JSON
-  factory UserModel.fromJson(Map<String, dynamic> json) => _$UserModelFromJson(json);
+  /// From JSON - Custom implementation to handle backend's snake_case format
+  factory UserModel.fromJson(Map<String, dynamic> json) {
+    // Parse ID which may be string or int from backend
+    int id;
+    if (json['id'] is String) {
+      id = int.tryParse(json['id'] as String) ?? 0;
+    } else if (json['id'] is int) {
+      id = json['id'] as int;
+    } else {
+      id = (json['id'] as num?)?.toInt() ?? 0;
+    }
+
+    // Parse dates with fallback to current time
+    DateTime createdAt;
+    if (json['created_at'] != null) {
+      createdAt = DateTime.tryParse(json['created_at'] as String) ?? DateTime.now();
+    } else if (json['createdAt'] != null) {
+      createdAt = DateTime.tryParse(json['createdAt'] as String) ?? DateTime.now();
+    } else {
+      createdAt = DateTime.now();
+    }
+
+    DateTime updatedAt;
+    if (json['updated_at'] != null) {
+      updatedAt = DateTime.tryParse(json['updated_at'] as String) ?? DateTime.now();
+    } else if (json['updatedAt'] != null) {
+      updatedAt = DateTime.tryParse(json['updatedAt'] as String) ?? DateTime.now();
+    } else {
+      updatedAt = DateTime.now();
+    }
+
+    return UserModel(
+      id: id,
+      username: json['username'] as String? ?? '',
+      email: json['email'] as String? ?? '',
+      firstName: json['first_name'] as String? ?? json['firstName'] as String?,
+      lastName: json['last_name'] as String? ?? json['lastName'] as String?,
+      phoneNumber: json['phone'] as String? ?? json['phone_number'] as String? ?? json['phoneNumber'] as String?,
+      profilePhotoUrl: json['profile_photo'] as String? ?? json['profilePhotoUrl'] as String?,
+      idNumber: json['id_number'] as String? ?? json['idNumber'] as String?,
+      address: json['address'] as String?,
+      city: json['city'] as String?,
+      country: json['country'] as String?,
+      postalCode: json['postal_code'] as String? ?? json['postalCode'] as String?,
+      dateOfBirth: json['date_of_birth'] != null
+          ? DateTime.tryParse(json['date_of_birth'] as String)
+          : json['dateOfBirth'] != null
+              ? DateTime.tryParse(json['dateOfBirth'] as String)
+              : null,
+      role: json['role'] as String? ?? 'user',
+      isActive: json['is_active'] as bool? ?? json['isActive'] as bool? ?? true,
+      isVerified: json['is_verified'] as bool? ?? json['isVerified'] as bool? ?? false,
+      createdAt: createdAt,
+      updatedAt: updatedAt,
+      rating: (json['rating'] as num?)?.toDouble(),
+      totalBids: (json['total_bids'] as num?)?.toInt() ?? (json['totalBids'] as num?)?.toInt(),
+      totalWins: (json['total_wins'] as num?)?.toInt() ?? (json['totalWins'] as num?)?.toInt(),
+      totalSpent: (json['total_spent'] as num?)?.toDouble() ?? (json['totalSpent'] as num?)?.toDouble(),
+      emailVerified: json['email_verified'] as bool? ?? json['emailVerified'] as bool?,
+      phoneVerified: json['phone_verified'] as bool? ?? json['phoneVerified'] as bool?,
+      preferredLanguage: json['preferred_language'] as String? ?? json['preferredLanguage'] as String?,
+      timezone: json['timezone'] as String?,
+      preferences: json['preferences'] as Map<String, dynamic>?,
+    );
+  }
 
   /// To JSON
   Map<String, dynamic> toJson() => _$UserModelToJson(this);

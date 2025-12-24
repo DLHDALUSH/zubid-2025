@@ -153,7 +153,7 @@ class AuctionRepository {
     try {
       AppLogger.info('Fetching categories');
 
-      final response = await _apiClient.get('/api/categories');
+      final response = await _apiClient.get('/categories');
 
       if (response.statusCode == 200) {
         final data = response.data as Map<String, dynamic>;
@@ -181,7 +181,7 @@ class AuctionRepository {
       AppLogger.info('Adding auction $auctionId to watchlist');
 
       final response = await _apiClient.post(
-        '/api/watchlist',
+        '/wishlist/$auctionId',
         data: {'auction_id': auctionId},
       );
 
@@ -203,7 +203,7 @@ class AuctionRepository {
     try {
       AppLogger.info('Removing auction $auctionId from watchlist');
 
-      final response = await _apiClient.delete('/api/watchlist/$auctionId');
+      final response = await _apiClient.delete('/wishlist/$auctionId');
 
       if (response.statusCode == 200 || response.statusCode == 204) {
         AppLogger.info('Successfully removed auction from watchlist');
@@ -227,7 +227,7 @@ class AuctionRepository {
       AppLogger.info('Fetching watchlist - page: $page, limit: $limit');
 
       final response = await _apiClient.get(
-        '/api/watchlist',
+        '/wishlist',
         queryParameters: {
           'page': page,
           'limit': limit,

@@ -25,11 +25,11 @@ class ProfileRepository {
   /// Get user profile
   Future<ApiResult<ProfileModel>> getProfile() async {
     try {
-      AppLogger.network('GET', '/api/profile');
-      
-      final response = await _apiClient.dio.get('/api/profile');
-      
-      AppLogger.network('GET', '/api/profile', statusCode: 200, response: 'Profile fetch successful');
+      AppLogger.network('GET', '/user/profile');
+
+      final response = await _apiClient.dio.get('/user/profile');
+
+      AppLogger.network('GET', '/user/profile', statusCode: 200, response: 'Profile fetch successful');
       
       final profile = ProfileModel.fromJson(response.data['profile']);
       return ApiResult.success(profile);
@@ -46,14 +46,14 @@ class ProfileRepository {
   /// Update user profile
   Future<ApiResult<ProfileModel>> updateProfile(UpdateProfileRequestModel request) async {
     try {
-      AppLogger.network('PUT', '/api/profile');
-      
+      AppLogger.network('PUT', '/user/profile');
+
       final response = await _apiClient.dio.put(
-        '/api/profile',
+        '/user/profile',
         data: request.toJson(),
       );
-      
-      AppLogger.network('PUT', '/api/profile', statusCode: 200, response: 'Profile update successful');
+
+      AppLogger.network('PUT', '/user/profile', statusCode: 200, response: 'Profile update successful');
       
       final updateResponse = UpdateProfileResponseModel.fromJson(response.data);
       
@@ -76,22 +76,22 @@ class ProfileRepository {
   /// Upload profile photo
   Future<ApiResult<String>> uploadProfilePhoto(File imageFile) async {
     try {
-      AppLogger.network('POST', '/api/profile/photo');
-      
+      AppLogger.network('POST', '/user/profile/photo');
+
       // Convert image to base64
       final bytes = await imageFile.readAsBytes();
       final base64Image = base64Encode(bytes);
       final fileName = imageFile.path.split('/').last;
       final fileType = fileName.split('.').last.toLowerCase();
-      
+
       final request = UploadPhotoRequestModel.fromFile(imageFile);
-      
+
       final response = await _apiClient.dio.post(
-        '/api/profile/photo',
+        '/user/profile/photo',
         data: request.toJson(),
       );
-      
-      AppLogger.network('POST', '/api/profile/photo', statusCode: 200, response: 'Photo upload successful');
+
+      AppLogger.network('POST', '/user/profile/photo', statusCode: 200, response: 'Photo upload successful');
       
       final uploadResponse = UploadPhotoResponseModel.fromJson(response.data);
       
@@ -113,11 +113,11 @@ class ProfileRepository {
   /// Delete profile photo
   Future<ApiResult<bool>> deleteProfilePhoto() async {
     try {
-      AppLogger.network('DELETE', '/api/profile/photo');
+      AppLogger.network('DELETE', '/user/profile/photo');
 
-      final response = await _apiClient.dio.delete('/api/profile/photo');
+      final response = await _apiClient.dio.delete('/user/profile/photo');
 
-      AppLogger.network('DELETE', '/api/profile/photo', statusCode: 200, response: 'Photo deletion successful');
+      AppLogger.network('DELETE', '/user/profile/photo', statusCode: 200, response: 'Photo deletion successful');
       
       return ApiResult.success(true);
       
@@ -136,17 +136,17 @@ class ProfileRepository {
     required String newPassword,
   }) async {
     try {
-      AppLogger.network('POST', '/api/profile/change-password');
+      AppLogger.network('POST', '/change-password');
 
       final response = await _apiClient.dio.post(
-        '/api/profile/change-password',
+        '/change-password',
         data: {
           'current_password': currentPassword,
           'new_password': newPassword,
         },
       );
 
-      AppLogger.network('POST', '/api/profile/change-password', statusCode: 200, response: 'Password change successful');
+      AppLogger.network('POST', '/change-password', statusCode: 200, response: 'Password change successful');
       
       return ApiResult.success(true);
       
@@ -162,14 +162,14 @@ class ProfileRepository {
   /// Verify email
   Future<ApiResult<bool>> verifyEmail(String token) async {
     try {
-      AppLogger.network('POST', '/api/profile/verify-email');
+      AppLogger.network('POST', '/verify-email');
 
       final response = await _apiClient.dio.post(
-        '/api/profile/verify-email',
+        '/verify-email',
         data: {'token': token},
       );
 
-      AppLogger.network('POST', '/api/profile/verify-email', statusCode: 200, response: 'Email verification successful');
+      AppLogger.network('POST', '/verify-email', statusCode: 200, response: 'Email verification successful');
       
       return ApiResult.success(true);
       
@@ -185,11 +185,11 @@ class ProfileRepository {
   /// Resend email verification
   Future<ApiResult<bool>> resendEmailVerification() async {
     try {
-      AppLogger.network('POST', '/api/profile/resend-verification');
+      AppLogger.network('POST', '/resend-verification');
 
-      final response = await _apiClient.dio.post('/api/profile/resend-verification');
+      final response = await _apiClient.dio.post('/resend-verification');
 
-      AppLogger.network('POST', '/api/profile/resend-verification', statusCode: 200, response: 'Email verification resent successfully');
+      AppLogger.network('POST', '/resend-verification', statusCode: 200, response: 'Email verification resent successfully');
       
       return ApiResult.success(true);
       

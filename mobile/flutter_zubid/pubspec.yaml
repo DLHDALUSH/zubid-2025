@@ -96,6 +96,8 @@ dependencies:
 
   # Native Platform Integration
   flutter_native_splash: ^2.3.6
+  dio_cookie_manager: ^3.3.0
+  cookie_jar: ^4.0.8
 
 dev_dependencies:
   flutter_test:

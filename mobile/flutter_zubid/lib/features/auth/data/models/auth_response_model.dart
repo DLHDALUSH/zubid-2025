@@ -21,8 +21,29 @@ class AuthResponseModel {
     this.errors,
   });
 
-  factory AuthResponseModel.fromJson(Map<String, dynamic> json) =>
-      _$AuthResponseModelFromJson(json);
+  /// Custom fromJson that handles backend's session-based response format
+  /// Backend returns: { "message": "Login successful", "user": {...} }
+  /// Or error: { "error": "Invalid credentials" }
+  factory AuthResponseModel.fromJson(Map<String, dynamic> json) {
+    // Check if this is a successful login (has 'user' and 'message', no 'error')
+    final hasUser = json['user'] != null;
+    final hasError = json['error'] != null;
+    final message = json['message'] as String? ?? json['error'] as String? ?? '';
+
+    // Determine success based on presence of user and absence of error
+    final success = hasUser && !hasError;
+
+    return AuthResponseModel(
+      success: json['success'] as bool? ?? success,
+      message: message,
+      token: json['token'] as String?,
+      refreshToken: json['refreshToken'] as String? ?? json['refresh_token'] as String?,
+      user: json['user'] == null
+          ? null
+          : UserModel.fromJson(json['user'] as Map<String, dynamic>),
+      errors: json['errors'] as Map<String, dynamic>?,
+    );
+  }
 
   Map<String, dynamic> toJson() => _$AuthResponseModelToJson(this);
 

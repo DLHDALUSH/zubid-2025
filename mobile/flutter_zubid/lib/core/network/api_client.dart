@@ -1,4 +1,6 @@
 import 'package:dio/dio.dart';
+import 'package:dio_cookie_manager/dio_cookie_manager.dart';
+import 'package:cookie_jar/cookie_jar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 
@@ -12,14 +14,18 @@ final apiClientProvider = Provider<ApiClient>((ref) {
 
 class ApiClient {
   late final Dio _dio;
-  
+  late final CookieJar _cookieJar;
+
   ApiClient() {
     _dio = Dio();
-    _setupInterceptors();
+    _cookieJar = CookieJar();
     _setupBaseOptions();
+    _setupCookieManager();
+    _setupInterceptors();
   }
 
   Dio get dio => _dio;
+  CookieJar get cookieJar => _cookieJar;
 
   void _setupBaseOptions() {
     _dio.options = BaseOptions(
@@ -31,7 +37,19 @@ class ApiClient {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
       },
+      // Important for session-based auth
+      extra: {'withCredentials': true},
     );
+  }
+
+  void _setupCookieManager() {
+    // Add cookie manager for session-based authentication
+    _dio.interceptors.add(CookieManager(_cookieJar));
+  }
+
+  /// Clear all cookies (useful for logout)
+  Future<void> clearCookies() async {
+    await _cookieJar.deleteAll();
   }
 
   void _setupInterceptors() {
@@ -138,31 +156,11 @@ class ApiClient {
       }
 
       AppLogger.info('Attempting token refresh...');
-      
-      final response = await _dio.post(
-        '/auth/refresh-token',
-        data: {'refresh_token': refreshToken},
-        options: Options(
-          headers: {'Authorization': null}, // Remove auth header for refresh
-        ),
-      );
 
-      if (response.statusCode == 200) {
-        final newToken = response.data['token'];
-        final newRefreshToken = response.data['refresh_token'];
-        
-        if (newToken != null) {
-          await StorageService.saveAuthToken(newToken);
-          if (newRefreshToken != null) {
-            await StorageService.saveRefreshToken(newRefreshToken);
-          }
-          
-          AppLogger.info('Token refresh successful');
-          return true;
-        }
-      }
-      
-      AppLogger.warning('Token refresh failed');
+      // Note: Backend doesn't have a dedicated refresh-token endpoint yet
+      // For now, return false to force re-login when token expires
+      // TODO: Implement refresh-token endpoint in backend
+      AppLogger.warning('Token refresh not implemented in backend - user will need to re-login');
       return false;
     } catch (e) {
       AppLogger.error('Token refresh error', error: e);

@@ -34,22 +34,30 @@ class AuthRepository {
   Future<ApiResult<AuthResponseModel>> login(LoginRequestModel request) async {
     try {
       AppLogger.auth('Attempting login', userId: request.username);
-      
+
       final response = await _apiClient.post(
-        '/auth/login',
+        '/login',
         data: request.toJson(),
       );
 
       final authResponse = AuthResponseModel.fromJson(response.data);
-      
-      if (authResponse.success && authResponse.token != null && authResponse.user != null) {
+
+      // Backend uses session-based auth (no token returned)
+      // Success is determined by presence of user data
+      if (authResponse.success && authResponse.user != null) {
         // Save authentication data
-        await StorageService.saveAuthToken(authResponse.token!);
+        // For session-based auth, we store a placeholder or session cookie is handled by Dio
+        if (authResponse.token != null) {
+          await StorageService.saveAuthToken(authResponse.token!);
+        } else {
+          // Store a session indicator for session-based auth
+          await StorageService.saveAuthToken('session_auth');
+        }
         if (authResponse.refreshToken != null) {
           await StorageService.saveRefreshToken(authResponse.refreshToken!);
         }
         await StorageService.saveUserData(authResponse.user!);
-        
+
         AppLogger.auth('Login successful', userId: authResponse.user!.id.toString(), success: true);
         return ApiResult.success(authResponse);
       } else {
@@ -71,7 +79,7 @@ class AuthRepository {
       AppLogger.auth('Attempting registration', userId: request.email);
       
       final response = await _apiClient.post(
-        '/auth/register',
+        '/register',
         data: request.toJson(),
       );
 
@@ -109,7 +117,7 @@ class AuthRepository {
       AppLogger.auth('Forgot password request', userId: request.email);
       
       final response = await _apiClient.post(
-        '/auth/forgot-password',
+        '/forgot-password',
         data: request.toJson(),
       );
 
@@ -132,7 +140,7 @@ class AuthRepository {
       AppLogger.auth('Reset password attempt');
       
       final response = await _apiClient.post(
-        '/auth/reset-password',
+        '/reset-password',
         data: request.toJson(),
       );
 
@@ -155,7 +163,7 @@ class AuthRepository {
       AppLogger.auth('Change password attempt');
       
       final response = await _apiClient.post(
-        '/auth/change-password',
+        '/change-password',
         data: request.toJson(),
       );
 
@@ -182,8 +190,10 @@ class AuthRepository {
 
       AppLogger.auth('Refreshing token');
       
+      // Note: The backend may not have a refresh-token endpoint yet
+      // Using the same login endpoint for now
       final response = await _apiClient.post(
-        '/auth/refresh-token',
+        '/login',
         data: RefreshTokenRequestModel(refreshToken: refreshToken).toJson(),
       );
 
@@ -215,8 +225,9 @@ class AuthRepository {
     try {
       AppLogger.auth('Email verification attempt');
       
+      // Note: Email verification endpoint - backend may need this
       final response = await _apiClient.post(
-        '/auth/verify-email',
+        '/verify-email',
         data: request.toJson(),
       );
 
@@ -238,8 +249,9 @@ class AuthRepository {
     try {
       AppLogger.auth('Resend verification email');
       
+      // Note: Resend verification endpoint - backend may need this
       final response = await _apiClient.post(
-        '/auth/resend-verification',
+        '/resend-verification',
         data: request.toJson(),
       );
 
@@ -265,7 +277,7 @@ class AuthRepository {
       final token = await StorageService.getAuthToken();
       if (token != null) {
         try {
-          await _apiClient.post('/auth/logout');
+          await _apiClient.post('/logout');
         } catch (e) {
           // Continue with local logout even if server logout fails
           AppLogger.warning('Server logout failed, continuing with local logout', error: e);
@@ -287,19 +299,22 @@ class AuthRepository {
   Future<ApiResult<UserModel>> getCurrentUser() async {
     try {
       AppLogger.auth('Getting current user');
-      
-      final response = await _apiClient.get('/auth/me');
-      if (response.data != null && response.data['user'] != null) {
-        final user = UserModel.fromJson(response.data['user']);
-        
-        // Update stored user data
-        await StorageService.saveUserData(user);
-        
-        AppLogger.auth('Current user retrieved', userId: user.id.toString());
-        return ApiResult.success(user);
-      } else {
-        return ApiResult.failure('Invalid user data received');
+
+      final response = await _apiClient.get('/me');
+      if (response.data != null) {
+        // Backend returns user data directly, or wrapped in "user" key
+        final userData = response.data['user'] ?? response.data;
+        if (userData != null && userData['id'] != null) {
+          final user = UserModel.fromJson(userData as Map<String, dynamic>);
+
+          // Update stored user data
+          await StorageService.saveUserData(user);
+
+          AppLogger.auth('Current user retrieved', userId: user.id.toString());
+          return ApiResult.success(user);
+        }
       }
+      return ApiResult.failure('Invalid user data received');
     } on DioException catch (e) {
       AppLogger.auth('Get current user error');
       return await _handleDioError(e);
