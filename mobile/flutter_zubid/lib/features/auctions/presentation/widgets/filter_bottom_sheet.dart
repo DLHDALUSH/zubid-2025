@@ -147,7 +147,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
             const SizedBox(height: 12),
             
             DropdownButtonFormField<int?>(
-              value: _filters.categoryId,
+              initialValue: _filters.categoryId,
               decoration: const InputDecoration(
                 hintText: 'All Categories',
                 border: OutlineInputBorder(),
@@ -290,7 +290,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
             const SizedBox(height: 12),
             
             DropdownButtonFormField<String?>(
-              value: _filters.condition,
+              initialValue: _filters.condition,
               decoration: const InputDecoration(
                 hintText: 'Any Condition',
                 border: OutlineInputBorder(),

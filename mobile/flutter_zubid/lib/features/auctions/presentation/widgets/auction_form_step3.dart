@@ -185,7 +185,7 @@ class _AuctionFormStep3State extends ConsumerState<AuctionFormStep3> {
                   },
                   backgroundColor: isSelected 
                       ? theme.colorScheme.primaryContainer
-                      : theme.colorScheme.surfaceVariant,
+                      : theme.colorScheme.surfaceContainerHighest,
                   selectedColor: theme.colorScheme.primaryContainer,
                   checkmarkColor: theme.colorScheme.primary,
                 );
@@ -198,7 +198,7 @@ class _AuctionFormStep3State extends ConsumerState<AuctionFormStep3> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
+                color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(

@@ -238,7 +238,7 @@ class AuctionListItem extends StatelessWidget {
         width: double.infinity,
         height: double.infinity,
         placeholder: (context, url) => Container(
-          color: theme.colorScheme.surfaceVariant,
+          color: theme.colorScheme.surfaceContainerHighest,
           child: const Center(
             child: CircularProgressIndicator(),
           ),
@@ -254,7 +254,7 @@ class AuctionListItem extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Container(
-      color: theme.colorScheme.surfaceVariant,
+      color: theme.colorScheme.surfaceContainerHighest,
       child: Center(
         child: Icon(
           Icons.image_outlined,

@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../auctions/presentation/providers/bidding_provider.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
-import '../../../../core/widgets/loading_widget.dart';
-import '../../../../core/widgets/error_widget.dart' as custom;
 
 class MyBidsScreen extends ConsumerStatefulWidget {
   const MyBidsScreen({super.key});

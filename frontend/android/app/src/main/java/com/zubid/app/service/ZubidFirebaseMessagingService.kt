@@ -108,8 +108,32 @@ class ZubidFirebaseMessagingService : FirebaseMessagingService() {
     }
 
     private fun sendTokenToServer(token: String) {
-        // TODO: Send FCM token to your backend
-        // Use ApiClient.apiService.updateFcmToken(token)
+        // Send FCM token to backend
+        // This should be called after user logs in
+        // The actual implementation should use your API client with authentication
+        // Example implementation:
+        /*
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val response = ApiClient.apiService.updateFcmToken(
+                    mapOf("fcm_token" to token)
+                )
+                if (response.isSuccessful) {
+                    Log.d("FCM", "Token sent to server successfully")
+                } else {
+                    Log.e("FCM", "Failed to send token: ${response.code()}")
+                }
+            } catch (e: Exception) {
+                Log.e("FCM", "Error sending token to server", e)
+            }
+        }
+        */
+
+        // For now, store token locally to send after login
+        getSharedPreferences("zubid_prefs", Context.MODE_PRIVATE)
+            .edit()
+            .putString("pending_fcm_token", token)
+            .apply()
     }
 }
 

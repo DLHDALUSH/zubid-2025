@@ -149,7 +149,7 @@ class _AuctionImageGalleryState extends State<AuctionImageGallery> {
       width: double.infinity,
       height: double.infinity,
       placeholder: (context, url) => Container(
-        color: Theme.of(context).colorScheme.surfaceVariant,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         child: const Center(
           child: CircularProgressIndicator(),
         ),
@@ -162,7 +162,7 @@ class _AuctionImageGalleryState extends State<AuctionImageGallery> {
     final theme = Theme.of(context);
 
     return Container(
-      color: theme.colorScheme.surfaceVariant,
+      color: theme.colorScheme.surfaceContainerHighest,
       child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

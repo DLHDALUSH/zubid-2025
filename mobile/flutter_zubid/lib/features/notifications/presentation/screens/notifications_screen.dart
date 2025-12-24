@@ -97,7 +97,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
           height: 40,
           decoration: BoxDecoration(
             color: isRead 
-                ? theme.colorScheme.surfaceVariant
+                ? theme.colorScheme.surfaceContainerHighest
                 : theme.colorScheme.primary.withOpacity(0.1),
             shape: BoxShape.circle,
           ),

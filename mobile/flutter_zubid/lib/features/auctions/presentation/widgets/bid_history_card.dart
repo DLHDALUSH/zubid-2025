@@ -169,7 +169,7 @@ class BidHistoryCard extends ConsumerWidget {
             height: 40,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: theme.colorScheme.surfaceVariant,
+              color: theme.colorScheme.surfaceContainerHighest,
             ),
             child: bid.hasUserAvatar
                 ? ClipOval(

@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/network/api_client.dart';
 import '../../../core/utils/logger.dart';
 import '../data/models/auction_model.dart';
 import '../data/repositories/auction_repository.dart';
@@ -41,7 +42,7 @@ class AuctionDetailNotifier extends StateNotifier<AuctionDetailState> {
   final AuctionRepository _repository;
   final String auctionId;
 
-  AuctionDetailNotifier(this._repository, this.auctionId) 
+  AuctionDetailNotifier(this._repository, this.auctionId)
       : super(const AuctionDetailState()) {
     loadAuction();
   }
@@ -54,18 +55,28 @@ class AuctionDetailNotifier extends StateNotifier<AuctionDetailState> {
 
     try {
       AppLogger.info('Loading auction details: $auctionId');
-      
-      final auction = await _repository.getAuction(int.parse(auctionId));
-      
-      state = state.copyWith(
-        auction: auction,
-        isLoading: false,
-        isWatchlisted: auction.isWatched,
+
+      final result = await _repository.getAuction(auctionId);
+
+      result.when(
+        success: (auction) {
+          state = state.copyWith(
+            auction: auction,
+            isLoading: false,
+            isWatchlisted: auction.isWatched,
+          );
+          AppLogger.info('Successfully loaded auction: ${auction.title}');
+        },
+        error: (errorMessage) {
+          state = state.copyWith(
+            isLoading: false,
+            error: errorMessage,
+          );
+          AppLogger.warning('Failed to load auction: $errorMessage');
+        },
       );
-      
-      AppLogger.info('Successfully loaded auction: ${auction.title}');
     } catch (e) {
-      AppLogger.error('Failed to load auction $auctionId', e);
+      AppLogger.error('Failed to load auction $auctionId', error: e);
       state = state.copyWith(
         isLoading: false,
         error: e.toString(),
@@ -81,20 +92,28 @@ class AuctionDetailNotifier extends StateNotifier<AuctionDetailState> {
     final newWatchStatus = !state.isWatchlisted;
 
     try {
-      AppLogger.info('Toggling watchlist for auction ${auction.id}: $newWatchStatus');
-      
+      AppLogger.info(
+          'Toggling watchlist for auction ${auction.id}: $newWatchStatus');
+
       // Optimistically update UI
       state = state.copyWith(isWatchlisted: newWatchStatus);
-      
-      await _repository.toggleWatchlist(auction.id);
-      
-      AppLogger.info('Successfully toggled watchlist for auction ${auction.id}');
+
+      // Use add or remove based on new status
+      if (newWatchStatus) {
+        await _repository.addToWatchlist(auction.id);
+      } else {
+        await _repository.removeFromWatchlist(auction.id);
+      }
+
+      AppLogger.info(
+          'Successfully toggled watchlist for auction ${auction.id}');
     } catch (e) {
-      AppLogger.error('Failed to toggle watchlist for auction ${auction.id}', e);
-      
+      AppLogger.error('Failed to toggle watchlist for auction ${auction.id}',
+          error: e);
+
       // Revert optimistic update
       state = state.copyWith(isWatchlisted: !newWatchStatus);
-      
+
       // Could show error message here
       rethrow;
     }
@@ -117,7 +136,8 @@ class AuctionDetailNotifier extends StateNotifier<AuctionDetailState> {
 }
 
 // Provider for auction detail
-final auctionDetailProvider = StateNotifierProvider.family<AuctionDetailNotifier, AuctionDetailState, String>(
+final auctionDetailProvider = StateNotifierProvider.family<
+    AuctionDetailNotifier, AuctionDetailState, String>(
   (ref, auctionId) {
     final repository = ref.watch(auctionRepositoryProvider);
     return AuctionDetailNotifier(repository, auctionId);
@@ -126,15 +146,18 @@ final auctionDetailProvider = StateNotifierProvider.family<AuctionDetailNotifier
 
 // Provider for auction repository
 final auctionRepositoryProvider = Provider<AuctionRepository>((ref) {
-  return AuctionRepository();
+  final apiClient = ref.watch(apiClientProvider);
+  return AuctionRepository(apiClient);
 });
 
 // Convenience providers
-final currentAuctionProvider = Provider.family<AuctionModel?, String>((ref, auctionId) {
+final currentAuctionProvider =
+    Provider.family<AuctionModel?, String>((ref, auctionId) {
   return ref.watch(auctionDetailProvider(auctionId)).auction;
 });
 
-final isAuctionWatchlistedProvider = Provider.family<bool, String>((ref, auctionId) {
+final isAuctionWatchlistedProvider =
+    Provider.family<bool, String>((ref, auctionId) {
   return ref.watch(auctionDetailProvider(auctionId)).isWatchlisted;
 });
 

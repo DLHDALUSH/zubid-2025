@@ -168,7 +168,7 @@ class _BuyNowScreenState extends ConsumerState<BuyNowScreen> {
             height: 80,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(8),
-              color: theme.colorScheme.surfaceVariant,
+              color: theme.colorScheme.surfaceContainerHighest,
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(8),
@@ -177,14 +177,14 @@ class _BuyNowScreenState extends ConsumerState<BuyNowScreen> {
                       imageUrl: widget.auction.primaryImageUrl,
                       fit: BoxFit.cover,
                       placeholder: (context, url) => Container(
-                        color: theme.colorScheme.surfaceVariant,
+                        color: theme.colorScheme.surfaceContainerHighest,
                         child: Icon(
                           Icons.image,
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
                       ),
                       errorWidget: (context, url, error) => Container(
-                        color: theme.colorScheme.surfaceVariant,
+                        color: theme.colorScheme.surfaceContainerHighest,
                         child: Icon(
                           Icons.broken_image,
                           color: theme.colorScheme.onSurfaceVariant,

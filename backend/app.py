@@ -523,6 +523,12 @@ class User(db.Model):
     last_login = db.Column(db.DateTime, nullable=True)
     login_count = db.Column(db.Integer, default=0)
 
+    # Financial fields
+    balance = db.Column(db.Float, default=0.0, nullable=False)  # User account balance
+
+    # Mobile app fields
+    fcm_token = db.Column(db.String(255), nullable=True)  # Firebase Cloud Messaging token for push notifications
+
     # Explicitly specify foreign_keys to avoid ambiguity
     auctions = db.relationship('Auction', foreign_keys='Auction.seller_id', backref='seller', lazy=True)
     won_auctions = db.relationship('Auction', foreign_keys='Auction.winner_id', backref='winner', lazy=True)
@@ -1405,7 +1411,7 @@ def login():
                 'profile_photo': user.profile_photo,
                 'first_name': user.first_name,
                 'last_name': user.last_name,
-                'balance': 0.0  # TODO: Add actual balance field to User model
+                'balance': float(user.balance) if user.balance is not None else 0.0
             }
         }), 200
     app.logger.warning(f"Failed login attempt for user: {data.get('username')}")
@@ -1433,7 +1439,7 @@ def get_current_user():
         'profile_photo': user.profile_photo,
         'first_name': user.first_name,
         'last_name': user.last_name,
-        'balance': 0.0,  # TODO: Add actual balance field
+        'balance': float(user.balance) if user.balance is not None else 0.0,
         'phone': user.phone,
         'address': user.address,
         'city': user.city,
@@ -2131,6 +2137,69 @@ def upload_profile_photo():
         db.session.rollback()
         app.logger.error(f"Error uploading profile photo: {str(e)}")
         return jsonify({'error': f'Failed to upload photo: {str(e)}'}), 500
+
+@app.route('/api/user/fcm-token', methods=['POST'])
+@login_required
+@limiter.limit("20 per minute")
+def update_fcm_token():
+    """Update user's FCM token for push notifications"""
+    try:
+        data = request.get_json()
+        if not data or 'fcm_token' not in data:
+            return jsonify({'error': 'FCM token is required'}), 400
+
+        fcm_token = data.get('fcm_token', '').strip()
+        if not fcm_token:
+            return jsonify({'error': 'FCM token cannot be empty'}), 400
+
+        # Validate token format (basic check)
+        if len(fcm_token) < 50 or len(fcm_token) > 500:
+            return jsonify({'error': 'Invalid FCM token format'}), 400
+
+        # Update user's FCM token
+        user = User.query.get(session['user_id'])
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+
+        user.fcm_token = fcm_token
+        db.session.commit()
+
+        app.logger.info(f"FCM token updated for user {user.username} (ID: {user.id})")
+
+        return jsonify({
+            'message': 'FCM token updated successfully',
+            'success': True
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f"Error updating FCM token: {str(e)}")
+        return jsonify({'error': f'Failed to update FCM token: {str(e)}'}), 500
+
+@app.route('/api/user/fcm-token', methods=['DELETE'])
+@login_required
+@limiter.limit("20 per minute")
+def delete_fcm_token():
+    """Delete user's FCM token (e.g., on logout)"""
+    try:
+        user = User.query.get(session['user_id'])
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+
+        user.fcm_token = None
+        db.session.commit()
+
+        app.logger.info(f"FCM token deleted for user {user.username} (ID: {user.id})")
+
+        return jsonify({
+            'message': 'FCM token deleted successfully',
+            'success': True
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f"Error deleting FCM token: {str(e)}")
+        return jsonify({'error': f'Failed to delete FCM token: {str(e)}'}), 500
 
 # Category APIs
 # Cache categories for 5 minutes (they don't change often)

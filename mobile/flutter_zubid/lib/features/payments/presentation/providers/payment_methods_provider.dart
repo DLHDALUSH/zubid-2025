@@ -2,7 +2,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/utils/logger.dart';
 import '../../data/models/payment_method_model.dart';
-import '../../data/models/payment_request_model.dart';
 import '../../data/models/add_payment_method_request.dart';
 import '../../data/repositories/payment_repository.dart';
 

@@ -13,7 +13,6 @@ import 'firebase_options.dart';
 import 'features/auctions/data/models/auction_model.dart';
 import 'features/auctions/data/models/bid_model.dart';
 import 'features/auctions/data/models/category_model.dart';
-import 'features/auctions/data/models/create_auction_model.dart';
 import 'features/auth/data/models/user_model.dart';
 import 'features/orders/data/models/order_model.dart';
 import 'features/payments/data/models/payment_method_model.dart';

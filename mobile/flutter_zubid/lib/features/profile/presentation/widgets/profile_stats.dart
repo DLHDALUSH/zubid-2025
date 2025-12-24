@@ -229,7 +229,7 @@ class ProfileStats extends StatelessWidget {
         // Win Rate Progress Bar
         LinearProgressIndicator(
           value: winRate / 100,
-          backgroundColor: theme.colorScheme.surfaceVariant,
+          backgroundColor: theme.colorScheme.surfaceContainerHighest,
           valueColor: AlwaysStoppedAnimation<Color>(
             winRate >= 50 
                 ? Colors.green 

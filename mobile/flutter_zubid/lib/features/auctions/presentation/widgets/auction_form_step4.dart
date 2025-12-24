@@ -104,7 +104,7 @@ class _AuctionFormStep4State extends ConsumerState<AuctionFormStep4> {
             
             // Shipping Method
             DropdownButtonFormField<String>(
-              value: _selectedShippingMethod,
+              initialValue: _selectedShippingMethod,
               decoration: InputDecoration(
                 labelText: 'Shipping Method',
                 border: OutlineInputBorder(
@@ -306,7 +306,7 @@ class _AuctionFormStep4State extends ConsumerState<AuctionFormStep4> {
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
+            color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Column(

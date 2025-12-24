@@ -39,7 +39,7 @@ class PaymentMethodCard extends StatelessWidget {
                     width: 48,
                     height: 32,
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.surfaceVariant,
+                      color: theme.colorScheme.surfaceContainerHighest,
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Center(

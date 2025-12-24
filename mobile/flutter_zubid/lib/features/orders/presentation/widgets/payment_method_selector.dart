@@ -154,13 +154,13 @@ class _PaymentMethodSelectorState extends ConsumerState<PaymentMethodSelector> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.surfaceVariant,
+                      color: theme.colorScheme.surfaceContainerHighest,
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
                       'Coming Soon',
                       style: theme.textTheme.labelSmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
+                        color: theme.colorScheme.onSurface,
                       ),
                     ),
                   ),
@@ -176,7 +176,7 @@ class _PaymentMethodSelectorState extends ConsumerState<PaymentMethodSelector> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+        color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(

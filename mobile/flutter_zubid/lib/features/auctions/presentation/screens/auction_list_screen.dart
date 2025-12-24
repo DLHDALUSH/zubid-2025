@@ -4,8 +4,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/widgets/loading_overlay.dart';
 import '../../../../core/utils/logger.dart';
-import '../../../profile/presentation/providers/profile_provider.dart';
-import '../../data/models/auction_model.dart';
 import '../../data/models/category_model.dart';
 import '../../data/models/auction_search_filters.dart';
 import '../providers/auction_provider.dart';

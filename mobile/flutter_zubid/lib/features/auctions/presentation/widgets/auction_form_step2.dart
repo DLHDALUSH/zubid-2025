@@ -89,7 +89,7 @@ class _AuctionFormStep2State extends ConsumerState<AuctionFormStep2> {
           )
         else
           DropdownButtonFormField<CategoryModel>(
-            value: state.selectedCategory,
+            initialValue: state.selectedCategory,
             decoration: InputDecoration(
               labelText: 'Select Category',
               border: OutlineInputBorder(
@@ -280,7 +280,7 @@ class _AuctionFormStep2State extends ConsumerState<AuctionFormStep2> {
                         },
                       )
                     : Container(
-                        color: theme.colorScheme.surfaceVariant,
+                        color: theme.colorScheme.surfaceContainerHighest,
                         child: Icon(
                           Icons.image,
                           color: theme.colorScheme.onSurfaceVariant,
@@ -338,7 +338,7 @@ class _AuctionFormStep2State extends ConsumerState<AuctionFormStep2> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
+        color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(

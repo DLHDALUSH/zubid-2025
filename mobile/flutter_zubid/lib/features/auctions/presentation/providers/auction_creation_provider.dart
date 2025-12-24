@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/utils/logger.dart';
-import '../../data/models/auction_model.dart';
 import '../../data/models/category_model.dart';
 import '../../data/models/create_auction_model.dart';
 import '../../data/repositories/auction_creation_repository.dart';

@@ -123,7 +123,7 @@ class _AuctionFormStep1State extends ConsumerState<AuctionFormStep1> {
             
             // Condition Dropdown
             DropdownButtonFormField<String>(
-              value: _selectedCondition,
+              initialValue: _selectedCondition,
               decoration: InputDecoration(
                 labelText: 'Condition',
                 border: OutlineInputBorder(

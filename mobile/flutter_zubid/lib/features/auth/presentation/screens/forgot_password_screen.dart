@@ -8,7 +8,6 @@ import '../../../../core/widgets/loading_overlay.dart';
 import '../../../../core/utils/logger.dart';
 import '../widgets/auth_header.dart';
 import '../providers/auth_provider.dart';
-import '../../data/models/auth_response_model.dart';
 import '../../data/models/forgot_password_request_model.dart';
 
 class ForgotPasswordScreen extends ConsumerStatefulWidget {

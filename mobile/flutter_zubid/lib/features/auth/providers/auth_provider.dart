@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/services/storage_service.dart';
 import '../../../core/utils/logger.dart';
 import '../data/models/user_model.dart';
-import '../data/models/auth_response_model.dart';
 import '../data/repositories/auth_repository.dart';
 
 // Auth state

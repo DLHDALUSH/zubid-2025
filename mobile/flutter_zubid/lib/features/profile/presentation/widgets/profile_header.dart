@@ -127,7 +127,7 @@ class ProfileHeader extends StatelessWidget {
         width: 80,
         height: 80,
         decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceVariant,
+          color: theme.colorScheme.surfaceContainerHighest,
           shape: BoxShape.circle,
         ),
         child: const CircularProgressIndicator(),
@@ -150,7 +150,7 @@ class ProfileHeader extends StatelessWidget {
                 imageUrl: profile!.profilePhotoUrl!,
                 fit: BoxFit.cover,
                 placeholder: (context, url) => Container(
-                  color: theme.colorScheme.surfaceVariant,
+                  color: theme.colorScheme.surfaceContainerHighest,
                   child: const Center(
                     child: CircularProgressIndicator(),
                   ),
@@ -254,7 +254,7 @@ class ProfileHeader extends StatelessWidget {
       width: width,
       height: height,
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceVariant,
+        color: theme.colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(4),
       ),
     );

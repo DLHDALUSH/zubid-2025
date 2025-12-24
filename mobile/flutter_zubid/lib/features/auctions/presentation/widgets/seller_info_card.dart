@@ -47,7 +47,7 @@ class SellerInfoCard extends StatelessWidget {
                   height: 60,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: theme.colorScheme.surfaceVariant,
+                    color: theme.colorScheme.surfaceContainerHighest,
                   ),
                   child: seller.hasAvatar
                       ? ClipOval(

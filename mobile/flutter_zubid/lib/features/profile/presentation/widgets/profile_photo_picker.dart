@@ -147,7 +147,7 @@ class ProfilePhotoPicker extends StatelessWidget {
         imageUrl: currentPhotoUrl!,
         fit: BoxFit.cover,
         placeholder: (context, url) => Container(
-          color: theme.colorScheme.surfaceVariant,
+          color: theme.colorScheme.surfaceContainerHighest,
           child: const Center(
             child: CircularProgressIndicator(),
           ),
