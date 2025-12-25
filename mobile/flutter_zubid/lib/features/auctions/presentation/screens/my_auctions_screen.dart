@@ -25,7 +25,7 @@ class _MyAuctionsScreenState extends ConsumerState<MyAuctionsScreen>
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
     _scrollController.addListener(_onScroll);
-    
+
     // Load initial data
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(myAuctionsProvider.notifier).loadAuctions();
@@ -40,7 +40,7 @@ class _MyAuctionsScreenState extends ConsumerState<MyAuctionsScreen>
   }
 
   void _onScroll() {
-    if (_scrollController.position.pixels >= 
+    if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 200) {
       ref.read(myAuctionsProvider.notifier).loadMoreAuctions();
     }
@@ -96,7 +96,8 @@ class _MyAuctionsScreenState extends ConsumerState<MyAuctionsScreen>
 
   Widget _buildAuctionsList(String status) {
     final auctionsState = ref.watch(myAuctionsProvider);
-    final filteredAuctions = _filterAuctionsByStatus(auctionsState.auctions, status);
+    final filteredAuctions =
+        _filterAuctionsByStatus(auctionsState.auctions, status);
 
     if (auctionsState.hasError && auctionsState.auctions.isEmpty) {
       return _buildErrorState(auctionsState.error!);
@@ -113,7 +114,8 @@ class _MyAuctionsScreenState extends ConsumerState<MyAuctionsScreen>
       child: ListView.builder(
         controller: _scrollController,
         padding: const EdgeInsets.all(16),
-        itemCount: filteredAuctions.length + (auctionsState.hasMoreData ? 1 : 0),
+        itemCount:
+            filteredAuctions.length + (auctionsState.hasMoreData ? 1 : 0),
         itemBuilder: (context, index) {
           if (index >= filteredAuctions.length) {
             return const Center(
@@ -133,7 +135,8 @@ class _MyAuctionsScreenState extends ConsumerState<MyAuctionsScreen>
               showActions: true,
               onEdit: () => _editAuction(auction),
               onDelete: () => _deleteAuction(auction),
-              onEndEarly: auction.isActive ? () => _endAuctionEarly(auction) : null,
+              onEndEarly:
+                  auction.isActive ? () => _endAuctionEarly(auction) : null,
             ),
           );
         },
@@ -143,11 +146,11 @@ class _MyAuctionsScreenState extends ConsumerState<MyAuctionsScreen>
 
   Widget _buildEmptyState(String status) {
     final theme = Theme.of(context);
-    
+
     String title;
     String subtitle;
     IconData icon;
-    
+
     switch (status) {
       case 'active':
         title = 'No Active Auctions';
@@ -213,7 +216,7 @@ class _MyAuctionsScreenState extends ConsumerState<MyAuctionsScreen>
 
   Widget _buildErrorState(String error) {
     final theme = Theme.of(context);
-    
+
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -241,7 +244,8 @@ class _MyAuctionsScreenState extends ConsumerState<MyAuctionsScreen>
           const SizedBox(height: 24),
           CustomButton(
             text: 'Try Again',
-            onPressed: () => ref.read(myAuctionsProvider.notifier).refreshAuctions(),
+            onPressed: () =>
+                ref.read(myAuctionsProvider.notifier).refreshAuctions(),
             icon: Icons.refresh,
           ),
         ],
@@ -249,12 +253,15 @@ class _MyAuctionsScreenState extends ConsumerState<MyAuctionsScreen>
     );
   }
 
-  List<AuctionModel> _filterAuctionsByStatus(List<AuctionModel> auctions, String status) {
+  List<AuctionModel> _filterAuctionsByStatus(
+      List<AuctionModel> auctions, String status) {
     switch (status) {
       case 'active':
         return auctions.where((auction) => auction.isActive).toList();
       case 'ended':
-        return auctions.where((auction) => auction.hasEnded && !(auction.hasSold ?? false)).toList();
+        return auctions
+            .where((auction) => auction.hasEnded && !(auction.hasSold ?? false))
+            .toList();
       case 'sold':
         return auctions.where((auction) => auction.hasSold ?? false).toList();
       case 'draft':
@@ -265,7 +272,7 @@ class _MyAuctionsScreenState extends ConsumerState<MyAuctionsScreen>
   }
 
   void _viewAuctionDetails(AuctionModel auction) {
-    context.pushNamed('auction-detail', pathParameters: {'id': auction.id.toString()});
+    context.push('/auctions/detail/${auction.id}');
   }
 
   void _editAuction(AuctionModel auction) {
@@ -295,9 +302,8 @@ class _MyAuctionsScreenState extends ConsumerState<MyAuctionsScreen>
     );
 
     if (confirmed == true) {
-      final success = await ref
-          .read(myAuctionsProvider.notifier)
-          .deleteAuction(auction.id);
+      final success =
+          await ref.read(myAuctionsProvider.notifier).deleteAuction(auction.id);
 
       if (success && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

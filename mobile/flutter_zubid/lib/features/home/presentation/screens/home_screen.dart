@@ -120,7 +120,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               const SliverToBoxAdapter(
                 child: LoadingWidget(),
               )
-            else if (auctionState.error != null && auctionState.auctions.isEmpty)
+            else if (auctionState.error != null &&
+                auctionState.auctions.isEmpty)
               SliverToBoxAdapter(
                 child: custom.CustomErrorWidget(
                   message: auctionState.error!,
@@ -169,12 +170,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         padding: const EdgeInsets.only(bottom: 16),
                         child: AuctionCard(
                           auction: auction,
-                          onTap: () => context.push('/auctions/${auction.id}'),
+                          onTap: () =>
+                              context.push('/auctions/detail/${auction.id}'),
                         ),
                       );
                     },
-                    childCount: auctionState.auctions.length > 5 
-                        ? 5 
+                    childCount: auctionState.auctions.length > 5
+                        ? 5
                         : auctionState.auctions.length,
                   ),
                 ),

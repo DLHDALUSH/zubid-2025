@@ -43,7 +43,8 @@ class _BiddingPanelState extends ConsumerState<BiddingPanel> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final biddingState = ref.watch(biddingProvider(widget.auction.id.toString()));
+    final biddingState =
+        ref.watch(biddingProvider(widget.auction.id.toString()));
 
     if (widget.isBottomSheet) {
       return _buildBottomSheetContent(theme, biddingState);
@@ -80,9 +81,9 @@ class _BiddingPanelState extends ConsumerState<BiddingPanel> {
               ),
             ),
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           // Title
           Text(
             'Place Your Bid',
@@ -91,9 +92,9 @@ class _BiddingPanelState extends ConsumerState<BiddingPanel> {
             ),
             textAlign: TextAlign.center,
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           _buildBiddingContent(theme, biddingState),
         ],
       ),
@@ -108,28 +109,28 @@ class _BiddingPanelState extends ConsumerState<BiddingPanel> {
         children: [
           // Current Price Info
           _buildCurrentPriceInfo(theme),
-          
+
           const SizedBox(height: 16),
-          
+
           // Quick Bid Buttons
           _buildQuickBidButtons(theme),
-          
+
           const SizedBox(height: 16),
-          
+
           // Custom Bid Input
           _buildCustomBidInput(theme),
-          
+
           const SizedBox(height: 16),
-          
+
           // Action Buttons
           _buildActionButtons(theme, biddingState),
-          
+
           // Buy Now Button (if available)
           if (widget.auction.hasBuyNow) ...[
             const SizedBox(height: 12),
             _buildBuyNowButton(theme, biddingState),
           ],
-          
+
           // Error Message
           if (biddingState.hasError) ...[
             const SizedBox(height: 12),
@@ -225,9 +226,9 @@ class _BiddingPanelState extends ConsumerState<BiddingPanel> {
           spacing: 8,
           runSpacing: 8,
           children: quickBids.map((amount) {
-            final isSelected = !_isCustomBid && 
-                double.tryParse(_bidController.text) == amount;
-            
+            final isSelected =
+                !_isCustomBid && double.tryParse(_bidController.text) == amount;
+
             return FilterChip(
               label: Text('\$${(amount ?? 0.0).toStringAsFixed(2)}'),
               selected: isSelected,
@@ -265,7 +266,8 @@ class _BiddingPanelState extends ConsumerState<BiddingPanel> {
                 setState(() {
                   _isCustomBid = value;
                   if (!value) {
-                    _bidController.text = (widget.auction.minimumBid ?? 0.0).toStringAsFixed(2);
+                    _bidController.text =
+                        (widget.auction.minimumBid ?? 0.0).toStringAsFixed(2);
                   }
                 });
               },
@@ -286,16 +288,16 @@ class _BiddingPanelState extends ConsumerState<BiddingPanel> {
             if (value == null || value.isEmpty) {
               return 'Please enter a bid amount';
             }
-            
+
             final bidAmount = double.tryParse(value);
             if (bidAmount == null) {
               return 'Please enter a valid amount';
             }
-            
+
             if (bidAmount < (widget.auction.minimumBid ?? 0.0)) {
               return 'Bid must be at least \$${(widget.auction.minimumBid ?? 0.0).toStringAsFixed(2)}';
             }
-            
+
             return null;
           },
         ),
@@ -328,20 +330,23 @@ class _BiddingPanelState extends ConsumerState<BiddingPanel> {
     }
 
     final bidAmount = double.parse(_bidController.text);
-    
-    AppLogger.userAction('Placing bid: \$${bidAmount.toStringAsFixed(2)} on auction ${widget.auction.id}');
-    
-    final success = await ref.read(biddingProvider(widget.auction.id.toString()).notifier)
+
+    AppLogger.userAction(
+        'Placing bid: \$${bidAmount.toStringAsFixed(2)} on auction ${widget.auction.id}');
+
+    final success = await ref
+        .read(biddingProvider(widget.auction.id.toString()).notifier)
         .placeBid(bidAmount);
-    
+
     if (success && mounted) {
       if (widget.isBottomSheet) {
         Navigator.of(context).pop();
       }
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Bid placed successfully for \$${bidAmount.toStringAsFixed(2)}'),
+          content: Text(
+              'Bid placed successfully for \$${bidAmount.toStringAsFixed(2)}'),
           backgroundColor: Colors.green,
         ),
       );
@@ -356,7 +361,7 @@ class _BiddingPanelState extends ConsumerState<BiddingPanel> {
     }
 
     if (mounted) {
-      context.pushNamed('buy-now', extra: widget.auction);
+      context.push('/buy-now', extra: widget.auction);
     }
   }
 }

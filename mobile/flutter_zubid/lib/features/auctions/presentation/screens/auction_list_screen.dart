@@ -40,7 +40,7 @@ class _AuctionListScreenState extends ConsumerState<AuctionListScreen> {
     super.initState();
     _searchController.text = widget.initialSearch ?? '';
     _scrollController.addListener(_onScroll);
-    
+
     // Load initial data
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadInitialData();
@@ -56,7 +56,7 @@ class _AuctionListScreenState extends ConsumerState<AuctionListScreen> {
 
   void _loadInitialData() {
     final notifier = ref.read(auctionProvider.notifier);
-    
+
     // Load categories if not loaded
     if (!ref.read(auctionProvider).hasCategories) {
       notifier.loadCategories();
@@ -70,7 +70,8 @@ class _AuctionListScreenState extends ConsumerState<AuctionListScreen> {
 
     if (filters != null) {
       notifier.applyFilters(filters);
-    } else if (widget.initialSearch != null && widget.initialSearch!.isNotEmpty) {
+    } else if (widget.initialSearch != null &&
+        widget.initialSearch!.isNotEmpty) {
       notifier.searchAuctions(widget.initialSearch!);
     } else {
       notifier.loadAuctions(refresh: true);
@@ -78,7 +79,7 @@ class _AuctionListScreenState extends ConsumerState<AuctionListScreen> {
   }
 
   void _onScroll() {
-    if (_scrollController.position.pixels >= 
+    if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 200) {
       ref.read(auctionProvider.notifier).loadMoreAuctions();
     }
@@ -99,25 +100,22 @@ class _AuctionListScreenState extends ConsumerState<AuctionListScreen> {
           // View mode toggle
           IconButton(
             icon: Icon(
-              _viewMode == ViewMode.grid 
-                  ? Icons.view_list 
-                  : Icons.grid_view,
+              _viewMode == ViewMode.grid ? Icons.view_list : Icons.grid_view,
             ),
             onPressed: () {
               setState(() {
-                _viewMode = _viewMode == ViewMode.grid 
-                    ? ViewMode.list 
-                    : ViewMode.grid;
+                _viewMode =
+                    _viewMode == ViewMode.grid ? ViewMode.list : ViewMode.grid;
               });
             },
           ),
-          
+
           // Sort button
           IconButton(
             icon: const Icon(Icons.sort),
             onPressed: _showSortOptions,
           ),
-          
+
           // Filter button
           Stack(
             children: [
@@ -156,11 +154,10 @@ class _AuctionListScreenState extends ConsumerState<AuctionListScreen> {
                 isLoading: _isSearching,
               ),
             ),
-            
+
             // Filter Summary
-            if (auctionState.hasFilters)
-              _buildFilterSummary(),
-            
+            if (auctionState.hasFilters) _buildFilterSummary(),
+
             // Auction List
             Expanded(
               child: RefreshIndicator(
@@ -237,9 +234,7 @@ class _AuctionListScreenState extends ConsumerState<AuctionListScreen> {
       return _buildEmptyState();
     }
 
-    return _viewMode == ViewMode.grid 
-        ? _buildGridView() 
-        : _buildListView();
+    return _viewMode == ViewMode.grid ? _buildGridView() : _buildListView();
   }
 
   Widget _buildGridView() {
@@ -268,7 +263,7 @@ class _AuctionListScreenState extends ConsumerState<AuctionListScreen> {
         final auction = auctions[index];
         return AuctionCard(
           auction: auction,
-          onTap: () => context.push('/auction/${auction.id}'),
+          onTap: () => context.push('/auctions/detail/${auction.id}'),
           onWatchlistToggle: () => _toggleWatchlist(auction),
         );
       },
@@ -298,7 +293,7 @@ class _AuctionListScreenState extends ConsumerState<AuctionListScreen> {
           padding: const EdgeInsets.only(bottom: 12),
           child: AuctionListItem(
             auction: auction,
-            onTap: () => context.push('/auction/${auction.id}'),
+            onTap: () => context.push('/auctions/detail/${auction.id}'),
             onWatchlistToggle: () => _toggleWatchlist(auction),
           ),
         );
@@ -421,7 +416,8 @@ class _AuctionListScreenState extends ConsumerState<AuctionListScreen> {
   }
 
   Future<void> _toggleWatchlist(auction) async {
-    final success = await ref.read(auctionProvider.notifier).toggleWatchlist(auction);
+    final success =
+        await ref.read(auctionProvider.notifier).toggleWatchlist(auction);
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -433,7 +429,8 @@ class _AuctionListScreenState extends ConsumerState<AuctionListScreen> {
                     : 'Added to watchlist'
                 : 'Failed to update watchlist',
           ),
-          backgroundColor: success ? Colors.green : Theme.of(context).colorScheme.error,
+          backgroundColor:
+              success ? Colors.green : Theme.of(context).colorScheme.error,
         ),
       );
     }
@@ -446,7 +443,8 @@ class _AuctionListScreenState extends ConsumerState<AuctionListScreen> {
         currentSortBy: ref.read(auctionProvider).currentFilters?.sortBy,
         currentSortOrder: ref.read(auctionProvider).currentFilters?.sortOrder,
         onSortChanged: (sortBy, sortOrder) {
-          final currentFilters = ref.read(auctionProvider).currentFilters ?? AuctionSearchFilters.empty;
+          final currentFilters = ref.read(auctionProvider).currentFilters ??
+              AuctionSearchFilters.empty;
           final newFilters = currentFilters.copyWith(
             sortBy: sortBy,
             sortOrder: sortOrder,
@@ -462,7 +460,8 @@ class _AuctionListScreenState extends ConsumerState<AuctionListScreen> {
       context: context,
       isScrollControlled: true,
       builder: (context) => FilterBottomSheet(
-        currentFilters: ref.read(auctionProvider).currentFilters ?? AuctionSearchFilters.empty,
+        currentFilters: ref.read(auctionProvider).currentFilters ??
+            AuctionSearchFilters.empty,
         categories: ref.read(categoriesProvider),
         onFiltersChanged: (filters) {
           ref.read(auctionProvider.notifier).applyFilters(filters);
