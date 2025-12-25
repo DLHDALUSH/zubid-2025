@@ -31,7 +31,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final profileState = ref.watch(profileProvider);
+    final authState = ref.watch(authProvider);
     final theme = Theme.of(context);
+
+    // Check if user is admin (check user model for role field)
+    final isAdmin = authState.user?.role == 'admin';
 
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
@@ -62,28 +66,30 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   isLoading: profileState.isLoading,
                   onEditPressed: () => context.push('/profile/edit'),
                 ),
-                
+
                 const SizedBox(height: 20),
-                
+
                 // Profile Completion Card
                 if (profileState.hasProfile && !profileState.isProfileComplete)
                   ProfileCompletionCard(
                     profile: profileState.profile!,
                     onCompletePressed: () => context.push('/profile/edit'),
                   ),
-                
+
                 if (profileState.hasProfile && !profileState.isProfileComplete)
                   const SizedBox(height: 20),
-                
+
                 // Profile Stats
                 if (profileState.hasProfile)
                   ProfileStats(profile: profileState.profile!),
-                
-                if (profileState.hasProfile)
-                  const SizedBox(height: 20),
-                
+
+                if (profileState.hasProfile) const SizedBox(height: 20),
+
                 // Profile Menu
                 ProfileMenu(
+                  isAdmin: isAdmin,
+                  onAdminDashboardPressed:
+                      isAdmin ? () => context.push('/admin-dashboard') : null,
                   onMyBidsPressed: () => context.push('/my-bids'),
                   onMyAuctionsPressed: () => context.push('/my-auctions'),
                   onWatchlistPressed: () => context.push('/watchlist'),
@@ -93,13 +99,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   onAboutPressed: () => context.push('/about'),
                   onLogoutPressed: _handleLogout,
                 ),
-                
+
                 const SizedBox(height: 20),
-                
+
                 // Error Display
-                if (profileState.hasError)
-                  _buildErrorCard(profileState.error!),
-                
+                if (profileState.hasError) _buildErrorCard(profileState.error!),
+
                 // Empty State
                 if (!profileState.hasProfile && !profileState.isLoading)
                   _buildEmptyState(),
@@ -113,7 +118,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   Widget _buildErrorCard(String error) {
     final theme = Theme.of(context);
-    
+
     return Card(
       color: theme.colorScheme.errorContainer,
       child: Padding(
@@ -143,7 +148,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             ),
             const SizedBox(height: 12),
             ElevatedButton(
-              onPressed: () => ref.read(profileProvider.notifier).refreshProfile(),
+              onPressed: () =>
+                  ref.read(profileProvider.notifier).refreshProfile(),
               style: ElevatedButton.styleFrom(
                 backgroundColor: theme.colorScheme.onErrorContainer,
                 foregroundColor: theme.colorScheme.errorContainer,
@@ -158,7 +164,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   Widget _buildEmptyState() {
     final theme = Theme.of(context);
-    
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -221,15 +227,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     if (confirmed == true) {
       try {
         AppLogger.userAction('User logout initiated');
-        
+
         await ref.read(authProvider.notifier).logout();
-        
+
         if (mounted) {
           context.go('/login');
         }
       } catch (e) {
         AppLogger.error('Logout failed', error: e);
-        
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(

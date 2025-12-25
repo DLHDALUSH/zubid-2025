@@ -39,6 +39,13 @@ Future<void> _initializeServices() async {
     // Initialize environment
     EnvironmentConfig.printConfig();
 
+    // Initialize Hive FIRST (before StorageService)
+    try {
+      await _initHive();
+    } catch (e) {
+      print('Hive initialization failed: $e');
+    }
+
     // Initialize Firebase with error handling
     try {
       await Firebase.initializeApp(
@@ -49,7 +56,7 @@ Future<void> _initializeServices() async {
       // Continue without Firebase for now
     }
 
-    // Initialize storage
+    // Initialize storage (after Hive is initialized)
     try {
       await StorageService.init();
     } catch (e) {
@@ -61,13 +68,6 @@ Future<void> _initializeServices() async {
       await NotificationService.init();
     } catch (e) {
       print('Notification service initialization failed: $e');
-    }
-
-    // Initialize Hive
-    try {
-      await _initHive();
-    } catch (e) {
-      print('Hive initialization failed: $e');
     }
 
     print('ZUBID Mobile App Starting...');

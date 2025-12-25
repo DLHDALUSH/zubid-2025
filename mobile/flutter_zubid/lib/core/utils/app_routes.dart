@@ -35,17 +35,25 @@ class AppRoutes {
 
   // User Listings
   static const String myAuctions = '/my-auctions';
+  static const String watchlist = '/watchlist';
 
   // Payments
   static const String paymentMethods = '/payment-methods';
   static const String addPaymentMethod = '/add-payment-method';
   static const String transactionHistory = '/transaction-history';
+  static const String transactions =
+      '/transactions'; // Alias for transaction history
 
   // Notifications
   static const String notifications = '/notifications';
 
   // Admin
-  static const String adminDashboard = '/admin';
+  static const String adminDashboard = '/admin-dashboard';
+
+  // Settings & Support
+  static const String settings = '/settings';
+  static const String help = '/help';
+  static const String about = '/about';
 
   // General
   static const String error = '/error';

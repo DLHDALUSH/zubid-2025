@@ -16,7 +16,7 @@ class EnvironmentConfig {
       return Environment.development;
     }
   }
-  
+
   static String get name {
     switch (current) {
       case Environment.development:
@@ -27,29 +27,41 @@ class EnvironmentConfig {
         return 'Production';
     }
   }
-  
+
   static String get apiBaseUrl {
     switch (current) {
       case Environment.development:
-        return 'https://zubidauction.duckdns.org/api'; // Use production server
+        // Use production server for all environments
+        return 'https://zubidauction.duckdns.org/api';
+
+      // For local development, uncomment the appropriate line below:
+      // return 'http://10.0.2.2:5000/api'; // Android emulator
+      // return 'http://localhost:5000/api'; // iOS simulator
+      // return 'http://192.168.1.x:5000/api'; // Physical device
       case Environment.staging:
         return 'https://zubidauction.duckdns.org/api';
       case Environment.production:
         return 'https://zubidauction.duckdns.org/api';
     }
   }
-  
+
   static String get websocketUrl {
     switch (current) {
       case Environment.development:
-        return 'wss://zubidauction.duckdns.org'; // Use production server
+        // Use production server for all environments
+        return 'wss://zubidauction.duckdns.org';
+
+      // For local development, uncomment the appropriate line below:
+      // return 'ws://10.0.2.2:5000'; // Android emulator
+      // return 'ws://localhost:5000'; // iOS simulator
+      // return 'ws://192.168.1.x:5000'; // Physical device
       case Environment.staging:
         return 'wss://zubidauction.duckdns.org';
       case Environment.production:
         return 'wss://zubidauction.duckdns.org';
     }
   }
-  
+
   static bool get enableLogging {
     switch (current) {
       case Environment.development:
@@ -60,7 +72,7 @@ class EnvironmentConfig {
         return false;
     }
   }
-  
+
   static bool get enableDebugTools {
     switch (current) {
       case Environment.development:
@@ -71,7 +83,7 @@ class EnvironmentConfig {
         return false;
     }
   }
-  
+
   static bool get enableCrashReporting {
     switch (current) {
       case Environment.development:
@@ -82,7 +94,7 @@ class EnvironmentConfig {
         return true;
     }
   }
-  
+
   static bool get enableAnalytics {
     switch (current) {
       case Environment.development:
@@ -93,7 +105,7 @@ class EnvironmentConfig {
         return true;
     }
   }
-  
+
   static Duration get apiTimeout {
     switch (current) {
       case Environment.development:
@@ -104,7 +116,7 @@ class EnvironmentConfig {
         return const Duration(seconds: 30);
     }
   }
-  
+
   static int get maxRetryAttempts {
     switch (current) {
       case Environment.development:
@@ -115,7 +127,7 @@ class EnvironmentConfig {
         return 3;
     }
   }
-  
+
   static String get logLevel {
     switch (current) {
       case Environment.development:
@@ -126,7 +138,7 @@ class EnvironmentConfig {
         return 'ERROR';
     }
   }
-  
+
   static Map<String, dynamic> get config {
     return {
       'environment': name,
@@ -141,7 +153,7 @@ class EnvironmentConfig {
       'logLevel': logLevel,
     };
   }
-  
+
   static void printConfig() {
     if (enableLogging) {
       print('=== ZUBID Environment Configuration ===');

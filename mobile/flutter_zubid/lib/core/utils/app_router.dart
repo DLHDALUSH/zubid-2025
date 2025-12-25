@@ -7,11 +7,11 @@ import '../../features/auctions/presentation/screens/auction_detail_screen.dart'
 import '../../features/auctions/presentation/screens/auction_list_screen.dart';
 import '../../features/auctions/presentation/screens/create_auction_screen.dart';
 import '../../features/auctions/presentation/screens/my_auctions_screen.dart';
+import '../../features/auctions/presentation/screens/watchlist_screen.dart';
 import '../../features/auth/presentation/screens/forgot_password_screen.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
 import '../../features/bids/presentation/screens/my_bids_screen.dart';
-import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/notifications/presentation/screens/notifications_screen.dart';
 import '../../features/onboarding/presentation/screens/onboarding_screen.dart';
 import '../../features/orders/presentation/screens/buy_now_screen.dart';
@@ -25,6 +25,7 @@ import '../../features/splash/presentation/screens/splash_screen.dart';
 import '../../features/legal/presentation/screens/terms_of_service_screen.dart';
 import '../../features/legal/presentation/screens/privacy_policy_screen.dart';
 import '../widgets/error_screen.dart';
+import '../widgets/main_layout.dart';
 import 'app_routes.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
@@ -54,7 +55,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: AppRoutes.home,
-        builder: (context, state) => const HomeScreen(),
+        builder: (context, state) => const MainLayout(),
       ),
       GoRoute(
         path: AppRoutes.auctions,
@@ -81,6 +82,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             path: AppRoutes.editProfile,
             builder: (context, state) => const EditProfileScreen(),
           ),
+          GoRoute(
+            path: 'settings',
+            builder: (context, state) => const ErrorScreen(
+              error: 'Settings screen coming soon!',
+            ),
+          ),
         ],
       ),
       GoRoute(
@@ -103,11 +110,19 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const MyAuctionsScreen(),
       ),
       GoRoute(
+        path: AppRoutes.watchlist,
+        builder: (context, state) => const WatchlistScreen(),
+      ),
+      GoRoute(
         path: AppRoutes.paymentMethods,
         builder: (context, state) => const PaymentMethodsScreen(),
       ),
       GoRoute(
         path: AppRoutes.transactionHistory,
+        builder: (context, state) => const TransactionHistoryScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.transactions,
         builder: (context, state) => const TransactionHistoryScreen(),
       ),
       GoRoute(
@@ -121,6 +136,23 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.adminDashboard,
         builder: (context, state) => const AdminDashboardScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.settings,
+        builder: (context, state) =>
+            const ProfileScreen(), // TODO: Create settings screen
+      ),
+      GoRoute(
+        path: AppRoutes.help,
+        builder: (context, state) => const ErrorScreen(
+          error: 'Help & Support screen coming soon!',
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.about,
+        builder: (context, state) => const ErrorScreen(
+          error: 'About screen coming soon!',
+        ),
       ),
       GoRoute(
         path: AppRoutes.termsOfService,

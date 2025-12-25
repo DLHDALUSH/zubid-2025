@@ -6,9 +6,11 @@ class ProfileMenu extends StatelessWidget {
   final VoidCallback? onWatchlistPressed;
   final VoidCallback? onTransactionsPressed;
   final VoidCallback? onNotificationsPressed;
+  final VoidCallback? onAdminDashboardPressed;
   final VoidCallback? onHelpPressed;
   final VoidCallback? onAboutPressed;
   final VoidCallback? onLogoutPressed;
+  final bool isAdmin;
 
   const ProfileMenu({
     super.key,
@@ -17,15 +19,34 @@ class ProfileMenu extends StatelessWidget {
     this.onWatchlistPressed,
     this.onTransactionsPressed,
     this.onNotificationsPressed,
+    this.onAdminDashboardPressed,
     this.onHelpPressed,
     this.onAboutPressed,
     this.onLogoutPressed,
+    this.isAdmin = false,
   });
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
+        // Admin Section (only for admin users)
+        if (isAdmin) ...[
+          _buildMenuSection(
+            context,
+            title: 'Admin',
+            items: [
+              _MenuItemData(
+                icon: Icons.admin_panel_settings,
+                title: 'Admin Dashboard',
+                subtitle: 'Manage users, auctions, and settings',
+                onTap: onAdminDashboardPressed,
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+        ],
+
         // Activity Section
         _buildMenuSection(
           context,
@@ -57,9 +78,9 @@ class ProfileMenu extends StatelessWidget {
             ),
           ],
         ),
-        
+
         const SizedBox(height: 16),
-        
+
         // Settings Section
         _buildMenuSection(
           context,
@@ -73,9 +94,9 @@ class ProfileMenu extends StatelessWidget {
             ),
           ],
         ),
-        
+
         const SizedBox(height: 16),
-        
+
         // Support Section
         _buildMenuSection(
           context,
@@ -95,9 +116,9 @@ class ProfileMenu extends StatelessWidget {
             ),
           ],
         ),
-        
+
         const SizedBox(height: 16),
-        
+
         // Logout Section
         _buildMenuSection(
           context,
@@ -138,7 +159,6 @@ class ProfileMenu extends StatelessWidget {
               ),
             ),
           ),
-          
           ...items.map((item) => _buildMenuItem(context, item)),
         ],
       ),
@@ -151,15 +171,15 @@ class ProfileMenu extends StatelessWidget {
     return ListTile(
       leading: Icon(
         item.icon,
-        color: item.isDestructive 
-            ? theme.colorScheme.error 
+        color: item.isDestructive
+            ? theme.colorScheme.error
             : theme.colorScheme.onSurface.withOpacity(0.7),
       ),
       title: Text(
         item.title,
         style: theme.textTheme.bodyLarge?.copyWith(
-          color: item.isDestructive 
-              ? theme.colorScheme.error 
+          color: item.isDestructive
+              ? theme.colorScheme.error
               : theme.colorScheme.onSurface,
           fontWeight: FontWeight.w500,
         ),

@@ -38,16 +38,25 @@ class StorageService {
   static Future<void> init() async {
     try {
       AppLogger.info('Initializing storage services...');
-      
+
       // Initialize SharedPreferences
       _prefs = await SharedPreferences.getInstance();
-      
-      // Initialize Hive secure box
-      _secureBox = await Hive.openBox('secure_storage');
-      
+      AppLogger.info('SharedPreferences initialized');
+
+      // Check if Hive is initialized
+      if (!Hive.isBoxOpen('secure_storage')) {
+        // Initialize Hive secure box
+        _secureBox = await Hive.openBox('secure_storage');
+        AppLogger.info('Hive secure box opened');
+      } else {
+        _secureBox = Hive.box('secure_storage');
+        AppLogger.info('Hive secure box already open');
+      }
+
       AppLogger.info('Storage services initialized successfully');
     } catch (e, stackTrace) {
-      AppLogger.error('Failed to initialize storage services', error: e, stackTrace: stackTrace);
+      AppLogger.error('Failed to initialize storage services',
+          error: e, stackTrace: stackTrace);
       rethrow;
     }
   }
@@ -155,7 +164,8 @@ class StorageService {
   /// Save biometric authentication preference
   static Future<void> setBiometricEnabled(bool enabled) async {
     await _prefs.setBool(_keyBiometricEnabled, enabled);
-    AppLogger.info('Biometric authentication ${enabled ? 'enabled' : 'disabled'}');
+    AppLogger.info(
+        'Biometric authentication ${enabled ? 'enabled' : 'disabled'}');
   }
 
   /// Get biometric authentication preference
@@ -225,7 +235,8 @@ class StorageService {
   }
 
   /// Save offline data
-  static Future<void> saveOfflineData(String key, Map<String, dynamic> data) async {
+  static Future<void> saveOfflineData(
+      String key, Map<String, dynamic> data) async {
     try {
       final dataJson = jsonEncode(data);
       await _secureBox.put('${_keyOfflineData}_$key', dataJson);
@@ -267,14 +278,15 @@ class StorageService {
       List<String> history = getSearchHistory();
       history.remove(query); // Remove if already exists
       history.insert(0, query); // Add to beginning
-      
+
       // Keep only last 20 searches
       if (history.length > 20) {
         history = history.take(20).toList();
       }
-      
+
       await _prefs.setStringList(_keySearchHistory, history);
-      AppLogger.userAction('Search query added to history', parameters: {'query': query});
+      AppLogger.userAction('Search query added to history',
+          parameters: {'query': query});
     } catch (e) {
       AppLogger.error('Failed to add to search history', error: e);
     }
@@ -298,7 +310,8 @@ class StorageService {
       if (!favorites.contains(auctionId)) {
         favorites.add(auctionId);
         await _prefs.setStringList(_keyFavoriteAuctions, favorites);
-        AppLogger.userAction('Auction added to favorites', parameters: {'auctionId': auctionId});
+        AppLogger.userAction('Auction added to favorites',
+            parameters: {'auctionId': auctionId});
       }
     } catch (e) {
       AppLogger.error('Failed to add to favorites', error: e);
@@ -311,7 +324,8 @@ class StorageService {
       List<String> favorites = getFavoriteAuctions();
       favorites.remove(auctionId);
       await _prefs.setStringList(_keyFavoriteAuctions, favorites);
-      AppLogger.userAction('Auction removed from favorites', parameters: {'auctionId': auctionId});
+      AppLogger.userAction('Auction removed from favorites',
+          parameters: {'auctionId': auctionId});
     } catch (e) {
       AppLogger.error('Failed to remove from favorites', error: e);
     }
@@ -328,14 +342,15 @@ class StorageService {
       List<String> recentlyViewed = getRecentlyViewed();
       recentlyViewed.remove(auctionId); // Remove if already exists
       recentlyViewed.insert(0, auctionId); // Add to beginning
-      
+
       // Keep only last 50 items
       if (recentlyViewed.length > 50) {
         recentlyViewed = recentlyViewed.take(50).toList();
       }
-      
+
       await _prefs.setStringList(_keyRecentlyViewed, recentlyViewed);
-      AppLogger.userAction('Auction added to recently viewed', parameters: {'auctionId': auctionId});
+      AppLogger.userAction('Auction added to recently viewed',
+          parameters: {'auctionId': auctionId});
     } catch (e) {
       AppLogger.error('Failed to add to recently viewed', error: e);
     }
