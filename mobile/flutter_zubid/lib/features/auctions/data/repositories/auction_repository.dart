@@ -1,4 +1,3 @@
-
 import '../../../../core/network/api_client.dart';
 import '../../../../core/network/api_result.dart';
 import '../../../../core/utils/logger.dart';
@@ -43,7 +42,7 @@ class AuctionRepository {
       if (response.statusCode == 200) {
         final data = response.data as Map<String, dynamic>;
         final auctionsData = data['auctions'] as List<dynamic>;
-        
+
         final auctions = auctionsData
             .map((json) => AuctionModel.fromJson(json as Map<String, dynamic>))
             .toList();
@@ -98,15 +97,17 @@ class AuctionRepository {
       if (response.statusCode == 200) {
         final data = response.data as Map<String, dynamic>;
         final auctionsData = data['auctions'] as List<dynamic>;
-        
+
         final auctions = auctionsData
             .map((json) => AuctionModel.fromJson(json as Map<String, dynamic>))
             .toList();
 
-        AppLogger.info('Successfully fetched ${auctions.length} featured auctions');
+        AppLogger.info(
+            'Successfully fetched ${auctions.length} featured auctions');
         return ApiResult.success(auctions);
       } else {
-        AppLogger.warning('Failed to fetch featured auctions: ${response.statusCode}');
+        AppLogger.warning(
+            'Failed to fetch featured auctions: ${response.statusCode}');
         return ApiResult.error('Failed to load featured auctions');
       }
     } catch (e) {
@@ -130,15 +131,17 @@ class AuctionRepository {
       if (response.statusCode == 200) {
         final data = response.data as Map<String, dynamic>;
         final auctionsData = data['auctions'] as List<dynamic>;
-        
+
         final auctions = auctionsData
             .map((json) => AuctionModel.fromJson(json as Map<String, dynamic>))
             .toList();
 
-        AppLogger.info('Successfully fetched ${auctions.length} ending soon auctions');
+        AppLogger.info(
+            'Successfully fetched ${auctions.length} ending soon auctions');
         return ApiResult.success(auctions);
       } else {
-        AppLogger.warning('Failed to fetch ending soon auctions: ${response.statusCode}');
+        AppLogger.warning(
+            'Failed to fetch ending soon auctions: ${response.statusCode}');
         return ApiResult.error('Failed to load ending soon auctions');
       }
     } catch (e) {
@@ -155,9 +158,12 @@ class AuctionRepository {
       final response = await _apiClient.get('/categories');
 
       if (response.statusCode == 200) {
-        final data = response.data as Map<String, dynamic>;
-        final categoriesData = data['categories'] as List<dynamic>;
-        
+        // API returns array directly, not wrapped in 'categories' key
+        final categoriesData = response.data is List
+            ? response.data as List<dynamic>
+            : (response.data as Map<String, dynamic>)['categories']
+                as List<dynamic>;
+
         final categories = categoriesData
             .map((json) => CategoryModel.fromJson(json as Map<String, dynamic>))
             .toList();
@@ -208,7 +214,8 @@ class AuctionRepository {
         AppLogger.info('Successfully removed auction from watchlist');
         return ApiResult.success(true);
       } else {
-        AppLogger.warning('Failed to remove from watchlist: ${response.statusCode}');
+        AppLogger.warning(
+            'Failed to remove from watchlist: ${response.statusCode}');
         return ApiResult.error('Failed to remove from watchlist');
       }
     } catch (e) {
@@ -236,12 +243,13 @@ class AuctionRepository {
       if (response.statusCode == 200) {
         final data = response.data as Map<String, dynamic>;
         final auctionsData = data['auctions'] as List<dynamic>;
-        
+
         final auctions = auctionsData
             .map((json) => AuctionModel.fromJson(json as Map<String, dynamic>))
             .toList();
 
-        AppLogger.info('Successfully fetched ${auctions.length} watchlist items');
+        AppLogger.info(
+            'Successfully fetched ${auctions.length} watchlist items');
         return ApiResult.success(auctions);
       } else {
         AppLogger.warning('Failed to fetch watchlist: ${response.statusCode}');

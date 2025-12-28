@@ -21,16 +21,17 @@ class AuctionCreationRepository {
   ) async {
     try {
       AppLogger.info('Creating auction: ${request.title}');
-      
+
       final response = await _apiClient.post(
         '/auctions',
         data: request.toJson(),
       );
 
       final createResponse = CreateAuctionResponse.fromJson(response.data);
-      
+
       if (createResponse.success) {
-        AppLogger.info('Auction created successfully: ${createResponse.auctionId}');
+        AppLogger.info(
+            'Auction created successfully: ${createResponse.auctionId}');
         return ApiResult.success(createResponse);
       } else {
         AppLogger.warning('Auction creation failed: ${createResponse.message}');
@@ -49,13 +50,14 @@ class AuctionCreationRepository {
   Future<ApiResult<List<String>>> uploadImages(List<File> images) async {
     try {
       AppLogger.info('Uploading ${images.length} auction images');
-      
+
       final formData = FormData();
-      
+
       for (int i = 0; i < images.length; i++) {
         final file = images[i];
-        final fileName = 'auction_image_${DateTime.now().millisecondsSinceEpoch}_$i.jpg';
-        
+        final fileName =
+            'auction_image_${DateTime.now().millisecondsSinceEpoch}_$i.jpg';
+
         formData.files.add(
           MapEntry(
             'images',
@@ -75,9 +77,9 @@ class AuctionCreationRepository {
         ),
       );
 
-      final imageUrls = (response.data['imageUrls'] as List<dynamic>)
-          .cast<String>();
-      
+      final imageUrls =
+          (response.data['imageUrls'] as List<dynamic>).cast<String>();
+
       AppLogger.info('Images uploaded successfully: ${imageUrls.length} URLs');
       return ApiResult.success(imageUrls);
     } on DioException catch (e) {
@@ -97,7 +99,7 @@ class AuctionCreationRepository {
   }) async {
     try {
       AppLogger.info('Fetching user auctions - page: $page, limit: $limit');
-      
+
       final queryParams = {
         'page': page,
         'limit': limit,
@@ -112,7 +114,7 @@ class AuctionCreationRepository {
       final auctions = (response.data['auctions'] as List<dynamic>)
           .map((json) => AuctionModel.fromJson(json))
           .toList();
-      
+
       AppLogger.info('Fetched ${auctions.length} user auctions');
       return ApiResult.success(auctions);
     } on DioException catch (e) {
@@ -131,14 +133,14 @@ class AuctionCreationRepository {
   ) async {
     try {
       AppLogger.info('Updating auction: $auctionId');
-      
+
       final response = await _apiClient.put(
         '/auctions/$auctionId',
         data: request.toJson(),
       );
 
       final auction = AuctionModel.fromJson(response.data['auction']);
-      
+
       AppLogger.info('Auction updated successfully: $auctionId');
       return ApiResult.success(auction);
     } on DioException catch (e) {
@@ -154,9 +156,9 @@ class AuctionCreationRepository {
   Future<ApiResult<bool>> deleteAuction(int auctionId) async {
     try {
       AppLogger.info('Deleting auction: $auctionId');
-      
+
       await _apiClient.delete('/auctions/$auctionId');
-      
+
       AppLogger.info('Auction deleted successfully: $auctionId');
       return ApiResult.success(true);
     } on DioException catch (e) {
@@ -172,11 +174,11 @@ class AuctionCreationRepository {
   Future<ApiResult<AuctionModel>> endAuctionEarly(int auctionId) async {
     try {
       AppLogger.info('Ending auction early: $auctionId');
-      
+
       final response = await _apiClient.post('/auctions/$auctionId/end');
-      
+
       final auction = AuctionModel.fromJson(response.data['auction']);
-      
+
       AppLogger.info('Auction ended early successfully: $auctionId');
       return ApiResult.success(auction);
     } on DioException catch (e) {
@@ -192,13 +194,18 @@ class AuctionCreationRepository {
   Future<ApiResult<List<CategoryModel>>> getCategories() async {
     try {
       AppLogger.info('Fetching auction categories');
-      
+
       final response = await _apiClient.get('/categories');
-      
-      final categories = (response.data['categories'] as List<dynamic>)
-          .map((json) => CategoryModel.fromJson(json))
-          .toList();
-      
+
+      // API returns array directly, not wrapped in 'categories' key
+      final categoriesData = response.data is List
+          ? response.data as List<dynamic>
+          : (response.data as Map<String, dynamic>)['categories']
+              as List<dynamic>;
+
+      final categories =
+          categoriesData.map((json) => CategoryModel.fromJson(json)).toList();
+
       AppLogger.info('Fetched ${categories.length} categories');
       return ApiResult.success(categories);
     } on DioException catch (e) {
@@ -219,7 +226,7 @@ class AuctionCreationRepository {
       case DioExceptionType.badResponse:
         final statusCode = e.response?.statusCode;
         final message = e.response?.data?['message'] ?? 'Server error';
-        
+
         switch (statusCode) {
           case 400:
             return 'Invalid request: $message';
@@ -247,7 +254,8 @@ class AuctionCreationRepository {
 }
 
 // Provider
-final auctionCreationRepositoryProvider = Provider<AuctionCreationRepository>((ref) {
+final auctionCreationRepositoryProvider =
+    Provider<AuctionCreationRepository>((ref) {
   final apiClient = ref.read(apiClientProvider);
   return AuctionCreationRepository(apiClient);
 });
