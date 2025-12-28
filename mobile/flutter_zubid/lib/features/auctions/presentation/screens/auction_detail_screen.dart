@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/widgets/loading_overlay.dart';
 import '../../../../core/utils/logger.dart';
 import '../../data/models/auction_model.dart';
-import '../providers/auction_provider.dart';
 import '../providers/auction_detail_provider.dart';
 import '../widgets/auction_image_gallery.dart';
 import '../widgets/auction_info_card.dart';
