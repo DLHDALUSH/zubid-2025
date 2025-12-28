@@ -2222,75 +2222,89 @@ def delete_fcm_token():
         return jsonify({'error': f'Failed to delete FCM token: {str(e)}'}), 500
 
 # Category APIs
-# Cache categories for 5 minutes (they don't change often)
-@lru_cache(maxsize=1)
-def _get_cached_categories():
-    """Internal function to get categories - cached"""
-    categories = Category.query.filter_by(is_active=True).order_by(Category.sort_order, Category.name).all()
-    return [{
-        'id': cat.id,
-        'name': cat.name,
-        'description': cat.description,
-        'parent_id': cat.parent_id,
-        'icon_url': cat.icon_url,
-        'image_url': cat.image_url,
-        'auction_count': cat.auction_count,
-        'is_active': cat.is_active,
-        'sort_order': cat.sort_order,
-        'created_at': cat.created_at.isoformat() if cat.created_at else None,
-        'updated_at': cat.updated_at.isoformat() if cat.updated_at else None,
-        'subcategories': [{
-            'id': sub.id,
-            'name': sub.name,
-            'description': sub.description,
-            'parent_id': sub.parent_id,
-            'icon_url': sub.icon_url,
-            'image_url': sub.image_url,
-            'auction_count': sub.auction_count,
-            'is_active': sub.is_active,
-            'sort_order': sub.sort_order,
-            'created_at': sub.created_at.isoformat() if sub.created_at else None,
-            'updated_at': sub.updated_at.isoformat() if sub.updated_at else None,
-        } for sub in cat.subcategories if sub.is_active]
-    } for cat in categories]
+# Note: Caching disabled for now to ensure compatibility during migration
+# @lru_cache(maxsize=1)
+# def _get_cached_categories():
+#     """Internal function to get categories - cached"""
+#     # This function is deprecated - use get_categories() directly
 
 @app.route('/api/categories', methods=['GET'])
 def get_categories():
-    # Clear cache if categories were recently modified (simple approach)
-    # In production, use Redis or similar for better cache invalidation
+    """
+    Get all categories with backward compatibility for old schema.
+    Handles both old (3 fields) and new (10 fields) database schemas.
+    """
     try:
-        categories = _get_cached_categories()
-        return jsonify(categories), 200
+        # Try to get all categories, handling both old and new schemas
+        categories = Category.query.all()
+
+        # Check if new fields exist by trying to access them
+        has_new_fields = hasattr(Category, 'is_active') and hasattr(Category, 'sort_order')
+
+        if has_new_fields:
+            # New schema - filter by is_active and sort
+            categories = Category.query.filter_by(is_active=True).order_by(Category.sort_order, Category.name).all()
+        else:
+            # Old schema - just get all and sort by name
+            categories = Category.query.order_by(Category.name).all()
+
+        result = []
+        for cat in categories:
+            cat_dict = {
+                'id': cat.id,
+                'name': cat.name,
+                'description': cat.description,
+            }
+
+            # Add new fields if they exist
+            if has_new_fields:
+                cat_dict.update({
+                    'parent_id': getattr(cat, 'parent_id', None),
+                    'icon_url': getattr(cat, 'icon_url', None),
+                    'image_url': getattr(cat, 'image_url', None),
+                    'auction_count': getattr(cat, 'auction_count', 0),
+                    'is_active': getattr(cat, 'is_active', True),
+                    'sort_order': getattr(cat, 'sort_order', 0),
+                    'created_at': cat.created_at.isoformat() if hasattr(cat, 'created_at') and cat.created_at else None,
+                    'updated_at': cat.updated_at.isoformat() if hasattr(cat, 'updated_at') and cat.updated_at else None,
+                    'subcategories': []
+                })
+
+                # Add subcategories if parent_id exists
+                if hasattr(cat, 'subcategories'):
+                    cat_dict['subcategories'] = [{
+                        'id': sub.id,
+                        'name': sub.name,
+                        'description': sub.description,
+                        'parent_id': getattr(sub, 'parent_id', None),
+                        'icon_url': getattr(sub, 'icon_url', None),
+                        'image_url': getattr(sub, 'image_url', None),
+                        'auction_count': getattr(sub, 'auction_count', 0),
+                        'is_active': getattr(sub, 'is_active', True),
+                        'sort_order': getattr(sub, 'sort_order', 0),
+                        'created_at': sub.created_at.isoformat() if hasattr(sub, 'created_at') and sub.created_at else None,
+                        'updated_at': sub.updated_at.isoformat() if hasattr(sub, 'updated_at') and sub.updated_at else None,
+                    } for sub in cat.subcategories if getattr(sub, 'is_active', True)]
+
+            result.append(cat_dict)
+
+        return jsonify(result), 200
+
     except Exception as e:
-        # If cache fails, clear it and fetch fresh
-        _get_cached_categories.cache_clear()
-        categories = Category.query.filter_by(is_active=True).order_by(Category.sort_order, Category.name).all()
-        return jsonify([{
-            'id': cat.id,
-            'name': cat.name,
-            'description': cat.description,
-            'parent_id': cat.parent_id,
-            'icon_url': cat.icon_url,
-            'image_url': cat.image_url,
-            'auction_count': cat.auction_count,
-            'is_active': cat.is_active,
-            'sort_order': cat.sort_order,
-            'created_at': cat.created_at.isoformat() if cat.created_at else None,
-            'updated_at': cat.updated_at.isoformat() if cat.updated_at else None,
-            'subcategories': [{
-                'id': sub.id,
-                'name': sub.name,
-                'description': sub.description,
-                'parent_id': sub.parent_id,
-                'icon_url': sub.icon_url,
-                'image_url': sub.image_url,
-                'auction_count': sub.auction_count,
-                'is_active': sub.is_active,
-                'sort_order': sub.sort_order,
-                'created_at': sub.created_at.isoformat() if sub.created_at else None,
-                'updated_at': sub.updated_at.isoformat() if sub.updated_at else None,
-            } for sub in cat.subcategories if sub.is_active]
-        } for cat in categories]), 200
+        print(f"Error fetching categories: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        # Fallback to simple query
+        try:
+            categories = Category.query.all()
+            return jsonify([{
+                'id': cat.id,
+                'name': cat.name,
+                'description': cat.description
+            } for cat in categories]), 200
+        except Exception as e2:
+            print(f"Fallback also failed: {str(e2)}")
+            return jsonify({'error': 'Failed to fetch categories'}), 500
 
 @app.route('/api/categories', methods=['POST'])
 @login_required
