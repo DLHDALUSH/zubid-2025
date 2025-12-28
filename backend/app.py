@@ -109,6 +109,64 @@ db = SQLAlchemy(app)
 # Initialize Flask-Migrate for database migrations
 migrate = Migrate(app, db)
 
+# =============================================================================
+# CRITICAL: Run database migrations BEFORE models are used
+# This fixes "column does not exist" errors on production
+# =============================================================================
+def run_pre_model_migrations():
+    """Run critical migrations before any ORM operations"""
+    try:
+        with app.app_context():
+            # Check if we're using PostgreSQL
+            db_url = str(db.engine.url)
+            if 'postgresql' not in db_url and 'postgres' not in db_url:
+                return  # Skip for SQLite
+
+            with db.engine.connect() as conn:
+                # Check if category table exists
+                result = conn.execute(text(
+                    "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'category')"
+                ))
+                table_exists = result.scalar()
+
+                if not table_exists:
+                    print("[MIGRATION] Category table doesn't exist yet, skipping pre-migration")
+                    return
+
+                # Check and add missing columns to category table
+                migrations = [
+                    ("parent_id", "ALTER TABLE category ADD COLUMN IF NOT EXISTS parent_id INTEGER"),
+                    ("icon_url", "ALTER TABLE category ADD COLUMN IF NOT EXISTS icon_url VARCHAR(500)"),
+                    ("image_url", "ALTER TABLE category ADD COLUMN IF NOT EXISTS image_url VARCHAR(500)"),
+                    ("is_active", "ALTER TABLE category ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE"),
+                    ("sort_order", "ALTER TABLE category ADD COLUMN IF NOT EXISTS sort_order INTEGER DEFAULT 0"),
+                    ("created_at", "ALTER TABLE category ADD COLUMN IF NOT EXISTS created_at TIMESTAMP"),
+                    ("updated_at", "ALTER TABLE category ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP"),
+                ]
+
+                for col_name, sql in migrations:
+                    try:
+                        conn.execute(text(sql))
+                        conn.commit()
+                    except Exception as e:
+                        if "already exists" not in str(e).lower():
+                            print(f"[MIGRATION] Note: {col_name}: {e}")
+
+                # Set defaults for NULL values
+                try:
+                    conn.execute(text("UPDATE category SET is_active = TRUE WHERE is_active IS NULL"))
+                    conn.execute(text("UPDATE category SET sort_order = id WHERE sort_order IS NULL"))
+                    conn.commit()
+                except:
+                    pass
+
+                print("[MIGRATION] Category table columns verified/updated")
+    except Exception as e:
+        print(f"[MIGRATION] Pre-model migration note: {e}")
+
+# Run migrations immediately
+run_pre_model_migrations()
+
 # Initialize CSRF Protection (optional, can be enabled for specific endpoints)
 # Only initialize if CSRF is enabled, otherwise create a mock object
 csrf_enabled = os.getenv('CSRF_ENABLED', 'false').lower() == 'true'
@@ -570,13 +628,14 @@ class Category(db.Model):
 
     # Relationships
     auctions = db.relationship('Auction', backref='category', lazy=True)
-    subcategories = db.relationship('Category', backref=db.backref('parent', remote_side=[id]), lazy=True)
+    # Note: subcategories relationship commented out for backward compatibility
+    # subcategories = db.relationship('Category', backref=db.backref('parent', remote_side=[id]), lazy=True)
 
-    # Database indexes for performance
-    __table_args__ = (
-        Index('idx_category_parent', 'parent_id'),
-        Index('idx_category_active_sort', 'is_active', 'sort_order'),
-    )
+    # Note: Indexes commented out to avoid errors on databases without these columns yet
+    # __table_args__ = (
+    #     Index('idx_category_parent', 'parent_id'),
+    #     Index('idx_category_active_sort', 'is_active', 'sort_order'),
+    # )
 
     @property
     def auction_count(self):
