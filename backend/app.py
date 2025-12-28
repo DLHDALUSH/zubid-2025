@@ -560,8 +560,28 @@ class Category(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), unique=True, nullable=False)
     description = db.Column(db.Text)
-    
+    parent_id = db.Column(db.Integer, db.ForeignKey('category.id'), nullable=True)  # For subcategories
+    icon_url = db.Column(db.String(500), nullable=True)  # Icon URL
+    image_url = db.Column(db.String(500), nullable=True)  # Category image URL
+    is_active = db.Column(db.Boolean, default=True, nullable=False)  # Active status
+    sort_order = db.Column(db.Integer, default=0, nullable=False)  # Display order
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+    # Relationships
     auctions = db.relationship('Auction', backref='category', lazy=True)
+    subcategories = db.relationship('Category', backref=db.backref('parent', remote_side=[id]), lazy=True)
+
+    # Database indexes for performance
+    __table_args__ = (
+        Index('idx_category_parent', 'parent_id'),
+        Index('idx_category_active_sort', 'is_active', 'sort_order'),
+    )
+
+    @property
+    def auction_count(self):
+        """Get count of active auctions in this category"""
+        return Auction.query.filter_by(category_id=self.id, status='active').count()
 
 class Auction(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -2206,11 +2226,32 @@ def delete_fcm_token():
 @lru_cache(maxsize=1)
 def _get_cached_categories():
     """Internal function to get categories - cached"""
-    categories = Category.query.all()
+    categories = Category.query.filter_by(is_active=True).order_by(Category.sort_order, Category.name).all()
     return [{
         'id': cat.id,
         'name': cat.name,
-        'description': cat.description
+        'description': cat.description,
+        'parent_id': cat.parent_id,
+        'icon_url': cat.icon_url,
+        'image_url': cat.image_url,
+        'auction_count': cat.auction_count,
+        'is_active': cat.is_active,
+        'sort_order': cat.sort_order,
+        'created_at': cat.created_at.isoformat() if cat.created_at else None,
+        'updated_at': cat.updated_at.isoformat() if cat.updated_at else None,
+        'subcategories': [{
+            'id': sub.id,
+            'name': sub.name,
+            'description': sub.description,
+            'parent_id': sub.parent_id,
+            'icon_url': sub.icon_url,
+            'image_url': sub.image_url,
+            'auction_count': sub.auction_count,
+            'is_active': sub.is_active,
+            'sort_order': sub.sort_order,
+            'created_at': sub.created_at.isoformat() if sub.created_at else None,
+            'updated_at': sub.updated_at.isoformat() if sub.updated_at else None,
+        } for sub in cat.subcategories if sub.is_active]
     } for cat in categories]
 
 @app.route('/api/categories', methods=['GET'])
@@ -2220,14 +2261,35 @@ def get_categories():
     try:
         categories = _get_cached_categories()
         return jsonify(categories), 200
-    except Exception:
+    except Exception as e:
         # If cache fails, clear it and fetch fresh
         _get_cached_categories.cache_clear()
-        categories = Category.query.all()
+        categories = Category.query.filter_by(is_active=True).order_by(Category.sort_order, Category.name).all()
         return jsonify([{
             'id': cat.id,
             'name': cat.name,
-            'description': cat.description
+            'description': cat.description,
+            'parent_id': cat.parent_id,
+            'icon_url': cat.icon_url,
+            'image_url': cat.image_url,
+            'auction_count': cat.auction_count,
+            'is_active': cat.is_active,
+            'sort_order': cat.sort_order,
+            'created_at': cat.created_at.isoformat() if cat.created_at else None,
+            'updated_at': cat.updated_at.isoformat() if cat.updated_at else None,
+            'subcategories': [{
+                'id': sub.id,
+                'name': sub.name,
+                'description': sub.description,
+                'parent_id': sub.parent_id,
+                'icon_url': sub.icon_url,
+                'image_url': sub.image_url,
+                'auction_count': sub.auction_count,
+                'is_active': sub.is_active,
+                'sort_order': sub.sort_order,
+                'created_at': sub.created_at.isoformat() if sub.created_at else None,
+                'updated_at': sub.updated_at.isoformat() if sub.updated_at else None,
+            } for sub in cat.subcategories if sub.is_active]
         } for cat in categories]), 200
 
 @app.route('/api/categories', methods=['POST'])
