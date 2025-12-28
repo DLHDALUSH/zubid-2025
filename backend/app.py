@@ -3890,8 +3890,62 @@ def init_db():
         except Exception as e:
             print(f"Note: Could not verify new tables: {e}")
 
+        # CRITICAL: Check and add missing Category table columns
+        # This fixes the "column category.parent_id does not exist" error
+        try:
+            inspector = inspect(db.engine)
+            category_columns = [col['name'] for col in inspector.get_columns('category')]
+
+            new_category_columns = {
+                'parent_id': 'INTEGER',
+                'icon_url': 'VARCHAR(500)',
+                'image_url': 'VARCHAR(500)',
+                'is_active': 'BOOLEAN DEFAULT TRUE',
+                'sort_order': 'INTEGER DEFAULT 0',
+                'created_at': 'TIMESTAMP',
+                'updated_at': 'TIMESTAMP',
+            }
+
+            added_cat_cols = 0
+            for col_name, col_type in new_category_columns.items():
+                if col_name not in category_columns:
+                    try:
+                        with db.engine.connect() as conn:
+                            with conn.begin():
+                                conn.execute(text(f"ALTER TABLE category ADD COLUMN {col_name} {col_type}"))
+                        print(f"[OK] Added {col_name} column to Category table")
+                        added_cat_cols += 1
+                    except Exception as e:
+                        if "already exists" not in str(e).lower() and "duplicate" not in str(e).lower():
+                            print(f"[WARNING] Could not add {col_name} column to Category: {e}")
+
+            if added_cat_cols > 0:
+                # Set default values for existing rows
+                try:
+                    with db.engine.connect() as conn:
+                        with conn.begin():
+                            conn.execute(text("UPDATE category SET is_active = TRUE WHERE is_active IS NULL"))
+                            conn.execute(text("UPDATE category SET sort_order = id WHERE sort_order IS NULL"))
+                            conn.execute(text("UPDATE category SET created_at = NOW() WHERE created_at IS NULL"))
+                            conn.execute(text("UPDATE category SET updated_at = NOW() WHERE updated_at IS NULL"))
+                    print(f"[OK] Category table migration complete - added {added_cat_cols} columns")
+                except Exception as e:
+                    print(f"[WARNING] Could not set default values for Category: {e}")
+            else:
+                print("[OK] Category table columns up to date")
+        except Exception as e:
+            print(f"Note: Could not check/add Category columns: {e}")
+
         # Create default categories
-        if Category.query.count() == 0:
+        # Use raw SQL to avoid ORM issues during migration
+        try:
+            with db.engine.connect() as conn:
+                result = conn.execute(text("SELECT COUNT(*) FROM category"))
+                cat_count = result.scalar()
+        except:
+            cat_count = 0
+
+        if cat_count == 0:
             categories = [
                 Category(name='Electronics', description='Electronic devices and gadgets'),
                 Category(name='Art & Collectibles', description='Artwork and collectible items'),
