@@ -13,15 +13,15 @@ import java.util.concurrent.TimeUnit
 object ApiClient {
 
     // API Configuration - Multi-environment setup
-    // PRODUCTION: DuckDNS Custom Domain (Primary Platform)
-    private const val PRODUCTION_URL = "https://zubidauction.duckdns.org/"
-    // DEVELOPMENT: Render Cloud Platform (Development/Testing)
-    private const val DEVELOPMENT_URL = "https://zubid-2025.onrender.com/"
+    // PRODUCTION: Render Cloud Platform (Primary Platform)
+    private const val PRODUCTION_URL = "https://zubid-2025.onrender.com/"
+    // ALTERNATIVE: DuckDNS Custom Domain
+    private const val ALTERNATIVE_URL = "https://zubidauction.duckdns.org/"
     // LOCAL: Local development server
     private const val LOCAL_DEVELOPMENT_URL = "http://10.0.2.2:5000/"
 
-    // Use PRODUCTION_URL for release builds, DEVELOPMENT_URL for debug builds
-    private val BASE_URL = if (BuildConfig.DEBUG) DEVELOPMENT_URL else PRODUCTION_URL
+    // Use PRODUCTION_URL for all builds
+    private val BASE_URL = PRODUCTION_URL
 
     // SECURITY: Only enable detailed logging in debug builds to prevent sensitive data exposure
     private val loggingInterceptor = HttpLoggingInterceptor().apply {

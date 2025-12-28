@@ -3,16 +3,16 @@
 // Update the PRODUCTION_API_URL below when deploying to production
 
 // ============================================================
-// 🔧 PRODUCTION CONFIGURATION - DUCKDNS PRIMARY PLATFORM
+// 🔧 PRODUCTION CONFIGURATION - RENDER.COM PRIMARY PLATFORM
 // ============================================================
-// PRODUCTION (Primary): DuckDNS Custom Domain
-// https://zubidauction.duckdns.org
-// DEVELOPMENT (Secondary): Render Cloud Platform
+// PRODUCTION (Primary): Render Cloud Platform
 // https://zubid-2025.onrender.com
-const PRODUCTION_API_URL = 'https://zubidauction.duckdns.org/api';
-const PRODUCTION_BASE_URL = 'https://zubidauction.duckdns.org';
-const DEVELOPMENT_API_URL = 'https://zubid-2025.onrender.com/api';
-const DEVELOPMENT_BASE_URL = 'https://zubid-2025.onrender.com';
+// ALTERNATIVE: DuckDNS Custom Domain
+// https://zubidauction.duckdns.org
+const PRODUCTION_API_URL = 'https://zubid-2025.onrender.com/api';
+const PRODUCTION_BASE_URL = 'https://zubid-2025.onrender.com';
+const ALTERNATIVE_API_URL = 'https://zubidauction.duckdns.org/api';
+const ALTERNATIVE_BASE_URL = 'https://zubidauction.duckdns.org';
 // ============================================================
 
 // Auto-detect environment
@@ -20,8 +20,8 @@ const isLocalhost = window.location.hostname === 'localhost' ||
                     window.location.hostname === '127.0.0.1' ||
                     window.location.hostname === '10.0.2.2';
 
-const isDevelopmentServer = window.location.hostname === 'zubid-2025.onrender.com';
-const isProductionServer = window.location.hostname === 'zubidauction.duckdns.org';
+const isProductionServer = window.location.hostname === 'zubid-2025.onrender.com';
+const isAlternativeServer = window.location.hostname === 'zubidauction.duckdns.org';
 
 // Detect if running in Capacitor (mobile app)
 const isCapacitor = typeof window.Capacitor !== 'undefined';
@@ -38,22 +38,22 @@ if (isMobileApp && !isLocalhost) {
     // Local development mode
     window.API_BASE_URL = 'http://localhost:5000/api';
     window.API_BASE = 'http://localhost:5000';
-} else if (isDevelopmentServer) {
-    // Development server (Render)
-    window.API_BASE_URL = DEVELOPMENT_API_URL;
-    window.API_BASE = DEVELOPMENT_BASE_URL;
 } else if (isProductionServer) {
-    // Production server (DuckDNS)
+    // Production server (Render.com)
     window.API_BASE_URL = PRODUCTION_API_URL;
     window.API_BASE = PRODUCTION_BASE_URL;
+} else if (isAlternativeServer) {
+    // Alternative server (DuckDNS)
+    window.API_BASE_URL = ALTERNATIVE_API_URL;
+    window.API_BASE = ALTERNATIVE_BASE_URL;
 } else {
     // Default to production for any other domain
     window.API_BASE_URL = PRODUCTION_API_URL;
     window.API_BASE = PRODUCTION_BASE_URL;
 }
 
-// Debug mode - enable for localhost and development server
-window.DEBUG_MODE = isLocalhost || isDevelopmentServer;
+// Debug mode - enable for localhost only
+window.DEBUG_MODE = isLocalhost;
 
 // Configuration settings
 window.ZUBID_CONFIG = {
@@ -63,13 +63,13 @@ window.ZUBID_CONFIG = {
 
     // Environment info
     isLocalhost: isLocalhost,
-    isDevelopmentServer: isDevelopmentServer,
     isProductionServer: isProductionServer,
+    isAlternativeServer: isAlternativeServer,
     isMobileApp: isMobileApp,
     isCapacitor: isCapacitor,
 
     // Feature flags
-    enableDebugLogs: isLocalhost || isDevelopmentServer,
+    enableDebugLogs: isLocalhost,
     enablePerformanceMetrics: false,
 
     // Timeouts (in milliseconds)
@@ -91,14 +91,14 @@ window.ZUBID_CONFIG = {
 
 if (window.DEBUG_MODE) {
     console.log('ZUBID Config Loaded:', {
-        environment: isProductionServer ? 'PRODUCTION (DuckDNS)' :
-                    isDevelopmentServer ? 'DEVELOPMENT (Render)' :
+        environment: isProductionServer ? 'PRODUCTION (Render.com)' :
+                    isAlternativeServer ? 'ALTERNATIVE (DuckDNS)' :
                     isLocalhost ? 'LOCAL' : 'UNKNOWN',
         apiUrl: window.API_BASE_URL,
         baseUrl: window.API_BASE,
         isLocalhost: isLocalhost,
-        isDevelopmentServer: isDevelopmentServer,
         isProductionServer: isProductionServer,
+        isAlternativeServer: isAlternativeServer,
         isMobileApp: isMobileApp,
         isCapacitor: isCapacitor
     });
