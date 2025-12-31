@@ -3958,11 +3958,13 @@ def init_db():
                 'city': 'VARCHAR(100)',
                 'country': 'VARCHAR(100)',
                 'postal_code': 'VARCHAR(20)',
-                'phone_verified': 'BOOLEAN DEFAULT 0',
-                'email_verified': 'BOOLEAN DEFAULT 0',
-                'is_active': 'BOOLEAN DEFAULT 1',
-                'last_login': 'DATETIME',
-                'login_count': 'INTEGER DEFAULT 0'
+                'phone_verified': 'BOOLEAN DEFAULT FALSE',
+                'email_verified': 'BOOLEAN DEFAULT FALSE',
+                'is_active': 'BOOLEAN DEFAULT TRUE',
+                'last_login': 'TIMESTAMP',
+                'login_count': 'INTEGER DEFAULT 0',
+                'balance': 'FLOAT DEFAULT 0.0',
+                'fcm_token': 'VARCHAR(255)'
             }
 
             added_count = 0
