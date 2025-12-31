@@ -12,8 +12,8 @@ class AppConfig {
 
   // API Configuration
   static String get baseUrl {
-    // Use Render.com production server
-    return 'https://zubid-2025.onrender.com/api';
+    // Use DuckDNS production server
+    return 'https://zubidauction.duckdns.org/api';
 
     // For local development, uncomment the appropriate line below:
     // return 'http://10.0.2.2:5000/api'; // Android emulator
@@ -24,8 +24,8 @@ class AppConfig {
   static String get apiUrl => baseUrl;
 
   static String get websocketUrl {
-    // Use Render.com production server
-    return 'wss://zubid-2025.onrender.com';
+    // Use DuckDNS production server
+    return 'wss://zubidauction.duckdns.org';
 
     // For local development, uncomment the appropriate line below:
     // return 'ws://10.0.2.2:5000'; // Android emulator

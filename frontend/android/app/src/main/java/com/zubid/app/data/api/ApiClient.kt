@@ -13,10 +13,10 @@ import java.util.concurrent.TimeUnit
 object ApiClient {
 
     // API Configuration - Multi-environment setup
-    // PRODUCTION: Render Cloud Platform (Primary Platform)
-    private const val PRODUCTION_URL = "https://zubid-2025.onrender.com/"
-    // ALTERNATIVE: DuckDNS Custom Domain
-    private const val ALTERNATIVE_URL = "https://zubidauction.duckdns.org/"
+    // PRODUCTION: DuckDNS Custom Domain (Primary Platform)
+    private const val PRODUCTION_URL = "https://zubidauction.duckdns.org/"
+    // ALTERNATIVE: Render Cloud Platform
+    private const val ALTERNATIVE_URL = "https://zubid-2025.onrender.com/"
     // LOCAL: Local development server
     private const val LOCAL_DEVELOPMENT_URL = "http://10.0.2.2:5000/"
 

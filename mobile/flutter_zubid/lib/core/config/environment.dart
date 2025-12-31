@@ -31,34 +31,34 @@ class EnvironmentConfig {
   static String get apiBaseUrl {
     switch (current) {
       case Environment.development:
-        // Use Render.com production server for all environments
-        return 'https://zubid-2025.onrender.com/api';
+        // Use DuckDNS production server for all environments
+        return 'https://zubidauction.duckdns.org/api';
 
       // For local development, uncomment the appropriate line below:
       // return 'http://10.0.2.2:5000/api'; // Android emulator
       // return 'http://localhost:5000/api'; // iOS simulator
       // return 'http://192.168.1.x:5000/api'; // Physical device
       case Environment.staging:
-        return 'https://zubid-2025.onrender.com/api';
+        return 'https://zubidauction.duckdns.org/api';
       case Environment.production:
-        return 'https://zubid-2025.onrender.com/api';
+        return 'https://zubidauction.duckdns.org/api';
     }
   }
 
   static String get websocketUrl {
     switch (current) {
       case Environment.development:
-        // Use Render.com production server for all environments
-        return 'wss://zubid-2025.onrender.com';
+        // Use DuckDNS production server for all environments
+        return 'wss://zubidauction.duckdns.org';
 
       // For local development, uncomment the appropriate line below:
       // return 'ws://10.0.2.2:5000'; // Android emulator
       // return 'ws://localhost:5000'; // iOS simulator
       // return 'ws://192.168.1.x:5000'; // Physical device
       case Environment.staging:
-        return 'wss://zubid-2025.onrender.com';
+        return 'wss://zubidauction.duckdns.org';
       case Environment.production:
-        return 'wss://zubid-2025.onrender.com';
+        return 'wss://zubidauction.duckdns.org';
     }
   }
 

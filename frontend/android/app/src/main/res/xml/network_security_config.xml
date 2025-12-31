@@ -11,6 +11,7 @@
     <!-- For production domains -->
     <domain-config cleartextTrafficPermitted="false">
         <domain includeSubdomains="true">zubid.app</domain>
+        <domain includeSubdomains="true">zubidauction.duckdns.org</domain>
         <domain includeSubdomains="true">onrender.com</domain>
         <domain includeSubdomains="true">zubid-2025.onrender.com</domain>
         <trust-anchors>
