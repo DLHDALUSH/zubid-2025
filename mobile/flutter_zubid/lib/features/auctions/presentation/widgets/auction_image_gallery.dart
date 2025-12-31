@@ -186,7 +186,7 @@ class _AuctionImageGalleryState extends State<AuctionImageGallery> {
   }
 
   Widget _buildThumbnailStrip() {
-    return Container(
+    return SizedBox(
       height: 60,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
@@ -285,7 +285,7 @@ class FullScreenImageGallery extends StatelessWidget {
           },
           itemCount: images.length,
           loadingBuilder: (context, event) => Center(
-            child: Container(
+            child: SizedBox(
               width: 20.0,
               height: 20.0,
               child: CircularProgressIndicator(

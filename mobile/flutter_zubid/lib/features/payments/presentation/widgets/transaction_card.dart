@@ -166,7 +166,7 @@ class TransactionCard extends StatelessWidget {
                   ),
                   child: Row(
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.error_outline,
                         size: 16,
                         color: Colors.red,

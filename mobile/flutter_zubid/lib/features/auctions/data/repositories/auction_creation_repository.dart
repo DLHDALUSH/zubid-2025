@@ -42,7 +42,7 @@ class AuctionCreationRepository {
       return ApiResult.failure(_handleDioError(e));
     } catch (e) {
       AppLogger.error('Unexpected auction creation error', error: e);
-      return ApiResult.failure('Failed to create auction');
+      return const ApiResult.failure('Failed to create auction');
     }
   }
 
@@ -87,7 +87,7 @@ class AuctionCreationRepository {
       return ApiResult.failure(_handleDioError(e));
     } catch (e) {
       AppLogger.error('Unexpected image upload error', error: e);
-      return ApiResult.failure('Failed to upload images');
+      return const ApiResult.failure('Failed to upload images');
     }
   }
 
@@ -122,7 +122,7 @@ class AuctionCreationRepository {
       return ApiResult.failure(_handleDioError(e));
     } catch (e) {
       AppLogger.error('Unexpected get user auctions error', error: e);
-      return ApiResult.failure('Failed to fetch auctions');
+      return const ApiResult.failure('Failed to fetch auctions');
     }
   }
 
@@ -148,7 +148,7 @@ class AuctionCreationRepository {
       return ApiResult.failure(_handleDioError(e));
     } catch (e) {
       AppLogger.error('Unexpected update auction error', error: e);
-      return ApiResult.failure('Failed to update auction');
+      return const ApiResult.failure('Failed to update auction');
     }
   }
 
@@ -160,13 +160,13 @@ class AuctionCreationRepository {
       await _apiClient.delete('/auctions/$auctionId');
 
       AppLogger.info('Auction deleted successfully: $auctionId');
-      return ApiResult.success(true);
+      return const ApiResult.success(true);
     } on DioException catch (e) {
       AppLogger.error('Delete auction error', error: e);
       return ApiResult.failure(_handleDioError(e));
     } catch (e) {
       AppLogger.error('Unexpected delete auction error', error: e);
-      return ApiResult.failure('Failed to delete auction');
+      return const ApiResult.failure('Failed to delete auction');
     }
   }
 
@@ -186,7 +186,7 @@ class AuctionCreationRepository {
       return ApiResult.failure(_handleDioError(e));
     } catch (e) {
       AppLogger.error('Unexpected end auction early error', error: e);
-      return ApiResult.failure('Failed to end auction');
+      return const ApiResult.failure('Failed to end auction');
     }
   }
 
@@ -213,7 +213,7 @@ class AuctionCreationRepository {
       return ApiResult.failure(_handleDioError(e));
     } catch (e) {
       AppLogger.error('Unexpected get categories error', error: e);
-      return ApiResult.failure('Failed to fetch categories');
+      return const ApiResult.failure('Failed to fetch categories');
     }
   }
 

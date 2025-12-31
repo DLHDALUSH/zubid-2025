@@ -39,7 +39,7 @@ class ProfileRepository {
       return _handleDioError(e);
     } catch (e) {
       AppLogger.error('Unexpected error in profile fetch', error: e);
-      return ApiResult.failure('An unexpected error occurred');
+      return const ApiResult.failure('An unexpected error occurred');
     }
   }
 
@@ -69,7 +69,7 @@ class ProfileRepository {
       return _handleDioError(e);
     } catch (e) {
       AppLogger.error('Unexpected error in profile update', error: e);
-      return ApiResult.failure('An unexpected error occurred');
+      return const ApiResult.failure('An unexpected error occurred');
     }
   }
 
@@ -106,7 +106,7 @@ class ProfileRepository {
       return _handleDioError(e);
     } catch (e) {
       AppLogger.error('Unexpected error in photo upload', error: e);
-      return ApiResult.failure('An unexpected error occurred');
+      return const ApiResult.failure('An unexpected error occurred');
     }
   }
 
@@ -119,14 +119,14 @@ class ProfileRepository {
 
       AppLogger.network('DELETE', '/user/profile/photo', statusCode: 200, response: 'Photo deletion successful');
       
-      return ApiResult.success(true);
+      return const ApiResult.success(true);
       
     } on DioException catch (e) {
       AppLogger.error('Photo deletion failed', error: e);
       return _handleDioError(e);
     } catch (e) {
       AppLogger.error('Unexpected error in photo deletion', error: e);
-      return ApiResult.failure('An unexpected error occurred');
+      return const ApiResult.failure('An unexpected error occurred');
     }
   }
 
@@ -148,14 +148,14 @@ class ProfileRepository {
 
       AppLogger.network('POST', '/change-password', statusCode: 200, response: 'Password change successful');
       
-      return ApiResult.success(true);
+      return const ApiResult.success(true);
       
     } on DioException catch (e) {
       AppLogger.error('Password change failed', error: e);
       return _handleDioError(e);
     } catch (e) {
       AppLogger.error('Unexpected error in password change', error: e);
-      return ApiResult.failure('An unexpected error occurred');
+      return const ApiResult.failure('An unexpected error occurred');
     }
   }
 
@@ -171,14 +171,14 @@ class ProfileRepository {
 
       AppLogger.network('POST', '/verify-email', statusCode: 200, response: 'Email verification successful');
       
-      return ApiResult.success(true);
+      return const ApiResult.success(true);
       
     } on DioException catch (e) {
       AppLogger.error('Email verification failed', error: e);
       return _handleDioError(e);
     } catch (e) {
       AppLogger.error('Unexpected error in email verification', error: e);
-      return ApiResult.failure('An unexpected error occurred');
+      return const ApiResult.failure('An unexpected error occurred');
     }
   }
 
@@ -191,14 +191,14 @@ class ProfileRepository {
 
       AppLogger.network('POST', '/resend-verification', statusCode: 200, response: 'Email verification resent successfully');
       
-      return ApiResult.success(true);
+      return const ApiResult.success(true);
       
     } on DioException catch (e) {
       AppLogger.error('Email verification resend failed', error: e);
       return _handleDioError(e);
     } catch (e) {
       AppLogger.error('Unexpected error in email verification resend', error: e);
-      return ApiResult.failure('An unexpected error occurred');
+      return const ApiResult.failure('An unexpected error occurred');
     }
   }
 

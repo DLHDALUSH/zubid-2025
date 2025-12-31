@@ -21,37 +21,37 @@ class _SortBottomSheetState extends State<SortBottomSheet> {
   String _selectedSortOrder = 'desc';
 
   final List<SortOption> _sortOptions = [
-    SortOption(
+    const SortOption(
       key: 'created_at',
       title: 'Date Listed',
       subtitle: 'Sort by when auction was created',
       icon: Icons.schedule,
     ),
-    SortOption(
+    const SortOption(
       key: 'end_time',
       title: 'Ending Soon',
       subtitle: 'Sort by auction end time',
       icon: Icons.timer,
     ),
-    SortOption(
+    const SortOption(
       key: 'current_price',
       title: 'Price',
       subtitle: 'Sort by current bid amount',
       icon: Icons.attach_money,
     ),
-    SortOption(
+    const SortOption(
       key: 'bid_count',
       title: 'Most Bids',
       subtitle: 'Sort by number of bids',
       icon: Icons.gavel,
     ),
-    SortOption(
+    const SortOption(
       key: 'view_count',
       title: 'Most Popular',
       subtitle: 'Sort by number of views',
       icon: Icons.visibility,
     ),
-    SortOption(
+    const SortOption(
       key: 'watch_count',
       title: 'Most Watched',
       subtitle: 'Sort by watchlist count',

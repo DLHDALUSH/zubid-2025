@@ -7,12 +7,12 @@ class CustomErrorWidget extends StatelessWidget {
   final String? retryText;
 
   const CustomErrorWidget({
-    Key? key,
+    super.key,
     required this.message,
     this.onRetry,
     this.icon,
     this.retryText,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -60,11 +60,11 @@ class ErrorBanner extends StatelessWidget {
   final Color? backgroundColor;
 
   const ErrorBanner({
-    Key? key,
+    super.key,
     required this.message,
     this.onDismiss,
     this.backgroundColor,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

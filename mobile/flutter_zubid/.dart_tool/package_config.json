@@ -345,7 +345,7 @@
     },
     {
       "name": "flutter",
-      "rootUri": "file:///C:/flutter/packages/flutter",
+      "rootUri": "file:///C:/src/flutter/packages/flutter",
       "packageUri": "lib/",
       "languageVersion": "3.8"
     },
@@ -363,7 +363,7 @@
     },
     {
       "name": "flutter_driver",
-      "rootUri": "file:///C:/flutter/packages/flutter_driver",
+      "rootUri": "file:///C:/src/flutter/packages/flutter_driver",
       "packageUri": "lib/",
       "languageVersion": "3.8"
     },
@@ -375,7 +375,7 @@
     },
     {
       "name": "flutter_localizations",
-      "rootUri": "file:///C:/flutter/packages/flutter_localizations",
+      "rootUri": "file:///C:/src/flutter/packages/flutter_localizations",
       "packageUri": "lib/",
       "languageVersion": "3.8"
     },
@@ -453,13 +453,13 @@
     },
     {
       "name": "flutter_test",
-      "rootUri": "file:///C:/flutter/packages/flutter_test",
+      "rootUri": "file:///C:/src/flutter/packages/flutter_test",
       "packageUri": "lib/",
       "languageVersion": "3.8"
     },
     {
       "name": "flutter_web_plugins",
-      "rootUri": "file:///C:/flutter/packages/flutter_web_plugins",
+      "rootUri": "file:///C:/src/flutter/packages/flutter_web_plugins",
       "packageUri": "lib/",
       "languageVersion": "3.8"
     },
@@ -483,7 +483,7 @@
     },
     {
       "name": "fuchsia_remote_debug_protocol",
-      "rootUri": "file:///C:/flutter/packages/fuchsia_remote_debug_protocol",
+      "rootUri": "file:///C:/src/flutter/packages/fuchsia_remote_debug_protocol",
       "packageUri": "lib/",
       "languageVersion": "3.8"
     },
@@ -699,7 +699,7 @@
     },
     {
       "name": "integration_test",
-      "rootUri": "file:///C:/flutter/packages/integration_test",
+      "rootUri": "file:///C:/src/flutter/packages/integration_test",
       "packageUri": "lib/",
       "languageVersion": "3.8"
     },
@@ -1137,7 +1137,7 @@
     },
     {
       "name": "sky_engine",
-      "rootUri": "file:///C:/flutter/bin/cache/pkg/sky_engine",
+      "rootUri": "file:///C:/src/flutter/bin/cache/pkg/sky_engine",
       "packageUri": "lib/",
       "languageVersion": "3.8"
     },
@@ -1432,7 +1432,7 @@
   ],
   "generator": "pub",
   "generatorVersion": "3.10.4",
-  "flutterRoot": "file:///C:/flutter",
+  "flutterRoot": "file:///C:/src/flutter",
   "flutterVersion": "3.38.5",
   "pubCache": "file:///C:/Users/Amer/AppData/Local/Pub/Cache"
 }

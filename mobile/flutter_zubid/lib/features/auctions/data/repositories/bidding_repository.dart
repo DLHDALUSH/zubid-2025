@@ -42,7 +42,7 @@ class BiddingRepository {
         AppLogger.info('Successfully placed bid: ${bid.id}');
         return ApiResult.success(bid);
       } else {
-        return ApiResult.error('Failed to place bid');
+        return const ApiResult.error('Failed to place bid');
       }
     } catch (e) {
       AppLogger.error('Error placing bid on auction ${request.auctionId}', error: e);
@@ -88,9 +88,9 @@ class BiddingRepository {
 
       if (result.statusCode == 200 || result.statusCode == 201) {
         AppLogger.info('Successfully processed buy now for auction ${request.auctionId}');
-        return ApiResult.success(null);
+        return const ApiResult.success(null);
       } else {
-        return ApiResult.error('Failed to complete buy now');
+        return const ApiResult.error('Failed to complete buy now');
       }
     } catch (e) {
       AppLogger.error('Error processing buy now for auction ${request.auctionId}', error: e);

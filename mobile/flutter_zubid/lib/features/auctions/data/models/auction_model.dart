@@ -227,7 +227,7 @@ class AuctionModel extends HiveObject {
       buyNowPrice: _parseDoubleNullable(json['buy_now_price'] ?? json['buyNowPrice']),
       reservePrice: _parseDoubleNullable(json['reserve_price'] ?? json['reservePrice']),
       startTime: _parseDateTime(json['start_time'] ?? json['startTime']) ?? DateTime.now(),
-      endTime: _parseDateTime(json['end_time'] ?? json['endTime']) ?? DateTime.now().add(Duration(days: 7)),
+      endTime: _parseDateTime(json['end_time'] ?? json['endTime']) ?? DateTime.now().add(const Duration(days: 7)),
       status: json['status'] ?? 'active',
       categoryId: _parseId(json['category_id'] ?? json['categoryId']),
       categoryName: json['category_name'] ?? json['categoryName'] ?? '',

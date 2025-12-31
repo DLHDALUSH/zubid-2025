@@ -14,28 +14,28 @@ class _PaymentMethodSelectorState extends ConsumerState<PaymentMethodSelector> {
   String? _selectedMethod;
 
   final List<PaymentMethodOption> _paymentMethods = [
-    PaymentMethodOption(
+    const PaymentMethodOption(
       id: 'stripe',
       name: 'Credit/Debit Card',
       description: 'Visa, Mastercard, American Express',
       icon: Icons.credit_card,
       isEnabled: true,
     ),
-    PaymentMethodOption(
+    const PaymentMethodOption(
       id: 'paypal',
       name: 'PayPal',
       description: 'Pay with your PayPal account',
       icon: Icons.account_balance_wallet,
       isEnabled: true,
     ),
-    PaymentMethodOption(
+    const PaymentMethodOption(
       id: 'apple_pay',
       name: 'Apple Pay',
       description: 'Pay with Touch ID or Face ID',
       icon: Icons.phone_iphone,
       isEnabled: false, // TODO: Enable based on platform
     ),
-    PaymentMethodOption(
+    const PaymentMethodOption(
       id: 'google_pay',
       name: 'Google Pay',
       description: 'Pay with Google Pay',

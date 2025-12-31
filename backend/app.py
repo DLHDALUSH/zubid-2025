@@ -75,13 +75,32 @@ app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 app.config['PERMANENT_SESSION_LIFETIME'] = 86400  # 24 hours
 # Database connection pooling (only for non-SQLite databases)
+# For serverless environments like Render.com, use NullPool to avoid connection limits
 if 'sqlite' not in app.config['SQLALCHEMY_DATABASE_URI'].lower():
-    app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
-        'pool_pre_ping': True,  # Verify connections before using
-        'pool_recycle': 3600,   # Recycle connections after 1 hour
-        'pool_size': 10,        # Connection pool size
-        'max_overflow': 20      # Max overflow connections
-    }
+    from sqlalchemy.pool import NullPool, QueuePool
+
+    # Check if we should use NullPool (recommended for Render.com free tier)
+    use_nullpool = os.getenv('DB_USE_NULLPOOL', 'true').lower() == 'true'
+
+    if use_nullpool:
+        # NullPool: Opens a new connection for each request, closes immediately after
+        # Best for serverless/free tier with limited connections
+        app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+            'poolclass': NullPool,
+            'pool_pre_ping': True,  # Verify connections before using
+        }
+        print("[DB] Using NullPool - no connection pooling (best for Render.com free tier)")
+    else:
+        # QueuePool: Traditional connection pooling with conservative settings
+        app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+            'poolclass': QueuePool,
+            'pool_pre_ping': True,
+            'pool_recycle': int(os.getenv('DB_POOL_RECYCLE', '1800')),  # 30 minutes
+            'pool_size': int(os.getenv('DB_POOL_SIZE', '3')),           # Small pool
+            'max_overflow': int(os.getenv('DB_MAX_OVERFLOW', '5')),     # Limited overflow
+            'pool_timeout': int(os.getenv('DB_POOL_TIMEOUT', '30')),    # 30 second timeout
+        }
+        print(f"[DB] Using QueuePool - pool_size={os.getenv('DB_POOL_SIZE', '3')}, max_overflow={os.getenv('DB_MAX_OVERFLOW', '5')}")
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max request size
 
 # CSRF Protection Configuration
@@ -220,9 +239,27 @@ def shutdown_session(exception=None):
     try:
         if exception:
             db.session.rollback()
+        # Force close any remaining connections
+        db.session.close()
         db.session.remove()
+    except Exception as e:
+        # Log cleanup errors for debugging
+        try:
+            app.logger.warning(f"Session cleanup error: {e}")
+        except:
+            pass  # Ignore logging errors during cleanup
+
+
+# Additional cleanup for request teardown
+@app.teardown_request
+def teardown_request(exception=None):
+    """Additional request cleanup to ensure no lingering sessions"""
+    try:
+        if exception:
+            db.session.rollback()
+        db.session.close()
     except Exception:
-        pass  # Ignore errors during cleanup
+        pass
 
 
 # Security Headers Middleware
@@ -4301,7 +4338,13 @@ def init_db():
         print("Database initialized successfully!")
 
 # Initialize database on module load (for gunicorn/production)
-init_db()
+# Skip auto-init if we're just importing for testing or if explicitly disabled
+if not os.getenv('SKIP_DB_INIT', '').lower() == 'true':
+    try:
+        init_db()
+    except Exception as e:
+        print(f"Warning: Database initialization failed during import: {e}")
+        print("Database will be initialized on first request if needed.")
 
 @app.route('/api/user/payments', methods=['GET'])
 @login_required
@@ -5303,6 +5346,46 @@ def reset_database():
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': f'Reset failed: {str(e)}'}), 500
+
+@app.route('/api/debug/db-status', methods=['GET'])
+def debug_db_status():
+    """Debug endpoint to check database connection status"""
+    try:
+        from sqlalchemy import text
+
+        # Test basic connection
+        result = db.session.execute(text('SELECT 1')).scalar()
+
+        # Get pool status if available
+        pool_info = {}
+        try:
+            engine = db.engine
+            pool = engine.pool
+            pool_info = {
+                'pool_class': str(type(pool).__name__),
+                'pool_size': getattr(pool, 'size', 'N/A'),
+                'checked_in': getattr(pool, 'checkedin', 'N/A'),
+                'checked_out': getattr(pool, 'checkedout', 'N/A'),
+                'overflow': getattr(pool, 'overflow', 'N/A'),
+                'invalid': getattr(pool, 'invalid', 'N/A'),
+            }
+        except Exception as e:
+            pool_info = {'error': str(e)}
+
+        return jsonify({
+            'status': 'connected',
+            'test_query': result,
+            'pool_info': pool_info,
+            'database_uri': app.config['SQLALCHEMY_DATABASE_URI'].split('@')[0] + '@***'  # Hide credentials
+        }), 200
+
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'error': str(e),
+            'database_uri': app.config['SQLALCHEMY_DATABASE_URI'].split('@')[0] + '@***'
+        }), 500
+
 
 @app.route('/api/admin/init-database', methods=['POST', 'GET'])
 def init_database_endpoint():

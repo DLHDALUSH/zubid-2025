@@ -297,7 +297,7 @@ class _AuctionFormStep2State extends ConsumerState<AuctionFormStep2> {
             onTap: onRemove,
             child: Container(
               padding: const EdgeInsets.all(4),
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 color: Colors.red,
                 shape: BoxShape.circle,
               ),

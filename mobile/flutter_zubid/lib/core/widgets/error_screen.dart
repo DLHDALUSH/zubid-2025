@@ -6,7 +6,7 @@ import '../utils/app_routes.dart';
 class ErrorScreen extends StatelessWidget {
   final String? error;
 
-  const ErrorScreen({Key? key, this.error}) : super(key: key);
+  const ErrorScreen({super.key, this.error});
 
   @override
   Widget build(BuildContext context) {

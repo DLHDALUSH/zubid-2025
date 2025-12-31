@@ -211,7 +211,7 @@ class BidHistoryCard extends ConsumerWidget {
                       const SizedBox(width: 8),
                       Row(
                         children: [
-                          Icon(
+                          const Icon(
                             Icons.star,
                             size: 12,
                             color: Colors.amber,

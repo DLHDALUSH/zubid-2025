@@ -214,7 +214,7 @@ class AuctionCard extends StatelessWidget {
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 foregroundColor: Colors.orange,
-                side: BorderSide(color: Colors.orange),
+                side: const BorderSide(color: Colors.orange),
               ),
             ),
           ),
@@ -232,7 +232,7 @@ class AuctionCard extends StatelessWidget {
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 foregroundColor: Colors.red,
-                side: BorderSide(color: Colors.red),
+                side: const BorderSide(color: Colors.red),
               ),
             ),
           ),

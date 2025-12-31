@@ -136,6 +136,7 @@ sealed class ApiResult<T> {
 
 /// Successful API result
 final class ApiSuccess<T> extends ApiResult<T> {
+  @override
   final T data;
 
   const ApiSuccess(this.data);
@@ -152,8 +153,11 @@ final class ApiSuccess<T> extends ApiResult<T> {
 
 /// Failed API result
 final class ApiFailure<T> extends ApiResult<T> {
+  @override
   final String message;
+  @override
   final String? code;
+  @override
   final dynamic error;
 
   const ApiFailure(this.message, {this.code, this.error});

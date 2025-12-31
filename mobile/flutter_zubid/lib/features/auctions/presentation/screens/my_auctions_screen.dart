@@ -87,8 +87,8 @@ class _MyAuctionsScreenState extends ConsumerState<MyAuctionsScreen>
         ),
         floatingActionButton: FloatingActionButton(
           onPressed: () => context.pushNamed('create-auction'),
-          child: const Icon(Icons.add),
           tooltip: 'Create Auction',
+          child: const Icon(Icons.add),
         ),
       ),
     );

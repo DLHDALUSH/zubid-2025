@@ -146,7 +146,7 @@ class ProfileStats extends StatelessWidget {
         
         Row(
           children: [
-            Icon(
+            const Icon(
               Icons.star,
               color: Colors.amber,
               size: 20,

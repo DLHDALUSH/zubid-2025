@@ -28,14 +28,14 @@ class PaymentRepository {
         AppLogger.info('Retrieved ${paymentMethods.length} payment methods');
         return ApiResult.success(paymentMethods);
       } else {
-        return ApiResult.failure('Failed to load payment methods');
+        return const ApiResult.failure('Failed to load payment methods');
       }
     } on DioException catch (e) {
       AppLogger.error('Failed to get payment methods: ${e.message}');
       return ApiResult.failure(_handleDioError(e));
     } catch (e) {
       AppLogger.error('Unexpected error getting payment methods: $e');
-      return ApiResult.failure('An unexpected error occurred');
+      return const ApiResult.failure('An unexpected error occurred');
     }
   }
 
@@ -53,14 +53,14 @@ class PaymentRepository {
         AppLogger.info('Added payment method: ${paymentMethod.id}');
         return ApiResult.success(paymentMethod);
       } else {
-        return ApiResult.failure('Failed to add payment method');
+        return const ApiResult.failure('Failed to add payment method');
       }
     } on DioException catch (e) {
       AppLogger.error('Failed to add payment method: ${e.message}');
       return ApiResult.failure(_handleDioError(e));
     } catch (e) {
       AppLogger.error('Unexpected error adding payment method: $e');
-      return ApiResult.failure('An unexpected error occurred');
+      return const ApiResult.failure('An unexpected error occurred');
     }
   }
 
@@ -70,16 +70,16 @@ class PaymentRepository {
       
       if (response.statusCode == 200) {
         AppLogger.info('Deleted payment method: $paymentMethodId');
-        return ApiResult.success(true);
+        return const ApiResult.success(true);
       } else {
-        return ApiResult.failure('Failed to delete payment method');
+        return const ApiResult.failure('Failed to delete payment method');
       }
     } on DioException catch (e) {
       AppLogger.error('Failed to delete payment method: ${e.message}');
       return ApiResult.failure(_handleDioError(e));
     } catch (e) {
       AppLogger.error('Unexpected error deleting payment method: $e');
-      return ApiResult.failure('An unexpected error occurred');
+      return const ApiResult.failure('An unexpected error occurred');
     }
   }
 
@@ -96,14 +96,14 @@ class PaymentRepository {
         AppLogger.info('Set default payment method: $paymentMethodId');
         return ApiResult.success(paymentMethod);
       } else {
-        return ApiResult.failure('Failed to set default payment method');
+        return const ApiResult.failure('Failed to set default payment method');
       }
     } on DioException catch (e) {
       AppLogger.error('Failed to set default payment method: ${e.message}');
       return ApiResult.failure(_handleDioError(e));
     } catch (e) {
       AppLogger.error('Unexpected error setting default payment method: $e');
-      return ApiResult.failure('An unexpected error occurred');
+      return const ApiResult.failure('An unexpected error occurred');
     }
   }
 
@@ -122,14 +122,14 @@ class PaymentRepository {
         AppLogger.info('Payment processed: ${paymentResponse.id}');
         return ApiResult.success(paymentResponse);
       } else {
-        return ApiResult.failure('Payment processing failed');
+        return const ApiResult.failure('Payment processing failed');
       }
     } on DioException catch (e) {
       AppLogger.error('Failed to process payment: ${e.message}');
       return ApiResult.failure(_handleDioError(e));
     } catch (e) {
       AppLogger.error('Unexpected error processing payment: $e');
-      return ApiResult.failure('An unexpected error occurred');
+      return const ApiResult.failure('An unexpected error occurred');
     }
   }
 
@@ -151,14 +151,14 @@ class PaymentRepository {
         AppLogger.info('Payment confirmed: ${paymentResponse.id}');
         return ApiResult.success(paymentResponse);
       } else {
-        return ApiResult.failure('Payment confirmation failed');
+        return const ApiResult.failure('Payment confirmation failed');
       }
     } on DioException catch (e) {
       AppLogger.error('Failed to confirm payment: ${e.message}');
       return ApiResult.failure(_handleDioError(e));
     } catch (e) {
       AppLogger.error('Unexpected error confirming payment: $e');
-      return ApiResult.failure('An unexpected error occurred');
+      return const ApiResult.failure('An unexpected error occurred');
     }
   }
 
@@ -191,14 +191,14 @@ class PaymentRepository {
         AppLogger.info('Retrieved ${transactions.length} transactions');
         return ApiResult.success(transactions);
       } else {
-        return ApiResult.failure('Failed to load transactions');
+        return const ApiResult.failure('Failed to load transactions');
       }
     } on DioException catch (e) {
       AppLogger.error('Failed to get transactions: ${e.message}');
       return ApiResult.failure(_handleDioError(e));
     } catch (e) {
       AppLogger.error('Unexpected error getting transactions: $e');
-      return ApiResult.failure('An unexpected error occurred');
+      return const ApiResult.failure('An unexpected error occurred');
     }
   }
 
@@ -211,14 +211,14 @@ class PaymentRepository {
         AppLogger.info('Retrieved transaction: $transactionId');
         return ApiResult.success(transaction);
       } else {
-        return ApiResult.failure('Failed to load transaction');
+        return const ApiResult.failure('Failed to load transaction');
       }
     } on DioException catch (e) {
       AppLogger.error('Failed to get transaction: ${e.message}');
       return ApiResult.failure(_handleDioError(e));
     } catch (e) {
       AppLogger.error('Unexpected error getting transaction: $e');
-      return ApiResult.failure('An unexpected error occurred');
+      return const ApiResult.failure('An unexpected error occurred');
     }
   }
 
@@ -237,14 +237,14 @@ class PaymentRepository {
         AppLogger.info('Refund processed: ${refundResponse.id}');
         return ApiResult.success(refundResponse);
       } else {
-        return ApiResult.failure('Refund processing failed');
+        return const ApiResult.failure('Refund processing failed');
       }
     } on DioException catch (e) {
       AppLogger.error('Failed to process refund: ${e.message}');
       return ApiResult.failure(_handleDioError(e));
     } catch (e) {
       AppLogger.error('Unexpected error processing refund: $e');
-      return ApiResult.failure('An unexpected error occurred');
+      return const ApiResult.failure('An unexpected error occurred');
     }
   }
 

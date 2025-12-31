@@ -54,8 +54,8 @@ class _PaymentMethodsScreenState extends ConsumerState<PaymentMethodsScreen> {
         ),
         floatingActionButton: FloatingActionButton(
           onPressed: () => _addPaymentMethod(),
-          child: const Icon(Icons.add),
           tooltip: 'Add Payment Method',
+          child: const Icon(Icons.add),
         ),
       ),
     );
@@ -244,10 +244,10 @@ class _PaymentMethodsScreenState extends ConsumerState<PaymentMethodsScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete'),
             style: TextButton.styleFrom(
               foregroundColor: Colors.red,
             ),
+            child: const Text('Delete'),
           ),
         ],
       ),

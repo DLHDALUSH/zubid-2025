@@ -159,7 +159,7 @@ class AuthRepository {
     } catch (e, stackTrace) {
       AppLogger.error('Unexpected forgot password error',
           error: e, stackTrace: stackTrace);
-      return ApiResult.failure('An unexpected error occurred');
+      return const ApiResult.failure('An unexpected error occurred');
     }
   }
 
@@ -184,7 +184,7 @@ class AuthRepository {
     } catch (e, stackTrace) {
       AppLogger.error('Unexpected reset password error',
           error: e, stackTrace: stackTrace);
-      return ApiResult.failure('An unexpected error occurred');
+      return const ApiResult.failure('An unexpected error occurred');
     }
   }
 
@@ -209,7 +209,7 @@ class AuthRepository {
     } catch (e, stackTrace) {
       AppLogger.error('Unexpected change password error',
           error: e, stackTrace: stackTrace);
-      return ApiResult.failure('An unexpected error occurred');
+      return const ApiResult.failure('An unexpected error occurred');
     }
   }
 
@@ -218,7 +218,7 @@ class AuthRepository {
     try {
       final refreshToken = await StorageService.getRefreshToken();
       if (refreshToken == null) {
-        return ApiResult.failure('No refresh token available');
+        return const ApiResult.failure('No refresh token available');
       }
 
       AppLogger.auth('Refreshing token');
@@ -250,7 +250,7 @@ class AuthRepository {
     } catch (e, stackTrace) {
       AppLogger.error('Unexpected token refresh error',
           error: e, stackTrace: stackTrace);
-      return ApiResult.failure('An unexpected error occurred');
+      return const ApiResult.failure('An unexpected error occurred');
     }
   }
 
@@ -277,7 +277,7 @@ class AuthRepository {
     } catch (e, stackTrace) {
       AppLogger.error('Unexpected email verification error',
           error: e, stackTrace: stackTrace);
-      return ApiResult.failure('An unexpected error occurred');
+      return const ApiResult.failure('An unexpected error occurred');
     }
   }
 
@@ -304,7 +304,7 @@ class AuthRepository {
     } catch (e, stackTrace) {
       AppLogger.error('Unexpected resend verification error',
           error: e, stackTrace: stackTrace);
-      return ApiResult.failure('An unexpected error occurred');
+      return const ApiResult.failure('An unexpected error occurred');
     }
   }
 
@@ -330,11 +330,11 @@ class AuthRepository {
       await StorageService.clearAuthData();
 
       AppLogger.auth('Logout successful', success: true);
-      return ApiResult.success(null);
+      return const ApiResult.success(null);
     } catch (e, stackTrace) {
       AppLogger.error('Unexpected logout error',
           error: e, stackTrace: stackTrace);
-      return ApiResult.failure('An unexpected error occurred during logout');
+      return const ApiResult.failure('An unexpected error occurred during logout');
     }
   }
 
@@ -357,14 +357,14 @@ class AuthRepository {
           return ApiResult.success(user);
         }
       }
-      return ApiResult.failure('Invalid user data received');
+      return const ApiResult.failure('Invalid user data received');
     } on DioException catch (e) {
       AppLogger.auth('Get current user error');
       return await _handleDioError(e);
     } catch (e, stackTrace) {
       AppLogger.error('Unexpected get current user error',
           error: e, stackTrace: stackTrace);
-      return ApiResult.failure('An unexpected error occurred');
+      return const ApiResult.failure('An unexpected error occurred');
     }
   }
 

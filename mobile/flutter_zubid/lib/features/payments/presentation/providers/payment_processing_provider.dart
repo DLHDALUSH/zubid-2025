@@ -44,7 +44,7 @@ class PaymentProcessingNotifier extends StateNotifier<PaymentProcessingState> {
   PaymentProcessingNotifier(this._repository) : super(const PaymentProcessingState());
 
   Future<bool> processPayment(PaymentRequest request) async {
-    state = PaymentProcessingState(
+    state = const PaymentProcessingState(
       isProcessing: true,
       currentStep: 'initiating',
     );

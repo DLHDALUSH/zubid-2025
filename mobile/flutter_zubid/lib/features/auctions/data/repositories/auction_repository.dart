@@ -51,7 +51,7 @@ class AuctionRepository {
         return ApiResult.success(auctions);
       } else {
         AppLogger.warning('Failed to fetch auctions: ${response.statusCode}');
-        return ApiResult.error('Failed to load auctions');
+        return const ApiResult.error('Failed to load auctions');
       }
     } catch (e) {
       AppLogger.error('Error fetching auctions', error: e);
@@ -74,7 +74,7 @@ class AuctionRepository {
         return ApiResult.success(auction);
       } else {
         AppLogger.warning('Failed to fetch auction: ${response.statusCode}');
-        return ApiResult.error('Failed to load auction details');
+        return const ApiResult.error('Failed to load auction details');
       }
     } catch (e) {
       AppLogger.error('Error fetching auction details', error: e);
@@ -108,7 +108,7 @@ class AuctionRepository {
       } else {
         AppLogger.warning(
             'Failed to fetch featured auctions: ${response.statusCode}');
-        return ApiResult.error('Failed to load featured auctions');
+        return const ApiResult.error('Failed to load featured auctions');
       }
     } catch (e) {
       AppLogger.error('Error fetching featured auctions', error: e);
@@ -142,7 +142,7 @@ class AuctionRepository {
       } else {
         AppLogger.warning(
             'Failed to fetch ending soon auctions: ${response.statusCode}');
-        return ApiResult.error('Failed to load ending soon auctions');
+        return const ApiResult.error('Failed to load ending soon auctions');
       }
     } catch (e) {
       AppLogger.error('Error fetching ending soon auctions', error: e);
@@ -172,7 +172,7 @@ class AuctionRepository {
         return ApiResult.success(categories);
       } else {
         AppLogger.warning('Failed to fetch categories: ${response.statusCode}');
-        return ApiResult.error('Failed to load categories');
+        return const ApiResult.error('Failed to load categories');
       }
     } catch (e) {
       AppLogger.error('Error fetching categories', error: e);
@@ -192,10 +192,10 @@ class AuctionRepository {
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         AppLogger.info('Successfully added auction to watchlist');
-        return ApiResult.success(true);
+        return const ApiResult.success(true);
       } else {
         AppLogger.warning('Failed to add to watchlist: ${response.statusCode}');
-        return ApiResult.error('Failed to add to watchlist');
+        return const ApiResult.error('Failed to add to watchlist');
       }
     } catch (e) {
       AppLogger.error('Error adding to watchlist', error: e);
@@ -212,11 +212,11 @@ class AuctionRepository {
 
       if (response.statusCode == 200 || response.statusCode == 204) {
         AppLogger.info('Successfully removed auction from watchlist');
-        return ApiResult.success(true);
+        return const ApiResult.success(true);
       } else {
         AppLogger.warning(
             'Failed to remove from watchlist: ${response.statusCode}');
-        return ApiResult.error('Failed to remove from watchlist');
+        return const ApiResult.error('Failed to remove from watchlist');
       }
     } catch (e) {
       AppLogger.error('Error removing from watchlist', error: e);
@@ -253,7 +253,7 @@ class AuctionRepository {
         return ApiResult.success(auctions);
       } else {
         AppLogger.warning('Failed to fetch watchlist: ${response.statusCode}');
-        return ApiResult.error('Failed to load watchlist');
+        return const ApiResult.error('Failed to load watchlist');
       }
     } catch (e) {
       AppLogger.error('Error fetching watchlist', error: e);
@@ -272,7 +272,7 @@ class AuctionRepository {
         final auction = AuctionModel.fromJson(response.data);
         return ApiResult.success(auction);
       } else {
-        return ApiResult.error('Failed to fetch auction');
+        return const ApiResult.error('Failed to fetch auction');
       }
     } catch (e) {
       AppLogger.error('Error fetching auction', error: e);
@@ -292,7 +292,7 @@ class AuctionRepository {
         final bids = bidsJson.map((json) => BidModel.fromJson(json)).toList();
         return ApiResult.success(bids);
       } else {
-        return ApiResult.error('Failed to fetch auction bids');
+        return const ApiResult.error('Failed to fetch auction bids');
       }
     } catch (e) {
       AppLogger.error('Error fetching auction bids', error: e);

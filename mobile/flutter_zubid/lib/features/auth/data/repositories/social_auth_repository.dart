@@ -25,7 +25,7 @@ class SocialAuthRepository {
       // 1. Sign in with Google to get the user's account
       final googleUser = await _googleSignIn.signIn();
       if (googleUser == null) {
-        return ApiResult.failure('Google sign-in cancelled');
+        return const ApiResult.failure('Google sign-in cancelled');
       }
 
       // 2. Get the authentication tokens
@@ -33,7 +33,7 @@ class SocialAuthRepository {
       final idToken = googleAuth.idToken;
 
       if (idToken == null) {
-        return ApiResult.failure('Failed to get Google ID token');
+        return const ApiResult.failure('Failed to get Google ID token');
       }
 
       // 3. Send the ID token to your backend for verification and get your own auth token
@@ -41,11 +41,11 @@ class SocialAuthRepository {
       // final authResponse = AuthResponseModel.fromJson(response.data);
 
       // For now, returning a mock failure
-      return ApiResult.failure('Google sign-in not fully implemented');
+      return const ApiResult.failure('Google sign-in not fully implemented');
 
     } catch (e, stackTrace) {
       AppLogger.error('Google sign-in error', error: e, stackTrace: stackTrace);
-      return ApiResult.failure('An unexpected error occurred during Google sign-in');
+      return const ApiResult.failure('An unexpected error occurred during Google sign-in');
     }
   }
 
@@ -53,7 +53,7 @@ class SocialAuthRepository {
   Future<ApiResult<AuthResponseModel>> signInWithApple() async {
     // Temporarily disabled due to build issues
     AppLogger.userAction('Apple sign-in attempted - currently disabled');
-    return ApiResult.failure('Apple sign-in temporarily disabled');
+    return const ApiResult.failure('Apple sign-in temporarily disabled');
 
     /*
     try {
