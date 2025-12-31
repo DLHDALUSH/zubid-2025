@@ -28,4 +28,13 @@ services:
         value: "https://zubid-2025.onrender.com,https://zubidauction.duckdns.org"
       - key: PYTHON_VERSION
         value: "3.11.0"
+      # Database Connection Pool Settings (optimized for Render free tier)
+      - key: DB_POOL_SIZE
+        value: "5"
+      - key: DB_MAX_OVERFLOW
+        value: "10"
+      - key: DB_POOL_TIMEOUT
+        value: "30"
+      - key: DB_POOL_RECYCLE
+        value: "1800"
 
