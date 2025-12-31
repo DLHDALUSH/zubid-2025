@@ -3,6 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/services/storage_service.dart';
 import '../../../core/utils/logger.dart';
 import '../data/models/user_model.dart';
+import '../data/models/login_request_model.dart';
+import '../data/models/register_request_model.dart';
+import '../data/models/forgot_password_request_model.dart';
+import '../data/models/reset_password_request_model.dart';
+import '../data/models/change_password_request_model.dart';
 import '../data/repositories/auth_repository.dart';
 
 // Auth state
@@ -51,7 +56,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<void> _checkAuthStatus() async {
     try {
       state = state.copyWith(isLoading: true);
-      
+
       final isLoggedIn = await StorageService.isLoggedIn();
       if (isLoggedIn) {
         final user = await StorageService.getUserData();
@@ -61,11 +66,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
             isAuthenticated: true,
             user: user,
           );
-          AppLogger.auth('User already authenticated', userId: user.id.toString());
+          AppLogger.auth('User already authenticated',
+              userId: user.id.toString());
           return;
         }
       }
-      
+
       state = state.copyWith(isLoading: false);
     } catch (e) {
       AppLogger.error('Error checking auth status', error: e);
@@ -74,18 +80,19 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   /// Login user
-  Future<bool> login(String username, String password, {bool rememberMe = false}) async {
+  Future<bool> login(String username, String password,
+      {bool rememberMe = false}) async {
     try {
       state = state.copyWith(isLoading: true, error: null);
-      
+
       final request = LoginRequestModel(
         username: username,
         password: password,
         rememberMe: rememberMe,
       );
-      
+
       final result = await _authRepository.login(request);
-      
+
       if (result.isSuccess) {
         final authResponse = result.data!;
         state = state.copyWith(
@@ -93,7 +100,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
           isAuthenticated: true,
           user: authResponse.user,
         );
-        AppLogger.auth('Login successful', userId: authResponse.user?.id.toString());
+        AppLogger.auth('Login successful',
+            userId: authResponse.user?.id.toString());
         return true;
       } else {
         state = state.copyWith(
@@ -118,33 +126,39 @@ class AuthNotifier extends StateNotifier<AuthState> {
     required String username,
     required String email,
     required String password,
-    required String confirmPassword,
+    required String phoneNumber,
+    required String idNumber,
+    required String birthDate,
+    required String address,
     String? firstName,
     String? lastName,
-    String? phoneNumber,
-    String? idNumber,
+    String? city,
+    String? country,
     bool acceptTerms = false,
   }) async {
     try {
       state = state.copyWith(isLoading: true, error: null);
-      
+
       final request = RegisterRequestModel(
         username: username,
         email: email,
         password: password,
-        confirmPassword: confirmPassword,
-        firstName: firstName,
-        lastName: lastName,
         phoneNumber: phoneNumber,
         idNumber: idNumber,
+        birthDate: birthDate,
+        address: address,
+        firstName: firstName,
+        lastName: lastName,
+        city: city,
+        country: country,
         acceptTerms: acceptTerms,
       );
-      
+
       final result = await _authRepository.register(request);
-      
+
       if (result.isSuccess) {
         final authResponse = result.data!;
-        
+
         // If auto-login after registration
         if (authResponse.user != null) {
           state = state.copyWith(
@@ -155,7 +169,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
         } else {
           state = state.copyWith(isLoading: false);
         }
-        
+
         AppLogger.auth('Registration successful', userId: username);
         return true;
       } else {
@@ -180,12 +194,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<bool> forgotPassword(String email) async {
     try {
       state = state.copyWith(isLoading: true, error: null);
-      
+
       final request = ForgotPasswordRequestModel(email: email);
       final result = await _authRepository.forgotPassword(request);
-      
+
       state = state.copyWith(isLoading: false);
-      
+
       if (result.isSuccess) {
         AppLogger.auth('Forgot password request sent');
         return true;
@@ -204,20 +218,21 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   /// Reset password
-  Future<bool> resetPassword(String token, String password, String confirmPassword) async {
+  Future<bool> resetPassword(
+      String token, String password, String confirmPassword) async {
     try {
       state = state.copyWith(isLoading: true, error: null);
-      
+
       final request = ResetPasswordRequestModel(
         token: token,
-        password: password,
+        newPassword: password,
         confirmPassword: confirmPassword,
       );
-      
+
       final result = await _authRepository.resetPassword(request);
-      
+
       state = state.copyWith(isLoading: false);
-      
+
       if (result.isSuccess) {
         AppLogger.auth('Password reset successful');
         return true;
@@ -236,20 +251,21 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   /// Change password
-  Future<bool> changePassword(String currentPassword, String newPassword, String confirmPassword) async {
+  Future<bool> changePassword(String currentPassword, String newPassword,
+      String confirmPassword) async {
     try {
       state = state.copyWith(isLoading: true, error: null);
-      
+
       final request = ChangePasswordRequestModel(
         currentPassword: currentPassword,
         newPassword: newPassword,
         confirmPassword: confirmPassword,
       );
-      
+
       final result = await _authRepository.changePassword(request);
-      
+
       state = state.copyWith(isLoading: false);
-      
+
       if (result.isSuccess) {
         AppLogger.auth('Password changed successfully');
         return true;
@@ -271,7 +287,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<void> refreshUser() async {
     try {
       final result = await _authRepository.getCurrentUser();
-      
+
       if (result.isSuccess) {
         state = state.copyWith(user: result.data);
         AppLogger.auth('User data refreshed');
@@ -285,9 +301,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<void> logout() async {
     try {
       state = state.copyWith(isLoading: true);
-      
+
       await _authRepository.logout();
-      
+
       state = const AuthState();
       AppLogger.auth('Logout completed');
     } catch (e) {

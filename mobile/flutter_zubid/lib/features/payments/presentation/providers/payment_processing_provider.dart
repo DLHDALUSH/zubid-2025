@@ -8,7 +8,8 @@ class PaymentProcessingState {
   final bool isProcessing;
   final String? error;
   final PaymentResponse? currentPayment;
-  final String? currentStep; // 'initiating', 'processing', 'confirming', 'completed'
+  final String?
+      currentStep; // 'initiating', 'processing', 'confirming', 'completed'
 
   const PaymentProcessingState({
     this.isProcessing = false,
@@ -41,7 +42,8 @@ class PaymentProcessingState {
 class PaymentProcessingNotifier extends StateNotifier<PaymentProcessingState> {
   final PaymentRepository _repository;
 
-  PaymentProcessingNotifier(this._repository) : super(const PaymentProcessingState());
+  PaymentProcessingNotifier(this._repository)
+      : super(const PaymentProcessingState());
 
   Future<bool> processPayment(PaymentRequest request) async {
     state = const PaymentProcessingState(
@@ -58,25 +60,28 @@ class PaymentProcessingNotifier extends StateNotifier<PaymentProcessingState> {
         state = PaymentProcessingState(
           isProcessing: false,
           currentPayment: paymentResponse,
-          currentStep: paymentResponse.requiresAction ? 'confirming' : 'completed',
+          currentStep:
+              paymentResponse.requiresAction ? 'confirming' : 'completed',
         );
 
-        AppLogger.info('Payment processed: ${paymentResponse.id}, status: ${paymentResponse.status}');
+        AppLogger.info(
+            'Payment processed: ${paymentResponse.id}, status: ${paymentResponse.status}');
         return true;
       },
-      failure: (error) {
+      error: (errorMessage) {
         state = PaymentProcessingState(
           isProcessing: false,
-          error: error,
+          error: errorMessage,
           currentStep: 'failed',
         );
-        AppLogger.error('Payment processing failed: $error');
+        AppLogger.error('Payment processing failed: $errorMessage');
         return false;
       },
     );
   }
 
-  Future<bool> confirmPayment(String paymentIntentId, [String? paymentMethodId]) async {
+  Future<bool> confirmPayment(String paymentIntentId,
+      [String? paymentMethodId]) async {
     state = state.copyWith(
       isProcessing: true,
       currentStep: 'confirming',
@@ -85,7 +90,8 @@ class PaymentProcessingNotifier extends StateNotifier<PaymentProcessingState> {
 
     AppLogger.info('Confirming payment: $paymentIntentId');
 
-    final result = await _repository.confirmPayment(paymentIntentId, paymentMethodId);
+    final result =
+        await _repository.confirmPayment(paymentIntentId, paymentMethodId);
 
     return result.when(
       success: (paymentResponse) {
@@ -95,16 +101,17 @@ class PaymentProcessingNotifier extends StateNotifier<PaymentProcessingState> {
           currentStep: paymentResponse.isSucceeded ? 'completed' : 'failed',
         );
 
-        AppLogger.info('Payment confirmed: ${paymentResponse.id}, status: ${paymentResponse.status}');
+        AppLogger.info(
+            'Payment confirmed: ${paymentResponse.id}, status: ${paymentResponse.status}');
         return paymentResponse.isSucceeded;
       },
-      failure: (error) {
+      error: (errorMessage) {
         state = state.copyWith(
           isProcessing: false,
-          error: error,
+          error: errorMessage,
           currentStep: 'failed',
         );
-        AppLogger.error('Payment confirmation failed: $error');
+        AppLogger.error('Payment confirmation failed: $errorMessage');
         return false;
       },
     );
@@ -117,7 +124,8 @@ class PaymentProcessingNotifier extends StateNotifier<PaymentProcessingState> {
       error: null,
     );
 
-    AppLogger.info('Processing refund for transaction: ${request.transactionId}');
+    AppLogger.info(
+        'Processing refund for transaction: ${request.transactionId}');
 
     final result = await _repository.processRefund(request);
 
@@ -131,13 +139,13 @@ class PaymentProcessingNotifier extends StateNotifier<PaymentProcessingState> {
         AppLogger.info('Refund processed: ${refundResponse.id}');
         return true;
       },
-      failure: (error) {
+      error: (errorMessage) {
         state = state.copyWith(
           isProcessing: false,
-          error: error,
+          error: errorMessage,
           currentStep: 'failed',
         );
-        AppLogger.error('Refund processing failed: $error');
+        AppLogger.error('Refund processing failed: $errorMessage');
         return false;
       },
     );
@@ -244,7 +252,9 @@ class PaymentProcessingNotifier extends StateNotifier<PaymentProcessingState> {
 }
 
 // Providers
-final paymentProcessingProvider = StateNotifierProvider<PaymentProcessingNotifier, PaymentProcessingState>((ref) {
+final paymentProcessingProvider =
+    StateNotifierProvider<PaymentProcessingNotifier, PaymentProcessingState>(
+        (ref) {
   final repository = ref.read(paymentRepositoryProvider);
   return PaymentProcessingNotifier(repository);
 });

@@ -1,7 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/network/api_client.dart';
 import '../../../core/utils/logger.dart';
 import '../data/models/bid_model.dart';
+import '../data/models/bid_request_models.dart';
 import '../data/repositories/bidding_repository.dart';
 
 // Bidding State
@@ -41,7 +43,8 @@ class BiddingNotifier extends StateNotifier<BiddingState> {
   final BiddingRepository _repository;
   final String auctionId;
 
-  BiddingNotifier(this._repository, this.auctionId) : super(const BiddingState()) {
+  BiddingNotifier(this._repository, this.auctionId)
+      : super(const BiddingState()) {
     loadBids();
   }
 
@@ -55,14 +58,14 @@ class BiddingNotifier extends StateNotifier<BiddingState> {
         bids: bids,
         lastBid: bids.isNotEmpty ? bids.first : null,
       );
-      
+
       AppLogger.info('Loaded ${bids.length} bids for auction $auctionId');
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
         error: 'Failed to load bids: ${e.toString()}',
       );
-      AppLogger.error('Failed to load bids for auction $auctionId', e);
+      AppLogger.error('Failed to load bids for auction $auctionId', error: e);
     }
   }
 
@@ -70,45 +73,76 @@ class BiddingNotifier extends StateNotifier<BiddingState> {
     state = state.copyWith(isLoading: true, error: null);
 
     try {
-      final bid = await _repository.placeBid(auctionId, amount);
-      
-      // Add the new bid to the list
-      final updatedBids = [bid, ...state.bids];
-      
-      state = state.copyWith(
-        isLoading: false,
-        bids: updatedBids,
-        lastBid: bid,
+      final request = PlaceBidRequest(auctionId: auctionId, amount: amount);
+      final result = await _repository.placeBid(request);
+
+      return result.when(
+        success: (bid) {
+          // Add the new bid to the list
+          final updatedBids = [bid, ...state.bids];
+
+          state = state.copyWith(
+            isLoading: false,
+            bids: updatedBids,
+            lastBid: bid,
+          );
+
+          AppLogger.userAction(
+              'Bid placed successfully: \$${amount.toStringAsFixed(2)} on auction $auctionId');
+          return true;
+        },
+        error: (errorMessage) {
+          state = state.copyWith(
+            isLoading: false,
+            error: errorMessage,
+          );
+          AppLogger.error('Failed to place bid on auction $auctionId');
+          return false;
+        },
       );
-      
-      AppLogger.userAction('Bid placed successfully: \$${amount.toStringAsFixed(2)} on auction $auctionId');
-      return true;
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
         error: e.toString(),
       );
-      AppLogger.error('Failed to place bid on auction $auctionId', e);
+      AppLogger.error('Failed to place bid on auction $auctionId', error: e);
       return false;
     }
   }
 
-  Future<bool> buyNow() async {
+  Future<bool> buyNow(
+      {String paymentMethodId = '', String? shippingAddress}) async {
     state = state.copyWith(isLoading: true, error: null);
 
     try {
-      await _repository.buyNow(auctionId);
-      
-      state = state.copyWith(isLoading: false);
-      
-      AppLogger.userAction('Buy now successful for auction $auctionId');
-      return true;
+      final request = BuyNowRequest(
+        auctionId: auctionId,
+        paymentMethodId: paymentMethodId,
+        shippingAddress: shippingAddress,
+      );
+      final result = await _repository.buyNow(request);
+
+      return result.when(
+        success: (_) {
+          state = state.copyWith(isLoading: false);
+          AppLogger.userAction('Buy now successful for auction $auctionId');
+          return true;
+        },
+        error: (errorMessage) {
+          state = state.copyWith(
+            isLoading: false,
+            error: errorMessage,
+          );
+          AppLogger.error('Failed to buy now for auction $auctionId');
+          return false;
+        },
+      );
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
         error: e.toString(),
       );
-      AppLogger.error('Failed to buy now for auction $auctionId', e);
+      AppLogger.error('Failed to buy now for auction $auctionId', error: e);
       return false;
     }
   }
@@ -124,10 +158,12 @@ class BiddingNotifier extends StateNotifier<BiddingState> {
 
 // Providers
 final biddingRepositoryProvider = Provider<BiddingRepository>((ref) {
-  return BiddingRepository();
+  final apiClient = ref.read(apiClientProvider);
+  return BiddingRepository(apiClient);
 });
 
-final biddingProvider = StateNotifierProvider.family<BiddingNotifier, BiddingState, String>(
+final biddingProvider =
+    StateNotifierProvider.family<BiddingNotifier, BiddingState, String>(
   (ref, auctionId) {
     final repository = ref.watch(biddingRepositoryProvider);
     return BiddingNotifier(repository, auctionId);
