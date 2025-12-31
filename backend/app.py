@@ -209,7 +209,7 @@ else:
          expose_headers=['Set-Cookie'],
          methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'])
 
-# Security Headers Middleware
+# Session cleanup to prevent connection leaks
 @app.teardown_appcontext
 def shutdown_session(exception=None):
     """Ensure database sessions are properly cleaned up after each request.
@@ -225,6 +225,7 @@ def shutdown_session(exception=None):
         pass  # Ignore errors during cleanup
 
 
+# Security Headers Middleware
 @app.after_request
 def add_security_headers(response):
     """Add comprehensive security headers to all responses"""
