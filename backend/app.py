@@ -76,25 +76,12 @@ app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 app.config['PERMANENT_SESSION_LIFETIME'] = 86400  # 24 hours
 # Database connection pooling (only for non-SQLite databases)
 if 'sqlite' not in app.config['SQLALCHEMY_DATABASE_URI'].lower():
-    # Connection pool settings - configurable via environment variables
-    # Render.com free tier PostgreSQL allows ~5-10 connections
-    # pool_size + max_overflow = maximum total connections
-    pool_size = int(os.getenv('DB_POOL_SIZE', '5'))
-    max_overflow = int(os.getenv('DB_MAX_OVERFLOW', '10'))
-    pool_timeout = int(os.getenv('DB_POOL_TIMEOUT', '30'))
-    pool_recycle = int(os.getenv('DB_POOL_RECYCLE', '1800'))  # 30 minutes
-
     app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
-        'pool_pre_ping': True,      # Verify connections before using (prevents stale connections)
-        'pool_recycle': pool_recycle,  # Recycle connections (prevents timeout issues)
-        'pool_size': pool_size,     # Persistent connections in the pool
-        'max_overflow': max_overflow,  # Additional connections beyond pool_size
-        'pool_timeout': pool_timeout,  # Seconds to wait for available connection
+        'pool_pre_ping': True,  # Verify connections before using
+        'pool_recycle': 3600,   # Recycle connections after 1 hour
+        'pool_size': 10,        # Connection pool size
+        'max_overflow': 20      # Max overflow connections
     }
-
-    if not is_production:
-        print(f"[DB Pool] size={pool_size}, max_overflow={max_overflow}, "
-              f"timeout={pool_timeout}s, recycle={pool_recycle}s")
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max request size
 
 # CSRF Protection Configuration
@@ -223,6 +210,21 @@ else:
          methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'])
 
 # Security Headers Middleware
+@app.teardown_appcontext
+def shutdown_session(exception=None):
+    """Ensure database sessions are properly cleaned up after each request.
+
+    This prevents connection leaks by returning connections to the pool.
+    Critical for avoiding 'QueuePool limit reached' errors.
+    """
+    try:
+        if exception:
+            db.session.rollback()
+        db.session.remove()
+    except Exception:
+        pass  # Ignore errors during cleanup
+
+
 @app.after_request
 def add_security_headers(response):
     """Add comprehensive security headers to all responses"""
