@@ -5389,6 +5389,54 @@ def debug_db_status():
         }), 500
 
 
+@app.route('/api/admin/run-migrations', methods=['POST', 'GET'])
+def run_migrations_endpoint():
+    """Run database migrations to add missing columns - safe to call multiple times"""
+    try:
+        results = []
+
+        # Add missing columns to User table
+        user_columns_to_add = {
+            'balance': 'FLOAT DEFAULT 0.0',
+            'fcm_token': 'VARCHAR(255)',
+            'profile_photo': 'VARCHAR(500)',
+            'first_name': 'VARCHAR(50)',
+            'last_name': 'VARCHAR(50)',
+            'bio': 'TEXT',
+            'company': 'VARCHAR(100)',
+            'website': 'VARCHAR(255)',
+            'city': 'VARCHAR(100)',
+            'country': 'VARCHAR(100)',
+            'postal_code': 'VARCHAR(20)',
+            'phone_verified': 'BOOLEAN DEFAULT FALSE',
+            'email_verified': 'BOOLEAN DEFAULT FALSE',
+            'is_active': 'BOOLEAN DEFAULT TRUE',
+            'last_login': 'TIMESTAMP',
+            'login_count': 'INTEGER DEFAULT 0'
+        }
+
+        for col_name, col_type in user_columns_to_add.items():
+            try:
+                with db.engine.connect() as conn:
+                    with conn.begin():
+                        # PostgreSQL syntax with IF NOT EXISTS
+                        conn.execute(text(f'ALTER TABLE "user" ADD COLUMN IF NOT EXISTS {col_name} {col_type}'))
+                results.append(f"User.{col_name}: OK")
+            except Exception as e:
+                if "already exists" in str(e).lower() or "duplicate" in str(e).lower():
+                    results.append(f"User.{col_name}: already exists")
+                else:
+                    results.append(f"User.{col_name}: ERROR - {str(e)}")
+
+        return jsonify({
+            'message': 'Migrations completed',
+            'results': results
+        }), 200
+
+    except Exception as e:
+        return jsonify({'error': f'Migration failed: {str(e)}'}), 500
+
+
 @app.route('/api/admin/init-database', methods=['POST', 'GET'])
 def init_database_endpoint():
     """Initialize database tables - useful for first deployment"""
