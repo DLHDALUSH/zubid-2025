@@ -1,6 +1,8 @@
 import 'package:hive/hive.dart';
 import 'package:json_annotation/json_annotation.dart';
 
+import '../../../../core/config/app_config.dart';
+
 part 'category_model.g.dart';
 
 @HiveType(typeId: 3)
@@ -67,6 +69,9 @@ class CategoryModel extends HiveObject {
 
   factory CategoryModel.fromJson(Map<String, dynamic> json) => _$CategoryModelFromJson(json);
   Map<String, dynamic> toJson() => _$CategoryModelToJson(this);
+
+  String get fullIconUrl => AppConfig.getFullImageUrl(iconUrl);
+  String get fullImageUrl => AppConfig.getFullImageUrl(imageUrl);
 
   // Computed properties
   bool get isParentCategory => parentId == null;

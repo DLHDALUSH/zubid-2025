@@ -157,8 +157,8 @@ def run_pre_model_migrations():
                     conn.execute(text("UPDATE category SET is_active = TRUE WHERE is_active IS NULL"))
                     conn.execute(text("UPDATE category SET sort_order = id WHERE sort_order IS NULL"))
                     conn.commit()
-                except:
-                    pass
+                except Exception as e:
+                    print(f"[MIGRATION] Optional category update failed: {e}")
 
                 print("[MIGRATION] Category table columns verified/updated")
     except Exception as e:
@@ -1041,7 +1041,8 @@ def resize_image(image_path, max_size=(1920, 1920), quality=85, is_featured=Fals
                     else:
                         try:
                             img.save(image_path, original_format, optimize=True)
-                        except Exception:
+                        except Exception as e:
+                            app.logger.warning(f"Failed to save as {original_format}, falling back to JPEG: {str(e)}")
                             img.save(image_path, 'JPEG', quality=featured_quality, optimize=True, progressive=True)
                 else:
                     # Regular images: standard quality
@@ -1055,7 +1056,8 @@ def resize_image(image_path, max_size=(1920, 1920), quality=85, is_featured=Fals
                     else:
                         try:
                             img.save(image_path, original_format, optimize=True)
-                        except Exception:
+                        except Exception as e:
+                            app.logger.warning(f"Failed to save as {original_format}, falling back to JPEG: {str(e)}")
                             img.save(image_path, 'JPEG', quality=quality, optimize=True)
             
             return True
@@ -2513,6 +2515,16 @@ def get_auctions():
         
         pagination = query.paginate(page=page, per_page=per_page, error_out=False)
         
+        # Check wishlisted status if user is logged in
+        current_user_id = session.get('user_id')
+        wishlisted_ids = set()
+        if current_user_id:
+            try:
+                wishlisted_items = Wishlist.query.filter_by(user_id=current_user_id).all()
+                wishlisted_ids = {item.auction_id for item in wishlisted_items}
+            except Exception as e:
+                app.logger.error(f"Error fetching wishlist: {str(e)}")
+        
         auctions = []
         for auction in pagination.items:
             # Ensure end_time is timezone-aware for calculation
@@ -2524,12 +2536,14 @@ def get_auctions():
             try:
                 if auction.bids:
                     unique_bidders = {bid.user_id for bid in auction.bids}
-            except Exception:
+            except Exception as e:
                 # If bids relationship fails to load, query directly
+                app.logger.debug(f"Bids relationship lazy load failed, querying directly: {str(e)}")
                 try:
                     bid_user_ids = db.session.query(Bid.user_id).filter_by(auction_id=auction.id).distinct().all()
                     unique_bidders = {bid[0] for bid in bid_user_ids}
-                except Exception:
+                except Exception as e2:
+                    app.logger.error(f"Direct bid query failed: {str(e2)}")
                     unique_bidders = set()
             
             # Return both old field names (for web) and new field names (for Android)
@@ -2546,7 +2560,7 @@ def get_auctions():
                 'categoryId': str(auction.category_id) if auction.category_id else '',
                 'sellerId': str(auction.seller_id),
                 'bidCount': len(unique_bidders),
-                'isWishlisted': False,  # TODO: Check if user has wishlisted
+                'isWishlisted': auction.id in wishlisted_ids,
                 'realPrice': auction.real_price,
                 'marketPrice': auction.market_price,
                 # Legacy field names (for web compatibility)
@@ -2570,7 +2584,8 @@ def get_auctions():
                 'featured_image_url': auction.featured_image_url,
                 'bid_count': len(unique_bidders),
                 'qr_code_url': auction.qr_code_url,
-                'video_url': auction.video_url
+                'video_url': auction.video_url,
+                'is_wishlisted': auction.id in wishlisted_ids
             })
         
         return jsonify({
@@ -2615,6 +2630,16 @@ def get_auction(auction_id):
         if auction.bids:
             unique_bidders = {bid.user_id for bid in auction.bids}
         
+        # Check if wishlisted by current user
+        is_wishlisted = False
+        current_user_id = session.get('user_id')
+        if current_user_id:
+            try:
+                wishlist_item = Wishlist.query.filter_by(user_id=current_user_id, auction_id=auction.id).first()
+                is_wishlisted = wishlist_item is not None
+            except Exception as e:
+                app.logger.error(f"Error checking wishlist: {str(e)}")
+        
         return jsonify({
             'id': auction.id,
             'item_name': auction.item_name,
@@ -2640,7 +2665,9 @@ def get_auction(auction_id):
             'bid_count': len(unique_bidders),  # Count unique bidders, not total bids
             'winner_id': auction.winner_id,
             'qr_code_url': auction.qr_code_url,
-            'video_url': auction.video_url
+            'video_url': auction.video_url,
+            'is_wishlisted': is_wishlisted,
+            'isWishlisted': is_wishlisted  # Android compatibility
         }), 200
     except Exception as e:
         db.session.rollback()
@@ -4001,7 +4028,8 @@ def init_db():
             with db.engine.connect() as conn:
                 result = conn.execute(text("SELECT COUNT(*) FROM category"))
                 cat_count = result.scalar()
-        except:
+        except Exception as e:
+            app.logger.warning(f"Could not count categories (table might not exist yet): {str(e)}")
             cat_count = 0
 
         if cat_count == 0:
@@ -5244,8 +5272,9 @@ def serve_static(filename):
     # Try to serve the file from frontend directory
     try:
         return send_from_directory(frontend_dir, filename)
-    except:
-        # If file not found, return 404
+    except Exception as e:
+        # If file not found or other error, return 404
+        app.logger.debug(f"Static file not found or error: {filename} - {str(e)}")
         return jsonify({'error': 'File not found'}), 404
 
 # ==========================================
@@ -5273,8 +5302,8 @@ def reset_database():
         # Delete password reset tokens
         try:
             PasswordResetToken.query.delete()
-        except:
-            pass
+        except Exception as e:
+            app.logger.warning(f"Could not delete password reset tokens: {str(e)}")
 
         db.session.commit()
 

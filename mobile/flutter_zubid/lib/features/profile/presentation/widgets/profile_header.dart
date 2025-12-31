@@ -145,9 +145,9 @@ class ProfileHeader extends StatelessWidget {
         ),
       ),
       child: ClipOval(
-        child: profile?.profilePhotoUrl != null
+        child: profile?.fullProfilePhotoUrl != null && profile!.fullProfilePhotoUrl.isNotEmpty
             ? CachedNetworkImage(
-                imageUrl: profile!.profilePhotoUrl!,
+                imageUrl: profile!.fullProfilePhotoUrl,
                 fit: BoxFit.cover,
                 placeholder: (context, url) => Container(
                   color: theme.colorScheme.surfaceContainerHighest,

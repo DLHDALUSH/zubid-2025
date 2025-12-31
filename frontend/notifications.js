@@ -56,23 +56,35 @@ const NotificationManager = {
     },
 
     async checkForNewNotifications() {
-        // Check if user is logged in
-        const token = localStorage.getItem('token');
-        if (!token) return;
-
+        // Check if user is logged in via global currentUser
+        if (!window.currentUser && typeof currentUser === 'undefined') return;
+        
         try {
-            // Fetch notifications from API (if available)
+            // Fetch notifications from API using session cookies
             const response = await fetch('/api/notifications', {
-                headers: { 'Authorization': `Bearer ${token}` }
+                headers: { 'Accept': 'application/json' }
             });
             
             if (response.ok) {
                 const data = await response.json();
-                if (data.notifications && data.notifications.length > 0) {
+                // API returns array directly
+                const notificationsList = Array.isArray(data) ? data : (data.notifications || []);
+                
+                if (notificationsList && notificationsList.length > 0) {
                     // Add new notifications
-                    data.notifications.forEach(n => {
-                        if (!this.notifications.find(existing => existing.id === n.id)) {
-                            this.notifications.unshift(n);
+                    notificationsList.forEach(n => {
+                        // Handle both backend field names (timestamp, isRead) and frontend expectations
+                        const formattedNotif = {
+                            id: n.id,
+                            title: n.title,
+                            message: n.message,
+                            time: n.timestamp ? new Date(n.timestamp).toISOString() : new Date().toISOString(),
+                            type: n.type || 'system',
+                            read: n.isRead !== undefined ? n.isRead : !!n.read
+                        };
+                        
+                        if (!this.notifications.find(existing => String(existing.id) === String(formattedNotif.id))) {
+                            this.notifications.unshift(formattedNotif);
                         }
                     });
                     this.saveNotifications();
@@ -82,7 +94,8 @@ const NotificationManager = {
                 }
             }
         } catch (error) {
-            // API not available, use local notifications
+            // API not available or error, fail silently
+            console.debug('Notification fetch failed:', error);
         }
     },
 
@@ -181,9 +194,25 @@ const NotificationManager = {
         return 'Just now';
     },
 
-    markAsRead(id) {
-        const n = this.notifications.find(n => n.id === id);
-        if (n && !n.read) { n.read = true; this.saveNotifications(); this.calculateUnreadCount(); this.updateBadge(); this.renderNotifications(); }
+    async markAsRead(id) {
+        const n = this.notifications.find(n => String(n.id) === String(id));
+        if (n && !n.read) {
+            n.read = true;
+            this.saveNotifications();
+            this.calculateUnreadCount();
+            this.updateBadge();
+            this.renderNotifications();
+            
+            // Try to notify backend
+            try {
+                await fetch(`/api/notifications/${id}/read`, {
+                    method: 'PUT',
+                    headers: { 'Accept': 'application/json' }
+                });
+            } catch (error) {
+                console.debug('Failed to sync notification read status to backend:', error);
+            }
+        }
     },
 
     markAllAsRead() {

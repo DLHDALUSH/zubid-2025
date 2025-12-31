@@ -1,6 +1,8 @@
 import 'package:hive/hive.dart';
 import 'package:json_annotation/json_annotation.dart';
 
+import '../../../../core/config/app_config.dart';
+
 part 'profile_model.g.dart';
 
 @HiveType(typeId: 1)
@@ -201,6 +203,8 @@ class ProfileModel {
       preferences: preferences ?? this.preferences,
     );
   }
+
+  String get fullProfilePhotoUrl => AppConfig.getFullImageUrl(profilePhotoUrl);
 
   // Computed properties
   String get displayName {

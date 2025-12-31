@@ -1,6 +1,7 @@
 import 'package:hive/hive.dart';
 import 'package:json_annotation/json_annotation.dart';
 
+import '../../../../core/config/app_config.dart';
 import '../../presentation/widgets/seller_info_card.dart';
 
 part 'auction_model.g.dart';
@@ -375,7 +376,7 @@ class AuctionModel extends HiveObject {
   bool get hasReserve => reservePrice != null && reservePrice! > 0;
   bool get reserveMet => hasReserve ? currentPrice >= reservePrice! : true;
 
-  String get primaryImageUrl => thumbnailUrl ?? (imageUrls.isNotEmpty ? imageUrls.first : '');
+  String get primaryImageUrl => AppConfig.getFullImageUrl(thumbnailUrl ?? (imageUrls.isNotEmpty ? imageUrls.first : ''));
   bool get hasImages => imageUrls.isNotEmpty;
 
   String get timeRemainingText {

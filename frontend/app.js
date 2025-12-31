@@ -212,6 +212,7 @@ async function checkAuth() {
         const response = await UserAPI.getProfile();
         console.log('[AUTH] Auth check successful, user:', response.username, 'role:', response.role);
         currentUser = response;
+        window.currentUser = response; // Make global for other scripts
         updateNavAuth(true);
         if (document.getElementById('userName')) {
             document.getElementById('userName').textContent = response.username;
@@ -253,12 +254,14 @@ async function checkAuth() {
             console.log('[AUTH] User not authenticated (401)');
             updateNavAuth(false);
             currentUser = null;
+            window.currentUser = null;
         } else {
             // Only log non-auth errors
             if (window.DEBUG_MODE) {
                 console.error('Auth check error:', error);
             }
             updateNavAuth(false);
+            window.currentUser = null;
         }
     }
 }
@@ -270,6 +273,8 @@ function updateNavAuth(isAuthenticated) {
 	const notificationsWrapper = document.getElementById('notificationsWrapper');
 	const userName = document.getElementById('userName');
 	const userAvatar = document.getElementById('userAvatar');
+	const myAccountDropdown = document.getElementById('myAccountDropdown');
+	const paymentsNavLink = document.getElementById('paymentsNavLink');
 
 	// Mobile-only nav items (inside the "More" dropdown)
 	const mobileLoginItem = document.getElementById('mobileLoginItem');
@@ -575,18 +580,6 @@ function removePhoto() {
 	    if (removeBtn) removeBtn.style.display = 'none';
 	}
 
-async function logout() {
-	try {
-		await UserAPI.logout();
-		currentUser = null;
-		updateNavAuth(false);
-		showToast('You have been signed out.', 'success');
-		window.location.href = 'index.html';
-	} catch (error) {
-		showToast('Sign out failed. Please try again.', 'error');
-	}
-}
-
 // Modal functions
 function showLogin() {
     document.getElementById('loginModal').style.display = 'block';
@@ -704,6 +697,7 @@ async function logout() {
 	try {
 		await UserAPI.logout();
 		currentUser = null;
+		window.currentUser = null;
 		updateNavAuth(false);
 		showToast('You have been signed out.', 'success');
 		window.location.href = 'index.html';

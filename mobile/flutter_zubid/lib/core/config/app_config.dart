@@ -13,15 +13,15 @@ class AppConfig {
   // API Configuration
   static String get baseUrl {
     // Use DuckDNS production server
-    return 'https://zubidauction.duckdns.org/api';
+    return 'https://zubidauction.duckdns.org';
 
     // For local development, uncomment the appropriate line below:
-    // return 'http://10.0.2.2:5000/api'; // Android emulator
-    // return 'http://localhost:5000/api'; // iOS simulator
-    // return 'http://192.168.1.x:5000/api'; // Physical device (replace with your IP)
+    // return 'http://10.0.2.2:5000'; // Android emulator
+    // return 'http://localhost:5000'; // iOS simulator
+    // return 'http://192.168.1.x:5000'; // Physical device (replace with your IP)
   }
 
-  static String get apiUrl => baseUrl;
+  static String get apiUrl => '$baseUrl/api';
 
   static String get websocketUrl {
     // Use DuckDNS production server
@@ -130,6 +130,16 @@ class AppConfig {
   static const String supportPhone = '+964-xxx-xxx-xxxx';
   static String get privacyPolicyUrl => '$baseUrl/privacy-policy';
   static String get termsOfServiceUrl => '$baseUrl/terms-of-service';
+
+  // Image Helper
+  static String getFullImageUrl(String? path) {
+    if (path == null || path.isEmpty) return '';
+    if (path.startsWith('http://') || path.startsWith('https://')) return path;
+    // Remove leading slash if exists
+    final cleanPath = path.startsWith('/') ? path.substring(1) : path;
+    // baseUrl in this class is root (https://zubidauction.duckdns.org)
+    return '$baseUrl/$cleanPath';
+  }
 
   // Firebase Configuration (if using Firebase)
   static const String firebaseProjectId = 'zubid-auction';

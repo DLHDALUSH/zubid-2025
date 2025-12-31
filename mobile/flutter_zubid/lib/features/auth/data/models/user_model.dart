@@ -1,6 +1,8 @@
 import 'package:hive/hive.dart';
 import 'package:json_annotation/json_annotation.dart';
 
+import '../../../../core/config/app_config.dart';
+
 part 'user_model.g.dart';
 
 @HiveType(typeId: 0)
@@ -116,6 +118,8 @@ class UserModel {
     this.timezone,
     this.preferences,
   });
+
+  String get fullProfilePhotoUrl => AppConfig.getFullImageUrl(profilePhotoUrl);
 
   /// Get full name
   String get fullName {
