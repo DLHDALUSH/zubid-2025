@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../data/models/auth_response_model.dart';
 import '../../data/models/login_request_model.dart';
 import '../../data/models/register_request_model.dart';
 import '../../data/models/forgot_password_request_model.dart';
@@ -50,10 +51,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   Future<bool> login(LoginRequestModel request) async {
     state = state.copyWith(isLoading: true, error: null);
-    
+
     try {
       final result = await _authRepository.login(request);
-      
+
       return result.when(
         success: (response) {
           state = state.copyWith(
@@ -87,10 +88,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   Future<bool> register(RegisterRequestModel request) async {
     state = state.copyWith(isLoading: true, error: null);
-    
+
     try {
       final result = await _authRepository.register(request);
-      
+
       return result.when(
         success: (response) {
           state = state.copyWith(
@@ -100,7 +101,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
             userId: response.user?.id.toString(),
             user: response.user,
           );
-          AppLogger.info('Registration successful for user: ${response.user?.email}');
+          AppLogger.info(
+              'Registration successful for user: ${response.user?.email}');
           return true;
         },
         error: (error) {
@@ -124,10 +126,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   Future<bool> forgotPassword(ForgotPasswordRequestModel request) async {
     state = state.copyWith(isLoading: true, error: null);
-    
+
     try {
       final result = await _authRepository.forgotPassword(request);
-      
+
       return result.when(
         success: (success) {
           state = state.copyWith(isLoading: false);
@@ -160,6 +162,27 @@ class AuthNotifier extends StateNotifier<AuthState> {
       AppLogger.info('User logged out successfully');
     } catch (e) {
       AppLogger.error('Logout failed', error: e);
+    }
+  }
+
+  /// Login with social auth (Google, Apple, etc.)
+  void loginWithSocialAuth(AuthResponseModel response) {
+    if (response.success && response.user != null) {
+      state = state.copyWith(
+        isLoading: false,
+        isAuthenticated: true,
+        token: response.token,
+        userId: response.user!.id.toString(),
+        user: response.user,
+      );
+      AppLogger.info(
+          'Social auth login successful for user: ${response.user!.email}');
+    } else {
+      state = state.copyWith(
+        isLoading: false,
+        error: response.message,
+      );
+      AppLogger.error('Social auth login failed: ${response.message}');
     }
   }
 

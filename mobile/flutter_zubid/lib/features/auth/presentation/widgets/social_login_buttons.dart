@@ -1,38 +1,42 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/utils/logger.dart';
+import '../../data/models/auth_response_model.dart';
 import '../../data/repositories/social_auth_repository.dart';
+import '../providers/auth_provider.dart';
 
-class SocialLoginButtons extends ConsumerWidget {
+class SocialLoginButtons extends ConsumerStatefulWidget {
   const SocialLoginButtons({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SocialLoginButtons> createState() => _SocialLoginButtonsState();
+}
+
+class _SocialLoginButtonsState extends ConsumerState<SocialLoginButtons> {
+  bool _isLoading = false;
+
+  @override
+  Widget build(BuildContext context) {
     return Column(
       children: [
         _SocialLoginButton(
           text: 'Continue with Google',
           icon: 'assets/icons/google.png',
-          onPressed: () => _handleSocialLogin(
-            context,
-            ref,
-            () => ref.read(socialAuthRepositoryProvider).signInWithGoogle(),
-            'Google',
-          ),
+          isLoading: _isLoading,
+          onPressed:
+              _isLoading ? null : () => _handleGoogleSignIn(context, ref),
         ),
         const SizedBox(height: 12),
         if (defaultTargetPlatform == TargetPlatform.iOS) ...[
           _SocialLoginButton(
             text: 'Continue with Apple',
             icon: 'assets/icons/apple.png',
-            onPressed: () => _handleSocialLogin(
-              context,
-              ref,
-              () => ref.read(socialAuthRepositoryProvider).signInWithApple(),
-              'Apple',
-            ),
+            isLoading: _isLoading,
+            onPressed:
+                _isLoading ? null : () => _handleAppleSignIn(context, ref),
           ),
           const SizedBox(height: 12),
         ],
@@ -40,39 +44,115 @@ class SocialLoginButtons extends ConsumerWidget {
     );
   }
 
-  Future<void> _handleSocialLogin(
-    BuildContext context,
-    WidgetRef ref,
-    Future<void> Function() signInMethod,
-    String providerName,
-  ) async {
+  Future<void> _handleGoogleSignIn(BuildContext context, WidgetRef ref) async {
+    setState(() => _isLoading = true);
+
     try {
-      AppLogger.userAction('$providerName login attempted');
-      await signInMethod();
-      // TODO: Handle the successful response from your repository
+      AppLogger.userAction('Google login attempted');
+
+      final result =
+          await ref.read(socialAuthRepositoryProvider).signInWithGoogle();
+
+      if (!mounted) return;
+
+      result.when(
+        success: (response) {
+          _handleSuccessfulLogin(context, ref, response, 'Google');
+        },
+        error: (error) {
+          _showErrorSnackBar(context, error);
+        },
+      );
     } catch (e) {
-      AppLogger.error('$providerName login error', error: e);
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('$providerName login failed. Please try again.'),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
+      AppLogger.error('Google login error', error: e);
+      if (mounted) {
+        _showErrorSnackBar(context, 'Google login failed. Please try again.');
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
       }
     }
+  }
+
+  Future<void> _handleAppleSignIn(BuildContext context, WidgetRef ref) async {
+    setState(() => _isLoading = true);
+
+    try {
+      AppLogger.userAction('Apple login attempted');
+
+      final result =
+          await ref.read(socialAuthRepositoryProvider).signInWithApple();
+
+      if (!mounted) return;
+
+      result.when(
+        success: (response) {
+          _handleSuccessfulLogin(context, ref, response, 'Apple');
+        },
+        error: (error) {
+          _showErrorSnackBar(context, error);
+        },
+      );
+    } catch (e) {
+      AppLogger.error('Apple login error', error: e);
+      if (mounted) {
+        _showErrorSnackBar(context, 'Apple login failed. Please try again.');
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  void _handleSuccessfulLogin(
+    BuildContext context,
+    WidgetRef ref,
+    AuthResponseModel response,
+    String providerName,
+  ) {
+    AppLogger.info(
+        '$providerName login successful for: ${response.user?.email}');
+
+    // Update auth state with the response
+    ref.read(authProvider.notifier).loginWithSocialAuth(response);
+
+    // Show success message
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Welcome, ${response.user?.displayName ?? 'User'}!'),
+        backgroundColor: Colors.green,
+        duration: const Duration(seconds: 2),
+      ),
+    );
+
+    // Navigate to home
+    context.go('/home');
+  }
+
+  void _showErrorSnackBar(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Theme.of(context).colorScheme.error,
+        duration: const Duration(seconds: 3),
+      ),
+    );
   }
 }
 
 class _SocialLoginButton extends StatelessWidget {
   final String text;
   final String icon;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
+  final bool isLoading;
 
   const _SocialLoginButton({
     required this.text,
     required this.icon,
     required this.onPressed,
+    this.isLoading = false,
   });
 
   @override
@@ -83,12 +163,20 @@ class _SocialLoginButton extends StatelessWidget {
       width: double.infinity,
       child: OutlinedButton.icon(
         onPressed: onPressed,
-        icon: _buildIcon(icon),
-        label: Text(text),
+        icon: isLoading
+            ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            : _buildIcon(icon),
+        label: Text(isLoading ? 'Please wait...' : text),
         style: OutlinedButton.styleFrom(
           padding: const EdgeInsets.symmetric(vertical: 16),
-          side: BorderSide(color: theme.colorScheme.outline.withOpacity(0.3)),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          side: BorderSide(
+              color: theme.colorScheme.outline.withValues(alpha: 0.3)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       ),
     );
