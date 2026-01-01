@@ -21,6 +21,9 @@ import qrcode
 import html
 import re
 
+# Import image storage service
+import image_storage
+
 # Load environment variables
 try:
     from dotenv import load_dotenv
@@ -1182,18 +1185,18 @@ def generate_qr_code(auction_id, item_name, item_price=None):
 @login_required
 @limiter.limit("20 per minute")  # Rate limit image uploads
 def upload_image():
-    """Upload and process auction images"""
+    """Upload and process auction images - supports Cloudinary for production"""
     try:
         if 'image' not in request.files:
             return jsonify({'error': 'No image file provided'}), 400
-        
+
         file = request.files['image']
         if file.filename == '':
             return jsonify({'error': 'No file selected'}), 400
-        
+
         if not allowed_file(file.filename):
             return jsonify({'error': 'Invalid file type. Allowed types: PNG, JPG, JPEG, GIF, WEBP'}), 400
-        
+
         # Check file size - handle both file-like objects and werkzeug FileStorage
         try:
             if hasattr(file, 'content_length') and file.content_length:
@@ -1206,54 +1209,54 @@ def upload_image():
         except (AttributeError, OSError, IOError) as e:
             app.logger.warning(f"Could not determine file size: {str(e)}")
             file_size = MAX_IMAGE_SIZE + 1  # Force validation to fail
-        
+
         if file_size > MAX_IMAGE_SIZE:
             return jsonify({'error': f'File too large. Maximum size: {MAX_IMAGE_SIZE / 1024 / 1024}MB'}), 400
-        
-        # Generate secure filename
+
+        # Check if filename is valid
         filename = secure_filename(file.filename)
-        if not filename:  # secure_filename returns empty string for invalid filenames
+        if not filename:
             return jsonify({'error': 'Invalid filename'}), 400
-        
-        timestamp = datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')
-        unique_filename = f"{timestamp}_{session['user_id']}_{filename}"
-        filepath = os.path.join(UPLOAD_FOLDER, unique_filename)
-        
-        # Additional security: prevent path traversal
-        if not os.path.abspath(filepath).startswith(os.path.abspath(UPLOAD_FOLDER)):
-            return jsonify({'error': 'Invalid file path'}), 400
-        
-        # Save file
-        file.save(filepath)
-        
-        # Check if this is a featured image upload (check request parameter)
+
+        # Check if this is a featured image upload
         is_featured = request.form.get('is_featured', 'false').lower() == 'true'
-        
-        # Resize if needed - use higher quality for featured images
-        if is_featured:
-            resize_result = resize_image(filepath, max_size=(1920, 600), quality=95, is_featured=True)
-        else:
-            resize_result = resize_image(filepath)
-        if not resize_result:
-            # If resize failed, delete the uploaded file
-            try:
-                os.remove(filepath)
-            except OSError:
-                pass
-            return jsonify({'error': 'Failed to process image'}), 500
-        
-        # Store relative URL in database (frontend will construct full URL)
-        # This allows the app to work across different domains/environments
-        image_url = f"/uploads/{unique_filename}"
-        
-        app.logger.info(f"Image uploaded: {unique_filename} by user {session['user_id']}")
-        
+
+        # Use image_storage service for upload (supports both local and Cloudinary)
+        upload_result = image_storage.upload_image(
+            file,
+            session['user_id'],
+            folder='auctions',
+            is_featured=is_featured
+        )
+
+        if not upload_result:
+            return jsonify({'error': 'Failed to upload image'}), 500
+
+        # If using local storage, also resize the image
+        if upload_result.get('storage') == 'local':
+            filepath = upload_result.get('filepath')
+            if filepath:
+                if is_featured:
+                    resize_result = resize_image(filepath, max_size=(1920, 600), quality=95, is_featured=True)
+                else:
+                    resize_result = resize_image(filepath)
+                if not resize_result:
+                    try:
+                        os.remove(filepath)
+                    except OSError:
+                        pass
+                    return jsonify({'error': 'Failed to process image'}), 500
+
+        image_url = upload_result['url']
+        app.logger.info(f"Image uploaded ({upload_result.get('storage', 'unknown')}): {image_url} by user {session['user_id']}")
+
         return jsonify({
             'message': 'Image uploaded successfully',
             'url': image_url,
-            'filename': unique_filename
+            'filename': upload_result.get('filename', ''),
+            'storage': upload_result.get('storage', 'local')
         }), 200
-        
+
     except Exception as e:
         app.logger.error(f"Error uploading image: {str(e)}")
         import traceback
@@ -2212,7 +2215,7 @@ def update_profile():
 @login_required
 @limiter.limit("10 per minute")
 def upload_profile_photo():
-    """Upload profile photo separately"""
+    """Upload profile photo - supports Cloudinary for production"""
     try:
         if 'photo' not in request.files:
             return jsonify({'error': 'No photo file provided'}), 400
@@ -2238,48 +2241,54 @@ def upload_profile_photo():
         if file_size > MAX_IMAGE_SIZE:
             return jsonify({'error': f'Photo too large. Maximum size: {MAX_IMAGE_SIZE / 1024 / 1024}MB'}), 400
 
-        # Generate secure filename
+        # Check if filename is valid
         filename = secure_filename(file.filename)
         if not filename:
             return jsonify({'error': 'Invalid filename'}), 400
-
-        timestamp = datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')
-        unique_filename = f"profile_{timestamp}_{session['user_id']}_{filename}"
-        filepath = os.path.join(UPLOAD_FOLDER, unique_filename)
-
-        # Security check
-        if not os.path.abspath(filepath).startswith(os.path.abspath(UPLOAD_FOLDER)):
-            return jsonify({'error': 'Invalid file path'}), 400
 
         # Get user and delete old photo
         user = User.query.get(session['user_id'])
         if user.profile_photo:
             try:
-                old_filename = user.profile_photo.split('/')[-1]
-                old_filepath = os.path.join(UPLOAD_FOLDER, old_filename)
-                if os.path.exists(old_filepath) and os.path.abspath(old_filepath).startswith(os.path.abspath(UPLOAD_FOLDER)):
-                    os.remove(old_filepath)
+                # Delete from appropriate storage (Cloudinary or local)
+                image_storage.delete_image(user.profile_photo)
             except Exception as e:
                 app.logger.warning(f"Could not delete old profile photo: {str(e)}")
 
-        # Save and resize
-        file.save(filepath)
-        resize_result = resize_image(filepath, max_size=(400, 400), quality=85)
-        if not resize_result:
-            try:
-                os.remove(filepath)
-            except OSError:
-                pass
-            return jsonify({'error': 'Failed to process photo'}), 500
+        # Use image_storage service for upload (supports both local and Cloudinary)
+        upload_result = image_storage.upload_image(
+            file,
+            session['user_id'],
+            folder='profiles',
+            is_profile=True
+        )
+
+        if not upload_result:
+            return jsonify({'error': 'Failed to upload photo'}), 500
+
+        # If using local storage, also resize the image
+        if upload_result.get('storage') == 'local':
+            filepath = upload_result.get('filepath')
+            if filepath:
+                resize_result = resize_image(filepath, max_size=(400, 400), quality=85)
+                if not resize_result:
+                    try:
+                        os.remove(filepath)
+                    except OSError:
+                        pass
+                    return jsonify({'error': 'Failed to process photo'}), 500
 
         # Update user
-        profile_photo_url = f"/uploads/{unique_filename}"
+        profile_photo_url = upload_result['url']
         user.profile_photo = profile_photo_url
         db.session.commit()
 
+        app.logger.info(f"Profile photo uploaded ({upload_result.get('storage', 'unknown')}): {profile_photo_url}")
+
         return jsonify({
             'message': 'Profile photo uploaded successfully',
-            'profile_photo': profile_photo_url
+            'profile_photo': profile_photo_url,
+            'storage': upload_result.get('storage', 'local')
         }), 200
 
     except Exception as e:

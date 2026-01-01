@@ -10,6 +10,7 @@ gunicorn==21.2.0
 Pillow>=10.2.0
 qrcode[pil]>=7.4.2
 psycopg[binary]==3.2.3
+cloudinary>=1.36.0
 
 # Optional payment gateway SDKs (only install if needed)
 # For Stripe: pip install stripe
