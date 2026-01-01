@@ -373,9 +373,21 @@ function getAuctionImageUrl(imageUrl) {
         return PLACEHOLDER_IMAGE;
     }
 
-    const urlString = String(imageUrl).trim();
+    let urlString = String(imageUrl).trim();
     if (urlString === '' || urlString === 'null' || urlString === 'undefined') {
         return PLACEHOLDER_IMAGE;
+    }
+
+    // Fix corrupted URLs: handle /https:// or /http:// (leading slash before protocol)
+    if (urlString.startsWith('/https://') || urlString.startsWith('/http://')) {
+        urlString = urlString.substring(1); // Remove leading slash
+    }
+
+    // Fix double URL: detect if URL contains another full URL (https://...https://)
+    const doubleHttpsMatch = urlString.match(/^(https?:\/\/[^/]+\/)(https?:\/\/.+)$/);
+    if (doubleHttpsMatch) {
+        console.warn('Detected double URL, extracting inner URL:', urlString.substring(0, 100));
+        urlString = doubleHttpsMatch[2]; // Use the inner (correct) URL
     }
 
     // Data URIs - return as-is if valid

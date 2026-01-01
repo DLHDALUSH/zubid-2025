@@ -1350,13 +1350,25 @@ function getImageUrl(imageUrl) {
     if (imageUrl === null || imageUrl === undefined || imageUrl === 'null' || imageUrl === 'undefined') {
         return SVG_PLACEHOLDER_SVG;
     }
-    
+
     // Convert to string and check if empty
-    const urlString = String(imageUrl).trim();
+    let urlString = String(imageUrl).trim();
     if (urlString === '' || urlString === 'null' || urlString === 'undefined') {
         return SVG_PLACEHOLDER_SVG;
     }
-    
+
+    // Fix corrupted URLs: handle /https:// or /http:// (leading slash before protocol)
+    if (urlString.startsWith('/https://') || urlString.startsWith('/http://')) {
+        urlString = urlString.substring(1); // Remove leading slash
+    }
+
+    // Fix double URL: detect if URL contains another full URL (https://...https://)
+    const doubleHttpsMatch = urlString.match(/^(https?:\/\/[^/]+\/)(https?:\/\/.+)$/);
+    if (doubleHttpsMatch) {
+        console.warn('Detected double URL, extracting inner URL:', urlString.substring(0, 100));
+        urlString = doubleHttpsMatch[2]; // Use the inner (correct) URL
+    }
+
     // Validate data:image URLs - check if they're complete
     if (urlString.startsWith('data:image/')) {
         // Check if data URI is complete (has base64 data after comma)
@@ -1368,7 +1380,7 @@ function getImageUrl(imageUrl) {
         }
         return urlString;
     }
-    
+
     // If already absolute URL (http/https), validate it
     if (urlString.startsWith('http://') || urlString.startsWith('https://')) {
         // Basic URL validation
@@ -1380,7 +1392,7 @@ function getImageUrl(imageUrl) {
             return SVG_PLACEHOLDER_SVG;
         }
     }
-    
+
     // Handle relative URLs - get base URL from window.API_BASE or origin
     const baseUrl = window.API_BASE || (window.location.hostname === 'localhost' ? 'http://localhost:5000' : window.location.origin);
     const relativeUrl = urlString.startsWith('/') ? urlString : '/' + urlString;
