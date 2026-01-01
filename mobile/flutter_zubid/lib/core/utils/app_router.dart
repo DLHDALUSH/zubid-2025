@@ -33,14 +33,19 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     initialLocation: AppRoutes.splash,
     debugLogDiagnostics: true,
     routes: [
+      // Splash Screen
       GoRoute(
         path: AppRoutes.splash,
         builder: (context, state) => const SplashScreen(),
       ),
+
+      // Onboarding
       GoRoute(
         path: AppRoutes.onboarding,
         builder: (context, state) => const OnboardingScreen(),
       ),
+
+      // Auth Routes
       GoRoute(
         path: AppRoutes.login,
         builder: (context, state) => const LoginScreen(),
@@ -53,51 +58,62 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.forgotPassword,
         builder: (context, state) => const ForgotPasswordScreen(),
       ),
+
+      // Main Home (with bottom nav)
       GoRoute(
         path: AppRoutes.home,
         builder: (context, state) => const MainLayout(),
       ),
+
+      // Auctions - flat routes for better navigation
       GoRoute(
         path: AppRoutes.auctions,
         builder: (context, state) => const AuctionListScreen(),
-        routes: [
-          GoRoute(
-            path: AppRoutes.auctionDetail,
-            builder: (context, state) {
-              final auctionId = state.pathParameters['id']!;
-              return AuctionDetailScreen(auctionId: auctionId);
-            },
-          ),
-          GoRoute(
-            path: AppRoutes.createAuction,
-            builder: (context, state) => const CreateAuctionScreen(),
-          ),
-        ],
       ),
+      // Auction Detail - separate top-level route
+      GoRoute(
+        path: '/auctions/detail/:id',
+        builder: (context, state) {
+          final auctionId = state.pathParameters['id']!;
+          return AuctionDetailScreen(auctionId: auctionId);
+        },
+      ),
+      // Create Auction - separate top-level route
+      GoRoute(
+        path: '/auctions/create',
+        builder: (context, state) => const CreateAuctionScreen(),
+      ),
+
+      // Profile Routes
       GoRoute(
         path: AppRoutes.profile,
         builder: (context, state) => const ProfileScreen(),
-        routes: [
-          GoRoute(
-            path: AppRoutes.editProfile,
-            builder: (context, state) => const EditProfileScreen(),
-          ),
-          GoRoute(
-            path: 'settings',
-            builder: (context, state) => const ErrorScreen(
-              error: 'Settings screen coming soon!',
-            ),
-          ),
-        ],
       ),
+      GoRoute(
+        path: '/profile/edit',
+        builder: (context, state) => const EditProfileScreen(),
+      ),
+      GoRoute(
+        path: '/profile/settings',
+        builder: (context, state) => const ErrorScreen(
+          error: 'Settings screen coming soon!',
+        ),
+      ),
+
+      // Bids
       GoRoute(
         path: AppRoutes.myBids,
         builder: (context, state) => const MyBidsScreen(),
       ),
+
+      // Orders
       GoRoute(
         path: AppRoutes.buyNow,
         builder: (context, state) {
-          final auction = state.extra as AuctionModel;
+          final auction = state.extra as AuctionModel?;
+          if (auction == null) {
+            return const ErrorScreen(error: 'No auction data provided');
+          }
           return BuyNowScreen(auction: auction);
         },
       ),
@@ -105,14 +121,20 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.orderConfirmation,
         builder: (context, state) => const OrderConfirmationScreen(),
       ),
+
+      // My Auctions
       GoRoute(
         path: AppRoutes.myAuctions,
         builder: (context, state) => const MyAuctionsScreen(),
       ),
+
+      // Watchlist
       GoRoute(
         path: AppRoutes.watchlist,
         builder: (context, state) => const WatchlistScreen(),
       ),
+
+      // Payments
       GoRoute(
         path: AppRoutes.paymentMethods,
         builder: (context, state) => const PaymentMethodsScreen(),
@@ -129,18 +151,25 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.addPaymentMethod,
         builder: (context, state) => const AddPaymentMethodScreen(),
       ),
+
+      // Notifications
       GoRoute(
         path: AppRoutes.notifications,
         builder: (context, state) => const NotificationsScreen(),
       ),
+
+      // Admin
       GoRoute(
         path: AppRoutes.adminDashboard,
         builder: (context, state) => const AdminDashboardScreen(),
       ),
+
+      // Settings & Help
       GoRoute(
         path: AppRoutes.settings,
-        builder: (context, state) =>
-            const ProfileScreen(), // TODO: Create settings screen
+        builder: (context, state) => const ErrorScreen(
+          error: 'Settings screen coming soon!',
+        ),
       ),
       GoRoute(
         path: AppRoutes.help,
@@ -154,6 +183,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           error: 'About screen coming soon!',
         ),
       ),
+
+      // Legal
       GoRoute(
         path: AppRoutes.termsOfService,
         builder: (context, state) => const TermsOfServiceScreen(),
@@ -164,7 +195,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
     ],
     errorBuilder: (context, state) => ErrorScreen(
-      error: state.error?.toString(),
+      error: state.error?.toString() ?? 'Page not found',
     ),
     redirect: (context, state) {
       // TODO: Add authentication and authorization logic here

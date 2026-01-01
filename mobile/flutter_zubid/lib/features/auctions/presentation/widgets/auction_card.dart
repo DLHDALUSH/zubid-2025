@@ -34,21 +34,23 @@ class AuctionCard extends StatelessWidget {
         onTap: onTap,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            // Image Section
-            Expanded(
-              flex: 3,
+            // Image Section - fixed height instead of Expanded
+            SizedBox(
+              height: 160,
               child: Stack(
                 children: [
                   _buildImage(context),
-                  
+
                   // Featured Badge
                   if (auction.isFeatured)
                     Positioned(
                       top: 8,
                       left: 8,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
                           color: Colors.orange,
                           borderRadius: BorderRadius.circular(4),
@@ -62,7 +64,7 @@ class AuctionCard extends StatelessWidget {
                         ),
                       ),
                     ),
-                  
+
                   // Watchlist Button
                   Positioned(
                     top: 8,
@@ -74,7 +76,9 @@ class AuctionCard extends StatelessWidget {
                       ),
                       child: IconButton(
                         icon: Icon(
-                          auction.isWatched ? Icons.favorite : Icons.favorite_border,
+                          auction.isWatched
+                              ? Icons.favorite
+                              : Icons.favorite_border,
                           color: auction.isWatched ? Colors.red : Colors.white,
                           size: 20,
                         ),
@@ -86,14 +90,15 @@ class AuctionCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                  
+
                   // Status Badge
                   if (!auction.isLive)
                     Positioned(
                       bottom: 8,
                       left: 8,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
                           color: _getStatusColor(),
                           borderRadius: BorderRadius.circular(4),
@@ -110,74 +115,73 @@ class AuctionCard extends StatelessWidget {
                 ],
               ),
             ),
-            
-            // Content Section
-            Expanded(
-              flex: 2,
-              child: Padding(
-                padding: const EdgeInsets.all(8),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Title
-                    Text(
-                      auction.title,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
+
+            // Content Section - fixed padding instead of Expanded
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Title
+                  Text(
+                    auction.title,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
                     ),
-                    
-                    const SizedBox(height: 4),
-                    
-                    // Current Price
-                    Text(
-                      '\$${auction.currentPrice.toStringAsFixed(2)}',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        color: theme.colorScheme.primary,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  // Current Price
+                  Text(
+                    '\$${auction.currentPrice.toStringAsFixed(2)}',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: theme.colorScheme.primary,
+                      fontWeight: FontWeight.bold,
                     ),
-                    
-                    const Spacer(),
-                    
-                    // Time and Bids
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.access_time,
-                          size: 12,
-                          color: theme.colorScheme.onSurface.withOpacity(0.6),
-                        ),
-                        const SizedBox(width: 4),
-                        Expanded(
-                          child: Text(
-                            auction.timeRemainingText,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurface.withOpacity(0.6),
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        
-                        Text(
-                          '${auction.bidCount} bids',
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  // Time and Bids
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.access_time,
+                        size: 12,
+                        color: theme.colorScheme.onSurface.withOpacity(0.6),
+                      ),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          auction.timeRemainingText,
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: theme.colorScheme.onSurface.withOpacity(0.6),
                           ),
+                          overflow: TextOverflow.ellipsis,
                         ),
-                      ],
-                    ),
-                  ],
-                ),
+                      ),
+                      Text(
+                        '${auction.bidCount} bids',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurface.withOpacity(0.6),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
 
             // Action Buttons (for My Auctions screen)
             if (showActions) ...[
-              const SizedBox(height: 12),
-              _buildActionButtons(theme),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+                child: _buildActionButtons(theme),
+              ),
             ],
           ],
         ),
@@ -219,8 +223,7 @@ class AuctionCard extends StatelessWidget {
             ),
           ),
 
-        if (onEndEarly != null && onDelete != null)
-          const SizedBox(width: 8),
+        if (onEndEarly != null && onDelete != null) const SizedBox(width: 8),
 
         // Delete Button
         if (onDelete != null)
