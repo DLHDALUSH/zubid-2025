@@ -3709,10 +3709,10 @@ def get_admin_stats():
     active_auctions = Auction.query.filter_by(status='active').count()
     ended_auctions = Auction.query.filter_by(status='ended').count()
     total_bids = Bid.query.count()
-    
+
     week_ago = datetime.now(timezone.utc) - timedelta(days=7)
     recent_users = User.query.filter(User.created_at >= week_ago).count()
-    
+
     return jsonify({
         'total_users': total_users,
         'total_admins': total_admins,
@@ -3721,6 +3721,206 @@ def get_admin_stats():
         'ended_auctions': ended_auctions,
         'total_bids': total_bids,
         'recent_users': recent_users
+    }), 200
+
+@app.route('/api/admin/scan-images', methods=['GET'])
+@admin_required
+def scan_corrupted_images():
+    """Scan database for corrupted/malformed image URLs"""
+    import re
+
+    def check_url(url, source_type, source_id, field_name):
+        """Check if URL is corrupted and return issue details"""
+        if not url:
+            return None
+
+        url = str(url).strip()
+        issues = []
+
+        # Check for truncated cloudinary domain
+        if 'cloudinar' in url.lower() and 'cloudinary' not in url.lower():
+            issues.append('Truncated Cloudinary domain')
+
+        # Check for double URL (https://...https://)
+        if re.search(r'https?://[^/]+/https?://', url):
+            issues.append('Double URL detected')
+
+        # Check for leading slash before protocol
+        if url.startswith('/http://') or url.startswith('/https://'):
+            issues.append('Leading slash before protocol')
+
+        # Check for very short URLs that should be longer
+        if url.startswith('http') and len(url) < 20:
+            issues.append('URL too short')
+
+        # Check for malformed URLs (missing TLD)
+        if url.startswith('http') and not re.search(r'https?://[^/]+\.[a-z]{2,}', url.lower()):
+            issues.append('Malformed domain (missing TLD)')
+
+        # Check for truncated file extensions
+        if re.search(r'\.(jp|pn|gi|we|sv)$', url.lower()):
+            issues.append('Truncated file extension')
+
+        if issues:
+            return {
+                'source_type': source_type,
+                'source_id': source_id,
+                'field': field_name,
+                'url': url[:200],  # Truncate for display
+                'issues': issues
+            }
+        return None
+
+    corrupted = []
+
+    # Scan Auction table
+    auctions = Auction.query.all()
+    for auction in auctions:
+        # Check featured_image_url
+        issue = check_url(auction.featured_image_url, 'auction', auction.id, 'featured_image_url')
+        if issue:
+            issue['item_name'] = auction.item_name
+            corrupted.append(issue)
+
+        # Check qr_code_url
+        issue = check_url(auction.qr_code_url, 'auction', auction.id, 'qr_code_url')
+        if issue:
+            issue['item_name'] = auction.item_name
+            corrupted.append(issue)
+
+    # Scan Image table
+    images = Image.query.all()
+    for img in images:
+        issue = check_url(img.url, 'image', img.id, 'url')
+        if issue:
+            issue['auction_id'] = img.auction_id
+            corrupted.append(issue)
+
+    # Scan User profile images
+    users = User.query.all()
+    for user in users:
+        issue = check_url(user.profile_image, 'user', user.id, 'profile_image')
+        if issue:
+            issue['username'] = user.username
+            corrupted.append(issue)
+
+    return jsonify({
+        'total_corrupted': len(corrupted),
+        'corrupted_urls': corrupted
+    }), 200
+
+@app.route('/api/admin/fix-image/<source_type>/<int:source_id>', methods=['PUT'])
+@admin_required
+def fix_corrupted_image(source_type, source_id):
+    """Fix or clear a corrupted image URL"""
+    try:
+        data = request.json or {}
+        new_url = data.get('new_url', '')  # Empty string to clear
+        field = data.get('field', 'url')
+
+        if source_type == 'auction':
+            auction = Auction.query.get(source_id)
+            if not auction:
+                return jsonify({'error': 'Auction not found'}), 404
+
+            if field == 'featured_image_url':
+                auction.featured_image_url = new_url if new_url else None
+            elif field == 'qr_code_url':
+                auction.qr_code_url = new_url if new_url else None
+            else:
+                return jsonify({'error': f'Unknown field: {field}'}), 400
+
+            db.session.commit()
+            return jsonify({'message': f'Auction {source_id} {field} updated'}), 200
+
+        elif source_type == 'image':
+            image = Image.query.get(source_id)
+            if not image:
+                return jsonify({'error': 'Image not found'}), 404
+
+            if new_url:
+                image.url = new_url
+                db.session.commit()
+                return jsonify({'message': f'Image {source_id} URL updated'}), 200
+            else:
+                # Delete the image record if clearing
+                db.session.delete(image)
+                db.session.commit()
+                return jsonify({'message': f'Image {source_id} deleted'}), 200
+
+        elif source_type == 'user':
+            user = User.query.get(source_id)
+            if not user:
+                return jsonify({'error': 'User not found'}), 404
+
+            user.profile_image = new_url if new_url else None
+            db.session.commit()
+            return jsonify({'message': f'User {source_id} profile image updated'}), 200
+
+        else:
+            return jsonify({'error': f'Unknown source type: {source_type}'}), 400
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/admin/delete-corrupted-images', methods=['POST'])
+@admin_required
+def delete_all_corrupted_images():
+    """Delete all corrupted image records (use with caution)"""
+    import re
+
+    def is_corrupted(url):
+        if not url:
+            return False
+        url = str(url).strip()
+
+        # Check for common corruption patterns
+        if 'cloudinar' in url.lower() and 'cloudinary' not in url.lower():
+            return True
+        if re.search(r'https?://[^/]+/https?://', url):
+            return True
+        if url.startswith('/http://') or url.startswith('/https://'):
+            return True
+        if url.startswith('http') and len(url) < 20:
+            return True
+        if re.search(r'\.(jp|pn|gi|we|sv)$', url.lower()):
+            return True
+        return False
+
+    deleted_count = 0
+    fixed_count = 0
+
+    # Fix/clear corrupted auction URLs
+    auctions = Auction.query.all()
+    for auction in auctions:
+        if is_corrupted(auction.featured_image_url):
+            auction.featured_image_url = None
+            fixed_count += 1
+        if is_corrupted(auction.qr_code_url):
+            auction.qr_code_url = None
+            fixed_count += 1
+
+    # Delete corrupted image records
+    images = Image.query.all()
+    for img in images:
+        if is_corrupted(img.url):
+            db.session.delete(img)
+            deleted_count += 1
+
+    # Clear corrupted user profile images
+    users = User.query.all()
+    for user in users:
+        if is_corrupted(user.profile_image):
+            user.profile_image = None
+            fixed_count += 1
+
+    db.session.commit()
+
+    return jsonify({
+        'message': 'Corrupted images cleaned up',
+        'deleted_image_records': deleted_count,
+        'cleared_url_fields': fixed_count
     }), 200
 
 @app.route('/api/admin/categories', methods=['POST'])
