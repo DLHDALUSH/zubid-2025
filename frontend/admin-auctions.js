@@ -229,19 +229,19 @@ function previewUploadedImages(event) {
     files.forEach((file, i) => {
         const imageIndex = startIndex + i;
         const reader = new FileReader();
-        
-        reader.onload = function(e) {
+
+        reader.onload = async function(e) {
             // Compress image to reduce size
             const img = new Image();
-            img.onload = function() {
+            img.onload = async function() {
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
-                
-                // Resize to max 1200x1200 while maintaining aspect ratio
+
+                // Resize to max 1920x1920 while maintaining aspect ratio (higher quality)
                 let width = img.width;
                 let height = img.height;
-                const maxSize = 1200;
-                
+                const maxSize = 1920;
+
                 if (width > maxSize || height > maxSize) {
                     if (width > height) {
                         height = (height / width) * maxSize;
@@ -251,13 +251,35 @@ function previewUploadedImages(event) {
                         height = maxSize;
                     }
                 }
-                
+
                 canvas.width = width;
                 canvas.height = height;
                 ctx.drawImage(img, 0, 0, width, height);
-                
-                // Convert to base64 with 80% quality
-                const compressedBase64 = canvas.toDataURL('image/jpeg', 0.8);
+
+                // Convert to base64 with 95% quality (higher quality)
+                const compressedBase64 = canvas.toDataURL('image/jpeg', 0.95);
+
+                // Upload to server instead of storing base64
+                let uploadedUrl = null;
+                try {
+                    // Convert base64 to blob for upload
+                    const response = await fetch(compressedBase64);
+                    const blob = await response.blob();
+                    const uploadFile = new File([blob], file.name || 'image.jpg', { type: 'image/jpeg' });
+
+                    // Upload using ImageAPI
+                    if (typeof ImageAPI !== 'undefined' && ImageAPI.upload) {
+                        const result = await ImageAPI.upload(uploadFile, false);
+                        if (result && result.url) {
+                            // Construct full URL
+                            const baseUrl = typeof API_BASE_URL !== 'undefined' ? API_BASE_URL.replace('/api', '') : '';
+                            uploadedUrl = result.url.startsWith('http') ? result.url : baseUrl + result.url;
+                            console.log('Image uploaded successfully:', uploadedUrl);
+                        }
+                    }
+                } catch (uploadError) {
+                    console.warn('Failed to upload image to server, using base64 fallback:', uploadError);
+                }
                 
                 // Create preview div
                 const previewDiv = document.createElement('div');
@@ -349,20 +371,27 @@ function previewUploadedImages(event) {
                 previewDiv.appendChild(removeBtn);
                 previewDiv.appendChild(moveControls);
                 previewContainer.appendChild(previewDiv);
-                
-                // Store image data
+
+                // Store image data - prefer uploaded URL over base64
                 const imageData = {
-                    base64: compressedBase64,
+                    url: uploadedUrl,  // Server URL (preferred)
+                    base64: uploadedUrl ? null : compressedBase64,  // Only use base64 as fallback
                     previewDiv: previewDiv,
                     index: imageIndex
                 };
                 uploadedImageData.push(imageData);
                 updateAdminImageNumbers();
+
+                // Show success indicator if uploaded
+                if (uploadedUrl) {
+                    previewDiv.style.border = '2px solid #22c55e';  // Green border for uploaded
+                    showToast('Image uploaded to server', 'success');
+                }
             };
-            
+
             img.src = e.target.result;
         };
-        
+
         reader.readAsDataURL(file);
     });
     
@@ -612,13 +641,13 @@ function updateAdminImageNumbers() {
 
 async function handleCreateAuction(event) {
     event.preventDefault();
-    
+
     const errorElement = document.getElementById('createFormError');
     errorElement.textContent = '';
-    
-    // Use uploaded images or default placeholder
-    const images = uploadedImageData.length > 0 
-        ? uploadedImageData.map(img => img.base64)
+
+    // Use uploaded images - prefer server URLs over base64
+    const images = uploadedImageData.length > 0
+        ? uploadedImageData.map(img => img.url || img.base64).filter(Boolean)
         : ['https://via.placeholder.com/600x400?text=No+Image+Available'];
     
         const marketPriceInput = document.getElementById('createMarketPrice').value;

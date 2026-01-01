@@ -67,12 +67,13 @@ html, body {
     --gradient-orange-blue-vibrant: linear-gradient(135deg, #0d47a1 0%, #1259c3 50%, #4285f4 100%);
     --gradient-sunset: linear-gradient(135deg, #1259c3 0%, #4285f4 100%);
 
-    /* Samsung One UI Text Colors */
-    --text-color: #1a1a1a;           /* Primary Text - Almost Black */
-    --text-secondary: #666666;       /* Secondary Text */
-    --text-light: #999999;           /* Light Text */
+    /* Samsung One UI Text Colors - High Contrast for Readability */
+    --text-color: #0a0a0a;           /* Primary Text - Near Black for max contrast */
+    --text-secondary: #3a3a3a;       /* Secondary Text - Darker for better readability */
+    --text-light: #6a6a6a;           /* Light Text - Still readable */
     --text-white: #ffffff;
     --text-inverse: #ffffff;
+    --text-muted: #8a8a8a;           /* Muted/hint text */
 
     /* Samsung One UI Background Colors */
     --bg-color: #f7f7f7;             /* Light Gray Background */
@@ -176,10 +177,11 @@ html, body {
     --bg-gradient-radial: radial-gradient(circle at center, rgba(18, 89, 195, 0.08) 0%, transparent 70%);
     --bg-gradient-mesh: linear-gradient(180deg, rgba(18, 89, 195, 0.05) 0%, transparent 100%);
 
-    /* Dark mode text colors */
-    --text-color: #ffffff;
-    --text-secondary: #b3b3b3;
-    --text-light: #808080;
+    /* Dark mode text colors - High Contrast for Readability */
+    --text-color: #f5f5f5;           /* Primary Text - Bright white */
+    --text-secondary: #d0d0d0;       /* Secondary Text - Brighter for better readability */
+    --text-light: #a0a0a0;           /* Light Text - Still readable in dark mode */
+    --text-muted: #8a8a8a;           /* Muted/hint text */
 
     /* Dark mode card style */
     --glass-bg: #1e1e1e;
@@ -262,20 +264,151 @@ html, body {
     color: var(--text-light);
 }
 
-/* Samsung One UI Body - Clean & Minimal */
+/* Samsung One UI Body - Clean & Minimal with Enhanced Typography */
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     color: var(--text-color);
     background: var(--bg-color);
     line-height: 1.6;
+    font-size: 16px;
+    font-weight: 400;
+    letter-spacing: 0.01em;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: 'kern' 1, 'liga' 1;
     min-height: 100vh;
     min-height: 100dvh;
     position: relative;
     overflow-x: hidden;
     width: 100%;
     max-width: 100%;
+}
+
+/* ============================================
+   ENHANCED TYPOGRAPHY - Better Readability
+   ============================================ */
+
+/* Headings - High contrast and clear hierarchy */
+h1, h2, h3, h4, h5, h6 {
+    color: var(--text-color);
+    font-weight: 600;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+    margin-bottom: 0.5em;
+}
+
+h1 { font-size: 2.25rem; font-weight: 700; }
+h2 { font-size: 1.875rem; font-weight: 700; }
+h3 { font-size: 1.5rem; font-weight: 600; }
+h4 { font-size: 1.25rem; font-weight: 600; }
+h5 { font-size: 1.125rem; font-weight: 600; }
+h6 { font-size: 1rem; font-weight: 600; }
+
+/* Paragraphs - Comfortable reading */
+p {
+    color: var(--text-color);
+    line-height: 1.7;
+    margin-bottom: 1em;
+}
+
+/* Secondary text styling */
+.text-secondary,
+.text-muted {
+    color: var(--text-secondary) !important;
+}
+
+/* Small text - Still readable */
+small,
+.text-small,
+.text-sm {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+/* Extra small text */
+.text-xs {
+    font-size: 0.75rem;
+    color: var(--text-light);
+    line-height: 1.4;
+}
+
+/* Strong emphasis */
+strong, b {
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+/* Labels and captions */
+label {
+    font-weight: 500;
+    color: var(--text-color);
+    font-size: 0.875rem;
+    letter-spacing: 0.02em;
+}
+
+/* ============================================
+   DARK MODE TYPOGRAPHY ENHANCEMENTS
+   ============================================ */
+[data-theme="dark"] h1,
+[data-theme="dark"] h2,
+[data-theme="dark"] h3,
+[data-theme="dark"] h4,
+[data-theme="dark"] h5,
+[data-theme="dark"] h6 {
+    color: var(--text-color);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="dark"] p,
+[data-theme="dark"] span,
+[data-theme="dark"] div {
+    color: inherit;
+}
+
+[data-theme="dark"] .text-secondary,
+[data-theme="dark"] .text-muted {
+    color: var(--text-secondary) !important;
+}
+
+/* Ensure auction card text is visible in dark mode */
+[data-theme="dark"] .auction-card .item-name,
+[data-theme="dark"] .auction-card h3,
+[data-theme="dark"] .auction-card .title {
+    color: var(--text-color);
+    font-weight: 600;
+}
+
+[data-theme="dark"] .auction-card .description,
+[data-theme="dark"] .auction-card p {
+    color: var(--text-secondary);
+}
+
+[data-theme="dark"] .auction-card .price,
+[data-theme="dark"] .auction-card .bid-amount {
+    color: var(--text-color);
+    font-weight: 700;
+}
+
+/* Input text visibility in dark mode */
+[data-theme="dark"] input,
+[data-theme="dark"] textarea,
+[data-theme="dark"] select {
+    color: var(--text-color);
+    background: var(--bg-light);
+}
+
+[data-theme="dark"] input::placeholder,
+[data-theme="dark"] textarea::placeholder {
+    color: var(--text-light);
+    opacity: 1;
+}
+
+/* Button text visibility */
+[data-theme="dark"] .btn,
+[data-theme="dark"] button {
+    font-weight: 500;
 }
 
 /* Remove animated background effects for cleaner Samsung look */
