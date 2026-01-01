@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, session, abort, send_from_directory
+from flask import Flask, request, jsonify, session, abort, send_from_directory, make_response
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from flask_wtf.csrf import CSRFProtect, generate_csrf
@@ -279,15 +279,17 @@ def add_security_headers(response):
     # Strict Transport Security (HTTPS only)
     if request.is_secure:
         response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
-    # Content Security Policy
+    # Content Security Policy - Updated for Google Fonts, YouTube, and external resources
     response.headers['Content-Security-Policy'] = (
         "default-src 'self'; "
-        "script-src 'self' 'unsafe-inline' 'unsafe-eval'; "
-        "style-src 'self' 'unsafe-inline'; "
-        "img-src 'self' data: blob: https:; "
-        "font-src 'self' https:; "
-        "connect-src 'self' https:; "
-        "frame-ancestors 'none';"
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:; "
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+        "img-src 'self' data: blob: https: http:; "
+        "font-src 'self' https://fonts.gstatic.com https://fonts.googleapis.com https:; "
+        "connect-src 'self' https: wss:; "
+        "frame-src 'self' https://www.youtube.com https://youtube.com https://www.youtube-nocookie.com https://player.vimeo.com; "
+        "media-src 'self' https: blob: data:; "
+        "frame-ancestors 'self';"
     )
     # Referrer Policy
     response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
@@ -5320,6 +5322,19 @@ def update_menu_item(menu_id):
 @app.route('/')
 def serve_index():
     return send_from_directory(frontend_dir, 'index.html')
+
+@app.route('/favicon.ico')
+def serve_favicon():
+    """Serve favicon - returns a simple SVG icon to prevent 404 errors"""
+    # Simple blue "Z" favicon for ZUBID
+    svg_favicon = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+        <rect width="32" height="32" rx="6" fill="#1259c3"/>
+        <text x="16" y="24" font-family="Arial,sans-serif" font-size="22" font-weight="bold" fill="white" text-anchor="middle">Z</text>
+    </svg>'''
+    response = make_response(svg_favicon)
+    response.headers['Content-Type'] = 'image/svg+xml'
+    response.headers['Cache-Control'] = 'public, max-age=86400'  # Cache for 1 day
+    return response
 
 @app.route('/<path:filename>')
 def serve_static(filename):
