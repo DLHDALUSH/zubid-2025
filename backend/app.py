@@ -3064,23 +3064,21 @@ def place_bid(auction_id):
         
         auction.current_bid = bid_amount
         
-        # BID EXTENSION: Add 2 minutes to end_time when a bid is placed
-        # Only extend if auction is still active and end_time is less than 2 minutes from now
+        # ANTI-SNIPE: Only extend if bid is placed in the last 2 minutes
+        # This prevents last-second bids from winning without giving others a chance to respond
         end_time = ensure_timezone_aware(auction.end_time)
         time_until_end = (end_time - now).total_seconds() if end_time else 0
-        
-        # Extend by 2 minutes (120 seconds) if bid is placed
-        # Limit extension to maximum 10 minutes from now (to prevent infinite extensions)
-        if time_until_end > 0:
-            new_end_time = end_time + timedelta(seconds=120)  # Add 2 minutes
-            max_end_time = now + timedelta(minutes=10)  # Maximum 10 minutes from now
-            
-            # Only extend if new end time is before the maximum
-            if new_end_time <= max_end_time:
-                auction.end_time = new_end_time
-            else:
-                # If extension would exceed max, set to max
-                auction.end_time = max_end_time
+
+        # Only extend if less than 2 minutes (120 seconds) remaining
+        # This prevents extending auctions that have plenty of time left
+        ANTI_SNIPE_THRESHOLD = 120  # 2 minutes
+        EXTENSION_AMOUNT = 120  # 2 minutes
+
+        time_extended = False
+        if 0 < time_until_end < ANTI_SNIPE_THRESHOLD:
+            new_end_time = now + timedelta(seconds=EXTENSION_AMOUNT)  # Set to 2 minutes from now
+            auction.end_time = new_end_time
+            time_extended = True
         
         # Check for auto-bids from other users that should counter-bid
         # Only check active auto-bids that can still bid higher
@@ -3125,7 +3123,7 @@ def place_bid(auction_id):
             'message': 'Bid placed successfully',
             'current_bid': auction.current_bid,
             'bid_id': bid.id,
-            'time_extended': True,
+            'time_extended': time_extended,
             'new_end_time': updated_end_time.isoformat(),
             'time_left': updated_time_left
         }), 201
