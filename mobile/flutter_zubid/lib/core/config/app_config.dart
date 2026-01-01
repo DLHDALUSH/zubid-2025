@@ -12,8 +12,8 @@ class AppConfig {
 
   // API Configuration
   static String get baseUrl {
-    // Use DuckDNS production server
-    return 'https://zubidauction.duckdns.org';
+    // Use Render.com production server
+    return 'https://zubid-2025.onrender.com';
 
     // For local development, uncomment the appropriate line below:
     // return 'http://10.0.2.2:5000'; // Android emulator
@@ -24,8 +24,8 @@ class AppConfig {
   static String get apiUrl => '$baseUrl/api';
 
   static String get websocketUrl {
-    // Use DuckDNS production server
-    return 'wss://zubidauction.duckdns.org';
+    // Use Render.com production server
+    return 'wss://zubid-2025.onrender.com';
 
     // For local development, uncomment the appropriate line below:
     // return 'ws://10.0.2.2:5000'; // Android emulator
@@ -137,7 +137,7 @@ class AppConfig {
     if (path.startsWith('http://') || path.startsWith('https://')) return path;
     // Remove leading slash if exists
     final cleanPath = path.startsWith('/') ? path.substring(1) : path;
-    // baseUrl in this class is root (https://zubidauction.duckdns.org)
+    // baseUrl in this class is root (https://zubid-2025.onrender.com)
     return '$baseUrl/$cleanPath';
   }
 
