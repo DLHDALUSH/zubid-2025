@@ -222,43 +222,67 @@ class AuctionModel extends HiveObject {
       id: _parseId(json['id']),
       title: json['title'] ?? json['item_name'] ?? '',
       description: json['description'] ?? '',
-      startingPrice: _parseDouble(json['starting_price'] ?? json['startingPrice'] ?? json['starting_bid']),
-      currentPrice: _parseDouble(json['current_price'] ?? json['currentPrice'] ?? json['current_bid']),
-      buyNowPrice: _parseDoubleNullable(json['buy_now_price'] ?? json['buyNowPrice']),
-      reservePrice: _parseDoubleNullable(json['reserve_price'] ?? json['reservePrice']),
-      startTime: _parseDateTime(json['start_time'] ?? json['startTime']) ?? DateTime.now(),
-      endTime: _parseDateTime(json['end_time'] ?? json['endTime']) ?? DateTime.now().add(const Duration(days: 7)),
+      startingPrice: _parseDouble(json['starting_price'] ??
+          json['startingPrice'] ??
+          json['starting_bid']),
+      currentPrice: _parseDouble(
+          json['current_price'] ?? json['currentPrice'] ?? json['current_bid']),
+      buyNowPrice:
+          _parseDoubleNullable(json['buy_now_price'] ?? json['buyNowPrice']),
+      reservePrice:
+          _parseDoubleNullable(json['reserve_price'] ?? json['reservePrice']),
+      startTime: _parseDateTime(json['start_time'] ?? json['startTime']) ??
+          DateTime.now(),
+      endTime: _parseDateTime(json['end_time'] ?? json['endTime']) ??
+          DateTime.now().add(const Duration(days: 7)),
       status: json['status'] ?? 'active',
       categoryId: _parseId(json['category_id'] ?? json['categoryId']),
       categoryName: json['category_name'] ?? json['categoryName'] ?? '',
       sellerId: _parseId(json['seller_id'] ?? json['sellerId']),
-      sellerUsername: json['seller_username'] ?? json['sellerUsername'] ?? json['seller_name'] ?? '',
-      sellerRating: _parseDoubleNullable(json['seller_rating'] ?? json['sellerRating']),
+      sellerUsername: json['seller_username'] ??
+          json['sellerUsername'] ??
+          json['seller_name'] ??
+          '',
+      sellerRating:
+          _parseDoubleNullable(json['seller_rating'] ?? json['sellerRating']),
       imageUrls: _parseImageUrls(json),
-      thumbnailUrl: json['thumbnail_url'] ?? json['thumbnailUrl'] ?? json['imageUrl'] ?? json['image_url'] ?? json['featured_image_url'],
+      thumbnailUrl: json['thumbnail_url'] ??
+          json['thumbnailUrl'] ??
+          json['imageUrl'] ??
+          json['image_url'] ??
+          json['featured_image_url'],
       bidCount: _parseInt(json['bid_count'] ?? json['bidCount'] ?? 0),
       viewCount: _parseInt(json['view_count'] ?? json['viewCount'] ?? 0),
       watchCount: _parseInt(json['watch_count'] ?? json['watchCount'] ?? 0),
-      isFeatured: _parseBool(json['is_featured'] ?? json['isFeatured'] ?? json['featured']),
-      isWatched: _parseBool(json['is_watched'] ?? json['isWatched'] ?? json['isWishlisted']),
-      shippingCost: _parseDoubleNullable(json['shipping_cost'] ?? json['shippingCost']),
+      isFeatured: _parseBool(
+          json['is_featured'] ?? json['isFeatured'] ?? json['featured']),
+      isWatched: _parseBool(
+          json['is_watched'] ?? json['isWatched'] ?? json['isWishlisted']),
+      shippingCost:
+          _parseDoubleNullable(json['shipping_cost'] ?? json['shippingCost']),
       shippingInfo: json['shipping_info'] ?? json['shippingInfo'],
       condition: json['condition'] ?? json['item_condition'],
       location: json['location'],
-      createdAt: _parseDateTime(json['created_at'] ?? json['createdAt']) ?? DateTime.now(),
-      updatedAt: _parseDateTime(json['updated_at'] ?? json['updatedAt']) ?? DateTime.now(),
+      createdAt: _parseDateTime(json['created_at'] ?? json['createdAt']) ??
+          DateTime.now(),
+      updatedAt: _parseDateTime(json['updated_at'] ?? json['updatedAt']) ??
+          DateTime.now(),
       sellerAvatar: json['seller_avatar'] ?? json['sellerAvatar'],
-      sellerVerified: _parseBoolNullable(json['seller_verified'] ?? json['sellerVerified']),
+      sellerVerified:
+          _parseBoolNullable(json['seller_verified'] ?? json['sellerVerified']),
       shippingMethod: json['shipping_method'] ?? json['shippingMethod'],
-      estimatedDelivery: json['estimated_delivery'] ?? json['estimatedDelivery'],
+      estimatedDelivery:
+          json['estimated_delivery'] ?? json['estimatedDelivery'],
       shipsFrom: json['ships_from'] ?? json['shipsFrom'],
       shipsTo: json['ships_to'] ?? json['shipsTo'],
       handlingTime: json['handling_time'] ?? json['handlingTime'],
       returnPolicy: json['return_policy'] ?? json['returnPolicy'],
       shippingNotes: json['shipping_notes'] ?? json['shippingNotes'],
       images: _parseImageUrlsNullable(json),
-      minimumBid: _parseDoubleNullable(json['minimum_bid'] ?? json['minimumBid']),
-      currentBid: _parseDoubleNullable(json['current_bid'] ?? json['currentBid']),
+      minimumBid:
+          _parseDoubleNullable(json['minimum_bid'] ?? json['minimumBid']),
+      currentBid:
+          _parseDoubleNullable(json['current_bid'] ?? json['currentBid']),
       hasSold: _parseBoolNullable(json['has_sold'] ?? json['hasSold']),
     );
   }
@@ -334,19 +358,33 @@ class AuctionModel extends HiveObject {
     // Try multiple possible field names for image URLs
     final imageUrls = <String>[];
 
-    // Check for image_urls array
+    // Check for image_urls array (string array)
     if (json['image_urls'] is List) {
       imageUrls.addAll((json['image_urls'] as List).map((e) => e.toString()));
     } else if (json['imageUrls'] is List) {
       imageUrls.addAll((json['imageUrls'] as List).map((e) => e.toString()));
     } else if (json['images'] is List) {
-      imageUrls.addAll((json['images'] as List).map((e) => e.toString()));
+      // Handle images as array of objects with 'url' field (backend format)
+      // or as array of strings
+      for (final img in json['images'] as List) {
+        if (img is Map) {
+          // Image object: {"id": 1, "url": "...", "is_primary": true}
+          final url = img['url'];
+          if (url != null && url.toString().isNotEmpty) {
+            imageUrls.add(url.toString());
+          }
+        } else if (img is String && img.isNotEmpty) {
+          // Direct string URL
+          imageUrls.add(img);
+        }
+      }
     }
 
     // If no array found, check for single image fields
     if (imageUrls.isEmpty) {
-      final singleImage = json['imageUrl'] ?? json['image_url'] ?? json['featured_image_url'];
-      if (singleImage != null) {
+      final singleImage =
+          json['imageUrl'] ?? json['image_url'] ?? json['featured_image_url'];
+      if (singleImage != null && singleImage.toString().isNotEmpty) {
         imageUrls.add(singleImage.toString());
       }
     }
@@ -369,20 +407,23 @@ class AuctionModel extends HiveObject {
   bool get hasStarted => DateTime.now().isAfter(startTime);
   bool get isLive => hasStarted && !hasEnded && isActive;
 
-  Duration get timeRemaining => hasEnded ? Duration.zero : endTime.difference(DateTime.now());
-  Duration get timeSinceStart => hasStarted ? DateTime.now().difference(startTime) : Duration.zero;
+  Duration get timeRemaining =>
+      hasEnded ? Duration.zero : endTime.difference(DateTime.now());
+  Duration get timeSinceStart =>
+      hasStarted ? DateTime.now().difference(startTime) : Duration.zero;
 
   bool get hasBuyNow => buyNowPrice != null && buyNowPrice! > 0;
   bool get hasReserve => reservePrice != null && reservePrice! > 0;
   bool get reserveMet => hasReserve ? currentPrice >= reservePrice! : true;
 
-  String get primaryImageUrl => AppConfig.getFullImageUrl(thumbnailUrl ?? (imageUrls.isNotEmpty ? imageUrls.first : ''));
+  String get primaryImageUrl => AppConfig.getFullImageUrl(
+      thumbnailUrl ?? (imageUrls.isNotEmpty ? imageUrls.first : ''));
   bool get hasImages => imageUrls.isNotEmpty;
 
   String get timeRemainingText {
     if (hasEnded) return 'Ended';
     if (!hasStarted) return 'Not started';
-    
+
     final duration = timeRemaining;
     if (duration.inDays > 0) {
       return '${duration.inDays}d ${duration.inHours % 24}h';
@@ -398,7 +439,11 @@ class AuctionModel extends HiveObject {
   String get statusText {
     switch (status.toLowerCase()) {
       case 'active':
-        return isLive ? 'Live' : hasEnded ? 'Ended' : 'Scheduled';
+        return isLive
+            ? 'Live'
+            : hasEnded
+                ? 'Ended'
+                : 'Scheduled';
       case 'ended':
         return 'Ended';
       case 'pending':
@@ -412,17 +457,17 @@ class AuctionModel extends HiveObject {
 
   // Seller information
   SellerInfo get seller => SellerInfo(
-    id: sellerId,
-    username: sellerUsername ?? 'Unknown',
-    avatar: sellerAvatar,
-    isVerified: sellerVerified ?? false,
-    rating: sellerRating,
-    reviewCount: 0, // TODO: Add review count field
-    memberSince: createdAt, // TODO: Add proper member since date
-    activeAuctions: 0, // TODO: Add active auctions count
-    totalSales: 0, // TODO: Add total sales count
-    successRate: 0.0, // TODO: Add success rate
-  );
+        id: sellerId,
+        username: sellerUsername ?? 'Unknown',
+        avatar: sellerAvatar,
+        isVerified: sellerVerified ?? false,
+        rating: sellerRating,
+        reviewCount: 0, // TODO: Add review count field
+        memberSince: createdAt, // TODO: Add proper member since date
+        activeAuctions: 0, // TODO: Add active auctions count
+        totalSales: 0, // TODO: Add total sales count
+        successRate: 0.0, // TODO: Add success rate
+      );
 
   // Shipping properties with defaults
   double get shippingCostValue => shippingCost ?? 0.0;
@@ -435,17 +480,20 @@ class AuctionModel extends HiveObject {
   String get shippingNotesValue => shippingNotes ?? '';
 
   // Formatted price getters
-  String get formattedBuyNowPrice => buyNowPrice != null ? '\$${buyNowPrice!.toStringAsFixed(2)}' : 'N/A';
-  String get formattedCurrentBid => currentBid != null ? '\$${currentBid!.toStringAsFixed(2)}' : 'N/A';
-  String get formattedMinimumBid => minimumBid != null ? '\$${minimumBid!.toStringAsFixed(2)}' : 'N/A';
+  String get formattedBuyNowPrice =>
+      buyNowPrice != null ? '\$${buyNowPrice!.toStringAsFixed(2)}' : 'N/A';
+  String get formattedCurrentBid =>
+      currentBid != null ? '\$${currentBid!.toStringAsFixed(2)}' : 'N/A';
+  String get formattedMinimumBid =>
+      minimumBid != null ? '\$${minimumBid!.toStringAsFixed(2)}' : 'N/A';
 
   // Shipping object for compatibility
   ShippingInfo get shipping => ShippingInfo(
-    hasShippingCost: shippingCost != null && shippingCost! > 0,
-    shippingCost: shippingCost ?? 0.0,
-    hasReturnPolicy: returnPolicy != null && returnPolicy!.isNotEmpty,
-    returnPolicy: returnPolicy ?? '',
-  );
+        hasShippingCost: shippingCost != null && shippingCost! > 0,
+        shippingCost: shippingCost ?? 0.0,
+        hasReturnPolicy: returnPolicy != null && returnPolicy!.isNotEmpty,
+        returnPolicy: returnPolicy ?? '',
+      );
 
   AuctionModel copyWith({
     int? id,

@@ -7,6 +7,7 @@ from flask_limiter.util import get_remote_address
 from flask_migrate import Migrate
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
+from werkzeug.exceptions import HTTPException
 from datetime import datetime, timedelta, date, timezone
 from functools import wraps, lru_cache
 from sqlalchemy import func, text, Index
@@ -1264,17 +1265,30 @@ def uploaded_file(filename):
     """Serve uploaded images and videos"""
     try:
         # Security: ensure filename is safe
-        filename = secure_filename(filename)
-        filepath = os.path.join(UPLOAD_FOLDER, filename)
-        
-        # Additional security: prevent path traversal
-        if not os.path.exists(filepath) or not os.path.abspath(filepath).startswith(os.path.abspath(UPLOAD_FOLDER)):
+        safe_filename = secure_filename(filename)
+        if not safe_filename:
+            app.logger.warning(f"Invalid filename requested: {filename}")
             abort(404)
-        
+
+        filepath = os.path.join(UPLOAD_FOLDER, safe_filename)
+
+        # Additional security: prevent path traversal
+        abs_filepath = os.path.abspath(filepath)
+        abs_upload_folder = os.path.abspath(UPLOAD_FOLDER)
+
+        if not abs_filepath.startswith(abs_upload_folder):
+            app.logger.warning(f"Path traversal attempt: {filename}")
+            abort(404)
+
+        # Check if file exists
+        if not os.path.exists(filepath):
+            app.logger.warning(f"File not found: {safe_filename} (requested: {filename})")
+            abort(404)
+
         # Determine content type based on file extension
-        file_ext = filename.rsplit('.', 1)[1].lower() if '.' in filename else ''
+        file_ext = safe_filename.rsplit('.', 1)[1].lower() if '.' in safe_filename else ''
         content_type = None
-        
+
         if file_ext in ALLOWED_EXTENSIONS:
             # Image files
             content_type_map = {
@@ -1297,14 +1311,17 @@ def uploaded_file(filename):
                 'm4v': 'video/mp4'
             }
             content_type = content_type_map.get(file_ext, 'video/mp4')
-        
+
         if content_type:
-            return send_from_directory(UPLOAD_FOLDER, filename, mimetype=content_type)
+            return send_from_directory(UPLOAD_FOLDER, safe_filename, mimetype=content_type)
         else:
-            return send_from_directory(UPLOAD_FOLDER, filename)
+            return send_from_directory(UPLOAD_FOLDER, safe_filename)
+    except HTTPException:
+        # Re-raise HTTP exceptions (like abort(404))
+        raise
     except Exception as e:
-        app.logger.error(f"Error serving file: {str(e)}")
-        abort(500)
+        app.logger.error(f"Error serving file {filename}: {str(e)}")
+        abort(404)  # Return 404 instead of 500 for any unexpected errors
 
 # User Management APIs
 @app.route('/api/register', methods=['POST'])

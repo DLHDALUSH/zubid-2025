@@ -32,9 +32,22 @@ class BiddingRepository {
     try {
       AppLogger.info('Placing bid of \$${request.amount.toStringAsFixed(2)} on auction ${request.auctionId}');
 
+      // Backend expects just 'amount' field, not the full request object
+      final data = <String, dynamic>{
+        'amount': request.amount,
+      };
+
+      // Add optional auto-bid fields if present
+      if (request.isAutoBid == true) {
+        data['auto_bid'] = true;
+        if (request.maxBidAmount != null) {
+          data['auto_bid_amount'] = request.maxBidAmount;
+        }
+      }
+
       final result = await _apiClient.post(
         '/auctions/${request.auctionId}/bids',
-        data: request.toJson(),
+        data: data,
       );
 
       if (result.statusCode == 200 || result.statusCode == 201) {
@@ -42,11 +55,17 @@ class BiddingRepository {
         AppLogger.info('Successfully placed bid: ${bid.id}');
         return ApiResult.success(bid);
       } else {
-        return const ApiResult.error('Failed to place bid');
+        final errorMsg = result.data['error'] ?? 'Failed to place bid';
+        return ApiResult.error(errorMsg);
       }
     } catch (e) {
       AppLogger.error('Error placing bid on auction ${request.auctionId}', error: e);
-      return ApiResult.error('Network error: ${e.toString()}');
+      // Extract error message from DioException if possible
+      String errorMessage = 'Network error';
+      if (e.toString().contains('error')) {
+        errorMessage = e.toString();
+      }
+      return ApiResult.error(errorMessage);
     }
   }
 

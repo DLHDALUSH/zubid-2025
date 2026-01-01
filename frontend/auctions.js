@@ -416,8 +416,8 @@ function createAuctionCard(auction) {
         return div.innerHTML;
     };
     
-    // Get image URL
-    const imageUrl = getAuctionImageUrl(auction.image_url);
+    // Get image URL - check both camelCase (API) and snake_case formats
+    const imageUrl = getAuctionImageUrl(auction.imageUrl || auction.image_url);
 
     return `
         <div class="auction-card ${isEndingSoon ? 'ending-soon' : ''}"
@@ -477,8 +477,8 @@ function createAuctionListItem(auction) {
         return div.innerHTML;
     };
     
-    // Get image URL
-    const imageUrl = getAuctionImageUrl(auction.image_url);
+    // Get image URL - check both camelCase (API) and snake_case formats
+    const imageUrl = getAuctionImageUrl(auction.imageUrl || auction.image_url);
 
     return `
         <div class="auction-list-item" onclick="window.location.href='auction-detail.html?id=${auction.id}'">
