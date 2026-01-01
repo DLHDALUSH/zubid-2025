@@ -80,14 +80,38 @@ function convertImageUrl(imageUrl) {
         urlString = doubleHttpsMatch[2]; // Use the inner (correct) URL
     }
 
+    // Detect corrupted/truncated URLs and return placeholder
+    if (urlString.includes('cloudinar') && !urlString.includes('cloudinary')) {
+        console.warn('Corrupted Cloudinary URL detected:', urlString.substring(0, 100));
+        return SVG_PLACEHOLDER;
+    }
+    if (urlString.startsWith('https://res.') && !urlString.includes('.com/') && !urlString.includes('.net/') && !urlString.includes('.org/')) {
+        console.warn('Malformed URL detected (missing TLD):', urlString.substring(0, 100));
+        return SVG_PLACEHOLDER;
+    }
+    if (/\.(jp|pn|gi|we|sv|bm)$/i.test(urlString)) {
+        console.warn('Truncated file extension detected:', urlString.substring(0, 100));
+        return SVG_PLACEHOLDER;
+    }
+
     // Data URIs - return as-is (no conversion to blob needed)
     if (urlString.startsWith('data:image/')) {
         return urlString;
     }
 
-    // Absolute URLs - return as-is
+    // Absolute URLs - validate and return
     if (urlString.startsWith('http://') || urlString.startsWith('https://')) {
-        return urlString;
+        try {
+            const parsedUrl = new URL(urlString);
+            if (!parsedUrl.hostname.includes('.') || parsedUrl.hostname.length < 4) {
+                console.warn('Invalid domain in URL:', urlString.substring(0, 100));
+                return SVG_PLACEHOLDER;
+            }
+            return urlString;
+        } catch (e) {
+            console.warn('Invalid URL:', urlString);
+            return SVG_PLACEHOLDER;
+        }
     }
 
     // Relative URLs - construct full URL

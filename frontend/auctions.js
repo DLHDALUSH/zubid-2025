@@ -390,14 +390,38 @@ function getAuctionImageUrl(imageUrl) {
         urlString = doubleHttpsMatch[2]; // Use the inner (correct) URL
     }
 
+    // Detect corrupted/truncated URLs and return placeholder
+    if (urlString.includes('cloudinar') && !urlString.includes('cloudinary')) {
+        console.warn('Corrupted Cloudinary URL detected:', urlString.substring(0, 100));
+        return PLACEHOLDER_IMAGE;
+    }
+    if (urlString.startsWith('https://res.') && !urlString.includes('.com/') && !urlString.includes('.net/') && !urlString.includes('.org/')) {
+        console.warn('Malformed URL detected (missing TLD):', urlString.substring(0, 100));
+        return PLACEHOLDER_IMAGE;
+    }
+    if (/\.(jp|pn|gi|we|sv|bm)$/i.test(urlString)) {
+        console.warn('Truncated file extension detected:', urlString.substring(0, 100));
+        return PLACEHOLDER_IMAGE;
+    }
+
     // Data URIs - return as-is if valid
     if (urlString.startsWith('data:image/')) {
         return urlString;
     }
 
-    // HTTP URLs - return as-is
+    // HTTP URLs - validate and return
     if (urlString.startsWith('http://') || urlString.startsWith('https://')) {
-        return urlString;
+        try {
+            const parsedUrl = new URL(urlString);
+            if (!parsedUrl.hostname.includes('.') || parsedUrl.hostname.length < 4) {
+                console.warn('Invalid domain in URL:', urlString.substring(0, 100));
+                return PLACEHOLDER_IMAGE;
+            }
+            return urlString;
+        } catch (e) {
+            console.warn('Invalid URL:', urlString);
+            return PLACEHOLDER_IMAGE;
+        }
     }
 
     // Relative URLs - prepend base URL (use global API_BASE from api.js)

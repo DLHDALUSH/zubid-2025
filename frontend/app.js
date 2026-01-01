@@ -1369,6 +1369,25 @@ function getImageUrl(imageUrl) {
         urlString = doubleHttpsMatch[2]; // Use the inner (correct) URL
     }
 
+    // Detect corrupted/truncated URLs and return placeholder
+    // Check for truncated cloudinary domain (cloudinar instead of cloudinary)
+    if (urlString.includes('cloudinar') && !urlString.includes('cloudinary')) {
+        console.warn('Corrupted Cloudinary URL detected:', urlString.substring(0, 100));
+        return SVG_PLACEHOLDER_SVG;
+    }
+
+    // Check for URLs that look like they have protocol but are malformed (no proper TLD)
+    if (urlString.startsWith('https://res.') && !urlString.includes('.com/') && !urlString.includes('.net/') && !urlString.includes('.org/')) {
+        console.warn('Malformed URL detected (missing TLD):', urlString.substring(0, 100));
+        return SVG_PLACEHOLDER_SVG;
+    }
+
+    // Check for truncated file extensions
+    if (/\.(jp|pn|gi|we|sv|bm)$/i.test(urlString)) {
+        console.warn('Truncated file extension detected:', urlString.substring(0, 100));
+        return SVG_PLACEHOLDER_SVG;
+    }
+
     // Validate data:image URLs - check if they're complete
     if (urlString.startsWith('data:image/')) {
         // Check if data URI is complete (has base64 data after comma)
@@ -1385,7 +1404,12 @@ function getImageUrl(imageUrl) {
     if (urlString.startsWith('http://') || urlString.startsWith('https://')) {
         // Basic URL validation
         try {
-            new URL(urlString);
+            const parsedUrl = new URL(urlString);
+            // Additional check: domain must have at least one dot and proper TLD
+            if (!parsedUrl.hostname.includes('.') || parsedUrl.hostname.length < 4) {
+                console.warn('Invalid domain in URL:', urlString.substring(0, 100));
+                return SVG_PLACEHOLDER_SVG;
+            }
             return urlString;
         } catch (e) {
             console.warn('Invalid URL:', urlString);
