@@ -1,7 +1,13 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
+
+import '../../../../core/config/app_config.dart';
+import '../../../../core/widgets/smart_image.dart';
 
 class AuctionImageGallery extends StatefulWidget {
   final List<String> images;
@@ -54,7 +60,7 @@ class _AuctionImageGalleryState extends State<AuctionImageGallery> {
             ),
           ),
         ),
-        
+
         // Image Counter
         if (widget.images.length > 1)
           Positioned(
@@ -76,7 +82,7 @@ class _AuctionImageGalleryState extends State<AuctionImageGallery> {
               ),
             ),
           ),
-        
+
         // Navigation Arrows
         if (widget.images.length > 1) ...[
           // Previous Button
@@ -103,7 +109,7 @@ class _AuctionImageGalleryState extends State<AuctionImageGallery> {
                 ),
               ),
             ),
-          
+
           // Next Button
           if (_currentIndex < widget.images.length - 1)
             Positioned(
@@ -129,7 +135,7 @@ class _AuctionImageGalleryState extends State<AuctionImageGallery> {
               ),
             ),
         ],
-        
+
         // Thumbnail Strip
         if (widget.images.length > 1)
           Positioned(
@@ -143,18 +149,12 @@ class _AuctionImageGalleryState extends State<AuctionImageGallery> {
   }
 
   Widget _buildImage(String imageUrl) {
-    return CachedNetworkImage(
+    return SmartImage(
       imageUrl: imageUrl,
       fit: BoxFit.cover,
       width: double.infinity,
       height: double.infinity,
-      placeholder: (context, url) => Container(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        child: const Center(
-          child: CircularProgressIndicator(),
-        ),
-      ),
-      errorWidget: (context, url, error) => _buildPlaceholder(),
+      errorWidget: _buildPlaceholder(),
     );
   }
 
@@ -193,7 +193,7 @@ class _AuctionImageGalleryState extends State<AuctionImageGallery> {
         itemCount: widget.images.length,
         itemBuilder: (context, index) {
           final isSelected = index == _currentIndex;
-          
+
           return GestureDetector(
             onTap: () {
               _pageController.animateToPage(
@@ -213,21 +213,13 @@ class _AuctionImageGalleryState extends State<AuctionImageGallery> {
                   width: 2,
                 ),
               ),
-              child: ClipRRect(
+              child: SmartImage(
+                imageUrl: widget.images[index],
+                fit: BoxFit.cover,
                 borderRadius: BorderRadius.circular(6),
-                child: CachedNetworkImage(
-                  imageUrl: widget.images[index],
-                  fit: BoxFit.cover,
-                  placeholder: (context, url) => Container(
-                    color: Colors.grey.withOpacity(0.3),
-                    child: const Center(
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                  ),
-                  errorWidget: (context, url, error) => Container(
-                    color: Colors.grey.withOpacity(0.3),
-                    child: const Icon(Icons.image_outlined, size: 24),
-                  ),
+                errorWidget: Container(
+                  color: Colors.grey.withValues(alpha: 0.3),
+                  child: const Icon(Icons.image_outlined, size: 24),
                 ),
               ),
             ),
@@ -276,8 +268,9 @@ class FullScreenImageGallery extends StatelessWidget {
         child: PhotoViewGallery.builder(
           scrollPhysics: const BouncingScrollPhysics(),
           builder: (BuildContext context, int index) {
+            final imageUrl = AppConfig.getFullImageUrl(images[index]);
             return PhotoViewGalleryPageOptions(
-              imageProvider: CachedNetworkImageProvider(images[index]),
+              imageProvider: _getImageProvider(imageUrl),
               initialScale: PhotoViewComputedScale.contained,
               minScale: PhotoViewComputedScale.contained * 0.8,
               maxScale: PhotoViewComputedScale.covered * 2,
@@ -291,7 +284,8 @@ class FullScreenImageGallery extends StatelessWidget {
               child: CircularProgressIndicator(
                 value: event == null
                     ? 0
-                    : event.cumulativeBytesLoaded / (event.expectedTotalBytes ?? 1),
+                    : event.cumulativeBytesLoaded /
+                        (event.expectedTotalBytes ?? 1),
                 valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
               ),
             ),
@@ -300,5 +294,23 @@ class FullScreenImageGallery extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  /// Get the appropriate ImageProvider based on the image URL type
+  ImageProvider _getImageProvider(String imageUrl) {
+    if (AppConfig.isDataUri(imageUrl)) {
+      // For data URIs, decode and use MemoryImage
+      try {
+        final parts = imageUrl.split(',');
+        if (parts.length == 2) {
+          final Uint8List bytes = base64Decode(parts[1]);
+          return MemoryImage(bytes);
+        }
+      } catch (e) {
+        // Fall back to network image provider if decoding fails
+      }
+    }
+    // For regular URLs, use CachedNetworkImageProvider
+    return CachedNetworkImageProvider(imageUrl);
   }
 }

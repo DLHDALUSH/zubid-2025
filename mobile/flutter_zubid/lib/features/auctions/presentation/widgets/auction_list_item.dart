@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 
+import '../../../../core/widgets/smart_image.dart';
 import '../../data/models/auction_model.dart';
 
 class AuctionListItem extends StatelessWidget {
@@ -40,9 +40,9 @@ class AuctionListItem extends StatelessWidget {
                 clipBehavior: Clip.antiAlias,
                 child: _buildImage(context),
               ),
-              
+
               const SizedBox(width: 12),
-              
+
               // Content
               Expanded(
                 child: Column(
@@ -64,7 +64,8 @@ class AuctionListItem extends StatelessWidget {
                         if (auction.isFeatured) ...[
                           const SizedBox(width: 8),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 4, vertical: 2),
                             decoration: BoxDecoration(
                               color: Colors.orange,
                               borderRadius: BorderRadius.circular(4),
@@ -80,9 +81,9 @@ class AuctionListItem extends StatelessWidget {
                         ],
                       ],
                     ),
-                    
+
                     const SizedBox(height: 4),
-                    
+
                     // Category and Seller
                     Text(
                       '${auction.categoryName} • by ${auction.sellerUsername}',
@@ -92,9 +93,9 @@ class AuctionListItem extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    
+
                     const SizedBox(height: 8),
-                    
+
                     // Price and Buy Now
                     Row(
                       children: [
@@ -104,7 +105,8 @@ class AuctionListItem extends StatelessWidget {
                             Text(
                               'Current Bid',
                               style: theme.textTheme.labelSmall?.copyWith(
-                                color: theme.colorScheme.onSurface.withOpacity(0.6),
+                                color: theme.colorScheme.onSurface
+                                    .withOpacity(0.6),
                               ),
                             ),
                             Text(
@@ -116,7 +118,7 @@ class AuctionListItem extends StatelessWidget {
                             ),
                           ],
                         ),
-                        
+
                         if (auction.hasBuyNow) ...[
                           const SizedBox(width: 16),
                           Column(
@@ -125,7 +127,8 @@ class AuctionListItem extends StatelessWidget {
                               Text(
                                 'Buy Now',
                                 style: theme.textTheme.labelSmall?.copyWith(
-                                  color: theme.colorScheme.onSurface.withOpacity(0.6),
+                                  color: theme.colorScheme.onSurface
+                                      .withOpacity(0.6),
                                 ),
                               ),
                               Text(
@@ -138,13 +141,14 @@ class AuctionListItem extends StatelessWidget {
                             ],
                           ),
                         ],
-                        
+
                         const Spacer(),
-                        
+
                         // Status Badge
                         if (!auction.isLive)
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
                               color: _getStatusColor(),
                               borderRadius: BorderRadius.circular(4),
@@ -159,9 +163,9 @@ class AuctionListItem extends StatelessWidget {
                           ),
                       ],
                     ),
-                    
+
                     const SizedBox(height: 8),
-                    
+
                     // Time and Stats
                     Row(
                       children: [
@@ -177,9 +181,7 @@ class AuctionListItem extends StatelessWidget {
                             color: theme.colorScheme.onSurface.withOpacity(0.6),
                           ),
                         ),
-                        
                         const SizedBox(width: 16),
-                        
                         Icon(
                           Icons.gavel,
                           size: 14,
@@ -192,9 +194,7 @@ class AuctionListItem extends StatelessWidget {
                             color: theme.colorScheme.onSurface.withOpacity(0.6),
                           ),
                         ),
-                        
                         const SizedBox(width: 16),
-                        
                         Icon(
                           Icons.visibility,
                           size: 14,
@@ -212,12 +212,14 @@ class AuctionListItem extends StatelessWidget {
                   ],
                 ),
               ),
-              
+
               // Watchlist Button
               IconButton(
                 icon: Icon(
                   auction.isWatched ? Icons.favorite : Icons.favorite_border,
-                  color: auction.isWatched ? Colors.red : theme.colorScheme.onSurface.withOpacity(0.6),
+                  color: auction.isWatched
+                      ? Colors.red
+                      : theme.colorScheme.onSurface.withOpacity(0.6),
                 ),
                 onPressed: onWatchlistToggle,
               ),
@@ -229,21 +231,13 @@ class AuctionListItem extends StatelessWidget {
   }
 
   Widget _buildImage(BuildContext context) {
-    final theme = Theme.of(context);
-
     if (auction.hasImages) {
-      return CachedNetworkImage(
+      return SmartImage(
         imageUrl: auction.primaryImageUrl,
         fit: BoxFit.cover,
         width: double.infinity,
         height: double.infinity,
-        placeholder: (context, url) => Container(
-          color: theme.colorScheme.surfaceContainerHighest,
-          child: const Center(
-            child: CircularProgressIndicator(),
-          ),
-        ),
-        errorWidget: (context, url, error) => _buildPlaceholder(context),
+        errorWidget: _buildPlaceholder(context),
       );
     } else {
       return _buildPlaceholder(context);

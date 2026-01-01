@@ -134,11 +134,30 @@ class AppConfig {
   // Image Helper
   static String getFullImageUrl(String? path) {
     if (path == null || path.isEmpty) return '';
+
+    // Data URIs should be returned as-is (base64-encoded images)
+    if (path.startsWith('data:image/')) return path;
+
+    // Absolute URLs should be returned as-is
     if (path.startsWith('http://') || path.startsWith('https://')) return path;
-    // Remove leading slash if exists
+
+    // Remove leading slash if exists for relative paths
     final cleanPath = path.startsWith('/') ? path.substring(1) : path;
     // baseUrl in this class is root (https://zubid-2025.onrender.com)
     return '$baseUrl/$cleanPath';
+  }
+
+  /// Check if the given URL is a data URI (base64-encoded image)
+  static bool isDataUri(String? url) {
+    return url != null && url.startsWith('data:image/');
+  }
+
+  /// Check if the given URL is a valid image URL (http/https or data URI)
+  static bool isValidImageUrl(String? url) {
+    if (url == null || url.isEmpty) return false;
+    return url.startsWith('http://') ||
+        url.startsWith('https://') ||
+        url.startsWith('data:image/');
   }
 
   // Firebase Configuration (if using Firebase)

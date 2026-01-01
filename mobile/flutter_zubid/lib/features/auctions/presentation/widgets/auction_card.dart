@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 
+import '../../../../core/widgets/smart_image.dart';
 import '../../data/models/auction_model.dart';
 
 class AuctionCard extends StatelessWidget {
@@ -244,21 +244,13 @@ class AuctionCard extends StatelessWidget {
   }
 
   Widget _buildImage(BuildContext context) {
-    final theme = Theme.of(context);
-
     if (auction.hasImages) {
-      return CachedNetworkImage(
+      return SmartImage(
         imageUrl: auction.primaryImageUrl,
         fit: BoxFit.cover,
         width: double.infinity,
         height: double.infinity,
-        placeholder: (context, url) => Container(
-          color: theme.colorScheme.surfaceContainerHighest,
-          child: const Center(
-            child: CircularProgressIndicator(),
-          ),
-        ),
-        errorWidget: (context, url, error) => _buildPlaceholder(context),
+        errorWidget: _buildPlaceholder(context),
       );
     } else {
       return _buildPlaceholder(context);
