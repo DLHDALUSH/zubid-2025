@@ -68,13 +68,8 @@ function convertImageUrl(imageUrl) {
         return SVG_PLACEHOLDER;
     }
 
-    // Data URIs - convert to blob URL for better browser support
+    // Data URIs - return as-is (no conversion to blob needed)
     if (urlString.startsWith('data:image/')) {
-        const blobUrl = dataUriToBlobUrl(urlString);
-        if (blobUrl) {
-            return blobUrl;
-        }
-        // Fallback to data URI if conversion fails
         return urlString;
     }
 
