@@ -3742,8 +3742,13 @@ def scan_corrupted_images():
             issues.append('Truncated Cloudinary domain')
 
         # Check for double URL (https://...https://)
+        # Double URL with slash: site.com/https://
         if re.search(r'https?://[^/]+/https?://', url):
-            issues.append('Double URL detected')
+            issues.append('Double URL detected (with slash)')
+
+        # Double URL without slash: site.comhttps://
+        if re.search(r'https?://[^/]+\.[a-z]+https?://', url.lower()):
+            issues.append('Double URL detected (without slash)')
 
         # Check for leading slash before protocol
         if url.startswith('/http://') or url.startswith('/https://'):
@@ -3878,7 +3883,11 @@ def delete_all_corrupted_images():
         # Check for common corruption patterns
         if 'cloudinar' in url.lower() and 'cloudinary' not in url.lower():
             return True
+        # Double URL with slash: site.com/https://
         if re.search(r'https?://[^/]+/https?://', url):
+            return True
+        # Double URL without slash: site.comhttps://
+        if re.search(r'https?://[^/]+\.[a-z]+https?://', url.lower()):
             return True
         if url.startswith('/http://') or url.startswith('/https://'):
             return True

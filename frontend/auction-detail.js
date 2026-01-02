@@ -74,10 +74,11 @@ function convertImageUrl(imageUrl) {
     }
 
     // Fix double URL: detect if URL contains another full URL (https://...https://)
-    const doubleHttpsMatch = urlString.match(/^(https?:\/\/[^/]+\/)(https?:\/\/.+)$/);
+    // Handles both with slash (site.com/https://) and without (site.comhttps://)
+    const doubleHttpsMatch = urlString.match(/^https?:\/\/[^/]+\/?.*?(https?:\/\/.+)$/);
     if (doubleHttpsMatch) {
         console.warn('Detected double URL, extracting inner URL:', urlString.substring(0, 100));
-        urlString = doubleHttpsMatch[2]; // Use the inner (correct) URL
+        urlString = doubleHttpsMatch[1]; // Use the inner (correct) URL
     }
 
     // Detect corrupted/truncated URLs and return placeholder
