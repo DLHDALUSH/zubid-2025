@@ -338,18 +338,38 @@ class _BiddingPanelState extends ConsumerState<BiddingPanel> {
         .read(biddingProvider(widget.auction.id.toString()).notifier)
         .placeBid(bidAmount);
 
-    if (success && mounted) {
-      if (widget.isBottomSheet) {
-        Navigator.of(context).pop();
-      }
+    if (mounted) {
+      if (success) {
+        if (widget.isBottomSheet) {
+          Navigator.of(context).pop();
+        }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-              'Bid placed successfully for \$${bidAmount.toStringAsFixed(2)}'),
-          backgroundColor: Colors.green,
-        ),
-      );
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+                'Bid placed successfully for \$${bidAmount.toStringAsFixed(2)}'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else {
+        // Show error message from state
+        final errorMessage =
+            ref.read(biddingProvider(widget.auction.id.toString())).error ??
+                'Failed to place bid. Please try again.';
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMessage),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 4),
+            action: SnackBarAction(
+              label: 'Retry',
+              textColor: Colors.white,
+              onPressed: _placeBid,
+            ),
+          ),
+        );
+      }
     }
   }
 

@@ -24,6 +24,7 @@ import '../../features/profile/presentation/screens/profile_screen.dart';
 import '../../features/splash/presentation/screens/splash_screen.dart';
 import '../../features/legal/presentation/screens/terms_of_service_screen.dart';
 import '../../features/legal/presentation/screens/privacy_policy_screen.dart';
+import '../../features/settings/presentation/screens/settings_screen.dart';
 import '../widgets/error_screen.dart';
 import '../widgets/main_layout.dart';
 import 'app_routes.dart';
@@ -95,9 +96,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/profile/settings',
-        builder: (context, state) => const ErrorScreen(
-          error: 'Settings screen coming soon!',
-        ),
+        builder: (context, state) => const SettingsScreen(),
       ),
 
       // Bids
@@ -167,9 +166,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       // Settings & Help
       GoRoute(
         path: AppRoutes.settings,
-        builder: (context, state) => const ErrorScreen(
-          error: 'Settings screen coming soon!',
-        ),
+        builder: (context, state) => const SettingsScreen(),
       ),
       GoRoute(
         path: AppRoutes.help,

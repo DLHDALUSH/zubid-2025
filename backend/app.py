@@ -2075,45 +2075,66 @@ def get_profile():
     # Get user preferences
     preferences = user.preferences
 
+    # Count user stats
+    total_bids = len(user.bids) if hasattr(user, 'bids') and user.bids else 0
+    total_wins = Auction.query.filter_by(winner_id=user.id).count()
+
+    # Return profile wrapped in 'profile' key (expected by Flutter app)
     return jsonify({
-        'id': user.id,
-        'username': user.username,
-        'email': user.email,
-        'id_number': user.id_number,
-        'birth_date': user.birth_date.isoformat() if user.birth_date else None,
-        'address': user.address,
-        'phone': user.phone,
-        'role': user.role,
-        'profile_photo': get_full_image_url(user.profile_photo),
-        # Enhanced profile fields
-        'first_name': user.first_name,
-        'last_name': user.last_name,
-        'bio': user.bio,
-        'company': user.company,
-        'website': user.website,
-        'city': user.city,
-        'country': user.country,
-        'postal_code': user.postal_code,
-        'phone_verified': user.phone_verified,
-        'email_verified': user.email_verified,
-        'is_active': user.is_active,
-        'last_login': user.last_login.isoformat() if user.last_login else None,
-        'login_count': user.login_count,
-        'created_at': user.created_at.isoformat() if user.created_at else None,
-        # User preferences
-        'preferences': {
-            'theme': preferences.theme if preferences else 'light',
-            'language': preferences.language if preferences else 'en',
-            'notifications_enabled': preferences.notifications_enabled if preferences else True,
-            'email_notifications': preferences.email_notifications if preferences else True,
-            'bid_alerts': preferences.bid_alerts if preferences else True,
-            'auction_reminders': preferences.auction_reminders if preferences else True,
-            'newsletter_subscribed': preferences.newsletter_subscribed if preferences else False,
-            'currency': preferences.currency if preferences else 'USD',
+        'profile': {
+            'id': user.id,
+            'username': user.username,
+            'email': user.email,
+            'id_number': user.id_number,
+            'date_of_birth': user.birth_date.isoformat() if user.birth_date else None,  # Flutter expects date_of_birth
+            'birth_date': user.birth_date.isoformat() if user.birth_date else None,  # Also keep original
+            'address': user.address,
+            'phone': user.phone,
+            'phone_number': user.phone,  # Flutter expects phone_number
+            'role': user.role,
+            'profile_photo': get_full_image_url(user.profile_photo),
+            'profile_photo_url': get_full_image_url(user.profile_photo),  # Flutter expects profile_photo_url
+            # Enhanced profile fields
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'bio': user.bio,
+            'company': user.company,
+            'website': user.website,
+            'city': user.city,
+            'country': user.country,
+            'postal_code': user.postal_code,
+            'phone_verified': user.phone_verified,
+            'email_verified': user.email_verified,
+            'is_active': user.is_active,
+            'profile_completed': bool(user.first_name and user.last_name and user.phone),
+            'last_login': user.last_login.isoformat() if user.last_login else None,
+            'last_active': user.last_login.isoformat() if user.last_login else None,  # Flutter expects last_active
+            'login_count': user.login_count,
+            'created_at': user.created_at.isoformat() if user.created_at else None,
+            'member_since': user.created_at.isoformat() if user.created_at else None,  # Flutter expects member_since
+            'updated_at': user.created_at.isoformat() if user.created_at else None,  # Add updated_at
+            # User stats
+            'total_bids': total_bids,
+            'total_wins': total_wins,
+            'total_spent': 0.0,  # TODO: Calculate from invoices
+            'rating': 5.0,  # TODO: Implement rating system
+            # User preferences
+            'preferences': {
+                'theme': preferences.theme if preferences else 'light',
+                'language': preferences.language if preferences else 'en',
+                'notifications_enabled': preferences.notifications_enabled if preferences else True,
+                'email_notifications': preferences.email_notifications if preferences else True,
+                'bid_alerts': preferences.bid_alerts if preferences else True,
+                'auction_reminders': preferences.auction_reminders if preferences else True,
+                'newsletter_subscribed': preferences.newsletter_subscribed if preferences else False,
+                'currency': preferences.currency if preferences else 'USD',
+                'timezone': preferences.timezone if preferences else 'UTC',
+                'items_per_page': preferences.items_per_page if preferences else 20,
+                'default_view': preferences.default_view if preferences else 'grid'
+            } if preferences else None,
+            'preferred_language': preferences.language if preferences else 'en',
             'timezone': preferences.timezone if preferences else 'UTC',
-            'items_per_page': preferences.items_per_page if preferences else 20,
-            'default_view': preferences.default_view if preferences else 'grid'
-        } if preferences else None
+        }
     }), 200
 
 @app.route('/api/user/profile', methods=['PUT'])
@@ -3246,13 +3267,31 @@ def place_bid(auction_id):
         updated_end_time = ensure_timezone_aware(auction.end_time)
         updated_time_left = max(0, int((updated_end_time - datetime.now(timezone.utc)).total_seconds()))
 
+        # Get user info for the bid response
+        user = User.query.get(user_id)
+
         return jsonify({
             'message': 'Bid placed successfully',
             'current_bid': auction.current_bid,
             'bid_id': bid.id,
             'time_extended': time_extended,
             'new_end_time': updated_end_time.isoformat(),
-            'time_left': updated_time_left
+            'time_left': updated_time_left,
+            # Return full bid object for Flutter app compatibility
+            'bid': {
+                'id': bid.id,
+                'auction_id': auction_id,
+                'user_id': user_id,
+                'amount': bid.amount,
+                'created_at': bid.timestamp.isoformat() if bid.timestamp else datetime.now(timezone.utc).isoformat(),
+                'updated_at': bid.timestamp.isoformat() if bid.timestamp else datetime.now(timezone.utc).isoformat(),
+                'is_winning': True,  # New bid is always the winning bid
+                'is_auto_bid': bid.is_auto_bid or False,
+                'max_bid_amount': bid.max_auto_bid,
+                'user_username': user.username if user else 'Unknown',
+                'user_avatar': user.avatar_url if user else None,
+                'user_rating': user.rating if user and hasattr(user, 'rating') else None
+            }
         }), 201
 
     except Exception as e:
