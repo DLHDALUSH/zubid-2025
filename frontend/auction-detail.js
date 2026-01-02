@@ -336,6 +336,33 @@ function displayAuctionDetail(auction) {
     document.getElementById('startingBid').textContent = `$${(auction.starting_bid || 0).toFixed(2)}`;
     document.getElementById('bidIncrement').textContent = `$${(auction.bid_increment || 1).toFixed(2)}`;
     document.getElementById('bidCount').textContent = auction.bid_count || 0;
+
+    // Update breadcrumb title
+    const breadcrumbTitle = document.getElementById('breadcrumbTitle');
+    if (breadcrumbTitle) {
+        breadcrumbTitle.textContent = auction.item_name || 'Auction';
+    }
+
+    // Update inline bid count
+    const bidCountInline = document.getElementById('bidCountInline');
+    if (bidCountInline) {
+        const count = auction.bid_count || 0;
+        bidCountInline.textContent = `${count} bid${count !== 1 ? 's' : ''}`;
+    }
+
+    // Add quick bid buttons
+    const quickBidButtons = document.getElementById('quickBidButtons');
+    if (quickBidButtons) {
+        const currentBid = parseFloat(auction.current_bid) || parseFloat(auction.starting_bid) || 0;
+        const increment = parseFloat(auction.bid_increment) || 1;
+        const minBid = currentBid + increment;
+
+        quickBidButtons.innerHTML = `
+            <button class="quick-bid-btn" onclick="setQuickBid(${minBid.toFixed(2)})">+$${increment.toFixed(2)}</button>
+            <button class="quick-bid-btn" onclick="setQuickBid(${(minBid + increment).toFixed(2)})">+$${(increment * 2).toFixed(2)}</button>
+            <button class="quick-bid-btn" onclick="setQuickBid(${(minBid + increment * 4).toFixed(2)})">+$${(increment * 5).toFixed(2)}</button>
+        `;
+    }
     
     // Set market price if available
     console.log('Market Price from API:', auction.market_price);
@@ -699,13 +726,25 @@ function toggleAutoBid() {
     const enableAutoBid = document.getElementById('enableAutoBid');
     const autoBidAmount = document.getElementById('autoBidAmount');
     const autoBidInfo = document.getElementById('autoBidInfo');
-    
+    const autoBidInputWrapper = document.getElementById('autoBidInputWrapper');
+
     if (enableAutoBid.checked) {
-        autoBidAmount.style.display = 'block';
-        autoBidInfo.style.display = 'block';
+        if (autoBidAmount) autoBidAmount.style.display = 'block';
+        if (autoBidInfo) autoBidInfo.style.display = 'block';
+        if (autoBidInputWrapper) autoBidInputWrapper.style.display = 'block';
     } else {
-        autoBidAmount.style.display = 'none';
-        autoBidInfo.style.display = 'none';
+        if (autoBidAmount) autoBidAmount.style.display = 'none';
+        if (autoBidInfo) autoBidInfo.style.display = 'none';
+        if (autoBidInputWrapper) autoBidInputWrapper.style.display = 'none';
+    }
+}
+
+// Set quick bid amount
+function setQuickBid(amount) {
+    const bidInput = document.getElementById('bidAmount');
+    if (bidInput) {
+        bidInput.value = amount.toFixed(2);
+        bidInput.focus();
     }
 }
 
