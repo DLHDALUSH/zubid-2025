@@ -16,7 +16,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css?v=20260102-detail-redesign">
+    <link rel="stylesheet" href="styles.css?v=20260102-v2-layout">
     <!-- Enhanced Utilities -->
 	    <script src="utils.js" defer></script>
 	    <script src="enhanced-utils.js" defer></script>
@@ -261,265 +261,201 @@
                     <span class="breadcrumb-current" id="breadcrumbTitle">Auction</span>
                 </nav>
 
-                <div class="auction-detail-grid">
-                    <!-- Left Column - Gallery -->
-                    <div class="auction-gallery-section">
-                        <div class="gallery-container">
-                            <div class="main-image-wrapper">
-                                <img id="mainAuctionImage" src="" alt="Auction Item" class="main-auction-image">
-                                <div class="image-zoom-hint">
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <circle cx="11" cy="11" r="8"></circle>
-                                        <path d="M21 21l-4.35-4.35"></path>
-                                        <path d="M11 8v6M8 11h6"></path>
-                                    </svg>
-                                    Click to zoom
+                <div class="auction-detail-grid-v2">
+                    <!-- Left Column - Gallery & Description -->
+                    <div class="auction-left-column">
+                        <!-- Gallery Card -->
+                        <div class="gallery-card-v2">
+                            <div class="main-image-container-v2">
+                                <img id="mainAuctionImage" src="" alt="Auction Item" class="main-auction-image-v2">
+                                <div class="image-badge-overlay">
+                                    <span class="badge badge-category" id="auctionCategory"></span>
                                 </div>
                                 <div id="videoContainer" class="video-container" style="display: none;">
                                     <iframe id="videoPlayer" allowfullscreen></iframe>
                                 </div>
                             </div>
-                            <div class="thumbnails-wrapper">
-                                <div class="image-thumbnails" id="imageThumbnails">
+                            <div class="thumbnails-row-v2">
+                                <div class="image-thumbnails-v2" id="imageThumbnails">
                                     <!-- Thumbnails will be loaded here -->
                                 </div>
-                                <div id="videoThumbnail" class="video-thumbnail-btn" style="display: none;">
-                                    <button class="btn-video-play" onclick="showVideo()">
-                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                                <div id="videoThumbnail" class="video-thumb-v2" style="display: none;">
+                                    <button class="btn-video-v2" onclick="showVideo()">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                                             <path d="M8 5v14l11-7z"/>
                                         </svg>
-                                        <span>Watch Video</span>
                                     </button>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Description Card -->
-                        <div class="detail-card description-card">
-                            <div class="card-header" onclick="toggleDescription()">
-                                <div class="card-title">
-                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                                        <polyline points="14 2 14 8 20 8"></polyline>
-                                        <line x1="16" y1="13" x2="8" y2="13"></line>
-                                        <line x1="16" y1="17" x2="8" y2="17"></line>
-                                        <polyline points="10 9 9 9 8 9"></polyline>
-                                    </svg>
-                                    <h3>Description</h3>
+                        <!-- Product Info Card -->
+                        <div class="product-info-card-v2">
+                            <div class="product-header-v2">
+                                <span class="badge badge-status" id="auctionStatus"></span>
+                                <h1 class="product-title-v2" id="auctionItemName"></h1>
+                                <div class="seller-row-v2">
+                                    <div class="seller-avatar-v2">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                            <circle cx="12" cy="7" r="4"></circle>
+                                        </svg>
+                                    </div>
+                                    <span class="seller-name-v2">Verified Seller</span>
+                                    <span class="verified-badge-v2">✓</span>
                                 </div>
-                                <span class="card-toggle" id="descriptionToggleIcon">
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            </div>
+
+                            <div class="product-description-v2">
+                                <h3 class="section-title-v2">Description</h3>
+                                <div class="description-text-v2" id="descriptionContent">
+                                    <p id="auctionDescription"></p>
+                                </div>
+                                <button class="btn-expand-v2" id="descriptionToggleBtn" onclick="toggleDescription()">
+                                    <span id="descriptionToggleText">Show More</span>
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <polyline points="6 9 12 15 18 9"></polyline>
                                     </svg>
-                                </span>
+                                </button>
                             </div>
-                            <div class="card-content description-content" id="descriptionContent">
-                                <p id="auctionDescription"></p>
+
+                            <!-- Warning Section -->
+                            <div class="warning-section-v2" id="auctionWarning" style="display: none;">
+                                <div class="warning-icon-v2">⚠️</div>
+                                <div class="warning-text-v2" id="warningContent"></div>
                             </div>
-                            <button class="btn-show-more" id="descriptionToggleBtn" onclick="toggleDescription()">
-                                <span id="descriptionToggleText">Show More</span>
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <polyline points="6 9 12 15 18 9"></polyline>
-                                </svg>
-                            </button>
                         </div>
 
-                        <!-- Warning Card -->
-                        <div class="detail-card warning-card" id="auctionWarning" style="display: none;">
-                            <div class="card-header warning-header">
-                                <div class="card-title">
-                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-                                        <line x1="12" y1="9" x2="12" y2="13"></line>
-                                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
-                                    </svg>
-                                    <h3>Warning</h3>
-                                </div>
+                        <!-- Bid History Card -->
+                        <div class="bid-history-card-v2">
+                            <div class="card-header-v2">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <h3>Bid History</h3>
+                                <span class="bid-count-badge" id="bidCountInline">0 bids</span>
                             </div>
-                            <div class="card-content" id="warningContent">
-                                <!-- Warning content will be loaded here -->
+                            <div id="bidHistory" class="bid-history-list-v2">
+                                <!-- Bid history will be loaded here -->
                             </div>
                         </div>
                     </div>
 
-                    <!-- Right Column - Info & Actions -->
-                    <div class="auction-info-section">
-                        <!-- Title & Meta -->
-                        <div class="auction-header-card">
-                            <div class="auction-badges">
-                                <span class="badge badge-category" id="auctionCategory"></span>
-                                <span class="badge badge-status" id="auctionStatus"></span>
+                    <!-- Right Column - Pricing & Actions (Sticky) -->
+                    <div class="auction-right-column">
+                        <div class="sticky-sidebar-v2">
+                            <!-- Timer Banner -->
+                            <div class="timer-banner-v2">
+                                <div class="timer-icon-v2">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <polyline points="12 6 12 12 16 14"></polyline>
+                                    </svg>
+                                </div>
+                                <div class="timer-content-v2">
+                                    <span class="timer-label-v2">Ends in</span>
+                                    <span id="countdownTimer" class="timer-value-v2"></span>
+                                </div>
+                                <div class="timer-bar-v2">
+                                    <div class="timer-bar-fill-v2" id="timerBarFill"></div>
+                                </div>
                             </div>
-                            <h1 class="auction-title" id="auctionItemName"></h1>
-                            <div class="auction-seller">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                                    <circle cx="12" cy="7" r="4"></circle>
-                                </svg>
-                                <span>Verified Seller</span>
-                            </div>
-                        </div>
 
-                        <!-- Timer Card -->
-                        <div class="timer-card">
-                            <div class="timer-header">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <circle cx="12" cy="12" r="10"></circle>
-                                    <polyline points="12 6 12 12 16 14"></polyline>
-                                </svg>
-                                <span>Time Remaining</span>
-                            </div>
-                            <div id="countdownTimer" class="timer-display"></div>
-                            <div class="timer-bar">
-                                <div class="timer-bar-fill" id="timerBarFill"></div>
-                            </div>
-                        </div>
+                            <!-- Main Pricing Card -->
+                            <div class="pricing-card-v2">
+                                <!-- Current Price Section -->
+                                <div class="current-price-section-v2">
+                                    <span class="price-label-v2">Current Bid</span>
+                                    <div class="price-row-v2">
+                                        <span class="price-value-v2" id="currentBid">$0.00</span>
+                                    </div>
+                                    <div class="price-meta-v2">
+                                        <div class="meta-item-v2">
+                                            <span class="meta-label">Starting</span>
+                                            <span class="meta-value" id="startingBid">$0.00</span>
+                                        </div>
+                                        <div class="meta-divider-v2"></div>
+                                        <div class="meta-item-v2">
+                                            <span class="meta-label">Increment</span>
+                                            <span class="meta-value" id="bidIncrement">$1.00</span>
+                                        </div>
+                                        <div class="meta-item-v2" id="marketPriceStat" style="display: none;">
+                                            <div class="meta-divider-v2"></div>
+                                            <span class="meta-label">Market</span>
+                                            <span class="meta-value strikethrough" id="marketPrice">$0.00</span>
+                                        </div>
+                                    </div>
+                                </div>
 
-                        <!-- Price Card -->
-                        <div class="price-card">
-                            <div class="current-bid-section">
-                                <span class="price-label">Current Bid</span>
-                                <span class="current-price" id="currentBid">$0.00</span>
-                                <span class="bid-count-inline" id="bidCountInline">0 bids</span>
-                            </div>
-                            <div class="price-details">
-                                <div class="price-detail-item">
-                                    <span class="detail-label">Starting Bid</span>
-                                    <span class="detail-value" id="startingBid">$0.00</span>
-                                </div>
-                                <div class="price-detail-item">
-                                    <span class="detail-label">Bid Increment</span>
-                                    <span class="detail-value" id="bidIncrement">$1.00</span>
-                                </div>
-                                <div class="price-detail-item" id="marketPriceStat" style="display: none;">
-                                    <span class="detail-label">Market Price</span>
-                                    <span class="detail-value market-price" id="marketPrice">$0.00</span>
-                                </div>
-                            </div>
-                        </div>
+                                <!-- Bid Input Section -->
+                                <div id="biddingForm" class="bid-section-v2">
+                                    <div class="bid-input-row-v2">
+                                        <div class="bid-input-v2">
+                                            <span class="currency-v2">$</span>
+                                            <input type="number" id="bidAmount" step="0.01" min="0" placeholder="Enter bid" required>
+                                        </div>
+                                        <button class="btn-bid-v2" onclick="placeBid()">
+                                            Place Bid
+                                        </button>
+                                    </div>
+                                    <span class="min-bid-hint-v2" id="minBidInfo">Minimum: $0.00</span>
 
-                        <!-- Buy Now Card -->
-                        <div class="buy-now-card-modern" id="buyNowSection" style="display: none;">
-                            <div class="buy-now-badge">⚡ INSTANT PURCHASE</div>
-                            <div class="buy-now-content">
-                                <div class="buy-now-price-row">
-                                    <span class="buy-now-label">Buy It Now</span>
-                                    <span class="buy-now-price" id="buyNowPrice">$0.00</span>
+                                    <div class="quick-bids-v2" id="quickBidButtons">
+                                        <!-- Quick bid buttons will be added by JS -->
+                                    </div>
+
+                                    <div class="auto-bid-row-v2">
+                                        <label class="auto-bid-toggle-v2">
+                                            <input type="checkbox" id="enableAutoBid" onchange="toggleAutoBid()">
+                                            <span class="toggle-switch-v2"></span>
+                                            <span class="toggle-text-v2">Auto-Bid</span>
+                                        </label>
+                                        <div class="auto-bid-input-v2" id="autoBidInputWrapper" style="display: none;">
+                                            <span class="currency-v2">$</span>
+                                            <input type="number" id="autoBidAmount" step="0.01" min="0" placeholder="Max bid">
+                                        </div>
+                                    </div>
+                                    <p id="bidError" class="bid-error-v2"></p>
                                 </div>
-                                <button class="btn-buy-now-modern" onclick="buyNow()">
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+
+                                <!-- Auction Ended State -->
+                                <div id="biddingClosed" class="auction-ended-v2" style="display: none;">
+                                    <div class="ended-icon-v2">🏁</div>
+                                    <p class="ended-title-v2">Auction Ended</p>
+                                    <p id="winnerInfo" class="ended-info-v2"></p>
+                                </div>
+                            </div>
+
+                            <!-- Buy Now Card -->
+                            <div class="buy-now-card-v2" id="buyNowSection" style="display: none;">
+                                <div class="buy-now-header-v2">
+                                    <span class="flash-icon-v2">⚡</span>
+                                    <span class="buy-now-title-v2">Buy It Now</span>
+                                </div>
+                                <div class="buy-now-price-v2" id="buyNowPrice">$0.00</div>
+                                <button class="btn-buy-now-v2" onclick="buyNow()">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
                                         <line x1="3" y1="6" x2="21" y2="6"></line>
                                         <path d="M16 10a4 4 0 0 1-8 0"></path>
                                     </svg>
-                                    Buy Now
+                                    Purchase Now
                                 </button>
-                                <p class="buy-now-secure">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                                    </svg>
-                                    Secure instant purchase
-                                </p>
+                                <span class="secure-text-v2">🔒 Secure checkout</span>
                             </div>
-                            <div class="or-divider">
-                                <span>OR PLACE A BID</span>
-                            </div>
-                        </div>
 
-                        <!-- Bidding Card -->
-                        <div class="bidding-card">
-                            <div class="bidding-card-header">
-                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
-                                </svg>
-                                <h3>Place Your Bid</h3>
-                            </div>
-                            <div id="biddingForm" class="bidding-form-modern">
-                                <div class="bid-input-group">
-                                    <label>Your Bid Amount</label>
-                                    <div class="bid-input-wrapper">
-                                        <span class="currency-symbol">$</span>
-                                        <input type="number" id="bidAmount" step="0.01" min="0" placeholder="0.00" required>
-                                    </div>
-                                    <small class="min-bid-hint" id="minBidInfo">Minimum bid: $0.00</small>
+                            <!-- Stats Row -->
+                            <div class="stats-row-v2">
+                                <div class="stat-box-v2">
+                                    <span class="stat-number-v2" id="bidCount">0</span>
+                                    <span class="stat-text-v2">Bids</span>
                                 </div>
-                                <div class="quick-bid-buttons" id="quickBidButtons">
-                                    <!-- Quick bid buttons will be added by JS -->
-                                </div>
-                                <div class="auto-bid-section">
-                                    <label class="auto-bid-toggle">
-                                        <input type="checkbox" id="enableAutoBid" onchange="toggleAutoBid()">
-                                        <span class="toggle-slider"></span>
-                                        <span class="toggle-label">Enable Auto-Bid</span>
-                                    </label>
-                                    <div class="auto-bid-input" id="autoBidInputWrapper" style="display: none;">
-                                        <label>Maximum Auto-Bid</label>
-                                        <div class="bid-input-wrapper">
-                                            <span class="currency-symbol">$</span>
-                                            <input type="number" id="autoBidAmount" step="0.01" min="0" placeholder="0.00">
-                                        </div>
-                                        <small id="autoBidInfo">System will bid automatically up to this amount</small>
-                                    </div>
-                                </div>
-                                <button class="btn-place-bid" onclick="placeBid()">
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <polyline points="9 11 12 14 22 4"></polyline>
-                                        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
-                                    </svg>
-                                    Place Bid
-                                </button>
-                                <p id="bidError" class="bid-error"></p>
-                            </div>
-                            <div id="biddingClosed" class="bidding-closed-modern" style="display: none;">
-                                <div class="closed-icon">🏁</div>
-                                <p class="closed-title">Auction Ended</p>
-                                <p id="winnerInfo" class="winner-info"></p>
-                            </div>
-                        </div>
-
-                        <!-- Stats Card -->
-                        <div class="stats-card">
-                            <div class="stat-item">
-                                <div class="stat-icon">
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                                        <circle cx="9" cy="7" r="4"></circle>
-                                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                                    </svg>
-                                </div>
-                                <div class="stat-info">
-                                    <span class="stat-value" id="bidCount">0</span>
-                                    <span class="stat-label">Total Bids</span>
-                                </div>
-                            </div>
-                            <div class="stat-item">
-                                <div class="stat-icon">
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                                        <circle cx="12" cy="12" r="3"></circle>
-                                    </svg>
-                                </div>
-                                <div class="stat-info">
-                                    <span class="stat-value" id="watchCount">--</span>
-                                    <span class="stat-label">Watching</span>
+                                <div class="stat-box-v2">
+                                    <span class="stat-number-v2" id="watchCount">--</span>
+                                    <span class="stat-text-v2">Watching</span>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </div>
-
-                <!-- Bid History Section -->
-                <div class="bid-history-card">
-                    <div class="section-header">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                        <h2>Bid History</h2>
-                    </div>
-                    <div id="bidHistory" class="bid-history-list">
-                        <!-- Bid history will be loaded here -->
                     </div>
                 </div>
 
