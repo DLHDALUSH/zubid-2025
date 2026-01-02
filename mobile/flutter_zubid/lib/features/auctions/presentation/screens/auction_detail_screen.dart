@@ -9,9 +9,6 @@ import '../../data/models/auction_model.dart';
 import '../providers/auction_detail_provider.dart';
 import '../providers/bidding_provider.dart';
 import '../widgets/auction_image_gallery.dart';
-import '../widgets/auction_info_card.dart';
-import '../widgets/bid_history_card.dart';
-import '../widgets/bidding_panel.dart';
 
 class AuctionDetailScreen extends ConsumerStatefulWidget {
   final String auctionId;
@@ -29,9 +26,12 @@ class AuctionDetailScreen extends ConsumerStatefulWidget {
 class _AuctionDetailScreenState extends ConsumerState<AuctionDetailScreen>
     with SingleTickerProviderStateMixin {
   final ScrollController _scrollController = ScrollController();
+  final TextEditingController _bidController = TextEditingController();
   late AnimationController _fabAnimationController;
   bool _showFloatingBidButton = false;
   bool _isAppBarCollapsed = false;
+  bool _showBidHistory = false;
+  bool _showDescription = false;
 
   @override
   void initState() {
@@ -52,6 +52,7 @@ class _AuctionDetailScreenState extends ConsumerState<AuctionDetailScreen>
   void dispose() {
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
+    _bidController.dispose();
     _fabAnimationController.dispose();
     super.dispose();
   }
@@ -101,8 +102,14 @@ class _AuctionDetailScreenState extends ConsumerState<AuctionDetailScreen>
                       curve: Curves.easeOutBack,
                     ),
                     child: FloatingActionButton.extended(
-                      onPressed: () =>
-                          _showBiddingBottomSheet(auctionState.auction!),
+                      onPressed: () {
+                        // Scroll to top where bid input is
+                        _scrollController.animateTo(
+                          0,
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeOut,
+                        );
+                      },
                       icon: const Icon(Icons.gavel_rounded),
                       label: const Text(
                         'Place Bid',
@@ -198,37 +205,25 @@ class _AuctionDetailScreenState extends ConsumerState<AuctionDetailScreen>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Pricing Card - Prominent Display
-              _buildPricingCard(auction, theme),
+              // Compact Pricing & Timer Section
+              _buildCompactPricingSection(auction, theme),
 
-              // Live Auction Timer (if live)
-              if (auction.isLive) _buildLiveTimerSection(auction, theme),
+              // Buy It Now Button (prominent)
+              if (auction.hasBuyNow) _buildBuyNowButton(auction, theme),
 
-              // Quick Actions
-              if (auction.isLive) _buildQuickActions(auction, theme),
+              // Action Buttons (Watch)
+              if (auction.isLive) _buildActionButtons(auction, theme),
 
-              // Detailed Info Section
-              AuctionInfoCard(auction: auction),
+              // Inline Bid Input (if live)
+              if (auction.isLive) _buildInlineBidInput(auction, theme),
 
-              // Bidding Panel (if auction is live)
-              if (auction.isLive) BiddingPanel(auction: auction),
+              // Description (collapsible)
+              _buildCompactDescription(auction, theme),
 
-              // Bid History
-              BidHistoryCard(auctionId: auction.id.toString()),
+              // Bid History (collapsed by default)
+              _buildCollapsibleBidHistory(auction, theme),
 
-              // Description
-              _buildDescriptionSection(auction, theme),
-
-              // Seller Info
-              _buildSellerSection(auction, theme),
-
-              // Buy Now (if available)
-              if (auction.hasBuyNow) _buildBuyNowSection(auction, theme),
-
-              // Safety Tips
-              _buildSafetyTips(theme),
-
-              const SizedBox(height: 120),
+              const SizedBox(height: 100),
             ],
           ),
         ),
@@ -419,49 +414,47 @@ class _AuctionDetailScreenState extends ConsumerState<AuctionDetailScreen>
     );
   }
 
-  Widget _buildPricingCard(AuctionModel auction, ThemeData theme) {
+  // =============== NEW SIMPLIFIED COMPONENTS ===============
+
+  Widget _buildCompactPricingSection(AuctionModel auction, ThemeData theme) {
+    final isEndingSoon = auction.isLive && auction.timeRemaining.inMinutes < 60;
+
     return Container(
       margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            theme.colorScheme.primary.withValues(alpha: 0.08),
-            theme.colorScheme.primary.withValues(alpha: 0.03),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(24),
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: theme.colorScheme.primary.withValues(alpha: 0.15),
+          color: isEndingSoon
+              ? Colors.red.withValues(alpha: 0.3)
+              : theme.colorScheme.outline.withValues(alpha: 0.1),
         ),
       ),
       child: Column(
         children: [
+          // Price and Timer Row
           Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Current Bid
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       'Current Bid',
-                      style: theme.textTheme.labelLarge?.copyWith(
+                      style: theme.textTheme.labelSmall?.copyWith(
                         color:
                             theme.colorScheme.onSurface.withValues(alpha: 0.6),
                       ),
                     ),
-                    const SizedBox(height: 4),
                     Text(
                       '\$${auction.currentPrice.toStringAsFixed(2)}',
-                      style: theme.textTheme.headlineLarge?.copyWith(
+                      style: theme.textTheme.headlineSmall?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: theme.colorScheme.primary,
                       ),
                     ),
-                    const SizedBox(height: 4),
                     Text(
                       '${auction.bidCount} bids',
                       style: theme.textTheme.bodySmall?.copyWith(
@@ -472,31 +465,36 @@ class _AuctionDetailScreenState extends ConsumerState<AuctionDetailScreen>
                   ],
                 ),
               ),
-              if (auction.hasBuyNow)
+              // Timer
+              if (auction.isLive)
                 Container(
-                  padding: const EdgeInsets.all(16),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
-                    color: Colors.green.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(16),
-                    border:
-                        Border.all(color: Colors.green.withValues(alpha: 0.3)),
+                    color: isEndingSoon
+                        ? Colors.red.withValues(alpha: 0.1)
+                        : theme.colorScheme.primaryContainer
+                            .withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Column(
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.flash_on_rounded,
-                          color: Colors.green, size: 20),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Buy Now',
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: Colors.green,
-                        ),
+                      Icon(
+                        Icons.timer_outlined,
+                        size: 18,
+                        color: isEndingSoon
+                            ? Colors.red
+                            : theme.colorScheme.primary,
                       ),
+                      const SizedBox(width: 6),
                       Text(
-                        '\$${auction.buyNowPrice!.toStringAsFixed(0)}',
-                        style: theme.textTheme.titleMedium?.copyWith(
+                        auction.timeRemainingText,
+                        style: theme.textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.bold,
-                          color: Colors.green,
+                          color: isEndingSoon
+                              ? Colors.red
+                              : theme.colorScheme.primary,
                         ),
                       ),
                     ],
@@ -504,150 +502,38 @@ class _AuctionDetailScreenState extends ConsumerState<AuctionDetailScreen>
                 ),
             ],
           ),
-          const SizedBox(height: 16),
-          // Stats Row
-          Row(
-            children: [
-              _buildStatItem(
-                  theme, Icons.gavel_rounded, '${auction.bidCount}', 'Bids'),
-              _buildStatDivider(theme),
-              _buildStatItem(theme, Icons.visibility_rounded,
-                  '${auction.viewCount}', 'Views'),
-              _buildStatDivider(theme),
-              _buildStatItem(theme, Icons.favorite_rounded,
-                  '${auction.watchCount}', 'Watching'),
-            ],
-          ),
         ],
       ),
     );
   }
 
-  Widget _buildStatItem(
-      ThemeData theme, IconData icon, String value, String label) {
-    return Expanded(
-      child: Column(
-        children: [
-          Icon(icon, size: 20, color: theme.colorScheme.primary),
-          const SizedBox(height: 4),
-          Text(value,
-              style: theme.textTheme.titleMedium
-                  ?.copyWith(fontWeight: FontWeight.bold)),
-          Text(label,
-              style: theme.textTheme.labelSmall?.copyWith(
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.5))),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatDivider(ThemeData theme) {
-    return Container(
-      width: 1,
-      height: 40,
-      color: theme.colorScheme.outline.withValues(alpha: 0.2),
-    );
-  }
-
-  Widget _buildLiveTimerSection(AuctionModel auction, ThemeData theme) {
-    final isEndingSoon = auction.timeRemaining.inMinutes < 60;
-
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: isEndingSoon
-            ? Colors.red.withValues(alpha: 0.1)
-            : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isEndingSoon
-              ? Colors.red.withValues(alpha: 0.3)
-              : theme.colorScheme.outline.withValues(alpha: 0.1),
-        ),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: isEndingSoon
-                  ? Colors.red.withValues(alpha: 0.2)
-                  : theme.colorScheme.primary.withValues(alpha: 0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              isEndingSoon ? Icons.timer : Icons.access_time_rounded,
-              color: isEndingSoon ? Colors.red : theme.colorScheme.primary,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  isEndingSoon ? 'Ending Soon!' : 'Time Remaining',
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    color: isEndingSoon ? Colors.red : null,
-                    fontWeight: isEndingSoon ? FontWeight.bold : null,
-                  ),
-                ),
-                Text(
-                  auction.timeRemainingText,
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: isEndingSoon ? Colors.red : null,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          if (isEndingSoon)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: Colors.red,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: const Text(
-                'URGENT',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildQuickActions(AuctionModel auction, ThemeData theme) {
+  Widget _buildActionButtons(AuctionModel auction, ThemeData theme) {
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          Expanded(
-            child: _buildQuickActionButton(
-              theme: theme,
-              icon: Icons.gavel_rounded,
-              label: 'Place Bid',
-              isPrimary: true,
-              onPressed: () => _showBiddingBottomSheet(auction),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: _buildQuickActionButton(
-              theme: theme,
-              icon: auction.isWatched
+          // Watch Button
+          ElevatedButton.icon(
+            onPressed: () => _toggleWatchlist(auction),
+            icon: Icon(
+              auction.isWatched
                   ? Icons.favorite_rounded
                   : Icons.favorite_outline_rounded,
-              label: auction.isWatched ? 'Watching' : 'Watch',
-              isPrimary: false,
-              onPressed: () => _toggleWatchlist(auction),
+              size: 20,
+            ),
+            label: Text(auction.isWatched ? 'Watching' : 'Watch'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: auction.isWatched
+                  ? Colors.red.withValues(alpha: 0.1)
+                  : theme.colorScheme.surfaceContainerHighest,
+              foregroundColor:
+                  auction.isWatched ? Colors.red : theme.colorScheme.onSurface,
+              elevation: 0,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
           ),
         ],
@@ -655,332 +541,478 @@ class _AuctionDetailScreenState extends ConsumerState<AuctionDetailScreen>
     );
   }
 
-  Widget _buildQuickActionButton({
-    required ThemeData theme,
-    required IconData icon,
-    required String label,
-    required bool isPrimary,
-    required VoidCallback onPressed,
-  }) {
-    return Material(
-      color: isPrimary
-          ? theme.colorScheme.primary
-          : theme.colorScheme.surfaceContainerHighest,
-      borderRadius: BorderRadius.circular(16),
-      child: InkWell(
-        onTap: onPressed,
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                icon,
-                color: isPrimary
-                    ? theme.colorScheme.onPrimary
-                    : theme.colorScheme.onSurface,
-                size: 20,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                label,
-                style: theme.textTheme.labelLarge?.copyWith(
-                  color: isPrimary
-                      ? theme.colorScheme.onPrimary
-                      : theme.colorScheme.onSurface,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+  Widget _buildInlineBidInput(AuctionModel auction, ThemeData theme) {
+    final biddingState = ref.watch(biddingProvider(auction.id.toString()));
 
-  Widget _buildDescriptionSection(AuctionModel auction, ThemeData theme) {
+    // Set default bid amount if controller is empty
+    if (_bidController.text.isEmpty) {
+      _bidController.text =
+          (auction.minimumBid ?? auction.currentPrice + 1).toStringAsFixed(2);
+    }
+
     return Container(
       margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(20),
+        color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: theme.colorScheme.outline.withValues(alpha: 0.1),
+          color: theme.colorScheme.primary.withValues(alpha: 0.2),
         ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Text(
+            'Place Your Bid',
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 12),
           Row(
             children: [
-              Icon(Icons.description_outlined,
-                  size: 20, color: theme.colorScheme.primary),
-              const SizedBox(width: 8),
-              Text(
-                'Description',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Text(
-            auction.description,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              height: 1.6,
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
-            ),
-          ),
-          if (auction.condition?.isNotEmpty == true) ...[
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.verified_outlined,
-                      size: 18, color: theme.colorScheme.primary),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Condition: ${auction.condition}',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: theme.colorScheme.primary,
+              // Bid Input
+              Expanded(
+                child: TextField(
+                  controller: _bidController,
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(
+                        RegExp(r'^\d+\.?\d{0,2}')),
+                  ],
+                  decoration: InputDecoration(
+                    prefixText: '\$ ',
+                    hintText: 'Enter amount',
+                    filled: true,
+                    fillColor: theme.colorScheme.surface,
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 14),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
                     ),
                   ),
-                ],
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSellerSection(AuctionModel auction, ThemeData theme) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: theme.colorScheme.outline.withValues(alpha: 0.1),
-        ),
-      ),
-      child: Row(
-        children: [
-          CircleAvatar(
-            radius: 28,
-            backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
-            child: Text(
-              auction.sellerUsername.isNotEmpty
-                  ? auction.sellerUsername[0].toUpperCase()
-                  : 'S',
-              style: theme.textTheme.titleLarge?.copyWith(
-                color: theme.colorScheme.primary,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  auction.sellerUsername,
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    const Icon(Icons.star_rounded,
-                        size: 16, color: Colors.amber),
-                    const SizedBox(width: 4),
-                    Text(
-                      auction.sellerRating != null
-                          ? '${auction.sellerRating!.toStringAsFixed(1)} rating'
-                          : 'New seller',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color:
-                            theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                      ),
-                    ),
-                  ],
+              ),
+              const SizedBox(width: 12),
+              // Place Bid Button
+              ElevatedButton(
+                onPressed:
+                    biddingState.isPlacingBid ? null : () => _placeBid(auction),
+                style: ElevatedButton.styleFrom(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
-              ],
+                child: biddingState.isPlacingBid
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Text(
+                        'Bid',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Min bid: \$${(auction.minimumBid ?? auction.currentPrice + 1).toStringAsFixed(2)}',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
             ),
           ),
-          OutlinedButton(
-            onPressed: () {},
-            style: OutlinedButton.styleFrom(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+          // Error Message
+          if (biddingState.hasError) ...[
+            const SizedBox(height: 8),
+            Text(
+              biddingState.error!,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.error,
               ),
             ),
-            child: const Text('View Profile'),
-          ),
+          ],
         ],
       ),
     );
   }
 
-  Widget _buildBuyNowSection(AuctionModel auction, ThemeData theme) {
+  Widget _buildCompactDescription(AuctionModel auction, ThemeData theme) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: theme.colorScheme.outline.withValues(alpha: 0.1),
+        ),
+      ),
+      child: Column(
+        children: [
+          InkWell(
+            onTap: () => setState(() => _showDescription = !_showDescription),
+            borderRadius: BorderRadius.circular(12),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Icon(Icons.description_outlined,
+                      size: 20, color: theme.colorScheme.primary),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Description',
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  Icon(
+                    _showDescription ? Icons.expand_less : Icons.expand_more,
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (_showDescription)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    auction.description,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      height: 1.5,
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
+                    ),
+                  ),
+                  if (auction.condition?.isNotEmpty == true) ...[
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        const Icon(Icons.verified_outlined,
+                            size: 16, color: Colors.teal),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Condition: ${auction.condition}',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: Colors.teal,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCollapsibleBidHistory(AuctionModel auction, ThemeData theme) {
     final biddingState = ref.watch(biddingProvider(auction.id.toString()));
 
     return Container(
       margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Colors.green.withValues(alpha: 0.1),
-            Colors.green.withValues(alpha: 0.05),
-          ],
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: theme.colorScheme.outline.withValues(alpha: 0.1),
         ),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: Colors.green.withValues(alpha: 0.2),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(Icons.flash_on_rounded,
-                    color: Colors.green, size: 24),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Buy Now Available',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.green.shade700,
+          InkWell(
+            onTap: () => setState(() => _showBidHistory = !_showBidHistory),
+            borderRadius: BorderRadius.circular(12),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Icon(Icons.history,
+                      size: 20, color: theme.colorScheme.primary),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Bid History',
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
-                    Text(
-                      'Skip the bidding and purchase immediately',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color:
-                            theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Buy Now Price',
-                      style: theme.textTheme.labelMedium?.copyWith(
-                        color:
-                            theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                      ),
-                    ),
-                    Text(
-                      '\$${(auction.buyNowPrice ?? 0.0).toStringAsFixed(2)}',
-                      style: theme.textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.green.shade700,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              ElevatedButton.icon(
-                onPressed: biddingState.isBuyingNow
-                    ? null
-                    : () => _handleBuyNow(auction),
-                icon: biddingState.isBuyingNow
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(
-                            strokeWidth: 2, color: Colors.white),
-                      )
-                    : const Icon(Icons.shopping_cart_rounded),
-                label: Text(
-                    biddingState.isBuyingNow ? 'Processing...' : 'Buy Now'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
-                  foregroundColor: Colors.white,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
                   ),
+                  if (biddingState.hasBids)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primaryContainer,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        '${biddingState.bids.length}',
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: theme.colorScheme.onPrimaryContainer,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  const SizedBox(width: 8),
+                  Icon(
+                    _showBidHistory ? Icons.expand_less : Icons.expand_more,
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (_showBidHistory && biddingState.hasBids)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: Column(
+                children:
+                    biddingState.bids.asMap().entries.take(10).map((entry) {
+                  final index = entry.key;
+                  final bid = entry.value;
+                  final isWinner =
+                      index == 0; // First bid is the highest/winner
+                  final isLoser = index > 0; // All others are outbid
+
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: isWinner
+                          ? Colors.green.withValues(alpha: 0.1)
+                          : isLoser
+                              ? Colors.red.withValues(alpha: 0.05)
+                              : null,
+                      borderRadius: BorderRadius.circular(10),
+                      border: isWinner
+                          ? Border.all(
+                              color: Colors.green.withValues(alpha: 0.3))
+                          : null,
+                    ),
+                    child: Row(
+                      children: [
+                        // Winner/Loser Icon
+                        Container(
+                          width: 28,
+                          height: 28,
+                          decoration: BoxDecoration(
+                            color: isWinner
+                                ? Colors.green
+                                : Colors.red.withValues(alpha: 0.7),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            isWinner
+                                ? Icons.emoji_events_rounded
+                                : Icons.arrow_downward_rounded,
+                            size: 16,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Text(
+                                    bid.displayUsername,
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                      color: isWinner
+                                          ? Colors.green.shade700
+                                          : null,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  if (isWinner)
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 6, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: Colors.green,
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: const Text(
+                                        'WINNING',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 9,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    )
+                                  else
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 6, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color:
+                                            Colors.red.withValues(alpha: 0.8),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: const Text(
+                                        'OUTBID',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 9,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                              Text(
+                                bid.timeAgo,
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  color: theme.colorScheme.onSurface
+                                      .withValues(alpha: 0.5),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Text(
+                          bid.formattedAmount,
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color:
+                                isWinner ? Colors.green : Colors.red.shade400,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+          if (_showBidHistory && !biddingState.hasBids)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: Text(
+                'No bids yet. Be the first!',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                 ),
               ),
-            ],
-          ),
+            ),
         ],
       ),
     );
   }
 
-  Widget _buildSafetyTips(ThemeData theme) {
+  // Buy Now Button Section (separate from action buttons)
+  Widget _buildBuyNowButton(AuctionModel auction, ThemeData theme) {
+    final biddingState = ref.watch(biddingProvider(auction.id.toString()));
+
+    if (!auction.hasBuyNow) return const SizedBox.shrink();
+
     return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.blue.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.blue.withValues(alpha: 0.1)),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.shield_outlined, color: Colors.blue.shade600, size: 24),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Buyer Protection',
-                  style: theme.textTheme.labelLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.blue.shade700,
-                  ),
-                ),
-                Text(
-                  'Your purchase is protected by our secure payment system',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                  ),
-                ),
-              ],
-            ),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: ElevatedButton.icon(
+        onPressed:
+            biddingState.isBuyingNow ? null : () => _handleBuyNow(auction),
+        icon: biddingState.isBuyingNow
+            ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                    strokeWidth: 2, color: Colors.white),
+              )
+            : const Icon(Icons.flash_on_rounded, size: 24),
+        label: Text(
+          biddingState.isBuyingNow
+              ? 'Processing...'
+              : 'Buy It Now - \$${auction.buyNowPrice!.toStringAsFixed(2)}',
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
           ),
-        ],
+        ),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.green,
+          foregroundColor: Colors.white,
+          minimumSize: const Size(double.infinity, 52),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+          elevation: 2,
+        ),
       ),
     );
+  }
+
+  Future<void> _placeBid(AuctionModel auction) async {
+    final bidAmount = double.tryParse(_bidController.text);
+    if (bidAmount == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter a valid bid amount'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    final minBid = auction.minimumBid ?? auction.currentPrice + 1;
+    if (bidAmount < minBid) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Bid must be at least \$${minBid.toStringAsFixed(2)}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    final success = await ref
+        .read(biddingProvider(auction.id.toString()).notifier)
+        .placeBid(bidAmount);
+
+    if (!mounted) return;
+
+    if (success) {
+      // Refresh auction details
+      await ref
+          .read(auctionDetailProvider(auction.id.toString()).notifier)
+          .refresh();
+
+      if (!mounted) return;
+
+      // Update bid input with new minimum
+      final updatedAuction =
+          ref.read(auctionDetailProvider(auction.id.toString())).auction;
+      if (updatedAuction != null) {
+        _bidController.text =
+            (updatedAuction.minimumBid ?? updatedAuction.currentPrice + 1)
+                .toStringAsFixed(2);
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Bid placed: \$${bidAmount.toStringAsFixed(2)}'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    }
   }
 
   Future<void> _handleBuyNow(AuctionModel auction) async {
@@ -1106,17 +1138,6 @@ class _AuctionDetailScreenState extends ConsumerState<AuctionDetailScreen>
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Share functionality coming soon'),
-      ),
-    );
-  }
-
-  void _showBiddingBottomSheet(AuctionModel auction) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) => BiddingPanel(
-        auction: auction,
-        isBottomSheet: true,
       ),
     );
   }
