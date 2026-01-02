@@ -98,11 +98,8 @@ async function loadAdminStats() {
 	        document.getElementById('totalBids').textContent = data.total_bids || 0;
 	        document.getElementById('recentUsers').textContent = data.recent_users || 0;
 
-	        // Reflect recent user activity in header badge (simple, clean)
-	        const notifBadge = document.querySelector('.admin-notification-btn .badge');
-	        if (notifBadge && typeof data.recent_users !== 'undefined') {
-	            notifBadge.textContent = String(data.recent_users);
-	        }
+        // Load notification stats for badge
+        await loadNotificationStats();
 
         // Load additional analytics
         await loadFinancialAnalytics();
@@ -249,8 +246,65 @@ function backupDatabase() {
     showToast('Database backup initiated', 'success');
 }
 
-function sendNotification() {
-    showToast('Notification system feature coming soon', 'info');
+async function sendNotification() {
+    // Create a simple modal for sending notifications
+    const title = prompt('Notification Title:');
+    if (!title) return;
+
+    const message = prompt('Notification Message:');
+    if (!message) return;
+
+    const sendToAll = confirm('Send to all users? Click Cancel to send to a specific user.');
+
+    let userId = null;
+    if (!sendToAll) {
+        userId = prompt('Enter User ID:');
+        if (!userId) return;
+        userId = parseInt(userId);
+    }
+
+    try {
+        const response = await fetch(`${AdminAPI.getApiBase()}/api/admin/notifications/send`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+                title,
+                message,
+                type: 'system',
+                user_id: userId
+            })
+        });
+
+        const data = await response.json();
+        if (response.ok) {
+            showToast(data.message || 'Notification sent!', 'success');
+            loadNotificationStats();
+        } else {
+            showToast(data.error || 'Failed to send notification', 'error');
+        }
+    } catch (error) {
+        console.error('Error sending notification:', error);
+        showToast('Failed to send notification', 'error');
+    }
+}
+
+async function loadNotificationStats() {
+    try {
+        const response = await fetch(`${AdminAPI.getApiBase()}/api/admin/notifications/stats`, {
+            credentials: 'include'
+        });
+
+        if (response.ok) {
+            const stats = await response.json();
+            const badge = document.querySelector('.admin-notification-btn .badge');
+            if (badge) {
+                badge.textContent = stats.unread > 99 ? '99+' : stats.unread;
+            }
+        }
+    } catch (error) {
+        console.debug('Could not load notification stats:', error);
+    }
 }
 
 // Logout

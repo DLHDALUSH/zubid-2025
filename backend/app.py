@@ -1811,6 +1811,61 @@ def mark_notification_read(notification_id):
 
     return jsonify({'message': 'Notification marked as read'}), 200
 
+@app.route('/api/notifications/read-all', methods=['PUT'])
+@login_required
+def mark_all_notifications_read():
+    """Mark all notifications as read for current user"""
+    user_id = session['user_id']
+
+    Notification.query.filter_by(user_id=user_id, is_read=False).update({'is_read': True})
+    db.session.commit()
+
+    return jsonify({'message': 'All notifications marked as read'}), 200
+
+@app.route('/api/notifications/unread-count', methods=['GET'])
+@login_required
+def get_unread_notification_count():
+    """Get count of unread notifications"""
+    user_id = session['user_id']
+
+    count = Notification.query.filter_by(user_id=user_id, is_read=False).count()
+
+    return jsonify({'count': count}), 200
+
+@app.route('/api/notifications/<int:notification_id>', methods=['DELETE'])
+@login_required
+def delete_notification(notification_id):
+    """Delete a notification"""
+    user_id = session['user_id']
+
+    notification = Notification.query.filter_by(id=notification_id, user_id=user_id).first()
+    if not notification:
+        return jsonify({'error': 'Notification not found'}), 404
+
+    db.session.delete(notification)
+    db.session.commit()
+
+    return jsonify({'message': 'Notification deleted'}), 200
+
+# Helper function to create notifications
+def create_notification(user_id, title, message, notification_type='info', auction_id=None):
+    """Helper function to create a notification for a user"""
+    try:
+        notification = Notification(
+            user_id=user_id,
+            title=title,
+            message=message,
+            type=notification_type,
+            auction_id=auction_id
+        )
+        db.session.add(notification)
+        db.session.commit()
+        return notification
+    except Exception as e:
+        app.logger.error(f"Failed to create notification: {e}")
+        db.session.rollback()
+        return None
+
 # ==========================================
 # PASSWORD MANAGEMENT ENDPOINTS
 # ==========================================
@@ -2553,7 +2608,19 @@ def get_auctions():
                             payment_status='pending'
                         )
                         db.session.add(invoice)
-        
+
+                    # Create winner notification
+                    try:
+                        create_notification(
+                            user_id=highest_bid.user_id,
+                            title='🎉 Congratulations! You Won!',
+                            message=f'You won the auction for "{auction.item_name}" with a bid of ${auction.current_bid:.2f}. Please complete your payment.',
+                            notification_type='won',
+                            auction_id=auction.id
+                        )
+                    except Exception as notif_error:
+                        app.logger.warning(f"Failed to create winner notification: {notif_error}")
+
         if ended_auctions:
             db.session.commit()
         
@@ -3152,12 +3219,33 @@ def place_bid(auction_id):
                 # Other auto-bids will be processed on next bid
                 break
         
+        # Find previous highest bidder to notify them they've been outbid
+        previous_bid = Bid.query.filter(
+            Bid.auction_id == auction_id,
+            Bid.user_id != user_id
+        ).order_by(Bid.amount.desc()).first()
+
+        previous_bidder_id = previous_bid.user_id if previous_bid else None
+
         db.session.commit()
-        
+
+        # Create notification for outbid user (after commit to ensure bid is saved)
+        if previous_bidder_id:
+            try:
+                create_notification(
+                    user_id=previous_bidder_id,
+                    title='You\'ve been outbid! 🔔',
+                    message=f'Someone placed a higher bid of ${bid_amount:.2f} on "{auction.item_name}". Place a new bid to stay in the lead!',
+                    notification_type='outbid',
+                    auction_id=auction_id
+                )
+            except Exception as notif_error:
+                app.logger.warning(f"Failed to create outbid notification: {notif_error}")
+
         # Calculate updated time_left for response
         updated_end_time = ensure_timezone_aware(auction.end_time)
         updated_time_left = max(0, int((updated_end_time - datetime.now(timezone.utc)).total_seconds()))
-        
+
         return jsonify({
             'message': 'Bid placed successfully',
             'current_bid': auction.current_bid,
@@ -3166,7 +3254,7 @@ def place_bid(auction_id):
             'new_end_time': updated_end_time.isoformat(),
             'time_left': updated_time_left
         }), 201
-    
+
     except Exception as e:
         db.session.rollback()
         app.logger.error(f"Error placing bid: {str(e)}", exc_info=True)
@@ -3242,6 +3330,18 @@ def buy_now(auction_id):
             db.session.add(invoice)
 
         db.session.commit()
+
+        # Create notification for buyer
+        try:
+            create_notification(
+                user_id=user_id,
+                title='Purchase Complete! 🎉',
+                message=f'Congratulations! You purchased "{auction.item_name}" for ${auction.real_price:.2f}.',
+                notification_type='won',
+                auction_id=auction_id
+            )
+        except Exception as notif_error:
+            app.logger.warning(f"Failed to create purchase notification: {notif_error}")
 
         return jsonify({
             'message': 'Purchase successful! You bought this item.',
@@ -3732,6 +3832,111 @@ def get_admin_stats():
         'ended_auctions': ended_auctions,
         'total_bids': total_bids,
         'recent_users': recent_users
+    }), 200
+
+# ==========================================
+# ADMIN NOTIFICATIONS ENDPOINTS
+# ==========================================
+
+@app.route('/api/admin/notifications', methods=['GET'])
+@admin_required
+def get_admin_notifications():
+    """Get all notifications (admin view)"""
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 50, type=int)
+
+    notifications = Notification.query.order_by(Notification.created_at.desc()).paginate(page=page, per_page=per_page)
+
+    result = []
+    for notif in notifications.items:
+        user = User.query.get(notif.user_id)
+        result.append({
+            'id': str(notif.id),
+            'user_id': notif.user_id,
+            'user_name': user.username if user else 'Unknown',
+            'title': notif.title,
+            'message': notif.message,
+            'type': notif.type,
+            'is_read': notif.is_read,
+            'auction_id': notif.auction_id,
+            'created_at': notif.created_at.isoformat() if notif.created_at else None
+        })
+
+    return jsonify({
+        'notifications': result,
+        'total': notifications.total,
+        'pages': notifications.pages,
+        'current_page': page
+    }), 200
+
+@app.route('/api/admin/notifications/send', methods=['POST'])
+@admin_required
+def send_admin_notification():
+    """Send notification to specific user or all users"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+
+        title = data.get('title', '').strip()
+        message = data.get('message', '').strip()
+        notification_type = data.get('type', 'info')
+        user_id = data.get('user_id')  # None means all users
+
+        if not title or not message:
+            return jsonify({'error': 'Title and message are required'}), 400
+
+        if user_id:
+            # Send to specific user
+            user = User.query.get(user_id)
+            if not user:
+                return jsonify({'error': 'User not found'}), 404
+
+            create_notification(
+                user_id=user_id,
+                title=title,
+                message=message,
+                notification_type=notification_type
+            )
+            return jsonify({'message': f'Notification sent to {user.username}'}), 200
+        else:
+            # Send to all users
+            users = User.query.filter_by(role='user').all()
+            count = 0
+            for user in users:
+                create_notification(
+                    user_id=user.id,
+                    title=title,
+                    message=message,
+                    notification_type=notification_type
+                )
+                count += 1
+
+            return jsonify({'message': f'Notification sent to {count} users'}), 200
+
+    except Exception as e:
+        app.logger.error(f"Error sending notification: {e}")
+        return jsonify({'error': 'Failed to send notification'}), 500
+
+@app.route('/api/admin/notifications/stats', methods=['GET'])
+@admin_required
+def get_notification_stats():
+    """Get notification statistics"""
+    total = Notification.query.count()
+    unread = Notification.query.filter_by(is_read=False).count()
+    today = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+    today_count = Notification.query.filter(Notification.created_at >= today).count()
+
+    # Count by type
+    type_counts = {}
+    for notif_type in ['outbid', 'won', 'ending', 'info', 'system']:
+        type_counts[notif_type] = Notification.query.filter_by(type=notif_type).count()
+
+    return jsonify({
+        'total': total,
+        'unread': unread,
+        'today': today_count,
+        'by_type': type_counts
     }), 200
 
 @app.route('/api/admin/scan-images', methods=['GET'])

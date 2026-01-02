@@ -58,35 +58,40 @@ const NotificationManager = {
     async checkForNewNotifications() {
         // Check if user is logged in via global currentUser
         if (!window.currentUser && typeof currentUser === 'undefined') return;
-        
+
         try {
             // Fetch notifications from API using session cookies
             const response = await fetch('/api/notifications', {
                 headers: { 'Accept': 'application/json' }
             });
-            
+
             if (response.ok) {
                 const data = await response.json();
                 // API returns array directly
                 const notificationsList = Array.isArray(data) ? data : (data.notifications || []);
-                
+
                 if (notificationsList && notificationsList.length > 0) {
-                    // Add new notifications
-                    notificationsList.forEach(n => {
-                        // Handle both backend field names (timestamp, isRead) and frontend expectations
-                        const formattedNotif = {
-                            id: n.id,
-                            title: n.title,
-                            message: n.message,
-                            time: n.timestamp ? new Date(n.timestamp).toISOString() : new Date().toISOString(),
-                            type: n.type || 'system',
-                            read: n.isRead !== undefined ? n.isRead : !!n.read
-                        };
-                        
-                        if (!this.notifications.find(existing => String(existing.id) === String(formattedNotif.id))) {
-                            this.notifications.unshift(formattedNotif);
-                        }
-                    });
+                    // Replace local notifications with server data for logged-in users
+                    // This ensures we have the correct read state from the server
+                    const serverNotifications = notificationsList.map(n => ({
+                        id: n.id,
+                        title: n.title,
+                        message: n.message,
+                        time: n.timestamp ? new Date(n.timestamp).toISOString() : new Date().toISOString(),
+                        type: n.type || 'system',
+                        read: n.isRead !== undefined ? n.isRead : !!n.read,
+                        auctionId: n.auction_id || null
+                    }));
+
+                    // Use server notifications as source of truth
+                    this.notifications = serverNotifications;
+                    this.saveNotifications();
+                    this.calculateUnreadCount();
+                    this.updateBadge();
+                    this.renderNotifications();
+                } else {
+                    // No notifications from server - clear local cache for logged-in user
+                    this.notifications = [];
                     this.saveNotifications();
                     this.calculateUnreadCount();
                     this.updateBadge();
@@ -215,9 +220,23 @@ const NotificationManager = {
         }
     },
 
-    markAllAsRead() {
+    async markAllAsRead() {
         this.notifications.forEach(n => n.read = true);
-        this.saveNotifications(); this.calculateUnreadCount(); this.updateBadge(); this.renderNotifications();
+        this.saveNotifications();
+        this.calculateUnreadCount();
+        this.updateBadge();
+        this.renderNotifications();
+
+        // Sync with backend
+        try {
+            await fetch('/api/notifications/read-all', {
+                method: 'PUT',
+                headers: { 'Accept': 'application/json' }
+            });
+        } catch (error) {
+            console.debug('Failed to sync mark all read to backend:', error);
+        }
+
         if (typeof showToast === 'function') showToast('All notifications marked as read', 'success');
     },
 
