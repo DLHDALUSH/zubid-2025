@@ -437,6 +437,9 @@
 
             <!-- Step 2: Enter Code and New Password -->
             <div id="forgotStep2" style="display: none;">
+                <!-- Reset Code Display (shown when SMS/Email not configured) -->
+                <div id="resetCodeDisplay" style="display: none; margin-bottom: 1.5rem;"></div>
+
                 <p style="color: var(--text-secondary); margin-bottom: 1rem;">Enter the 6-digit code and your new password.</p>
                 <form id="resetPasswordForm" onsubmit="handleResetPassword(event)">
                     <div class="form-group">

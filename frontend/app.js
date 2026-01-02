@@ -3487,16 +3487,43 @@ async function handleForgotPassword(event) {
 
         resetIdentifier = resetType === 'email' ? email : phone;
 
-        // Show reset code for testing (remove in production)
-        if (response.reset_code) {
-            showToast(`Reset code: ${response.reset_code}`, 'success', 10000);
-        } else {
-            showToast('Reset code sent! Check your ' + (resetType === 'email' ? 'email' : 'phone'), 'success');
-        }
-
         // Show step 2
         document.getElementById('forgotStep1').style.display = 'none';
         document.getElementById('forgotStep2').style.display = 'block';
+
+        // If reset code is returned (email/SMS not configured), show it prominently
+        if (response.reset_code) {
+            // Show reset code in a prominent way
+            const codeDisplay = document.getElementById('resetCodeDisplay');
+            if (codeDisplay) {
+                codeDisplay.innerHTML = `
+                    <div class="reset-code-alert">
+                        <div class="alert-icon">⚠️</div>
+                        <div class="alert-content">
+                            <strong>Email/SMS Not Configured</strong>
+                            <p>Your reset code is:</p>
+                            <div class="reset-code-value">${response.reset_code}</div>
+                            <small>Copy this code and enter it below</small>
+                        </div>
+                    </div>
+                `;
+                codeDisplay.style.display = 'block';
+            }
+            // Also show toast
+            showToast(`Reset code: ${response.reset_code}`, 'success', 15000);
+            // Auto-fill the code for convenience
+            const resetCodeInput = document.getElementById('resetCode');
+            if (resetCodeInput) {
+                resetCodeInput.value = response.reset_code;
+            }
+        } else {
+            showToast('Reset code sent! Check your ' + (resetType === 'email' ? 'email' : 'phone'), 'success');
+            // Hide code display if it exists
+            const codeDisplay = document.getElementById('resetCodeDisplay');
+            if (codeDisplay) {
+                codeDisplay.style.display = 'none';
+            }
+        }
 
     } catch (error) {
         showToast(error.message || 'Failed to send reset code', 'error');
