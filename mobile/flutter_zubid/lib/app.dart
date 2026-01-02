@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'core/config/theme_config.dart';
+import 'core/providers/theme_provider.dart';
 import 'core/utils/app_router.dart';
 import 'core/widgets/connectivity_banner.dart';
 import 'l10n/app_localizations.dart';
@@ -14,13 +15,14 @@ class ZubidApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     try {
       final router = ref.watch(appRouterProvider);
+      final themeMode = ref.watch(themeModeProvider);
 
       return MaterialApp.router(
         title: 'ZUBID - Auction Platform',
         debugShowCheckedModeBanner: false,
         theme: ThemeConfig.lightTheme,
         darkTheme: ThemeConfig.darkTheme,
-        themeMode: ThemeMode.system,
+        themeMode: themeMode,
         routerConfig: router,
         localizationsDelegates: const [
           AppLocalizations.delegate,

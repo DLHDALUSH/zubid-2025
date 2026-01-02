@@ -6,12 +6,11 @@ import '../../../../core/widgets/loading_overlay.dart';
 import '../../../../core/utils/logger.dart';
 import '../../data/models/auction_model.dart';
 import '../providers/auction_detail_provider.dart';
+import '../providers/bidding_provider.dart';
 import '../widgets/auction_image_gallery.dart';
 import '../widgets/auction_info_card.dart';
 import '../widgets/bid_history_card.dart';
 import '../widgets/bidding_panel.dart';
-import '../widgets/seller_info_card.dart';
-import '../widgets/shipping_info_card.dart';
 
 class AuctionDetailScreen extends ConsumerStatefulWidget {
   final String auctionId;
@@ -22,7 +21,8 @@ class AuctionDetailScreen extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<AuctionDetailScreen> createState() => _AuctionDetailScreenState();
+  ConsumerState<AuctionDetailScreen> createState() =>
+      _AuctionDetailScreenState();
 }
 
 class _AuctionDetailScreenState extends ConsumerState<AuctionDetailScreen> {
@@ -33,7 +33,7 @@ class _AuctionDetailScreenState extends ConsumerState<AuctionDetailScreen> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
-    
+
     // Load auction details
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(auctionDetailProvider(widget.auctionId).notifier).loadAuction();
@@ -68,7 +68,8 @@ class _AuctionDetailScreenState extends ConsumerState<AuctionDetailScreen> {
             ? _buildAuctionDetail(auctionState.auction!)
             : _buildErrorOrEmpty(),
       ),
-      floatingActionButton: _showFloatingBidButton && auctionState.auction?.isLive == true
+      floatingActionButton: _showFloatingBidButton &&
+              auctionState.auction?.isLive == true
           ? FloatingActionButton.extended(
               onPressed: () => _showBiddingBottomSheet(auctionState.auction!),
               icon: const Icon(Icons.gavel),
@@ -106,7 +107,7 @@ class _AuctionDetailScreenState extends ConsumerState<AuctionDetailScreen> {
             ),
           ],
         ),
-        
+
         // Content
         SliverToBoxAdapter(
           child: Padding(
@@ -116,38 +117,31 @@ class _AuctionDetailScreenState extends ConsumerState<AuctionDetailScreen> {
               children: [
                 // Auction Info
                 AuctionInfoCard(auction: auction),
-                
+
                 const SizedBox(height: 16),
-                
+
                 // Bidding Panel (if auction is live)
                 if (auction.isLive) ...[
                   BiddingPanel(auction: auction),
                   const SizedBox(height: 16),
                 ],
-                
+
                 // Bid History
                 BidHistoryCard(auctionId: auction.id.toString()),
-                
+
                 const SizedBox(height: 16),
-                
-                // Seller Info
-                SellerInfoCard(seller: auction.seller),
-                
-                const SizedBox(height: 16),
-                
-                // Shipping Info
-                ShippingInfoCard(auction: auction),
-                
-                const SizedBox(height: 16),
-                
+
                 // Description
                 _buildDescriptionCard(auction),
-                
+
                 const SizedBox(height: 16),
-                
-                // Similar Auctions
-                _buildSimilarAuctions(),
-                
+
+                // Buy Now Button (if available)
+                if (auction.hasBuyNow) ...[
+                  _buildBuyNowButton(auction),
+                  const SizedBox(height: 16),
+                ],
+
                 const SizedBox(height: 100), // Space for floating button
               ],
             ),
@@ -177,7 +171,6 @@ class _AuctionDetailScreenState extends ConsumerState<AuctionDetailScreen> {
               auction.description,
               style: theme.textTheme.bodyMedium,
             ),
-            
             if (auction.condition?.isNotEmpty == true) ...[
               const SizedBox(height: 16),
               Row(
@@ -204,39 +197,76 @@ class _AuctionDetailScreenState extends ConsumerState<AuctionDetailScreen> {
     );
   }
 
-  Widget _buildSimilarAuctions() {
+  Widget _buildBuyNowButton(AuctionModel auction) {
     final theme = Theme.of(context);
+    final biddingState = ref.watch(biddingProvider(auction.id.toString()));
 
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              'Similar Auctions',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+            Row(
+              children: [
+                Icon(
+                  Icons.flash_on,
+                  color: theme.colorScheme.primary,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Buy Now',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 12),
-            // TODO: Implement similar auctions list
-            Container(
-              height: 100,
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: theme.colorScheme.outline.withOpacity(0.3),
-                  style: BorderStyle.solid,
-                ),
+            Text(
+              'Skip the bidding and purchase immediately',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
               ),
-              child: Center(
-                child: Text(
-                  'Similar auctions will be shown here',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurface.withOpacity(0.6),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Text(
+                  'Buy Now Price:',
+                  style: theme.textTheme.bodyMedium,
+                ),
+                const Spacer(),
+                Text(
+                  '\$${(auction.buyNowPrice ?? 0.0).toStringAsFixed(2)}',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.primary,
                   ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: biddingState.isBuyingNow
+                    ? null
+                    : () => _handleBuyNow(auction),
+                icon: biddingState.isBuyingNow
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.shopping_cart),
+                label: Text(
+                  biddingState.isBuyingNow ? 'Processing...' : 'Buy Now',
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: theme.colorScheme.primary,
+                  foregroundColor: theme.colorScheme.onPrimary,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
               ),
             ),
@@ -244,6 +274,50 @@ class _AuctionDetailScreenState extends ConsumerState<AuctionDetailScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _handleBuyNow(AuctionModel auction) async {
+    final theme = Theme.of(context);
+
+    // Show confirmation dialog
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirm Purchase'),
+        content: Text(
+          'Are you sure you want to buy this item for \$${(auction.buyNowPrice ?? 0.0).toStringAsFixed(2)}?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Confirm'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      final success = await ref
+          .read(biddingProvider(auction.id.toString()).notifier)
+          .buyNow('default_payment_method');
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              success
+                  ? 'Purchase successful! Check your orders for details.'
+                  : 'Purchase failed. Please try again.',
+            ),
+            backgroundColor: success ? Colors.green : theme.colorScheme.error,
+          ),
+        );
+      }
+    }
   }
 
   Widget _buildErrorOrEmpty() {
@@ -261,10 +335,12 @@ class _AuctionDetailScreenState extends ConsumerState<AuctionDetailScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
-                error != null ? Icons.error_outline : Icons.inventory_2_outlined,
+                error != null
+                    ? Icons.error_outline
+                    : Icons.inventory_2_outlined,
                 size: 64,
-                color: error != null 
-                    ? theme.colorScheme.error 
+                color: error != null
+                    ? theme.colorScheme.error
                     : theme.colorScheme.onSurface.withOpacity(0.5),
               ),
               const SizedBox(height: 16),
@@ -295,20 +371,22 @@ class _AuctionDetailScreenState extends ConsumerState<AuctionDetailScreen> {
   }
 
   Future<void> _toggleWatchlist(AuctionModel auction) async {
-    final success = await ref.read(auctionDetailProvider(widget.auctionId).notifier)
+    final success = await ref
+        .read(auctionDetailProvider(widget.auctionId).notifier)
         .toggleWatchlist();
-    
+
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            success 
-                ? auction.isWatched 
-                    ? 'Removed from watchlist' 
+            success
+                ? auction.isWatched
+                    ? 'Removed from watchlist'
                     : 'Added to watchlist'
                 : 'Failed to update watchlist',
           ),
-          backgroundColor: success ? Colors.green : Theme.of(context).colorScheme.error,
+          backgroundColor:
+              success ? Colors.green : Theme.of(context).colorScheme.error,
         ),
       );
     }
@@ -317,7 +395,7 @@ class _AuctionDetailScreenState extends ConsumerState<AuctionDetailScreen> {
   void _shareAuction(AuctionModel auction) {
     // TODO: Implement share functionality
     AppLogger.userAction('Share auction: ${auction.id}');
-    
+
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Share functionality coming soon'),

@@ -25,6 +25,7 @@ import '../../features/splash/presentation/screens/splash_screen.dart';
 import '../../features/legal/presentation/screens/terms_of_service_screen.dart';
 import '../../features/legal/presentation/screens/privacy_policy_screen.dart';
 import '../../features/settings/presentation/screens/settings_screen.dart';
+import '../../features/settings/presentation/screens/help_support_screen.dart';
 import '../widgets/error_screen.dart';
 import '../widgets/main_layout.dart';
 import 'app_routes.dart';
@@ -170,9 +171,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: AppRoutes.help,
-        builder: (context, state) => const ErrorScreen(
-          error: 'Help & Support screen coming soon!',
-        ),
+        builder: (context, state) => const HelpSupportScreen(),
       ),
       GoRoute(
         path: AppRoutes.about,

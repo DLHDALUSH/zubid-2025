@@ -16,11 +16,11 @@ RegisterRequestModel _$RegisterRequestModelFromJson(
       idNumber: json['id_number'] as String,
       birthDate: json['birth_date'] as String,
       address: json['address'] as String,
-      firstName: json['firstName'] as String?,
-      lastName: json['lastName'] as String?,
+      firstName: json['first_name'] as String?,
+      lastName: json['last_name'] as String?,
       city: json['city'] as String?,
       country: json['country'] as String?,
-      acceptTerms: json['acceptTerms'] as bool? ?? false,
+      acceptTerms: json['accept_terms'] as bool? ?? false,
     );
 
 Map<String, dynamic> _$RegisterRequestModelToJson(
@@ -33,9 +33,9 @@ Map<String, dynamic> _$RegisterRequestModelToJson(
       'id_number': instance.idNumber,
       'birth_date': instance.birthDate,
       'address': instance.address,
-      'firstName': instance.firstName,
-      'lastName': instance.lastName,
+      'first_name': instance.firstName,
+      'last_name': instance.lastName,
       'city': instance.city,
       'country': instance.country,
-      'acceptTerms': instance.acceptTerms,
+      'accept_terms': instance.acceptTerms,
     };

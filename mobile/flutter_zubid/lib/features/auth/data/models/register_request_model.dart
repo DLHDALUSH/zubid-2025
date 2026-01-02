@@ -14,10 +14,13 @@ class RegisterRequestModel {
   @JsonKey(name: 'birth_date')
   final String birthDate;
   final String address;
+  @JsonKey(name: 'first_name')
   final String? firstName;
+  @JsonKey(name: 'last_name')
   final String? lastName;
   final String? city;
   final String? country;
+  @JsonKey(name: 'accept_terms')
   final bool acceptTerms;
 
   const RegisterRequestModel({

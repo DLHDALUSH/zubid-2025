@@ -2,6 +2,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/providers/theme_provider.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../../../core/utils/logger.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -35,7 +36,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     // Load local settings
     _notificationsEnabled = StorageService.isNotificationsEnabled();
     _biometricEnabled = StorageService.isBiometricEnabled();
-    _darkModeEnabled = StorageService.getThemeMode() == 'dark';
+
+    // Get dark mode from theme provider
+    final themeMode = ref.read(themeModeProvider);
+    _darkModeEnabled = themeMode == ThemeMode.dark;
 
     final language = StorageService.getLanguage();
     _selectedLanguage = _getLanguageDisplayName(language);
@@ -99,7 +103,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   Future<void> _saveDarkModeSetting(bool value) async {
     setState(() => _darkModeEnabled = value);
-    await StorageService.setThemeMode(value ? 'dark' : 'light');
+    // Update theme through provider (which also saves to storage)
+    await ref.read(themeModeProvider.notifier).toggleDarkMode(value);
     _showSavedSnackbar();
   }
 

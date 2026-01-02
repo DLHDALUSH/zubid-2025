@@ -26,7 +26,6 @@ class BiddingPanel extends ConsumerStatefulWidget {
 class _BiddingPanelState extends ConsumerState<BiddingPanel> {
   final _bidController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
-  bool _isCustomBid = false;
 
   @override
   void initState() {
@@ -110,17 +109,12 @@ class _BiddingPanelState extends ConsumerState<BiddingPanel> {
           // Current Price Info
           _buildCurrentPriceInfo(theme),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
 
-          // Quick Bid Buttons
-          _buildQuickBidButtons(theme),
+          // Bid Amount Input - Direct entry
+          _buildBidInput(theme),
 
-          const SizedBox(height: 16),
-
-          // Custom Bid Input
-          _buildCustomBidInput(theme),
-
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
 
           // Action Buttons
           _buildActionButtons(theme, biddingState),
@@ -204,83 +198,22 @@ class _BiddingPanelState extends ConsumerState<BiddingPanel> {
     );
   }
 
-  Widget _buildQuickBidButtons(ThemeData theme) {
-    final quickBids = [
-      widget.auction.minimumBid,
-      (widget.auction.minimumBid ?? 0.0) + 5,
-      (widget.auction.minimumBid ?? 0.0) + 10,
-      (widget.auction.minimumBid ?? 0.0) + 25,
-    ];
-
+  Widget _buildBidInput(ThemeData theme) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Quick Bid',
+          'Enter Your Bid Amount',
           style: theme.textTheme.titleSmall?.copyWith(
             fontWeight: FontWeight.w600,
           ),
         ),
-        const SizedBox(height: 8),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: quickBids.map((amount) {
-            final isSelected =
-                !_isCustomBid && double.tryParse(_bidController.text) == amount;
-
-            return FilterChip(
-              label: Text('\$${(amount ?? 0.0).toStringAsFixed(2)}'),
-              selected: isSelected,
-              onSelected: (selected) {
-                if (selected) {
-                  setState(() {
-                    _isCustomBid = false;
-                    _bidController.text = (amount ?? 0.0).toStringAsFixed(2);
-                  });
-                }
-              },
-            );
-          }).toList(),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildCustomBidInput(ThemeData theme) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Text(
-              'Custom Bid',
-              style: theme.textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const Spacer(),
-            Switch(
-              value: _isCustomBid,
-              onChanged: (value) {
-                setState(() {
-                  _isCustomBid = value;
-                  if (!value) {
-                    _bidController.text =
-                        (widget.auction.minimumBid ?? 0.0).toStringAsFixed(2);
-                  }
-                });
-              },
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 12),
         CustomTextField(
           controller: _bidController,
           label: 'Bid Amount',
-          prefixText: '\$',
-          keyboardType: TextInputType.number,
-          enabled: _isCustomBid,
+          prefixText: '\$ ',
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
           inputFormatters: [
             FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
           ],
@@ -300,6 +233,13 @@ class _BiddingPanelState extends ConsumerState<BiddingPanel> {
 
             return null;
           },
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Minimum bid: \$${(widget.auction.minimumBid ?? 0.0).toStringAsFixed(2)}',
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.primary,
+          ),
         ),
       ],
     );
