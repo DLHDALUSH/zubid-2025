@@ -71,9 +71,14 @@ app.config['SQLALCHEMY_DATABASE_URI'] = database_uri
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Session configuration for proper cookie handling
-is_https = os.getenv('HTTPS_ENABLED', 'false').lower() == 'true'
+https_enabled = os.getenv('HTTPS_ENABLED', 'false').lower() == 'true'
+# Auto-detect HTTPS if running on production domains
+hostname = os.getenv('RENDER_EXTERNAL_HOSTNAME', '')
+if not https_enabled and ('onrender.com' in hostname or 'duckdns.org' in hostname):
+    https_enabled = True
+
 app.config['SESSION_COOKIE_NAME'] = 'zubid_session'  # Explicit session cookie name
-app.config['SESSION_COOKIE_SECURE'] = is_https
+app.config['SESSION_COOKIE_SECURE'] = https_enabled
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 # Use 'Lax' for same-origin requests (frontend served from Flask on port 5000)
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
@@ -217,7 +222,7 @@ if cors_origins == '*':
     # Development/default mode - allow all origins for API access (mobile apps, web)
     # For APIs that need to be accessed from mobile apps, we use permissive CORS
     CORS(app,
-         supports_credentials=False,  # Mobile apps don't use cookies
+         supports_credentials=True,  # Allow credentials even with * (modern browsers require specific origin for this though)
          origins="*",  # Allow any origin (required for mobile apps)
          allow_headers=['Content-Type', 'X-CSRFToken', 'Authorization'],
          expose_headers=['Set-Cookie'],
