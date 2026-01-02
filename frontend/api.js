@@ -10,6 +10,28 @@ const API_BASE_URL = window.API_BASE_URL || (window.location.hostname === 'local
 const API_BASE = API_BASE_URL.replace('/api', '');
 window.API_BASE = API_BASE; // Make available globally
 
+/**
+ * Convert relative image URLs to full URLs
+ * Handles: /uploads/xxx, uploads/xxx, and validates existing URLs
+ * @param {string} imageUrl - The image URL to convert
+ * @returns {string} - Full URL or original if already absolute
+ */
+function getFullImageUrl(imageUrl) {
+    if (!imageUrl) return null;
+
+    // Already a full URL or data URL
+    if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://') || imageUrl.startsWith('data:')) {
+        return imageUrl;
+    }
+
+    // Relative URL - convert to full URL
+    const baseUrl = API_BASE || API_BASE_URL.replace('/api', '');
+    return baseUrl + (imageUrl.startsWith('/') ? imageUrl : '/' + imageUrl);
+}
+
+// Make globally available
+window.getFullImageUrl = getFullImageUrl;
+
 // CSRF Token Management
 let csrfToken = null;
 

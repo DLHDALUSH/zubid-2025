@@ -945,6 +945,17 @@ def ensure_timezone_aware(dt):
     # If already timezone-aware, return as-is
     return dt
 
+def get_full_image_url(image_url):
+    """Convert relative image URL to full URL"""
+    if not image_url:
+        return None
+    # Already a full URL or data URL
+    if image_url.startswith(('http://', 'https://', 'data:')):
+        return image_url
+    # Relative URL - convert to full URL
+    base_url = os.getenv('BASE_URL', 'http://localhost:5000')
+    return f"{base_url}{image_url}" if image_url.startswith('/') else f"{base_url}/{image_url}"
+
 def calculate_delivery_fee(user_id):
     """Calculate delivery fee based on user's address"""
     user = User.query.get(user_id)
@@ -1562,7 +1573,7 @@ def login():
                 'username': user.username,
                 'email': user.email,
                 'role': user.role,
-                'profile_photo': user.profile_photo,
+                'profile_photo': get_full_image_url(user.profile_photo),
                 'first_name': user.first_name,
                 'last_name': user.last_name,
                 'balance': float(user.balance) if user.balance is not None else 0.0
@@ -1590,7 +1601,7 @@ def get_current_user():
         'username': user.username,
         'email': user.email,
         'role': user.role,
-        'profile_photo': user.profile_photo,
+        'profile_photo': get_full_image_url(user.profile_photo),
         'first_name': user.first_name,
         'last_name': user.last_name,
         'balance': float(user.balance) if user.balance is not None else 0.0,
@@ -2018,7 +2029,7 @@ def get_profile():
         'address': user.address,
         'phone': user.phone,
         'role': user.role,
-        'profile_photo': user.profile_photo,
+        'profile_photo': get_full_image_url(user.profile_photo),
         # Enhanced profile fields
         'first_name': user.first_name,
         'last_name': user.last_name,

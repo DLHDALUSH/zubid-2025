@@ -317,8 +317,19 @@ function updateNavAuth(isAuthenticated) {
                 }
                 if (userAvatar) {
                     if (currentUser.profile_photo) {
-                        userAvatar.src = currentUser.profile_photo;
+                        // Convert relative URLs to full URLs
+                        let photoUrl = currentUser.profile_photo;
+                        if (photoUrl.startsWith('/uploads/') || (!photoUrl.startsWith('http://') && !photoUrl.startsWith('https://') && !photoUrl.startsWith('data:'))) {
+                            const baseUrl = API_BASE_URL.replace('/api', '');
+                            photoUrl = baseUrl + (photoUrl.startsWith('/') ? photoUrl : '/' + photoUrl);
+                        }
+                        userAvatar.src = photoUrl;
                         userAvatar.style.display = 'block';
+                        userAvatar.onerror = function() {
+                            // Fallback to default avatar on error
+                            this.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="%23ff6600" stroke-width="2"%3E%3Cpath d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"%3E%3C/path%3E%3Ccircle cx="12" cy="7" r="4"%3E%3C/circle%3E%3C/svg%3E';
+                            this.onerror = null; // Prevent infinite loop
+                        };
                     } else {
                         // Use default avatar
                         userAvatar.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="%23ff6600" stroke-width="2"%3E%3Cpath d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"%3E%3C/path%3E%3Ccircle cx="12" cy="7" r="4"%3E%3C/circle%3E%3C/svg%3E';

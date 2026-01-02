@@ -175,15 +175,13 @@ function displayProfilePhoto(photoUrl) {
 
     if (photoUrl) {
         if (photoDisplay) {
-            // Use unified image URL converter for consistent handling
-            let fullUrl = photoUrl;
+            // Use global helper function for URL conversion
+            const fullUrl = (typeof getFullImageUrl !== 'undefined')
+                ? getFullImageUrl(photoUrl)
+                : photoUrl;
 
-            // Handle relative URLs (e.g., /uploads/profile_xxx.jpg)
-            if (photoUrl.startsWith('/uploads/') || (!photoUrl.startsWith('http://') && !photoUrl.startsWith('https://') && !photoUrl.startsWith('data:'))) {
-                const apiBaseUrl = (typeof API_BASE_URL !== 'undefined') ? API_BASE_URL : 'http://localhost:5000/api';
-                const baseUrl = apiBaseUrl.replace('/api', '');
-                fullUrl = baseUrl + (photoUrl.startsWith('/') ? photoUrl : '/' + photoUrl);
-            }
+            console.log('Profile photo URL:', photoUrl);
+            console.log('Full URL:', fullUrl);
 
             photoDisplay.src = fullUrl;
             photoDisplay.style.display = 'block';
@@ -191,6 +189,8 @@ function displayProfilePhoto(photoUrl) {
                 console.error('Failed to load profile photo:', fullUrl);
                 this.style.display = 'none';
                 if (photoPlaceholder) photoPlaceholder.style.display = 'flex';
+                // Also update remove button visibility
+                if (removePhotoBtn) removePhotoBtn.style.display = 'none';
             };
             photoDisplay.onload = function() {
                 console.log('✅ Profile photo loaded successfully:', fullUrl.substring(0, 100));
