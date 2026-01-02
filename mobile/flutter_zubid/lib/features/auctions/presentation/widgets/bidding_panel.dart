@@ -248,8 +248,8 @@ class _BiddingPanelState extends ConsumerState<BiddingPanel> {
   Widget _buildActionButtons(ThemeData theme, BiddingState biddingState) {
     return CustomButton(
       text: 'Place Bid',
-      onPressed: biddingState.isLoading ? null : _placeBid,
-      isLoading: biddingState.isLoading,
+      onPressed: biddingState.isPlacingBid ? null : _placeBid,
+      isLoading: biddingState.isPlacingBid,
       icon: Icons.gavel,
     );
   }
@@ -257,8 +257,8 @@ class _BiddingPanelState extends ConsumerState<BiddingPanel> {
   Widget _buildBuyNowButton(ThemeData theme, BiddingState biddingState) {
     return CustomButton(
       text: 'Buy It Now - \$${widget.auction.buyNowPrice!.toStringAsFixed(2)}',
-      onPressed: biddingState.isLoading ? null : _buyNow,
-      isLoading: biddingState.isLoading,
+      onPressed: biddingState.isBuyingNow ? null : _buyNow,
+      isLoading: biddingState.isBuyingNow,
       icon: Icons.shopping_cart,
       backgroundColor: Colors.green,
     );

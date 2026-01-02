@@ -3,16 +3,16 @@
 // Update the PRODUCTION_API_URL below when deploying to production
 
 // ============================================================
-// 🔧 PRODUCTION CONFIGURATION - RENDER.COM PRIMARY PLATFORM
+// 🔧 PRODUCTION CONFIGURATION - DUCKDNS PRIMARY PLATFORM
 // ============================================================
-// PRODUCTION (Primary): Render Cloud Platform
-// https://zubid-2025.onrender.com
-// ALTERNATIVE: DuckDNS Custom Domain
+// PRODUCTION (Primary): DuckDNS Custom Domain
 // https://zubidauction.duckdns.org
-const PRODUCTION_API_URL = 'https://zubid-2025.onrender.com/api';
-const PRODUCTION_BASE_URL = 'https://zubid-2025.onrender.com';
-const ALTERNATIVE_API_URL = 'https://zubidauction.duckdns.org/api';
-const ALTERNATIVE_BASE_URL = 'https://zubidauction.duckdns.org';
+// ALTERNATIVE: Render Cloud Platform (Backup)
+// https://zubid-2025.onrender.com
+const PRODUCTION_API_URL = 'https://zubidauction.duckdns.org/api';
+const PRODUCTION_BASE_URL = 'https://zubidauction.duckdns.org';
+const ALTERNATIVE_API_URL = 'https://zubid-2025.onrender.com/api';
+const ALTERNATIVE_BASE_URL = 'https://zubid-2025.onrender.com';
 // ============================================================
 
 // Auto-detect environment

@@ -3,6 +3,7 @@ import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
+import 'package:path_provider/path_provider.dart';
 
 import '../config/app_config.dart';
 import '../services/storage_service.dart';
@@ -14,18 +15,38 @@ final apiClientProvider = Provider<ApiClient>((ref) {
 
 class ApiClient {
   late final Dio _dio;
-  late final CookieJar _cookieJar;
+  PersistCookieJar? _persistCookieJar;
+  final CookieJar _cookieJar = CookieJar();
+  bool _isInitialized = false;
 
   ApiClient() {
     _dio = Dio();
-    _cookieJar = CookieJar();
     _setupBaseOptions();
     _setupCookieManager();
     _setupInterceptors();
+    _initPersistentCookies();
   }
 
   Dio get dio => _dio;
-  CookieJar get cookieJar => _cookieJar;
+  CookieJar get cookieJar => _persistCookieJar ?? _cookieJar;
+
+  Future<void> _initPersistentCookies() async {
+    try {
+      final dir = await getApplicationDocumentsDirectory();
+      _persistCookieJar = PersistCookieJar(
+        ignoreExpires: true,
+        storage: FileStorage('${dir.path}/.cookies/'),
+      );
+      // Replace the cookie manager with persistent one
+      _dio.interceptors.removeWhere((i) => i is CookieManager);
+      _dio.interceptors.insert(0, CookieManager(_persistCookieJar!));
+      _isInitialized = true;
+      AppLogger.info('Persistent cookie storage initialized');
+    } catch (e) {
+      AppLogger.warning('Failed to init persistent cookies, using in-memory',
+          error: e);
+    }
+  }
 
   void _setupBaseOptions() {
     _dio.options = BaseOptions(
@@ -43,12 +64,15 @@ class ApiClient {
   }
 
   void _setupCookieManager() {
-    // Add cookie manager for session-based authentication
+    // Add cookie manager for session-based authentication (will be replaced with persistent one)
     _dio.interceptors.add(CookieManager(_cookieJar));
   }
 
   /// Clear all cookies (useful for logout)
   Future<void> clearCookies() async {
+    if (_persistCookieJar != null) {
+      await _persistCookieJar!.deleteAll();
+    }
     await _cookieJar.deleteAll();
   }
 
@@ -77,12 +101,12 @@ class ApiClient {
           if (token != null) {
             options.headers['Authorization'] = 'Bearer $token';
           }
-          
+
           AppLogger.network(
             options.method,
             '${options.baseUrl}${options.path}',
           );
-          
+
           handler.next(options);
         },
         onResponse: (response, handler) {
@@ -104,8 +128,8 @@ class ApiClient {
           if (error.type == DioExceptionType.connectionError ||
               error.type == DioExceptionType.unknown ||
               (error.message?.contains('Failed host lookup') ?? false)) {
-
-            AppLogger.warning('Network connectivity issue detected, attempting retry...');
+            AppLogger.warning(
+                'Network connectivity issue detected, attempting retry...');
 
             // Wait a bit before retry
             await Future.delayed(const Duration(seconds: 2));
@@ -160,7 +184,8 @@ class ApiClient {
       // Note: Backend doesn't have a dedicated refresh-token endpoint yet
       // For now, return false to force re-login when token expires
       // TODO: Implement refresh-token endpoint in backend
-      AppLogger.warning('Token refresh not implemented in backend - user will need to re-login');
+      AppLogger.warning(
+          'Token refresh not implemented in backend - user will need to re-login');
       return false;
     } catch (e) {
       AppLogger.error('Token refresh error', error: e);

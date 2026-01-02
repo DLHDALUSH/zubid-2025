@@ -1,3 +1,5 @@
+import 'package:dio/dio.dart';
+
 import '../../../../core/network/api_client.dart';
 import '../../../../core/network/api_result.dart';
 import '../../../../core/utils/logger.dart';
@@ -87,33 +89,54 @@ class BiddingRepository {
     } catch (e) {
       AppLogger.error('Error placing bid on auction ${request.auctionId}',
           error: e);
-      // Extract error message from DioException if possible
+
       String errorMessage = 'Failed to place bid';
 
-      // Try to extract meaningful error message
-      final errorString = e.toString();
-      if (errorString.contains('401')) {
-        errorMessage = 'Please log in to place a bid';
-      } else if (errorString.contains('400')) {
-        // Try to get the specific error from response
-        if (errorString.contains('must be at least')) {
-          final match =
-              RegExp(r'Bid must be at least \$[\d.]+').firstMatch(errorString);
-          errorMessage = match?.group(0) ?? 'Bid amount too low';
-        } else if (errorString.contains('not active')) {
-          errorMessage = 'This auction is no longer active';
-        } else if (errorString.contains('own auction')) {
-          errorMessage = 'You cannot bid on your own auction';
-        } else if (errorString.contains('ended')) {
-          errorMessage = 'This auction has ended';
-        } else {
-          errorMessage = 'Invalid bid. Please try again.';
+      // Try to extract error message from DioException response
+      if (e is DioException) {
+        final response = e.response;
+        if (response != null && response.data != null) {
+          // Try to get error from response body
+          final data = response.data;
+          if (data is Map<String, dynamic> && data['error'] != null) {
+            errorMessage = data['error'].toString();
+            AppLogger.error('Server error: $errorMessage');
+            return ApiResult.error(errorMessage);
+          }
         }
-      } else if (errorString.contains('429')) {
-        errorMessage = 'Too many bids. Please wait a moment.';
-      } else if (errorString.contains('connection') ||
-          errorString.contains('network')) {
-        errorMessage = 'Network error. Please check your connection.';
+
+        // Handle specific status codes
+        switch (response?.statusCode) {
+          case 401:
+            errorMessage = 'Please log in to place a bid';
+            break;
+          case 400:
+            errorMessage = 'Invalid bid. Please try again.';
+            break;
+          case 404:
+            errorMessage = 'Auction not found';
+            break;
+          case 429:
+            errorMessage = 'Too many bids. Please wait a moment.';
+            break;
+          default:
+            if (e.type == DioExceptionType.connectionTimeout ||
+                e.type == DioExceptionType.receiveTimeout ||
+                e.type == DioExceptionType.sendTimeout) {
+              errorMessage = 'Connection timeout. Please try again.';
+            } else if (e.type == DioExceptionType.connectionError) {
+              errorMessage = 'Network error. Please check your connection.';
+            }
+        }
+      } else {
+        // Fallback to string parsing for non-Dio errors
+        final errorString = e.toString();
+        if (errorString.contains('401')) {
+          errorMessage = 'Please log in to place a bid';
+        } else if (errorString.contains('connection') ||
+            errorString.contains('network')) {
+          errorMessage = 'Network error. Please check your connection.';
+        }
       }
 
       return ApiResult.error(errorMessage);
