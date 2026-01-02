@@ -7,6 +7,7 @@ import '../../../../core/widgets/custom_button.dart';
 import '../../../../core/widgets/custom_text_field.dart';
 import '../../../../core/utils/logger.dart';
 import '../../data/models/auction_model.dart';
+import '../providers/auction_detail_provider.dart';
 import '../providers/bidding_provider.dart';
 
 class BiddingPanel extends ConsumerStatefulWidget {
@@ -278,38 +279,53 @@ class _BiddingPanelState extends ConsumerState<BiddingPanel> {
         .read(biddingProvider(widget.auction.id.toString()).notifier)
         .placeBid(bidAmount);
 
-    if (mounted) {
-      if (success) {
-        if (widget.isBottomSheet) {
-          Navigator.of(context).pop();
-        }
+    if (!mounted) return;
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-                'Bid placed successfully for \$${bidAmount.toStringAsFixed(2)}'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      } else {
-        // Show error message from state
-        final errorMessage =
-            ref.read(biddingProvider(widget.auction.id.toString())).error ??
-                'Failed to place bid. Please try again.';
+    if (success) {
+      // Refresh auction details to get updated current price
+      await ref
+          .read(auctionDetailProvider(widget.auction.id.toString()).notifier)
+          .refresh();
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(errorMessage),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 4),
-            action: SnackBarAction(
-              label: 'Retry',
-              textColor: Colors.white,
-              onPressed: _placeBid,
-            ),
-          ),
-        );
+      if (!mounted) return;
+
+      // Update the bid input field with new minimum bid
+      final updatedAuction =
+          ref.read(auctionDetailProvider(widget.auction.id.toString())).auction;
+      if (updatedAuction != null) {
+        _bidController.text =
+            (updatedAuction.minimumBid ?? 0.0).toStringAsFixed(2);
       }
+
+      if (widget.isBottomSheet) {
+        Navigator.of(context).pop();
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+              'Bid placed successfully for \$${bidAmount.toStringAsFixed(2)}'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } else {
+      // Show error message from state
+      final errorMessage =
+          ref.read(biddingProvider(widget.auction.id.toString())).error ??
+              'Failed to place bid. Please try again.';
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(errorMessage),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 4),
+          action: SnackBarAction(
+            label: 'Retry',
+            textColor: Colors.white,
+            onPressed: _placeBid,
+          ),
+        ),
+      );
     }
   }
 
