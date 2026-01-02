@@ -3289,7 +3289,7 @@ def place_bid(auction_id):
                 'is_auto_bid': bid.is_auto_bid or False,
                 'max_bid_amount': bid.max_auto_bid,
                 'user_username': user.username if user else 'Unknown',
-                'user_avatar': user.avatar_url if user else None,
+                'user_avatar': user.profile_photo if user else None,
                 'user_rating': user.rating if user and hasattr(user, 'rating') else None
             }
         }), 201
