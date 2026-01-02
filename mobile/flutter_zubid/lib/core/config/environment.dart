@@ -156,18 +156,18 @@ class EnvironmentConfig {
 
   static void printConfig() {
     if (enableLogging) {
-      print('=== ZUBID Environment Configuration ===');
-      print('Environment: $name');
-      print('API Base URL: $apiBaseUrl');
-      print('WebSocket URL: $websocketUrl');
-      print('Logging Enabled: $enableLogging');
-      print('Debug Tools: $enableDebugTools');
-      print('Crash Reporting: $enableCrashReporting');
-      print('Analytics: $enableAnalytics');
-      print('API Timeout: ${apiTimeout.inSeconds}s');
-      print('Max Retry Attempts: $maxRetryAttempts');
-      print('Log Level: $logLevel');
-      print('=====================================');
+      debugPrint('=== ZUBID Environment Configuration ===');
+      debugPrint('Environment: $name');
+      debugPrint('API Base URL: $apiBaseUrl');
+      debugPrint('WebSocket URL: $websocketUrl');
+      debugPrint('Logging Enabled: $enableLogging');
+      debugPrint('Debug Tools: $enableDebugTools');
+      debugPrint('Crash Reporting: $enableCrashReporting');
+      debugPrint('Analytics: $enableAnalytics');
+      debugPrint('API Timeout: ${apiTimeout.inSeconds}s');
+      debugPrint('Max Retry Attempts: $maxRetryAttempts');
+      debugPrint('Log Level: $logLevel');
+      debugPrint('=====================================');
     }
   }
 }

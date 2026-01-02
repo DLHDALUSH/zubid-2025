@@ -57,10 +57,14 @@ class _SocialLoginButtonsState extends ConsumerState<SocialLoginButtons> {
 
       result.when(
         success: (response) {
-          _handleSuccessfulLogin(context, ref, response, 'Google');
+          if (mounted) {
+            _handleSuccessfulLogin(context, ref, response, 'Google');
+          }
         },
         error: (error) {
-          _showErrorSnackBar(context, error);
+          if (mounted) {
+            _showErrorSnackBar(context, error);
+          }
         },
       );
     } catch (e) {
@@ -88,10 +92,14 @@ class _SocialLoginButtonsState extends ConsumerState<SocialLoginButtons> {
 
       result.when(
         success: (response) {
-          _handleSuccessfulLogin(context, ref, response, 'Apple');
+          if (mounted) {
+            _handleSuccessfulLogin(context, ref, response, 'Apple');
+          }
         },
         error: (error) {
-          _showErrorSnackBar(context, error);
+          if (mounted) {
+            _showErrorSnackBar(context, error);
+          }
         },
       );
     } catch (e) {

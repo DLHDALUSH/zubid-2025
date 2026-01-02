@@ -119,7 +119,7 @@ class SellerInfoCard extends StatelessWidget {
                             Text(
                               '${seller.rating!.toStringAsFixed(1)} (${seller.reviewCount} reviews)',
                               style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurface.withOpacity(0.6),
+                                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                               ),
                             ),
                           ],
@@ -131,7 +131,7 @@ class SellerInfoCard extends StatelessWidget {
                       Text(
                         'Member since ${_formatMemberSince(seller.memberSince)}',
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurface.withOpacity(0.6),
+                          color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                         ),
                       ),
                     ],
@@ -207,7 +207,7 @@ class SellerInfoCard extends StatelessWidget {
         Text(
           label,
           style: theme.textTheme.bodySmall?.copyWith(
-            color: theme.colorScheme.onSurface.withOpacity(0.6),
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
           ),
         ),
       ],

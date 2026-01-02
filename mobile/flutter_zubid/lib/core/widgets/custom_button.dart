@@ -68,7 +68,7 @@ class CustomButton extends StatelessWidget {
               style: OutlinedButton.styleFrom(
                 foregroundColor: effectiveTextColor,
                 side: BorderSide(
-                  color: effectiveTextColor.withOpacity(0.5),
+                  color: effectiveTextColor.withValues(alpha: 0.5),
                   width: 1.5,
                 ),
                 shape: RoundedRectangleBorder(
@@ -84,7 +84,7 @@ class CustomButton extends StatelessWidget {
                 backgroundColor: effectiveBackgroundColor,
                 foregroundColor: effectiveTextColor,
                 elevation: 2,
-                shadowColor: effectiveBackgroundColor.withOpacity(0.3),
+                shadowColor: effectiveBackgroundColor.withValues(alpha: 0.3),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(borderRadius),
                 ),
@@ -168,7 +168,7 @@ class CustomIconButton extends StatelessWidget {
         color: backgroundColor ?? colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: colorScheme.outline.withOpacity(0.2),
+          color: colorScheme.outline.withValues(alpha: 0.2),
         ),
       ),
       child: IconButton(

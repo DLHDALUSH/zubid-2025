@@ -61,7 +61,7 @@ class PurchaseSummaryCard extends ConsumerWidget {
             
             // Divider
             Divider(
-              color: theme.colorScheme.outline.withOpacity(0.3),
+              color: theme.colorScheme.outline.withValues(alpha: 0.3),
             ),
             
             const SizedBox(height: 16),
@@ -80,7 +80,7 @@ class PurchaseSummaryCard extends ConsumerWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Column(
@@ -126,7 +126,7 @@ class PurchaseSummaryCard extends ConsumerWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.primaryContainer.withOpacity(0.3),
+                  color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
@@ -199,9 +199,6 @@ class PurchaseSummaryCard extends ConsumerWidget {
   String _calculateTax() {
     // Default tax calculation (8.5% sales tax)
     final itemPrice = auction.buyNowPrice ?? auction.currentBid;
-    final shippingCost = auction.shipping.hasShippingCost 
-        ? auction.shipping.shippingCost 
-        : 9.99;
     const taxRate = 0.085; // 8.5%
     final tax = (itemPrice ?? 0.0) * taxRate;
     return '\$${tax.toStringAsFixed(2)}';

@@ -37,7 +37,7 @@ class AuctionCard extends StatelessWidget {
 
     return Card(
       elevation: 4,
-      shadowColor: theme.colorScheme.primary.withOpacity(0.2),
+      shadowColor: theme.colorScheme.primary.withValues(alpha: 0.2),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
       ),
@@ -66,7 +66,7 @@ class AuctionCard extends StatelessWidget {
                           end: Alignment.bottomCenter,
                           colors: [
                             Colors.transparent,
-                            Colors.black.withOpacity(0.5),
+                            Colors.black.withValues(alpha: 0.5),
                           ],
                           stops: const [0.5, 1.0],
                         ),
@@ -161,7 +161,7 @@ class AuctionCard extends StatelessWidget {
                             'Current Bid',
                             style: theme.textTheme.labelSmall?.copyWith(
                               color:
-                                  theme.colorScheme.onSurface.withOpacity(0.5),
+                                  theme.colorScheme.onSurface.withValues(alpha: 0.5),
                               fontSize: 10,
                             ),
                           ),
@@ -216,7 +216,7 @@ class AuctionCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: color.withOpacity(0.4),
+            color: color.withValues(alpha: 0.4),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -247,12 +247,12 @@ class AuctionCard extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           color: isDark
-              ? Colors.black.withOpacity(0.6)
-              : Colors.white.withOpacity(0.9),
+              ? Colors.black.withValues(alpha: 0.6)
+              : Colors.white.withValues(alpha: 0.9),
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.2),
+              color: Colors.black.withValues(alpha: 0.2),
               blurRadius: 4,
               offset: const Offset(0, 2),
             ),
@@ -282,7 +282,7 @@ class AuctionCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.green.withOpacity(0.4),
+            color: Colors.green.withValues(alpha: 0.4),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -299,7 +299,7 @@ class AuctionCard extends StatelessWidget {
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.white.withOpacity(0.5),
+                  color: Colors.white.withValues(alpha: 0.5),
                   blurRadius: 4,
                 ),
               ],
@@ -343,7 +343,7 @@ class AuctionCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.9),
+        color: Colors.white.withValues(alpha: 0.9),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
@@ -375,13 +375,13 @@ class AuctionCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: isUrgent
-            ? Colors.red.withOpacity(0.1)
+            ? Colors.red.withValues(alpha: 0.1)
             : theme.colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
           color: isUrgent
-              ? Colors.red.withOpacity(0.3)
-              : theme.colorScheme.outline.withOpacity(0.2),
+              ? Colors.red.withValues(alpha: 0.3)
+              : theme.colorScheme.outline.withValues(alpha: 0.2),
         ),
       ),
       child: Row(
@@ -392,7 +392,7 @@ class AuctionCard extends StatelessWidget {
             size: 14,
             color: isUrgent
                 ? Colors.red
-                : theme.colorScheme.onSurface.withOpacity(0.6),
+                : theme.colorScheme.onSurface.withValues(alpha: 0.6),
           ),
           const SizedBox(width: 4),
           Text(
@@ -400,7 +400,7 @@ class AuctionCard extends StatelessWidget {
             style: theme.textTheme.labelSmall?.copyWith(
               color: isUrgent
                   ? Colors.red
-                  : theme.colorScheme.onSurface.withOpacity(0.7),
+                  : theme.colorScheme.onSurface.withValues(alpha: 0.7),
               fontWeight: isUrgent ? FontWeight.bold : FontWeight.w500,
             ),
           ),
@@ -438,7 +438,7 @@ class AuctionCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(4),
           child: LinearProgressIndicator(
             value: progress.clamp(0.0, 1.0),
-            backgroundColor: Colors.red.withOpacity(0.2),
+            backgroundColor: Colors.red.withValues(alpha: 0.2),
             valueColor: const AlwaysStoppedAnimation<Color>(Colors.red),
             minHeight: 4,
           ),

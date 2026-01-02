@@ -78,12 +78,6 @@ class ProfileRepository {
     try {
       AppLogger.network('POST', '/user/profile/photo');
 
-      // Convert image to base64
-      final bytes = await imageFile.readAsBytes();
-      final base64Image = base64Encode(bytes);
-      final fileName = imageFile.path.split('/').last;
-      final fileType = fileName.split('.').last.toLowerCase();
-
       final request = UploadPhotoRequestModel.fromFile(imageFile);
 
       final response = await _apiClient.dio.post(
@@ -115,7 +109,7 @@ class ProfileRepository {
     try {
       AppLogger.network('DELETE', '/user/profile/photo');
 
-      final response = await _apiClient.dio.delete('/user/profile/photo');
+      await _apiClient.dio.delete('/user/profile/photo');
 
       AppLogger.network('DELETE', '/user/profile/photo', statusCode: 200, response: 'Photo deletion successful');
       
@@ -138,7 +132,7 @@ class ProfileRepository {
     try {
       AppLogger.network('POST', '/change-password');
 
-      final response = await _apiClient.dio.post(
+      await _apiClient.dio.post(
         '/change-password',
         data: {
           'current_password': currentPassword,
@@ -164,7 +158,7 @@ class ProfileRepository {
     try {
       AppLogger.network('POST', '/verify-email');
 
-      final response = await _apiClient.dio.post(
+      await _apiClient.dio.post(
         '/verify-email',
         data: {'token': token},
       );
@@ -187,7 +181,7 @@ class ProfileRepository {
     try {
       AppLogger.network('POST', '/resend-verification');
 
-      final response = await _apiClient.dio.post('/resend-verification');
+      await _apiClient.dio.post('/resend-verification');
 
       AppLogger.network('POST', '/resend-verification', statusCode: 200, response: 'Email verification resent successfully');
       

@@ -59,7 +59,6 @@ class _AuctionDetailScreenState extends ConsumerState<AuctionDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final auctionState = ref.watch(auctionDetailProvider(widget.auctionId));
-    final theme = Theme.of(context);
 
     return Scaffold(
       body: LoadingOverlay(
@@ -341,7 +340,7 @@ class _AuctionDetailScreenState extends ConsumerState<AuctionDetailScreen> {
                 size: 64,
                 color: error != null
                     ? theme.colorScheme.error
-                    : theme.colorScheme.onSurface.withOpacity(0.5),
+                    : theme.colorScheme.onSurface.withValues(alpha: 0.5),
               ),
               const SizedBox(height: 16),
               Text(
@@ -354,7 +353,7 @@ class _AuctionDetailScreenState extends ConsumerState<AuctionDetailScreen> {
               Text(
                 error ?? 'The auction you\'re looking for doesn\'t exist',
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurface.withOpacity(0.7),
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
                 ),
                 textAlign: TextAlign.center,
               ),

@@ -102,7 +102,7 @@ class _CreateAuctionScreenState extends ConsumerState<CreateAuctionScreen> {
                         shape: BoxShape.circle,
                         color: isActive
                             ? theme.colorScheme.primary
-                            : theme.colorScheme.outline.withOpacity(0.3),
+                            : theme.colorScheme.outline.withValues(alpha: 0.3),
                       ),
                       child: Center(
                         child: isCompleted
@@ -116,7 +116,7 @@ class _CreateAuctionScreenState extends ConsumerState<CreateAuctionScreen> {
                                 style: TextStyle(
                                   color: isActive
                                       ? theme.colorScheme.onPrimary
-                                      : theme.colorScheme.onSurface.withOpacity(0.6),
+                                      : theme.colorScheme.onSurface.withValues(alpha: 0.6),
                                   fontWeight: FontWeight.bold,
                                   fontSize: 14,
                                 ),
@@ -132,7 +132,7 @@ class _CreateAuctionScreenState extends ConsumerState<CreateAuctionScreen> {
                           margin: const EdgeInsets.symmetric(horizontal: 8),
                           color: isCompleted
                               ? theme.colorScheme.primary
-                              : theme.colorScheme.outline.withOpacity(0.3),
+                              : theme.colorScheme.outline.withValues(alpha: 0.3),
                         ),
                       ),
                   ],
@@ -152,7 +152,7 @@ class _CreateAuctionScreenState extends ConsumerState<CreateAuctionScreen> {
                   style: theme.textTheme.labelSmall?.copyWith(
                     color: _currentStep == 0
                         ? theme.colorScheme.primary
-                        : theme.colorScheme.onSurface.withOpacity(0.6),
+                        : theme.colorScheme.onSurface.withValues(alpha: 0.6),
                     fontWeight: _currentStep == 0 ? FontWeight.bold : FontWeight.normal,
                   ),
                   textAlign: TextAlign.center,
@@ -164,7 +164,7 @@ class _CreateAuctionScreenState extends ConsumerState<CreateAuctionScreen> {
                   style: theme.textTheme.labelSmall?.copyWith(
                     color: _currentStep == 1
                         ? theme.colorScheme.primary
-                        : theme.colorScheme.onSurface.withOpacity(0.6),
+                        : theme.colorScheme.onSurface.withValues(alpha: 0.6),
                     fontWeight: _currentStep == 1 ? FontWeight.bold : FontWeight.normal,
                   ),
                   textAlign: TextAlign.center,
@@ -176,7 +176,7 @@ class _CreateAuctionScreenState extends ConsumerState<CreateAuctionScreen> {
                   style: theme.textTheme.labelSmall?.copyWith(
                     color: _currentStep == 2
                         ? theme.colorScheme.primary
-                        : theme.colorScheme.onSurface.withOpacity(0.6),
+                        : theme.colorScheme.onSurface.withValues(alpha: 0.6),
                     fontWeight: _currentStep == 2 ? FontWeight.bold : FontWeight.normal,
                   ),
                   textAlign: TextAlign.center,
@@ -188,7 +188,7 @@ class _CreateAuctionScreenState extends ConsumerState<CreateAuctionScreen> {
                   style: theme.textTheme.labelSmall?.copyWith(
                     color: _currentStep == 3
                         ? theme.colorScheme.primary
-                        : theme.colorScheme.onSurface.withOpacity(0.6),
+                        : theme.colorScheme.onSurface.withValues(alpha: 0.6),
                     fontWeight: _currentStep == 3 ? FontWeight.bold : FontWeight.normal,
                   ),
                   textAlign: TextAlign.center,
@@ -208,7 +208,7 @@ class _CreateAuctionScreenState extends ConsumerState<CreateAuctionScreen> {
         color: theme.colorScheme.surface,
         boxShadow: [
           BoxShadow(
-            color: theme.colorScheme.shadow.withOpacity(0.1),
+            color: theme.colorScheme.shadow.withValues(alpha: 0.1),
             blurRadius: 4,
             offset: const Offset(0, -2),
           ),

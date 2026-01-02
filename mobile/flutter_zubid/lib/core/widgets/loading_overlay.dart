@@ -23,7 +23,7 @@ class LoadingOverlay extends StatelessWidget {
         child,
         if (isLoading)
           Container(
-            color: backgroundColor ?? Colors.black.withOpacity(0.3),
+            color: backgroundColor ?? Colors.black.withValues(alpha: 0.3),
             child: Center(
               child: Card(
                 elevation: 8,
@@ -164,7 +164,7 @@ class LoadingIndicator extends StatelessWidget {
           Text(
             message!,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
             ),
             textAlign: TextAlign.center,
           ),
@@ -262,7 +262,7 @@ class _ShimmerLoadingState extends State<ShimmerLoading>
     final theme = Theme.of(context);
     final baseColor = widget.baseColor ?? theme.colorScheme.surface;
     final highlightColor = widget.highlightColor ?? 
-        theme.colorScheme.onSurface.withOpacity(0.1);
+        theme.colorScheme.onSurface.withValues(alpha: 0.1);
 
     return AnimatedBuilder(
       animation: _animation,

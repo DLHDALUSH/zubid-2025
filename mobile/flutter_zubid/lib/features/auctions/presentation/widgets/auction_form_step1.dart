@@ -74,7 +74,7 @@ class _AuctionFormStep1State extends ConsumerState<AuctionFormStep1> {
             Text(
               'Provide the basic details about your item',
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurface.withOpacity(0.7),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
               ),
             ),
             
@@ -182,7 +182,7 @@ class _AuctionFormStep1State extends ConsumerState<AuctionFormStep1> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: theme.colorScheme.primaryContainer.withOpacity(0.3),
+                color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Column(
@@ -229,9 +229,6 @@ class _AuctionFormStep1State extends ConsumerState<AuctionFormStep1> {
   }
 
   void _updateDraft([String? value]) {
-    // Update draft auction with current form data
-    final currentDraft = ref.read(auctionCreationProvider).draftAuction;
-    
     // For now, we'll just validate the form
     // The actual draft saving will be handled when moving to next step
     _formKey.currentState?.validate();

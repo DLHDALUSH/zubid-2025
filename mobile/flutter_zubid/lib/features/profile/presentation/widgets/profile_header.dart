@@ -65,13 +65,13 @@ class ProfileHeader extends StatelessWidget {
                             Icon(
                               Icons.access_time,
                               size: 16,
-                              color: theme.colorScheme.onSurface.withOpacity(0.6),
+                              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                             ),
                             const SizedBox(width: 4),
                             Text(
                               'Member for ${profile!.membershipDuration}',
                               style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurface.withOpacity(0.6),
+                                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                               ),
                             ),
                           ],
@@ -103,7 +103,7 @@ class ProfileHeader extends StatelessWidget {
                 child: Text(
                   profile!.bio!,
                   style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurface.withOpacity(0.8),
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
                   ),
                 ),
               ),
@@ -140,7 +140,7 @@ class ProfileHeader extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         border: Border.all(
-          color: theme.colorScheme.outline.withOpacity(0.3),
+          color: theme.colorScheme.outline.withValues(alpha: 0.3),
           width: 2,
         ),
       ),
@@ -180,8 +180,6 @@ class ProfileHeader extends StatelessWidget {
   }
 
   Widget _buildVerificationStatus(BuildContext context) {
-    final theme = Theme.of(context);
-    
     return Row(
       children: [
         // Email Verification

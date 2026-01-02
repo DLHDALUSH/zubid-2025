@@ -35,7 +35,7 @@ class ProfilePhotoPicker extends StatelessWidget {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: theme.colorScheme.outline.withOpacity(0.3),
+                    color: theme.colorScheme.outline.withValues(alpha: 0.3),
                     width: 3,
                   ),
                 ),
@@ -50,7 +50,7 @@ class ProfilePhotoPicker extends StatelessWidget {
                   child: Container(
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Colors.black.withOpacity(0.5),
+                      color: Colors.black.withValues(alpha: 0.5),
                     ),
                     child: const Center(
                       child: CircularProgressIndicator(
@@ -125,7 +125,7 @@ class ProfilePhotoPicker extends StatelessWidget {
             Text(
               'Uploading photo...',
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurface.withOpacity(0.7),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
               ),
             ),
           ],

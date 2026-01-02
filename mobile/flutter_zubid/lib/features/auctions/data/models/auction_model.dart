@@ -458,7 +458,7 @@ class AuctionModel extends HiveObject {
   // Seller information
   SellerInfo get seller => SellerInfo(
         id: sellerId,
-        username: sellerUsername ?? 'Unknown',
+        username: sellerUsername,
         avatar: sellerAvatar,
         isVerified: sellerVerified ?? false,
         rating: sellerRating,

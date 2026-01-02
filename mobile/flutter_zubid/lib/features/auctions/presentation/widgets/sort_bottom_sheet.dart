@@ -180,7 +180,7 @@ class _SortBottomSheetState extends State<SortBottomSheet> {
               size: 20,
               color: isSelected 
                   ? theme.colorScheme.primary 
-                  : theme.colorScheme.onSurface.withOpacity(0.6),
+                  : theme.colorScheme.onSurface.withValues(alpha: 0.6),
             ),
             const SizedBox(width: 12),
             Text(
@@ -195,7 +195,7 @@ class _SortBottomSheetState extends State<SortBottomSheet> {
         subtitle: Text(
           option.subtitle,
           style: theme.textTheme.bodySmall?.copyWith(
-            color: theme.colorScheme.onSurface.withOpacity(0.6),
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
           ),
         ),
         activeColor: theme.colorScheme.primary,
@@ -225,12 +225,12 @@ class _SortBottomSheetState extends State<SortBottomSheet> {
           border: Border.all(
             color: isSelected 
                 ? theme.colorScheme.primary 
-                : theme.colorScheme.outline.withOpacity(0.3),
+                : theme.colorScheme.outline.withValues(alpha: 0.3),
             width: isSelected ? 2 : 1,
           ),
           borderRadius: BorderRadius.circular(8),
           color: isSelected 
-              ? theme.colorScheme.primaryContainer.withOpacity(0.3)
+              ? theme.colorScheme.primaryContainer.withValues(alpha: 0.3)
               : null,
         ),
         child: Column(
@@ -239,7 +239,7 @@ class _SortBottomSheetState extends State<SortBottomSheet> {
               icon,
               color: isSelected 
                   ? theme.colorScheme.primary 
-                  : theme.colorScheme.onSurface.withOpacity(0.6),
+                  : theme.colorScheme.onSurface.withValues(alpha: 0.6),
             ),
             const SizedBox(height: 8),
             Text(
@@ -253,7 +253,7 @@ class _SortBottomSheetState extends State<SortBottomSheet> {
             Text(
               subtitle,
               style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurface.withOpacity(0.6),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
               ),
               textAlign: TextAlign.center,
             ),

@@ -43,7 +43,7 @@ class BidHistoryCard extends ConsumerWidget {
                   Text(
                     '${biddingState.bids.length} bids',
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurface.withOpacity(0.6),
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                     ),
                   ),
               ],
@@ -97,7 +97,7 @@ class BidHistoryCard extends ConsumerWidget {
             Text(
               error,
               style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurface.withOpacity(0.6),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
               ),
               textAlign: TextAlign.center,
             ),
@@ -115,21 +115,21 @@ class BidHistoryCard extends ConsumerWidget {
           children: [
             Icon(
               Icons.gavel_outlined,
-              color: theme.colorScheme.onSurface.withOpacity(0.5),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
               size: 32,
             ),
             const SizedBox(height: 8),
             Text(
               'No bids yet',
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurface.withOpacity(0.7),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
               ),
             ),
             const SizedBox(height: 4),
             Text(
               'Be the first to place a bid!',
               style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurface.withOpacity(0.6),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
               ),
             ),
           ],
@@ -220,7 +220,7 @@ class BidHistoryCard extends ConsumerWidget {
                           Text(
                             bid.userRating!.toStringAsFixed(1),
                             style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurface.withOpacity(0.6),
+                              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                             ),
                           ),
                         ],
@@ -234,7 +234,7 @@ class BidHistoryCard extends ConsumerWidget {
                     Text(
                       bid.timeAgo,
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurface.withOpacity(0.6),
+                        color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                       ),
                     ),
                     if (bid.isAutoBid) ...[

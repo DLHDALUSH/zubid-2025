@@ -17,7 +17,6 @@ class ApiClient {
   late final Dio _dio;
   PersistCookieJar? _persistCookieJar;
   final CookieJar _cookieJar = CookieJar();
-  bool _isInitialized = false;
 
   ApiClient() {
     _dio = Dio();
@@ -40,7 +39,6 @@ class ApiClient {
       // Replace the cookie manager with persistent one
       _dio.interceptors.removeWhere((i) => i is CookieManager);
       _dio.interceptors.insert(0, CookieManager(_persistCookieJar!));
-      _isInitialized = true;
       AppLogger.info('Persistent cookie storage initialized');
     } catch (e) {
       AppLogger.warning('Failed to init persistent cookies, using in-memory',

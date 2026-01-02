@@ -47,7 +47,6 @@ class _PaymentMethodSelectorState extends ConsumerState<PaymentMethodSelector> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final paymentMethod = ref.watch(paymentMethodProvider);
 
     return Card(
       child: Padding(
@@ -98,12 +97,12 @@ class _PaymentMethodSelectorState extends ConsumerState<PaymentMethodSelector> {
               border: Border.all(
                 color: isSelected 
                     ? theme.colorScheme.primary
-                    : theme.colorScheme.outline.withOpacity(0.3),
+                    : theme.colorScheme.outline.withValues(alpha: 0.3),
                 width: isSelected ? 2 : 1,
               ),
               borderRadius: BorderRadius.circular(8),
               color: isSelected 
-                  ? theme.colorScheme.primaryContainer.withOpacity(0.1)
+                  ? theme.colorScheme.primaryContainer.withValues(alpha: 0.1)
                   : null,
             ),
             child: Row(
@@ -112,7 +111,7 @@ class _PaymentMethodSelectorState extends ConsumerState<PaymentMethodSelector> {
                   method.icon,
                   color: method.isEnabled 
                       ? (isSelected ? theme.colorScheme.primary : theme.colorScheme.onSurface)
-                      : theme.colorScheme.onSurface.withOpacity(0.4),
+                      : theme.colorScheme.onSurface.withValues(alpha: 0.4),
                 ),
                 
                 const SizedBox(width: 16),
@@ -127,7 +126,7 @@ class _PaymentMethodSelectorState extends ConsumerState<PaymentMethodSelector> {
                           fontWeight: FontWeight.w600,
                           color: method.isEnabled 
                               ? theme.colorScheme.onSurface
-                              : theme.colorScheme.onSurface.withOpacity(0.4),
+                              : theme.colorScheme.onSurface.withValues(alpha: 0.4),
                         ),
                       ),
                       const SizedBox(height: 2),
@@ -135,8 +134,8 @@ class _PaymentMethodSelectorState extends ConsumerState<PaymentMethodSelector> {
                         method.description,
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: method.isEnabled 
-                              ? theme.colorScheme.onSurface.withOpacity(0.6)
-                              : theme.colorScheme.onSurface.withOpacity(0.4),
+                              ? theme.colorScheme.onSurface.withValues(alpha: 0.6)
+                              : theme.colorScheme.onSurface.withValues(alpha: 0.4),
                         ),
                       ),
                     ],
@@ -176,7 +175,7 @@ class _PaymentMethodSelectorState extends ConsumerState<PaymentMethodSelector> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -194,10 +193,10 @@ class _PaymentMethodSelectorState extends ConsumerState<PaymentMethodSelector> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: theme.colorScheme.primary.withOpacity(0.1),
+              color: theme.colorScheme.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
-                color: theme.colorScheme.primary.withOpacity(0.3),
+                color: theme.colorScheme.primary.withValues(alpha: 0.3),
               ),
             ),
             child: Row(

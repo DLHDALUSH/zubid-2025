@@ -19,8 +19,6 @@ class ThemeConfig {
   static const _lightOnSurface =
       Color(0xFF1A1A1A); // Darker for better contrast
   static const _lightBackground = Color(0xFFF7F7F7);
-  static const _lightOnBackground =
-      Color(0xFF1A1A1A); // Darker for better contrast
   static const _lightError = Color(0xFFD32F2F);
   static const _lightOnError = Colors.white;
   static const _lightTextPrimary =
@@ -43,7 +41,6 @@ class ThemeConfig {
   static const _darkSurface = Color(0xFF1E1E1E);
   static const _darkOnSurface = Color(0xFFF5F5F5); // Brighter white
   static const _darkBackground = Color(0xFF121212);
-  static const _darkOnBackground = Color(0xFFF5F5F5); // Brighter white
   static const _darkError = Color(0xFFFF6B6B);
   static const _darkOnError = Color(0xFF1A1A1A);
   static const _darkTextPrimary =

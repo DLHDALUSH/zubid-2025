@@ -93,7 +93,7 @@ class OrdersRepository {
     try {
       AppLogger.info('Cancelling order: ${request.orderId}');
       
-      final result = await _apiClient.post(
+      await _apiClient.post(
         '/orders/${request.orderId}/cancel',
         data: request.toJson(),
       );

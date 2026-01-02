@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/widgets/custom_text_field.dart';
-import '../../data/models/create_auction_model.dart';
 import '../providers/auction_creation_provider.dart';
 
 class AuctionFormStep4 extends ConsumerStatefulWidget {
@@ -96,7 +95,7 @@ class _AuctionFormStep4State extends ConsumerState<AuctionFormStep4> {
             Text(
               'Set shipping options and review your listing',
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurface.withOpacity(0.7),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
               ),
             ),
             
@@ -306,7 +305,7 @@ class _AuctionFormStep4State extends ConsumerState<AuctionFormStep4> {
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
+            color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Column(
@@ -383,7 +382,7 @@ class _AuctionFormStep4State extends ConsumerState<AuctionFormStep4> {
             style: theme.textTheme.bodySmall?.copyWith(
               color: isCompleted 
                   ? theme.colorScheme.onSurfaceVariant
-                  : theme.colorScheme.onSurfaceVariant.withOpacity(0.6),
+                  : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
             ),
           ),
         ],
@@ -392,18 +391,6 @@ class _AuctionFormStep4State extends ConsumerState<AuctionFormStep4> {
   }
 
   void _saveDraft() {
-    // Create shipping info
-    final shippingInfo = ShippingInfo(
-      domesticShippingCost: _freeShipping ? 0.0 : (double.tryParse(_shippingCostController.text) ?? 0.0),
-      internationalShippingCost: _allowInternationalShipping 
-          ? (double.tryParse(_internationalShippingController.text) ?? 0.0)
-          : null,
-      shippingMethod: _selectedShippingMethod,
-      shipsTo: _allowInternationalShipping ? ['Worldwide'] : ['Domestic'],
-      shippingNotes: _shippingNotesController.text.isEmpty ? null : _shippingNotesController.text,
-      freeShipping: _freeShipping,
-    );
-
     // Get current draft and update with shipping info
     final currentState = ref.read(auctionCreationProvider);
     if (currentState.selectedCategory != null) {

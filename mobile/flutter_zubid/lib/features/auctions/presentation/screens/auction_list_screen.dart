@@ -327,7 +327,7 @@ class _AuctionListScreenState extends ConsumerState<AuctionListScreen> {
             Text(
               error ?? 'Unknown error occurred',
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurface.withOpacity(0.7),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
               ),
               textAlign: TextAlign.center,
             ),
@@ -355,13 +355,13 @@ class _AuctionListScreenState extends ConsumerState<AuctionListScreen> {
             Icon(
               hasFilters ? Icons.search_off : Icons.inventory_2_outlined,
               size: 64,
-              color: theme.colorScheme.onSurface.withOpacity(0.5),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
             ),
             const SizedBox(height: 16),
             Text(
               hasFilters ? 'No Auctions Found' : 'No Auctions Available',
               style: theme.textTheme.titleLarge?.copyWith(
-                color: theme.colorScheme.onSurface.withOpacity(0.7),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
               ),
             ),
             const SizedBox(height: 8),
@@ -370,7 +370,7 @@ class _AuctionListScreenState extends ConsumerState<AuctionListScreen> {
                   ? 'Try adjusting your search or filters'
                   : 'Check back later for new auctions',
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurface.withOpacity(0.6),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
               ),
               textAlign: TextAlign.center,
             ),

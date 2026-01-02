@@ -124,12 +124,12 @@ class _CustomTextFieldState extends State<CustomTextField> {
           enabled: widget.enabled,
           autofocus: widget.autofocus,
           style: theme.textTheme.bodyLarge?.copyWith(
-            color: widget.enabled ? colorScheme.onSurface : colorScheme.onSurface.withOpacity(0.6),
+            color: widget.enabled ? colorScheme.onSurface : colorScheme.onSurface.withValues(alpha: 0.6),
           ),
           decoration: InputDecoration(
             hintText: widget.hintText ?? widget.hint,
             hintStyle: theme.textTheme.bodyLarge?.copyWith(
-              color: colorScheme.onSurface.withOpacity(0.6),
+              color: colorScheme.onSurface.withValues(alpha: 0.6),
             ),
             prefixText: widget.prefixText,
             prefixIcon: widget.prefixIcon != null
@@ -137,7 +137,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
                     widget.prefixIcon,
                     color: _isFocused
                         ? colorScheme.primary
-                        : colorScheme.onSurface.withOpacity(0.6),
+                        : colorScheme.onSurface.withValues(alpha: 0.6),
                   )
                 : null,
             suffixIcon: widget.suffixIcon,
@@ -146,17 +146,17 @@ class _CustomTextFieldState extends State<CustomTextField> {
             filled: true,
             fillColor: widget.enabled
                 ? colorScheme.surface
-                : colorScheme.surface.withOpacity(0.5),
+                : colorScheme.surface.withValues(alpha: 0.5),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(
-                color: colorScheme.outline.withOpacity(0.3),
+                color: colorScheme.outline.withValues(alpha: 0.3),
               ),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(
-                color: colorScheme.outline.withOpacity(0.3),
+                color: colorScheme.outline.withValues(alpha: 0.3),
               ),
             ),
             focusedBorder: OutlineInputBorder(
@@ -182,7 +182,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
             disabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(
-                color: colorScheme.outline.withOpacity(0.2),
+                color: colorScheme.outline.withValues(alpha: 0.2),
               ),
             ),
             contentPadding: const EdgeInsets.symmetric(
@@ -217,9 +217,6 @@ class CustomSearchField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
     return CustomTextField(
       controller: controller,
       hint: hint ?? 'Search...',

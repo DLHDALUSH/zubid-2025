@@ -173,7 +173,7 @@ class ProfileMenu extends StatelessWidget {
         item.icon,
         color: item.isDestructive
             ? theme.colorScheme.error
-            : theme.colorScheme.onSurface.withOpacity(0.7),
+            : theme.colorScheme.onSurface.withValues(alpha: 0.7),
       ),
       title: Text(
         item.title,
@@ -188,13 +188,13 @@ class ProfileMenu extends StatelessWidget {
           ? Text(
               item.subtitle!,
               style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurface.withOpacity(0.6),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
               ),
             )
           : null,
       trailing: Icon(
         Icons.chevron_right,
-        color: theme.colorScheme.onSurface.withOpacity(0.4),
+        color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
       ),
       onTap: item.onTap,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),

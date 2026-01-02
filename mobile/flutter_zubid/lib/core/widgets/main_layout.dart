@@ -58,7 +58,7 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
         type: BottomNavigationBarType.fixed,
         backgroundColor: theme.colorScheme.surface,
         selectedItemColor: theme.colorScheme.primary,
-        unselectedItemColor: theme.colorScheme.onSurface.withOpacity(0.6),
+        unselectedItemColor: theme.colorScheme.onSurface.withValues(alpha: 0.6),
         selectedFontSize: 12,
         unselectedFontSize: 12,
         elevation: 8,

@@ -56,7 +56,7 @@ class ProfileCompletionCard extends StatelessWidget {
             // Progress Bar
             LinearProgressIndicator(
               value: completionPercentage / 100,
-              backgroundColor: theme.colorScheme.onPrimaryContainer.withOpacity(0.3),
+              backgroundColor: theme.colorScheme.onPrimaryContainer.withValues(alpha: 0.3),
               valueColor: AlwaysStoppedAnimation<Color>(
                 theme.colorScheme.onPrimaryContainer,
               ),
@@ -67,7 +67,7 @@ class ProfileCompletionCard extends StatelessWidget {
             Text(
               'A complete profile helps build trust with other users and improves your bidding success.',
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onPrimaryContainer.withOpacity(0.8),
+                color: theme.colorScheme.onPrimaryContainer.withValues(alpha: 0.8),
               ),
             ),
             
@@ -153,7 +153,7 @@ class ProfileCompletionCard extends StatelessWidget {
         Text(
           'Missing Information:',
           style: theme.textTheme.bodySmall?.copyWith(
-            color: theme.colorScheme.onPrimaryContainer.withOpacity(0.8),
+            color: theme.colorScheme.onPrimaryContainer.withValues(alpha: 0.8),
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -179,10 +179,10 @@ class ProfileCompletionCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: theme.colorScheme.onPrimaryContainer.withOpacity(0.2),
+        color: theme.colorScheme.onPrimaryContainer.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: theme.colorScheme.onPrimaryContainer.withOpacity(0.3),
+          color: theme.colorScheme.onPrimaryContainer.withValues(alpha: 0.3),
           width: 1,
         ),
       ),

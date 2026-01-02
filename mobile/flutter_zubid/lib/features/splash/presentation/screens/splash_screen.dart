@@ -253,12 +253,12 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: const Color(0xFFFFD700).withOpacity(0.3),
+                  color: const Color(0xFFFFD700).withValues(alpha: 0.3),
                   width: 2,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFFFFD700).withOpacity(0.3),
+                    color: const Color(0xFFFFD700).withValues(alpha: 0.3),
                     blurRadius: 20,
                     spreadRadius: 5,
                   ),
@@ -285,12 +285,12 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.3),
+                color: Colors.black.withValues(alpha: 0.3),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
               ),
               BoxShadow(
-                color: const Color(0xFFFFD700).withOpacity(0.5),
+                color: const Color(0xFFFFD700).withValues(alpha: 0.5),
                 blurRadius: 30,
                 offset: const Offset(0, 0),
               ),
@@ -316,7 +316,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                       letterSpacing: 3,
                       shadows: [
                         Shadow(
-                          color: Colors.black.withOpacity(0.7),
+                          color: Colors.black.withValues(alpha: 0.7),
                           offset: const Offset(2, 2),
                           blurRadius: 4,
                         ),
@@ -329,7 +329,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                 Container(
                   padding: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
@@ -338,7 +338,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                     size: 18,
                     shadows: [
                       Shadow(
-                        color: Colors.black.withOpacity(0.5),
+                        color: Colors.black.withValues(alpha: 0.5),
                         offset: const Offset(1, 1),
                         blurRadius: 3,
                       ),
@@ -362,7 +362,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: Colors.white.withOpacity(0.3),
+                    color: Colors.white.withValues(alpha: 0.3),
                     width: 1,
                   ),
                 ),
@@ -394,7 +394,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
               height: 1.5,
               shadows: [
                 Shadow(
-                  color: Colors.black.withOpacity(0.5),
+                  color: Colors.black.withValues(alpha: 0.5),
                   offset: const Offset(1, 1),
                   blurRadius: 3,
                 ),
@@ -409,11 +409,11 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w400,
-              color: Colors.white.withOpacity(0.9),
+              color: Colors.white.withValues(alpha: 0.9),
               letterSpacing: 0.5,
               shadows: [
                 Shadow(
-                  color: Colors.black.withOpacity(0.3),
+                  color: Colors.black.withValues(alpha: 0.3),
                   offset: const Offset(1, 1),
                   blurRadius: 2,
                 ),
@@ -428,7 +428,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
             child: CircularProgressIndicator(
               strokeWidth: 3,
               valueColor: AlwaysStoppedAnimation<Color>(
-                Colors.white.withOpacity(0.8),
+                Colors.white.withValues(alpha: 0.8),
               ),
             ),
           ),
@@ -442,7 +442,7 @@ class _AccentRingPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.white.withOpacity(0.2)
+      ..color = Colors.white.withValues(alpha: 0.2)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2;
 

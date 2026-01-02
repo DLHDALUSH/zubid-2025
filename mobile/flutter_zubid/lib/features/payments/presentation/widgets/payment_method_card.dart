@@ -115,7 +115,7 @@ class PaymentMethodCard extends StatelessWidget {
                 Text(
                   'First Iraqi Bank Account',
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurface.withOpacity(0.6),
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -127,7 +127,7 @@ class PaymentMethodCard extends StatelessWidget {
                 Text(
                   'ZAIN CASH Mobile Wallet',
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurface.withOpacity(0.6),
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -141,7 +141,7 @@ class PaymentMethodCard extends StatelessWidget {
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: paymentMethod.isExpired
                         ? Colors.red
-                        : theme.colorScheme.onSurface.withOpacity(0.6),
+                        : theme.colorScheme.onSurface.withValues(alpha: 0.6),
                   ),
                 ),
               ],
@@ -154,7 +154,7 @@ class PaymentMethodCard extends StatelessWidget {
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: paymentMethod.isExpired
                         ? Colors.red
-                        : theme.colorScheme.onSurface.withOpacity(0.6),
+                        : theme.colorScheme.onSurface.withValues(alpha: 0.6),
                   ),
                 ),
               ],
@@ -167,7 +167,7 @@ class PaymentMethodCard extends StatelessWidget {
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: paymentMethod.isExpired
                         ? Colors.red
-                        : theme.colorScheme.onSurface.withOpacity(0.6),
+                        : theme.colorScheme.onSurface.withValues(alpha: 0.6),
                   ),
                 ),
               ],
@@ -178,7 +178,7 @@ class PaymentMethodCard extends StatelessWidget {
                 Text(
                   paymentMethod.email!,
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurface.withOpacity(0.6),
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                   ),
                 ),
               ],
@@ -189,7 +189,7 @@ class PaymentMethodCard extends StatelessWidget {
                 Text(
                   paymentMethod.bankName!,
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurface.withOpacity(0.6),
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                   ),
                 ),
               ],
@@ -205,13 +205,13 @@ class PaymentMethodCard extends StatelessWidget {
     Color textColor;
     
     if (paymentMethod.isExpired) {
-      chipColor = Colors.red.withOpacity(0.1);
+      chipColor = Colors.red.withValues(alpha: 0.1);
       textColor = Colors.red;
     } else if (!paymentMethod.isVerified) {
-      chipColor = Colors.orange.withOpacity(0.1);
+      chipColor = Colors.orange.withValues(alpha: 0.1);
       textColor = Colors.orange;
     } else {
-      chipColor = Colors.green.withOpacity(0.1);
+      chipColor = Colors.green.withValues(alpha: 0.1);
       textColor = Colors.green;
     }
 
@@ -235,7 +235,7 @@ class PaymentMethodCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
-        color: theme.colorScheme.primary.withOpacity(0.1),
+        color: theme.colorScheme.primary.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(

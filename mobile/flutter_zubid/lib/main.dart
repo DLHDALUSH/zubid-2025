@@ -43,7 +43,7 @@ Future<void> _initializeServices() async {
     try {
       await _initHive();
     } catch (e) {
-      print('Hive initialization failed: $e');
+      debugPrint('Hive initialization failed: $e');
     }
 
     // Initialize Firebase with error handling
@@ -52,7 +52,7 @@ Future<void> _initializeServices() async {
         options: DefaultFirebaseOptions.currentPlatform,
       );
     } catch (e) {
-      print('Firebase initialization failed: $e');
+      debugPrint('Firebase initialization failed: $e');
       // Continue without Firebase for now
     }
 
@@ -60,19 +60,19 @@ Future<void> _initializeServices() async {
     try {
       await StorageService.init();
     } catch (e) {
-      print('Storage initialization failed: $e');
+      debugPrint('Storage initialization failed: $e');
     }
 
     // Initialize notifications
     try {
       await NotificationService.init();
     } catch (e) {
-      print('Notification service initialization failed: $e');
+      debugPrint('Notification service initialization failed: $e');
     }
 
-    print('ZUBID Mobile App Starting...');
+    debugPrint('ZUBID Mobile App Starting...');
   } catch (error) {
-    print('Service initialization error: $error');
+    debugPrint('Service initialization error: $error');
   }
 }
 
@@ -99,63 +99,63 @@ Future<void> _initHive() async {
     try {
       Hive.registerAdapter(UserModelAdapter());
     } catch (e) {
-      print('UserModelAdapter registration failed: $e');
+      debugPrint('UserModelAdapter registration failed: $e');
     }
 
     try {
       Hive.registerAdapter(AuctionModelAdapter());
     } catch (e) {
-      print('AuctionModelAdapter registration failed: $e');
+      debugPrint('AuctionModelAdapter registration failed: $e');
     }
 
     try {
       Hive.registerAdapter(BidModelAdapter());
     } catch (e) {
-      print('BidModelAdapter registration failed: $e');
+      debugPrint('BidModelAdapter registration failed: $e');
     }
 
     try {
       Hive.registerAdapter(CategoryModelAdapter());
     } catch (e) {
-      print('CategoryModelAdapter registration failed: $e');
+      debugPrint('CategoryModelAdapter registration failed: $e');
     }
 
     try {
       Hive.registerAdapter(ProfileModelAdapter());
     } catch (e) {
-      print('ProfileModelAdapter registration failed: $e');
+      debugPrint('ProfileModelAdapter registration failed: $e');
     }
 
     try {
       Hive.registerAdapter(OrderModelAdapter());
     } catch (e) {
-      print('OrderModelAdapter registration failed: $e');
+      debugPrint('OrderModelAdapter registration failed: $e');
     }
 
     try {
       Hive.registerAdapter(ShippingAddressAdapter());
     } catch (e) {
-      print('ShippingAddressAdapter registration failed: $e');
+      debugPrint('ShippingAddressAdapter registration failed: $e');
     }
 
     try {
       Hive.registerAdapter(BillingAddressAdapter());
     } catch (e) {
-      print('BillingAddressAdapter registration failed: $e');
+      debugPrint('BillingAddressAdapter registration failed: $e');
     }
 
     try {
       Hive.registerAdapter(PaymentMethodModelAdapter());
     } catch (e) {
-      print('PaymentMethodModelAdapter registration failed: $e');
+      debugPrint('PaymentMethodModelAdapter registration failed: $e');
     }
 
     try {
       Hive.registerAdapter(TransactionModelAdapter());
     } catch (e) {
-      print('TransactionModelAdapter registration failed: $e');
+      debugPrint('TransactionModelAdapter registration failed: $e');
     }
   } catch (e) {
-    print('Hive initialization failed: $e');
+    debugPrint('Hive initialization failed: $e');
   }
 }

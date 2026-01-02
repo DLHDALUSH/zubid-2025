@@ -26,7 +26,7 @@ class AuctionInfoCard extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
         side: BorderSide(
-          color: theme.colorScheme.outline.withOpacity(0.1),
+          color: theme.colorScheme.outline.withValues(alpha: 0.1),
         ),
       ),
       child: Column(
@@ -66,7 +66,7 @@ class AuctionInfoCard extends StatelessWidget {
                       theme,
                       Icons.tag,
                       'Item #${auction.id}',
-                      theme.colorScheme.onSurface.withOpacity(0.6),
+                      theme.colorScheme.onSurface.withValues(alpha: 0.6),
                     ),
                     if (auction.condition?.isNotEmpty == true)
                       _buildInfoChip(
@@ -104,7 +104,7 @@ class AuctionInfoCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
       ),
       child: Row(
@@ -224,8 +224,8 @@ class AuctionInfoCard extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               decoration: BoxDecoration(
                 color: auction.reserveMet
-                    ? Colors.green.withOpacity(0.1)
-                    : Colors.orange.withOpacity(0.1),
+                    ? Colors.green.withValues(alpha: 0.1)
+                    : Colors.orange.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
                   color: auction.reserveMet ? Colors.green : Colors.orange,
@@ -267,7 +267,7 @@ class AuctionInfoCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
@@ -294,15 +294,15 @@ class AuctionInfoCard extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            theme.colorScheme.primary.withOpacity(0.05),
-            theme.colorScheme.primary.withOpacity(0.1),
+            theme.colorScheme.primary.withValues(alpha: 0.05),
+            theme.colorScheme.primary.withValues(alpha: 0.1),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: theme.colorScheme.primary.withOpacity(0.2),
+          color: theme.colorScheme.primary.withValues(alpha: 0.2),
         ),
       ),
       child: Row(
@@ -323,7 +323,7 @@ class AuctionInfoCard extends StatelessWidget {
                     Text(
                       'Current Bid',
                       style: theme.textTheme.labelMedium?.copyWith(
-                        color: theme.colorScheme.onSurface.withOpacity(0.7),
+                        color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -346,7 +346,7 @@ class AuctionInfoCard extends StatelessWidget {
             Container(
               width: 1,
               height: 60,
-              color: theme.colorScheme.outline.withOpacity(0.2),
+              color: theme.colorScheme.outline.withValues(alpha: 0.2),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -364,7 +364,7 @@ class AuctionInfoCard extends StatelessWidget {
                       Text(
                         'Buy It Now',
                         style: theme.textTheme.labelMedium?.copyWith(
-                          color: theme.colorScheme.onSurface.withOpacity(0.7),
+                          color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -394,13 +394,13 @@ class AuctionInfoCard extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: isUrgent
-            ? Colors.red.withOpacity(0.1)
-            : _getStatusColor().withOpacity(0.1),
+            ? Colors.red.withValues(alpha: 0.1)
+            : _getStatusColor().withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isUrgent
-              ? Colors.red.withOpacity(0.3)
-              : _getStatusColor().withOpacity(0.3),
+              ? Colors.red.withValues(alpha: 0.3)
+              : _getStatusColor().withValues(alpha: 0.3),
         ),
       ),
       child: Column(
@@ -412,8 +412,8 @@ class AuctionInfoCard extends StatelessWidget {
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   color: isUrgent
-                      ? Colors.red.withOpacity(0.2)
-                      : _getStatusColor().withOpacity(0.2),
+                      ? Colors.red.withValues(alpha: 0.2)
+                      : _getStatusColor().withValues(alpha: 0.2),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -430,7 +430,7 @@ class AuctionInfoCard extends StatelessWidget {
                     Text(
                       auction.isLive ? 'Time Remaining' : auction.statusText,
                       style: theme.textTheme.labelMedium?.copyWith(
-                        color: theme.colorScheme.onSurface.withOpacity(0.7),
+                        color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -462,7 +462,7 @@ class AuctionInfoCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(4),
               child: LinearProgressIndicator(
                 value: (auction.timeRemaining.inMinutes / 60).clamp(0.0, 1.0),
-                backgroundColor: Colors.red.withOpacity(0.2),
+                backgroundColor: Colors.red.withValues(alpha: 0.2),
                 valueColor: const AlwaysStoppedAnimation<Color>(Colors.red),
                 minHeight: 6,
               ),
@@ -537,7 +537,7 @@ class AuctionInfoCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -554,7 +554,7 @@ class AuctionInfoCard extends StatelessWidget {
           Text(
             label,
             style: theme.textTheme.labelSmall?.copyWith(
-              color: theme.colorScheme.onSurface.withOpacity(0.6),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
             ),
           ),
         ],

@@ -776,7 +776,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
             Text(
               title,
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurface.withOpacity(0.7),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
               ),
             ),
           ],
@@ -831,7 +831,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
 
     return ListTile(
       leading: CircleAvatar(
-        backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
+        backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
         child: Icon(
           icon,
           color: theme.colorScheme.primary,
@@ -847,7 +847,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
           Text(
             time,
             style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurface.withOpacity(0.6),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
             ),
           ),
         ],
