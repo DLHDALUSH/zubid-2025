@@ -418,7 +418,7 @@ class AuctionCard extends StatelessWidget {
       children: [
         Row(
           children: [
-            Icon(
+            const Icon(
               Icons.warning_amber_rounded,
               size: 14,
               color: Colors.red,

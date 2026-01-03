@@ -24,13 +24,13 @@ class NotificationRepository {
         return ApiResult.success(notifications);
       }
 
-      return ApiResult.failure('Failed to load notifications');
+      return const ApiResult.failure('Failed to load notifications');
     } on DioException catch (e) {
       AppLogger.error('Failed to get notifications', error: e);
       return ApiResult.failure(e.response?.data?['error'] ?? 'Network error');
     } catch (e) {
       AppLogger.error('Unexpected error getting notifications', error: e);
-      return ApiResult.failure('An unexpected error occurred');
+      return const ApiResult.failure('An unexpected error occurred');
     }
   }
 
@@ -44,13 +44,13 @@ class NotificationRepository {
         return ApiResult.success(count);
       }
 
-      return ApiResult.failure('Failed to get unread count');
+      return const ApiResult.failure('Failed to get unread count');
     } on DioException catch (e) {
       AppLogger.error('Failed to get unread count', error: e);
       return ApiResult.failure(e.response?.data?['error'] ?? 'Network error');
     } catch (e) {
       AppLogger.error('Unexpected error getting unread count', error: e);
-      return ApiResult.failure('An unexpected error occurred');
+      return const ApiResult.failure('An unexpected error occurred');
     }
   }
 
@@ -60,16 +60,16 @@ class NotificationRepository {
       final response = await _apiClient.put('/notifications/$notificationId/read');
 
       if (response.statusCode == 200) {
-        return ApiResult.success(true);
+        return const ApiResult.success(true);
       }
 
-      return ApiResult.failure('Failed to mark notification as read');
+      return const ApiResult.failure('Failed to mark notification as read');
     } on DioException catch (e) {
       AppLogger.error('Failed to mark notification as read', error: e);
       return ApiResult.failure(e.response?.data?['error'] ?? 'Network error');
     } catch (e) {
       AppLogger.error('Unexpected error marking notification as read', error: e);
-      return ApiResult.failure('An unexpected error occurred');
+      return const ApiResult.failure('An unexpected error occurred');
     }
   }
 
@@ -79,16 +79,16 @@ class NotificationRepository {
       final response = await _apiClient.put('/notifications/read-all');
 
       if (response.statusCode == 200) {
-        return ApiResult.success(true);
+        return const ApiResult.success(true);
       }
 
-      return ApiResult.failure('Failed to mark all notifications as read');
+      return const ApiResult.failure('Failed to mark all notifications as read');
     } on DioException catch (e) {
       AppLogger.error('Failed to mark all notifications as read', error: e);
       return ApiResult.failure(e.response?.data?['error'] ?? 'Network error');
     } catch (e) {
       AppLogger.error('Unexpected error marking all notifications as read', error: e);
-      return ApiResult.failure('An unexpected error occurred');
+      return const ApiResult.failure('An unexpected error occurred');
     }
   }
 
@@ -98,16 +98,16 @@ class NotificationRepository {
       final response = await _apiClient.delete('/notifications/$notificationId');
 
       if (response.statusCode == 200) {
-        return ApiResult.success(true);
+        return const ApiResult.success(true);
       }
 
-      return ApiResult.failure('Failed to delete notification');
+      return const ApiResult.failure('Failed to delete notification');
     } on DioException catch (e) {
       AppLogger.error('Failed to delete notification', error: e);
       return ApiResult.failure(e.response?.data?['error'] ?? 'Network error');
     } catch (e) {
       AppLogger.error('Unexpected error deleting notification', error: e);
-      return ApiResult.failure('An unexpected error occurred');
+      return const ApiResult.failure('An unexpected error occurred');
     }
   }
 }

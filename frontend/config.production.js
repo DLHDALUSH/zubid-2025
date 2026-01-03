@@ -5,9 +5,10 @@
 // ============================================================
 // 🔧 PRODUCTION CONFIGURATION
 // ============================================================
-const DUCKDNS_API_URL = 'https://zubidauction.duckdns.org/api';
+// Updated to use API v1 for versioning
+const DUCKDNS_API_URL = 'https://zubidauction.duckdns.org/api/v1';
 const DUCKDNS_BASE_URL = 'https://zubidauction.duckdns.org';
-const RENDER_API_URL = 'https://zubid-2025.onrender.com/api';
+const RENDER_API_URL = 'https://zubid-2025.onrender.com/api/v1';
 const RENDER_BASE_URL = 'https://zubid-2025.onrender.com';
 // ============================================================
 
@@ -31,8 +32,8 @@ if (isMobileApp && !isLocalhost) {
     window.API_BASE_URL = DUCKDNS_API_URL;
     window.API_BASE = DUCKDNS_BASE_URL;
 } else if (isLocalhost) {
-    // Local development mode
-    window.API_BASE_URL = 'http://localhost:5000/api';
+    // Local development mode - using API v1
+    window.API_BASE_URL = 'http://localhost:5000/api/v1';
     window.API_BASE = 'http://localhost:5000';
 } else if (isRenderServer) {
     // Render.com Server

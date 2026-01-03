@@ -11,26 +11,45 @@ class AppConfig {
   static bool get isProfile => kProfileMode;
 
   // API Configuration
+  // Environment variables can be set using --dart-define during build/run
+  // Example: flutter run --dart-define=API_URL=http://10.0.2.2:5000
   static String get baseUrl {
-    // Use Render.com production server
-    return 'https://zubid-2025.onrender.com';
+    // Check for environment variable first
+    const envApiUrl = String.fromEnvironment('API_URL');
+    if (envApiUrl.isNotEmpty) {
+      return envApiUrl;
+    }
 
-    // For local development, uncomment the appropriate line below:
-    // return 'http://10.0.2.2:5000'; // Android emulator
-    // return 'http://localhost:5000'; // iOS simulator
-    // return 'http://192.168.1.x:5000'; // Physical device (replace with your IP)
+    // Auto-detect based on build mode
+    if (isProduction) {
+      // Production: Use Render.com server
+      return 'https://zubid-2025.onrender.com';
+    } else {
+      // Development: Use local server
+      // Android emulator uses 10.0.2.2 to access host machine's localhost
+      // iOS simulator can use localhost directly
+      // For physical devices, you'll need to use your computer's IP address
+      return 'http://10.0.2.2:5000'; // Default for Android emulator
+    }
   }
 
-  static String get apiUrl => '$baseUrl/api';
+  static String get apiUrl => '$baseUrl/api/v1';
 
   static String get websocketUrl {
-    // Use Render.com production server
-    return 'wss://zubid-2025.onrender.com';
+    // Check for environment variable first
+    const envWsUrl = String.fromEnvironment('WS_URL');
+    if (envWsUrl.isNotEmpty) {
+      return envWsUrl;
+    }
 
-    // For local development, uncomment the appropriate line below:
-    // return 'ws://10.0.2.2:5000'; // Android emulator
-    // return 'ws://localhost:5000'; // iOS simulator
-    // return 'ws://192.168.1.x:5000'; // Physical device (replace with your IP)
+    // Auto-detect based on build mode
+    if (isProduction) {
+      // Production: Use secure WebSocket
+      return 'wss://zubid-2025.onrender.com';
+    } else {
+      // Development: Use local WebSocket
+      return 'ws://10.0.2.2:5000'; // Default for Android emulator
+    }
   }
 
   // Timeouts

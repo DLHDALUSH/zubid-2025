@@ -271,10 +271,62 @@ def teardown_request(exception=None):
         pass
 
 
+# =============================================================================
+# API VERSIONING MIDDLEWARE
+# =============================================================================
+# Supports both /api/endpoint and /api/v1/endpoint for backward compatibility
+# This allows gradual migration to versioned API without breaking existing clients
+
+from flask import g
+
+@app.before_request
+def handle_api_versioning():
+    """
+    Handle API versioning by rewriting URLs.
+    Supports both /api/endpoint and /api/v1/endpoint
+
+    Examples:
+    - /api/v1/auctions -> /api/auctions (internally)
+    - /api/auctions -> /api/auctions (unchanged)
+
+    This allows clients to use either format while we maintain a single set of routes.
+    """
+    path = request.path
+
+    # Rewrite /api/v1/* to /api/* for backward compatibility
+    if path.startswith('/api/v1/'):
+        request.environ['PATH_INFO'] = path.replace('/api/v1/', '/api/', 1)
+        # Store original version in request context
+        g.api_version = 'v1'
+        g.api_path_original = path
+    elif path.startswith('/api/v2/'):
+        # Future: Support for API v2
+        request.environ['PATH_INFO'] = path.replace('/api/v2/', '/api/', 1)
+        g.api_version = 'v2'
+        g.api_path_original = path
+    elif path.startswith('/api/'):
+        # Default to v1 for unversioned requests (backward compatibility)
+        g.api_version = 'v1'
+        g.api_path_original = path
+
+    # Log API version for debugging (only in debug mode)
+    if app.debug and hasattr(g, 'api_version'):
+        app.logger.debug(f'API Request: {request.method} {path} (version: {g.api_version})')
+
+
 # Security Headers Middleware
 @app.after_request
 def add_security_headers(response):
     """Add comprehensive security headers to all responses"""
+    # Add API version header for API requests
+    if hasattr(g, 'api_version'):
+        response.headers['X-API-Version'] = g.api_version
+        # Add deprecation warning for unversioned API (optional)
+        if not hasattr(g, 'api_path_original') or not g.api_path_original.startswith('/api/v'):
+            # Uncomment to add deprecation warning:
+            # response.headers['X-API-Deprecation'] = 'Unversioned API will be deprecated. Please use /api/v1/ prefix.'
+            pass
+
     # Prevent clickjacking
     response.headers['X-Frame-Options'] = 'DENY'
     # Prevent MIME type sniffing
