@@ -33,7 +33,7 @@ class AppConfig {
     }
   }
 
-  static String get apiUrl => '$baseUrl/api/v1';
+  static String get apiUrl => '$baseUrl/api';
 
   static String get websocketUrl {
     // Check for environment variable first
