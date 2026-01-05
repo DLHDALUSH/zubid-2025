@@ -417,7 +417,7 @@ class _AuctionListScreenState extends ConsumerState<AuctionListScreen> {
 
   Future<void> _toggleWatchlist(dynamic auction) async {
     final success =
-        await ref.read(auctionProvider.notifier).toggleWatchlist(auction);
+        await ref.read(auctionProvider.notifier).toggleWatchList(auction);
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(

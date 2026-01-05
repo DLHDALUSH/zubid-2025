@@ -217,6 +217,27 @@ class StorageService {
 
   // ==================== Data Caching ====================
 
+  /// Generic method to save string data
+  static Future<void> setString(String key, String value) async {
+    try {
+      await _prefs.setString(key, value);
+      AppLogger.info('String data saved for key: $key');
+    } catch (e) {
+      AppLogger.error('Failed to save string data', error: e);
+      rethrow;
+    }
+  }
+
+  /// Generic method to get string data
+  static String? getString(String key) {
+    try {
+      return _prefs.getString(key);
+    } catch (e) {
+      AppLogger.error('Failed to get string data', error: e);
+      return null;
+    }
+  }
+
   /// Save last sync time
   static Future<void> setLastSyncTime(DateTime time) async {
     await _prefs.setString(_keyLastSyncTime, time.toIso8601String());

@@ -100,15 +100,15 @@ class AuctionDetailNotifier extends Notifier<AuctionDetailState> {
     }
   }
 
-  Future<bool> toggleWatchlist() async {
+  Future<bool> toggleWatchList() async {
     if (state.auction == null) return false;
 
     try {
-      // Implementation for watchlist toggle
-      AppLogger.info('Toggle watchlist for auction: $auctionId');
+      // Implementation for Watch List toggle
+      AppLogger.info('Toggle Watch List for auction: $auctionId');
       return true;
     } catch (e) {
-      AppLogger.error('Failed to toggle watchlist', error: e);
+      AppLogger.error('Failed to toggle Watch List', error: e);
       return false;
     }
   }

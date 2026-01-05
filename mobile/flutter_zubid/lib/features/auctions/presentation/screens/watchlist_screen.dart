@@ -19,9 +19,9 @@ class _WatchlistScreenState extends ConsumerState<WatchlistScreen> {
   @override
   void initState() {
     super.initState();
-    // Load watchlist when screen initializes
+    // Load Watchlist when screen initializes
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      // TODO: Load watchlist from provider
+      // TODO: Load Watchlist from provider
       // ref.read(watchlistProvider.notifier).loadWatchlist();
     });
   }
@@ -29,7 +29,7 @@ class _WatchlistScreenState extends ConsumerState<WatchlistScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    // TODO: Replace with actual watchlist provider
+    // TODO: Replace with actual Watchlist provider
     final auctionState = ref.watch(auctionProvider);
 
     return Scaffold(
@@ -45,7 +45,7 @@ class _WatchlistScreenState extends ConsumerState<WatchlistScreen> {
       ),
       body: RefreshIndicator(
         onRefresh: () async {
-          // TODO: Refresh watchlist
+          // TODO: Refresh Watchlist
           await ref.read(auctionProvider.notifier).refresh();
         },
         child: auctionState.isLoading && auctionState.auctions.isEmpty
@@ -66,7 +66,10 @@ class _WatchlistScreenState extends ConsumerState<WatchlistScreen> {
                             padding: const EdgeInsets.only(bottom: 16),
                             child: AuctionCard(
                               auction: auction,
-                              onTap: () => context.push('/auctions/detail/${auction.id}'),
+                              onTap: () => context
+                                  .push('/auctions/detail/${auction.id}'),
+                              onWatchlistToggle: () =>
+                                  _toggleWatchlist(auction),
                             ),
                           );
                         },
@@ -87,14 +90,14 @@ class _WatchlistScreenState extends ConsumerState<WatchlistScreen> {
           ),
           const SizedBox(height: 16),
           Text(
-            'No items in watchlist',
+            'No items in Watchlist',
             style: theme.textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            'Add auctions to your watchlist to see them here',
+            'Add auctions to your Watchlist to see them here',
             style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
             ),
@@ -110,5 +113,25 @@ class _WatchlistScreenState extends ConsumerState<WatchlistScreen> {
       ),
     );
   }
-}
 
+  Future<void> _toggleWatchlist(dynamic auction) async {
+    final success =
+        await ref.read(auctionProvider.notifier).toggleWatchList(auction);
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            success
+                ? auction.isWatched
+                    ? 'Removed from watchlist'
+                    : 'Added to watchlist'
+                : 'Failed to update watchlist',
+          ),
+          backgroundColor:
+              success ? Colors.green : Theme.of(context).colorScheme.error,
+        ),
+      );
+    }
+  }
+}

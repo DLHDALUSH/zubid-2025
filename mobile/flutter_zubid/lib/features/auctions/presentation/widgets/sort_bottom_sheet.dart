@@ -54,7 +54,7 @@ class _SortBottomSheetState extends State<SortBottomSheet> {
     const SortOption(
       key: 'watch_count',
       title: 'Most Watched',
-      subtitle: 'Sort by watchlist count',
+      subtitle: 'Sort by Watch List count',
       icon: Icons.favorite,
     ),
   ];

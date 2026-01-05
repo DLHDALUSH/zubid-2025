@@ -257,6 +257,7 @@ class AuctionModel extends HiveObject {
       isFeatured: _parseBool(
           json['is_featured'] ?? json['isFeatured'] ?? json['featured']),
       isWatched: _parseBool(
+          // cSpell:ignore isWishlisted
           json['is_watched'] ?? json['isWatched'] ?? json['isWishlisted']),
       shippingCost:
           _parseDoubleNullable(json['shipping_cost'] ?? json['shippingCost']),

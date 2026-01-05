@@ -180,10 +180,10 @@ class AuctionRepository {
     }
   }
 
-  // Add to watchlist
-  Future<ApiResult<bool>> addToWatchlist(int auctionId) async {
+  // Add to Watch List
+  Future<ApiResult<bool>> addToWatchList(int auctionId) async {
     try {
-      AppLogger.info('Adding auction $auctionId to watchlist');
+      AppLogger.info('Adding auction $auctionId to Watch List');
 
       final response = await _apiClient.post(
         '/wishlist/$auctionId',
@@ -191,46 +191,46 @@ class AuctionRepository {
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        AppLogger.info('Successfully added auction to watchlist');
+        AppLogger.info('Successfully added auction to Watch List');
         return const ApiResult.success(true);
       } else {
-        AppLogger.warning('Failed to add to watchlist: ${response.statusCode}');
-        return const ApiResult.error('Failed to add to watchlist');
+        AppLogger.warning('Failed to add to Watch List: ${response.statusCode}');
+        return const ApiResult.error('Failed to add to Watch List');
       }
     } catch (e) {
-      AppLogger.error('Error adding to watchlist', error: e);
+      AppLogger.error('Error adding to Watch List', error: e);
       return ApiResult.error('Network error: ${e.toString()}');
     }
   }
 
-  // Remove from watchlist
-  Future<ApiResult<bool>> removeFromWatchlist(int auctionId) async {
+  // Remove from Watch List
+  Future<ApiResult<bool>> removeFromWatchList(int auctionId) async {
     try {
-      AppLogger.info('Removing auction $auctionId from watchlist');
+      AppLogger.info('Removing auction $auctionId from Watch List');
 
       final response = await _apiClient.delete('/wishlist/$auctionId');
 
       if (response.statusCode == 200 || response.statusCode == 204) {
-        AppLogger.info('Successfully removed auction from watchlist');
+        AppLogger.info('Successfully removed auction from Watch List');
         return const ApiResult.success(true);
       } else {
         AppLogger.warning(
-            'Failed to remove from watchlist: ${response.statusCode}');
-        return const ApiResult.error('Failed to remove from watchlist');
+            'Failed to remove from Watch List: ${response.statusCode}');
+        return const ApiResult.error('Failed to remove from Watch List');
       }
     } catch (e) {
-      AppLogger.error('Error removing from watchlist', error: e);
+      AppLogger.error('Error removing from Watch List', error: e);
       return ApiResult.error('Network error: ${e.toString()}');
     }
   }
 
-  // Get watchlist
-  Future<ApiResult<List<AuctionModel>>> getWatchlist({
+  // Get Watch List
+  Future<ApiResult<List<AuctionModel>>> getWatchList({
     int page = 1,
     int limit = 20,
   }) async {
     try {
-      AppLogger.info('Fetching watchlist - page: $page, limit: $limit');
+      AppLogger.info('Fetching Watch List - page: $page, limit: $limit');
 
       final response = await _apiClient.get(
         '/wishlist',
@@ -249,14 +249,14 @@ class AuctionRepository {
             .toList();
 
         AppLogger.info(
-            'Successfully fetched ${auctions.length} watchlist items');
+            'Successfully fetched ${auctions.length} Watch List items');
         return ApiResult.success(auctions);
       } else {
-        AppLogger.warning('Failed to fetch watchlist: ${response.statusCode}');
-        return const ApiResult.error('Failed to load watchlist');
+        AppLogger.warning('Failed to fetch Watch List: ${response.statusCode}');
+        return const ApiResult.error('Failed to load Watch List');
       }
     } catch (e) {
-      AppLogger.error('Error fetching watchlist', error: e);
+      AppLogger.error('Error fetching Watch List', error: e);
       return ApiResult.error('Network error: ${e.toString()}');
     }
   }

@@ -145,7 +145,7 @@ class _AuctionDetailScreenState extends ConsumerState<AuctionDetailScreen>
                   ? Icons.favorite_rounded
                   : Icons.favorite_outline_rounded,
               color: auction.isWatched ? Colors.red : null,
-              onPressed: () => _toggleWatchlist(auction),
+              onPressed: () => _toggleWatchList(auction),
             ),
             _buildActionButton(
               icon: Icons.share_rounded,
@@ -515,7 +515,7 @@ class _AuctionDetailScreenState extends ConsumerState<AuctionDetailScreen>
         children: [
           // Watch Button
           ElevatedButton.icon(
-            onPressed: () => _toggleWatchlist(auction),
+            onPressed: () => _toggleWatchList(auction),
             icon: Icon(
               auction.isWatched
                   ? Icons.favorite_rounded
@@ -1109,10 +1109,10 @@ class _AuctionDetailScreenState extends ConsumerState<AuctionDetailScreen>
     );
   }
 
-  Future<void> _toggleWatchlist(AuctionModel auction) async {
+  Future<void> _toggleWatchList(AuctionModel auction) async {
     final success = await ref
         .read(auctionDetailProvider(widget.auctionId).notifier)
-        .toggleWatchlist();
+        .toggleWatchList();
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1120,9 +1120,9 @@ class _AuctionDetailScreenState extends ConsumerState<AuctionDetailScreen>
           content: Text(
             success
                 ? auction.isWatched
-                    ? 'Removed from watchlist'
-                    : 'Added to watchlist'
-                : 'Failed to update watchlist',
+                    ? 'Removed from Watch List'
+                    : 'Added to Watch List'
+                : 'Failed to update Watch List',
           ),
           backgroundColor:
               success ? Colors.green : Theme.of(context).colorScheme.error,

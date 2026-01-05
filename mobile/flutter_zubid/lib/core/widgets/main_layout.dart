@@ -10,7 +10,7 @@ import '../../features/notifications/presentation/screens/notifications_screen.d
 /// Main layout with bottom navigation bar
 class MainLayout extends ConsumerStatefulWidget {
   final int initialIndex;
-  
+
   const MainLayout({
     super.key,
     this.initialIndex = 0,
@@ -22,7 +22,7 @@ class MainLayout extends ConsumerStatefulWidget {
 
 class _MainLayoutState extends ConsumerState<MainLayout> {
   late int _currentIndex;
-  
+
   final List<Widget> _screens = const [
     HomeScreen(),
     MyBidsScreen(),
@@ -46,7 +46,7 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex,
@@ -76,6 +76,7 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
           BottomNavigationBarItem(
             icon: Icon(Icons.favorite_outline),
             activeIcon: Icon(Icons.favorite),
+            // cSpell:ignore Watchlist
             label: 'Watchlist',
           ),
           BottomNavigationBarItem(
@@ -93,4 +94,3 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
     );
   }
 }
-
