@@ -190,7 +190,9 @@ const UserAPI = {
     },
     
     getProfile: async () => {
-        return apiRequest('/user/profile');
+        const response = await apiRequest('/user/profile');
+        // Backend wraps profile in 'profile' key, unwrap it for frontend
+        return response.profile || response;
     },
     
     updateProfile: async (userData) => {
