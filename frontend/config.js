@@ -51,7 +51,7 @@
     const environments = {
         development: {
             name: 'Development',
-            apiUrl: 'http://localhost:5000/api/v1',
+            apiUrl: 'http://localhost:5000/api',
             baseUrl: 'http://localhost:5000',
             wsUrl: 'ws://localhost:5000',
             debug: true,
@@ -62,7 +62,7 @@
 
         staging: {
             name: 'Staging',
-            apiUrl: 'https://staging.zubidauction.com/api/v1',
+            apiUrl: 'https://staging.zubidauction.com/api',
             baseUrl: 'https://staging.zubidauction.com',
             wsUrl: 'wss://staging.zubidauction.com',
             debug: true,
@@ -73,7 +73,7 @@
 
         production: {
             name: 'Production (Render)',
-            apiUrl: 'https://zubid-2025.onrender.com/api/v1',
+            apiUrl: 'https://zubid-2025.onrender.com/api',
             baseUrl: 'https://zubid-2025.onrender.com',
             wsUrl: 'wss://zubid-2025.onrender.com',
             debug: false,
@@ -84,7 +84,7 @@
 
         'production-alt': {
             name: 'Production (DuckDNS)',
-            apiUrl: 'https://zubidauction.duckdns.org/api/v1',
+            apiUrl: 'https://zubidauction.duckdns.org/api',
             baseUrl: 'https://zubidauction.duckdns.org',
             wsUrl: 'wss://zubidauction.duckdns.org',
             debug: false,

@@ -9,14 +9,16 @@ services:
     name: zubid-backend
     runtime: python
     plan: free
+    region: oregon
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --workers 2 --threads 4 --timeout 120
+    healthCheckPath: /api/health
     envVars:
       - key: FLASK_ENV
         value: production
       - key: SECRET_KEY
         generateValue: true
-      - key: DATABASE_URI
+      - key: DATABASE_URL
         fromDatabase:
           name: zubid-db
           property: connectionString
@@ -25,16 +27,19 @@ services:
       - key: CSRF_ENABLED
         value: "false"
       - key: CORS_ORIGINS
-        value: "https://zubid-2025.onrender.com,https://zubidauction.duckdns.org"
+        value: "https://zubid-2025.onrender.com,https://zubidauction.duckdns.org,https://zubid-backend.onrender.com"
       - key: PYTHON_VERSION
         value: "3.11.0"
-      # Database Connection Pool Settings (optimized for Render free tier)
+      # Use NullPool for Render free tier (avoids connection limit issues)
+      - key: DB_USE_NULLPOOL
+        value: "true"
+      # Database Connection Pool Settings (fallback if NullPool disabled)
       - key: DB_POOL_SIZE
-        value: "5"
+        value: "3"
       - key: DB_MAX_OVERFLOW
-        value: "10"
+        value: "5"
       - key: DB_POOL_TIMEOUT
         value: "30"
       - key: DB_POOL_RECYCLE
-        value: "1800"
+        value: "300"
 

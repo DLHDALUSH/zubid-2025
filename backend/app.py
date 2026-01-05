@@ -61,7 +61,8 @@ if not secret_key:
 app.config['SECRET_KEY'] = secret_key
 
 # Database configuration - convert postgresql:// to postgresql+psycopg:// for psycopg3
-database_uri = os.getenv('DATABASE_URI', 'sqlite:///auction.db')
+# Render.com provides DATABASE_URL, but we also support DATABASE_URI
+database_uri = os.getenv('DATABASE_URL') or os.getenv('DATABASE_URI', 'sqlite:///auction.db')
 if database_uri.startswith('postgresql://'):
     database_uri = database_uri.replace('postgresql://', 'postgresql+psycopg://', 1)
 elif database_uri.startswith('postgres://'):
