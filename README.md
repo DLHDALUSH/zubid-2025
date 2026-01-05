@@ -4,8 +4,6 @@ A full-stack modern auction bidding platform with real-time updates, auto-biddin
 
 > **✨ Latest Features:** Biometric Authentication, Modern Glassmorphism UI, Enhanced Security
 
-**[📤 Want to share with a colleague?](share-project.md)** | **[🤝 Full Collaboration Guide](COLLABORATION_GUIDE.md)**
-
 ## Features
 
 ### Frontend (JavaScript)
@@ -85,8 +83,8 @@ ZUBID/
    pip install -r requirements.txt
    ```
    
-   **Note:** The default installation uses SQLite (no additional setup needed). 
-   If you want to use PostgreSQL or MySQL, see `backend/README-INSTALLATION.md` for optional database drivers.
+   **Note:** The default installation uses SQLite (no additional setup needed).
+   For PostgreSQL, install `psycopg2-binary`. For MySQL, install `pymysql`.
 
 3. Run the Flask application:
    ```bash
