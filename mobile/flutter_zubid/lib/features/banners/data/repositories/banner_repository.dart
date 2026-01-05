@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer' as developer;
 import 'package:http/http.dart' as http;
 import '../../../../core/config/app_config.dart';
 import '../models/banner_model.dart';
@@ -20,7 +21,7 @@ class BannerRepository {
       }
     } catch (e) {
       // Return empty list on error - banners are optional
-      print('Banner loading error: $e');
+      developer.log('Banner loading error: $e', name: 'BannerRepository');
       return [];
     }
   }

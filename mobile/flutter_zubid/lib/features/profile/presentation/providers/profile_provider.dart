@@ -43,18 +43,22 @@ class ProfileState {
   }
 }
 
-// Profile Provider
-class ProfileNotifier extends StateNotifier<ProfileState> {
-  final ProfileRepository _profileRepository;
+// Profile Provider (Riverpod 3.x)
+class ProfileNotifier extends Notifier<ProfileState> {
+  late final ProfileRepository _profileRepository;
 
-  ProfileNotifier(this._profileRepository) : super(const ProfileState());
+  @override
+  ProfileState build() {
+    _profileRepository = ref.read(profileRepositoryProvider);
+    return const ProfileState();
+  }
 
   Future<void> loadProfile() async {
     state = state.copyWith(isLoading: true, error: null);
-    
+
     try {
       final result = await _profileRepository.getProfile();
-      
+
       result.when(
         success: (profile) {
           state = state.copyWith(
@@ -82,10 +86,10 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
 
   Future<bool> updateProfile(UpdateProfileRequestModel request) async {
     state = state.copyWith(isUpdating: true, error: null);
-    
+
     try {
       final result = await _profileRepository.updateProfile(request);
-      
+
       if (result.data != null) {
         state = state.copyWith(
           isUpdating: false,
@@ -114,63 +118,64 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
 
   Future<bool> uploadProfilePhoto(File imageFile) async {
     state = state.copyWith(isUploadingPhoto: true, error: null);
-    
+
     try {
       final result = await _profileRepository.uploadProfilePhoto(imageFile);
-      
-      if (result.data != null) {
-          // Update profile with new photo URL
-          if (state.profile != null) {
-            final updatedProfile = ProfileModel(
-              id: state.profile!.id,
-              username: state.profile!.username,
-              email: state.profile!.email,
-              firstName: state.profile!.firstName,
-              lastName: state.profile!.lastName,
-              phoneNumber: state.profile!.phoneNumber,
-              profilePhotoUrl: result.data,
-              idNumber: state.profile!.idNumber,
-              address: state.profile!.address,
-              city: state.profile!.city,
-              country: state.profile!.country,
-              postalCode: state.profile!.postalCode,
-              dateOfBirth: state.profile!.dateOfBirth,
-              bio: state.profile!.bio,
-              preferredLanguage: state.profile!.preferredLanguage,
-              timezone: state.profile!.timezone,
-              emailVerified: state.profile!.emailVerified,
-              phoneVerified: state.profile!.phoneVerified,
-              profileCompleted: state.profile!.profileCompleted,
-              rating: state.profile!.rating,
-              totalBids: state.profile!.totalBids,
-              totalWins: state.profile!.totalWins,
-              totalSpent: state.profile!.totalSpent,
-              memberSince: state.profile!.memberSince,
-              lastActive: state.profile!.lastActive,
-              preferences: state.profile!.preferences,
-              createdAt: state.profile!.createdAt,
-              updatedAt: DateTime.now(),
-            );
-            
-            state = state.copyWith(
-              isUploadingPhoto: false,
-              profile: updatedProfile,
-              error: null,
-            );
-          } else {
-            state = state.copyWith(isUploadingPhoto: false, error: null);
-          }
 
-          AppLogger.info('Profile photo uploaded successfully');
-          return true;
-        } else {
+      if (result.data != null) {
+        // Update profile with new photo URL
+        if (state.profile != null) {
+          final updatedProfile = ProfileModel(
+            id: state.profile!.id,
+            username: state.profile!.username,
+            email: state.profile!.email,
+            firstName: state.profile!.firstName,
+            lastName: state.profile!.lastName,
+            phoneNumber: state.profile!.phoneNumber,
+            profilePhotoUrl: result.data,
+            idNumber: state.profile!.idNumber,
+            address: state.profile!.address,
+            city: state.profile!.city,
+            country: state.profile!.country,
+            postalCode: state.profile!.postalCode,
+            dateOfBirth: state.profile!.dateOfBirth,
+            bio: state.profile!.bio,
+            preferredLanguage: state.profile!.preferredLanguage,
+            timezone: state.profile!.timezone,
+            emailVerified: state.profile!.emailVerified,
+            phoneVerified: state.profile!.phoneVerified,
+            profileCompleted: state.profile!.profileCompleted,
+            rating: state.profile!.rating,
+            totalBids: state.profile!.totalBids,
+            totalWins: state.profile!.totalWins,
+            totalSpent: state.profile!.totalSpent,
+            memberSince: state.profile!.memberSince,
+            lastActive: state.profile!.lastActive,
+            preferences: state.profile!.preferences,
+            createdAt: state.profile!.createdAt,
+            updatedAt: DateTime.now(),
+          );
+
           state = state.copyWith(
             isUploadingPhoto: false,
-            error: result.message ?? 'Failed to upload profile photo',
+            profile: updatedProfile,
+            error: null,
           );
-          AppLogger.error('Failed to upload profile photo', error: result.message);
-          return false;
+        } else {
+          state = state.copyWith(isUploadingPhoto: false, error: null);
         }
+
+        AppLogger.info('Profile photo uploaded successfully');
+        return true;
+      } else {
+        state = state.copyWith(
+          isUploadingPhoto: false,
+          error: result.message ?? 'Failed to upload profile photo',
+        );
+        AppLogger.error('Failed to upload profile photo',
+            error: result.message);
+        return false;
+      }
     } catch (e) {
       state = state.copyWith(
         isUploadingPhoto: false,
@@ -191,10 +196,9 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
 }
 
 // Provider instance
-final profileProvider = StateNotifierProvider<ProfileNotifier, ProfileState>((ref) {
-  final profileRepository = ref.read(profileRepositoryProvider);
-  return ProfileNotifier(profileRepository);
-});
+final profileProvider = NotifierProvider<ProfileNotifier, ProfileState>(
+  ProfileNotifier.new,
+);
 
 // Current profile provider (for easy access to current profile)
 final currentProfileProvider = Provider<ProfileModel?>((ref) {

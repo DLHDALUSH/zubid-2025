@@ -34,13 +34,18 @@ class AuctionDetailState {
   }
 }
 
-// Auction Detail Provider
-class AuctionDetailNotifier extends StateNotifier<AuctionDetailState> {
-  final AuctionRepository _auctionRepository;
-  final String auctionId;
+// Auction Detail Provider (Riverpod 3.x)
+class AuctionDetailNotifier extends Notifier<AuctionDetailState> {
+  AuctionDetailNotifier(this.auctionId);
 
-  AuctionDetailNotifier(this._auctionRepository, this.auctionId) 
-      : super(const AuctionDetailState());
+  final String auctionId;
+  late final AuctionRepository _auctionRepository;
+
+  @override
+  AuctionDetailState build() {
+    _auctionRepository = ref.read(auctionRepositoryProvider);
+    return const AuctionDetailState();
+  }
 
   Future<void> loadAuction() async {
     state = state.copyWith(isLoading: true, error: null);
@@ -55,7 +60,7 @@ class AuctionDetailNotifier extends StateNotifier<AuctionDetailState> {
             auction: auction,
           );
           AppLogger.info('Auction loaded successfully: $auctionId');
-          
+
           // Load bids for this auction
           _loadBids();
         },
@@ -86,7 +91,8 @@ class AuctionDetailNotifier extends StateNotifier<AuctionDetailState> {
           AppLogger.info('Loaded ${bids.length} bids for auction: $auctionId');
         },
         error: (error) {
-          AppLogger.error('Failed to load bids for auction: $auctionId', error: error);
+          AppLogger.error('Failed to load bids for auction: $auctionId',
+              error: error);
         },
       );
     } catch (e) {
@@ -117,9 +123,7 @@ class AuctionDetailNotifier extends StateNotifier<AuctionDetailState> {
 }
 
 // Provider factory
-final auctionDetailProvider = StateNotifierProvider.family<AuctionDetailNotifier, AuctionDetailState, String>(
-  (ref, auctionId) {
-    final auctionRepository = ref.read(auctionRepositoryProvider);
-    return AuctionDetailNotifier(auctionRepository, auctionId);
-  },
+final auctionDetailProvider =
+    NotifierProvider.family<AuctionDetailNotifier, AuctionDetailState, String>(
+  (auctionId) => AuctionDetailNotifier(auctionId),
 );

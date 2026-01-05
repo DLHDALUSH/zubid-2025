@@ -6,10 +6,12 @@ sealed class ApiResult<T> {
   const factory ApiResult.success(T data) = ApiSuccess<T>;
 
   /// Create a failure result
-  const factory ApiResult.failure(String message, {String? code, dynamic error}) = ApiFailure<T>;
+  const factory ApiResult.failure(String message,
+      {String? code, dynamic error}) = ApiFailure<T>;
 
   /// Create an error result (alias for failure)
-  const factory ApiResult.error(String message, {String? code, dynamic error}) = ApiFailure<T>;
+  const factory ApiResult.error(String message, {String? code, dynamic error}) =
+      ApiFailure<T>;
 
   /// Check if the result is successful
   bool get isSuccess => this is ApiSuccess<T>;
@@ -19,33 +21,37 @@ sealed class ApiResult<T> {
 
   /// Get the data if successful, null otherwise
   T? get data => switch (this) {
-    ApiSuccess<T>(data: final data) => data,
-    ApiFailure<T>() => null,
-  };
+        ApiSuccess<T>(data: final data) => data,
+        ApiFailure<T>() => null,
+      };
 
   /// Get the error message if failed, null otherwise
   String? get message => switch (this) {
-    ApiSuccess<T>() => null,
-    ApiFailure<T>(message: final message) => message,
-  };
+        ApiSuccess<T>() => null,
+        ApiFailure<T>(message: final message) => message,
+      };
 
   /// Get the error code if failed, null otherwise
   String? get code => switch (this) {
-    ApiSuccess<T>() => null,
-    ApiFailure<T>(code: final code) => code,
-  };
+        ApiSuccess<T>() => null,
+        ApiFailure<T>(code: final code) => code,
+      };
 
   /// Get the raw error if failed, null otherwise
   dynamic get error => switch (this) {
-    ApiSuccess<T>() => null,
-    ApiFailure<T>(error: final error) => error,
-  };
+        ApiSuccess<T>() => null,
+        ApiFailure<T>(error: final error) => error,
+      };
 
   /// Transform the data if successful
   ApiResult<R> map<R>(R Function(T data) transform) {
     return switch (this) {
       ApiSuccess<T>(data: final data) => ApiResult.success(transform(data)),
-      ApiFailure<T>(message: final message, code: final code, error: final error) => 
+      ApiFailure<T>(
+        message: final message,
+        code: final code,
+        error: final error
+      ) =>
         ApiResult.failure(message, code: code, error: error),
     };
   }
@@ -54,7 +60,11 @@ sealed class ApiResult<T> {
   ApiResult<R> flatMap<R>(ApiResult<R> Function(T data) transform) {
     return switch (this) {
       ApiSuccess<T>(data: final data) => transform(data),
-      ApiFailure<T>(message: final message, code: final code, error: final error) => 
+      ApiFailure<T>(
+        message: final message,
+        code: final code,
+        error: final error
+      ) =>
         ApiResult.failure(message, code: code, error: error),
     };
   }
@@ -68,7 +78,8 @@ sealed class ApiResult<T> {
   }
 
   /// Execute a function if failed
-  ApiResult<T> onFailure(void Function(String message, String? code, dynamic error) action) {
+  ApiResult<T> onFailure(
+      void Function(String message, String? code, dynamic error) action) {
     if (this is ApiFailure<T>) {
       final failure = this as ApiFailure<T>;
       action(failure.message, failure.code, failure.error);
@@ -80,7 +91,7 @@ sealed class ApiResult<T> {
   T getOrThrow() {
     return switch (this) {
       ApiSuccess<T>(data: final data) => data,
-      ApiFailure<T>(message: final message, error: final error) => 
+      ApiFailure<T>(message: final message, error: final error) =>
         throw ApiException(message, error: error),
     };
   }
@@ -108,7 +119,11 @@ sealed class ApiResult<T> {
   ) {
     return switch (this) {
       ApiSuccess<T>(data: final data) => onSuccess(data),
-      ApiFailure<T>(message: final message, code: final code, error: final error) =>
+      ApiFailure<T>(
+        message: final message,
+        code: final code,
+        error: final error
+      ) =>
         onFailure(message, code, error),
     };
   }
@@ -128,7 +143,7 @@ sealed class ApiResult<T> {
   String toString() {
     return switch (this) {
       ApiSuccess<T>(data: final data) => 'ApiResult.success($data)',
-      ApiFailure<T>(message: final message, code: final code) => 
+      ApiFailure<T>(message: final message, code: final code) =>
         'ApiResult.failure($message${code != null ? ', code: $code' : ''})',
     };
   }
@@ -165,10 +180,10 @@ final class ApiFailure<T> extends ApiResult<T> {
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
-    return other is ApiFailure<T> && 
-           other.message == message && 
-           other.code == code &&
-           other.error == error;
+    return other is ApiFailure<T> &&
+        other.message == message &&
+        other.code == code &&
+        other.error == error;
   }
 
   @override
@@ -188,7 +203,7 @@ class ApiException implements Exception {
   }
 }
 
-/// Extension methods for Future<ApiResult<T>>
+/// Extension methods for `Future<ApiResult<T>>`
 extension ApiResultFuture<T> on Future<ApiResult<T>> {
   /// Transform the future result
   Future<ApiResult<R>> mapAsync<R>(R Function(T data) transform) async {
@@ -197,17 +212,23 @@ extension ApiResultFuture<T> on Future<ApiResult<T>> {
   }
 
   /// Transform the future result with another async operation
-  Future<ApiResult<R>> flatMapAsync<R>(Future<ApiResult<R>> Function(T data) transform) async {
+  Future<ApiResult<R>> flatMapAsync<R>(
+      Future<ApiResult<R>> Function(T data) transform) async {
     final result = await this;
     return switch (result) {
       ApiSuccess<T>(data: final data) => await transform(data),
-      ApiFailure<T>(message: final message, code: final code, error: final error) => 
+      ApiFailure<T>(
+        message: final message,
+        code: final code,
+        error: final error
+      ) =>
         ApiResult.failure(message, code: code, error: error),
     };
   }
 
   /// Execute an action if the future result is successful
-  Future<ApiResult<T>> onSuccessAsync(Future<void> Function(T data) action) async {
+  Future<ApiResult<T>> onSuccessAsync(
+      Future<void> Function(T data) action) async {
     final result = await this;
     if (result is ApiSuccess<T>) {
       await action(result.data);
@@ -216,7 +237,9 @@ extension ApiResultFuture<T> on Future<ApiResult<T>> {
   }
 
   /// Execute an action if the future result is failed
-  Future<ApiResult<T>> onFailureAsync(Future<void> Function(String message, String? code, dynamic error) action) async {
+  Future<ApiResult<T>> onFailureAsync(
+      Future<void> Function(String message, String? code, dynamic error)
+          action) async {
     final result = await this;
     if (result is ApiFailure<T>) {
       await action(result.message, result.code, result.error);

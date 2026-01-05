@@ -37,16 +37,26 @@ class NotificationState {
   bool get hasNotifications => notifications.isNotEmpty;
 }
 
-// Notification Notifier with real-time polling
-class NotificationNotifier extends StateNotifier<NotificationState> {
-  final NotificationRepository _repository;
+// Notification Notifier with real-time polling (Riverpod 3.x)
+class NotificationNotifier extends Notifier<NotificationState> {
+  late final NotificationRepository _repository;
   Timer? _pollingTimer;
   static const _pollingInterval = Duration(seconds: 15);
 
-  NotificationNotifier(this._repository) : super(const NotificationState()) {
+  @override
+  NotificationState build() {
+    _repository = ref.read(notificationRepositoryProvider);
     // Start polling when created
-    loadNotifications();
     _startPolling();
+    // Load notifications on first build
+    Future.microtask(() => loadNotifications());
+
+    // Stop polling when disposed
+    ref.onDispose(() {
+      _stopPolling();
+    });
+
+    return const NotificationState();
   }
 
   void _startPolling() {
@@ -59,12 +69,6 @@ class NotificationNotifier extends StateNotifier<NotificationState> {
   void _stopPolling() {
     _pollingTimer?.cancel();
     _pollingTimer = null;
-  }
-
-  @override
-  void dispose() {
-    _stopPolling();
-    super.dispose();
   }
 
   Future<void> loadNotifications() async {
@@ -214,10 +218,9 @@ class NotificationNotifier extends StateNotifier<NotificationState> {
 
 // Provider
 final notificationProvider =
-    StateNotifierProvider<NotificationNotifier, NotificationState>((ref) {
-  final repository = ref.read(notificationRepositoryProvider);
-  return NotificationNotifier(repository);
-});
+    NotifierProvider<NotificationNotifier, NotificationState>(
+  NotificationNotifier.new,
+);
 
 // Convenience providers
 final unreadNotificationCountProvider = Provider<int>((ref) {

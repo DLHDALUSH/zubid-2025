@@ -48,15 +48,21 @@ class BuyNowState {
 
   bool get hasError => error != null;
   bool get hasShippingAddress => shippingAddress != null;
-  bool get hasPaymentMethod => paymentMethod != null && paymentMethod!.isNotEmpty;
-  bool get canPurchase => hasShippingAddress && hasPaymentMethod && !isProcessing;
+  bool get hasPaymentMethod =>
+      paymentMethod != null && paymentMethod!.isNotEmpty;
+  bool get canPurchase =>
+      hasShippingAddress && hasPaymentMethod && !isProcessing;
 }
 
-// Notifier for buy now functionality
-class BuyNowNotifier extends StateNotifier<BuyNowState> {
-  final OrdersRepository _repository;
+// Notifier for buy now functionality (Riverpod 3.x)
+class BuyNowNotifier extends Notifier<BuyNowState> {
+  late final OrdersRepository _repository;
 
-  BuyNowNotifier(this._repository) : super(const BuyNowState());
+  @override
+  BuyNowState build() {
+    _repository = ref.read(ordersRepositoryProvider);
+    return const BuyNowState();
+  }
 
   // Set shipping address
   void setShippingAddress(ShippingAddress address) {
@@ -113,7 +119,7 @@ class BuyNowNotifier extends StateNotifier<BuyNowState> {
           isProcessing: false,
           order: response.order,
         );
-        
+
         AppLogger.info('Purchase completed successfully');
         return true;
       } else {
@@ -144,27 +150,27 @@ class BuyNowNotifier extends StateNotifier<BuyNowState> {
 
     try {
       AppLogger.info('Loading purchase summary for auction: $auctionId');
-      
+
       final summary = await _repository.getPurchaseSummary(
         auctionId,
         state.shippingAddress!,
       );
-      
+
       state = state.copyWith(purchaseSummary: summary);
-      
+
       AppLogger.info('Purchase summary loaded successfully');
     } catch (e) {
-      AppLogger.error('Failed to load purchase summary for auction $auctionId', error: e);
+      AppLogger.error('Failed to load purchase summary for auction $auctionId',
+          error: e);
       // Don't set error state for summary loading failure
     }
   }
 }
 
 // Provider for buy now functionality
-final buyNowProvider = StateNotifierProvider<BuyNowNotifier, BuyNowState>((ref) {
-  final repository = ref.watch(ordersRepositoryProvider);
-  return BuyNowNotifier(repository);
-});
+final buyNowProvider = NotifierProvider<BuyNowNotifier, BuyNowState>(
+  BuyNowNotifier.new,
+);
 
 // Provider for orders repository
 final ordersRepositoryProvider = Provider<OrdersRepository>((ref) {

@@ -43,11 +43,15 @@ class AuthState {
   }
 }
 
-// Auth Provider
-class AuthNotifier extends StateNotifier<AuthState> {
-  final AuthRepository _authRepository;
+// Auth Provider (Riverpod 3.x)
+class AuthNotifier extends Notifier<AuthState> {
+  late final AuthRepository _authRepository;
 
-  AuthNotifier(this._authRepository) : super(const AuthState());
+  @override
+  AuthState build() {
+    _authRepository = ref.read(authRepositoryProvider);
+    return const AuthState();
+  }
 
   Future<bool> login(LoginRequestModel request) async {
     state = state.copyWith(isLoading: true, error: null);
@@ -192,7 +196,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
 }
 
 // Provider instance
-final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
-  final authRepository = ref.read(authRepositoryProvider);
-  return AuthNotifier(authRepository);
-});
+final authProvider = NotifierProvider<AuthNotifier, AuthState>(
+  AuthNotifier.new,
+);

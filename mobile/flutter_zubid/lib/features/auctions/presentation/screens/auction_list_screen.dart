@@ -415,7 +415,7 @@ class _AuctionListScreenState extends ConsumerState<AuctionListScreen> {
     await ref.read(auctionProvider.notifier).clearFilters();
   }
 
-  Future<void> _toggleWatchlist(auction) async {
+  Future<void> _toggleWatchlist(dynamic auction) async {
     final success =
         await ref.read(auctionProvider.notifier).toggleWatchlist(auction);
 

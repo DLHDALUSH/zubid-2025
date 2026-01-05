@@ -24,10 +24,10 @@ enum ConnectivityStatus {
 
 class ConnectivityService {
   final Connectivity _connectivity = Connectivity();
-  final InternetConnectionChecker _internetChecker = InternetConnectionChecker();
+  final InternetConnectionChecker _internetChecker = InternetConnectionChecker.instance;
 
   late final StreamController<ConnectivityStatus> _statusController;
-  StreamSubscription<ConnectivityResult>? _connectivitySubscription;
+  StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
   Timer? _checkTimer;
 
   ConnectivityService() {
@@ -38,7 +38,7 @@ class ConnectivityService {
   Stream<ConnectivityStatus> get connectivityStream => _statusController.stream;
 
   void _initializeConnectivity() {
-    // Listen to connectivity changes
+    // Listen to connectivity changes (now returns List<ConnectivityResult>)
     _connectivitySubscription = _connectivity.onConnectivityChanged.listen(
       _onConnectivityChanged,
       onError: (error) {
@@ -51,14 +51,14 @@ class ConnectivityService {
     _checkConnectivity();
   }
 
-  void _onConnectivityChanged(ConnectivityResult result) {
-    AppLogger.info('Connectivity changed: $result');
+  void _onConnectivityChanged(List<ConnectivityResult> results) {
+    AppLogger.info('Connectivity changed: $results');
 
     // Cancel any existing timer
     _checkTimer?.cancel();
 
     // If no connectivity, immediately report disconnected
-    if (result == ConnectivityResult.none) {
+    if (results.isEmpty || results.contains(ConnectivityResult.none)) {
       _statusController.add(ConnectivityStatus.disconnected);
       return;
     }
@@ -71,8 +71,8 @@ class ConnectivityService {
   Future<void> _checkConnectivity() async {
     try {
       _statusController.add(ConnectivityStatus.checking);
-      final result = await _connectivity.checkConnectivity();
-      _onConnectivityChanged(result);
+      final results = await _connectivity.checkConnectivity();
+      _onConnectivityChanged(results);
     } catch (e) {
       AppLogger.error('Failed to check connectivity', error: e);
       _statusController.add(ConnectivityStatus.disconnected);
@@ -109,8 +109,8 @@ class ConnectivityService {
 
   Future<bool> isConnected() async {
     try {
-      final result = await _connectivity.checkConnectivity();
-      if (result == ConnectivityResult.none) {
+      final results = await _connectivity.checkConnectivity();
+      if (results.isEmpty || results.contains(ConnectivityResult.none)) {
         return false;
       }
 

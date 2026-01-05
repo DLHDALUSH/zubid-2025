@@ -9,26 +9,28 @@ class AddPaymentMethodScreen extends ConsumerStatefulWidget {
   const AddPaymentMethodScreen({super.key});
 
   @override
-  ConsumerState<AddPaymentMethodScreen> createState() => _AddPaymentMethodScreenState();
+  ConsumerState<AddPaymentMethodScreen> createState() =>
+      _AddPaymentMethodScreenState();
 }
 
-class _AddPaymentMethodScreenState extends ConsumerState<AddPaymentMethodScreen> {
+class _AddPaymentMethodScreenState
+    extends ConsumerState<AddPaymentMethodScreen> {
   final _formKey = GlobalKey<FormState>();
   String _selectedType = 'fib'; // Default to FIB
   bool _setAsDefault = false;
-  
+
   // FIB fields
   final _fibAccountController = TextEditingController();
   final _fibHolderNameController = TextEditingController();
   final _fibPhoneController = TextEditingController();
   final _fibBranchController = TextEditingController();
   final _fibIbanController = TextEditingController();
-  
+
   // ZAIN CASH fields
   final _zainPhoneController = TextEditingController();
   final _zainPinController = TextEditingController();
   final _zainHolderNameController = TextEditingController();
-  
+
   // VISA/MASTERCARD fields
   final _cardNumberController = TextEditingController();
   final _cardHolderController = TextEditingController();
@@ -85,16 +87,16 @@ class _AddPaymentMethodScreenState extends ConsumerState<AddPaymentMethodScreen>
                 ),
               ),
               const SizedBox(height: 16),
-              
+
               _buildPaymentTypeSelector(),
-              
+
               const SizedBox(height: 24),
-              
+
               // Payment method form
               _buildPaymentMethodForm(),
-              
+
               const SizedBox(height: 24),
-              
+
               // Set as default checkbox
               CheckboxListTile(
                 title: const Text('Set as default payment method'),
@@ -106,14 +108,15 @@ class _AddPaymentMethodScreenState extends ConsumerState<AddPaymentMethodScreen>
                 },
                 controlAffinity: ListTileControlAffinity.leading,
               ),
-              
+
               const SizedBox(height: 32),
-              
+
               // Add button
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: paymentMethodsState.isLoading ? null : _addPaymentMethod,
+                  onPressed:
+                      paymentMethodsState.isLoading ? null : _addPaymentMethod,
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
@@ -150,36 +153,41 @@ class _AddPaymentMethodScreenState extends ConsumerState<AddPaymentMethodScreen>
       {'value': 'mastercard', 'label': 'MASTERCARD', 'icon': '💳'},
     ];
 
-    return Column(
-      children: paymentTypes.map((type) {
-        return Card(
-          margin: const EdgeInsets.only(bottom: 8),
-          child: RadioListTile<String>(
-            title: Row(
-              children: [
-                Text(
-                  type['icon']!,
-                  style: const TextStyle(fontSize: 24),
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  type['label']!,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w500,
+    return RadioGroup<String>(
+      groupValue: _selectedType,
+      onChanged: (value) {
+        if (value != null) {
+          setState(() {
+            _selectedType = value;
+          });
+        }
+      },
+      child: Column(
+        children: paymentTypes.map((type) {
+          return Card(
+            margin: const EdgeInsets.only(bottom: 8),
+            child: RadioListTile<String>(
+              title: Row(
+                children: [
+                  Text(
+                    type['icon']!,
+                    style: const TextStyle(fontSize: 24),
                   ),
-                ),
-              ],
+                  const SizedBox(width: 12),
+                  Text(
+                    type['label']!,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+              value: type['value']!,
+              // groupValue and onChanged are managed by RadioGroup ancestor
             ),
-            value: type['value']!,
-            groupValue: _selectedType,
-            onChanged: (value) {
-              setState(() {
-                _selectedType = value!;
-              });
-            },
-          ),
-        );
-      }).toList(),
+          );
+        }).toList(),
+      ),
     );
   }
 
@@ -204,11 +212,10 @@ class _AddPaymentMethodScreenState extends ConsumerState<AddPaymentMethodScreen>
         Text(
           'FIB Account Details',
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+                fontWeight: FontWeight.bold,
+              ),
         ),
         const SizedBox(height: 16),
-
         TextFormField(
           controller: _fibAccountController,
           decoration: const InputDecoration(
@@ -229,7 +236,6 @@ class _AddPaymentMethodScreenState extends ConsumerState<AddPaymentMethodScreen>
           },
         ),
         const SizedBox(height: 16),
-
         TextFormField(
           controller: _fibHolderNameController,
           decoration: const InputDecoration(
@@ -246,7 +252,6 @@ class _AddPaymentMethodScreenState extends ConsumerState<AddPaymentMethodScreen>
           },
         ),
         const SizedBox(height: 16),
-
         TextFormField(
           controller: _fibPhoneController,
           decoration: const InputDecoration(
@@ -268,7 +273,6 @@ class _AddPaymentMethodScreenState extends ConsumerState<AddPaymentMethodScreen>
           },
         ),
         const SizedBox(height: 16),
-
         TextFormField(
           controller: _fibBranchController,
           decoration: const InputDecoration(
@@ -278,7 +282,6 @@ class _AddPaymentMethodScreenState extends ConsumerState<AddPaymentMethodScreen>
           ),
         ),
         const SizedBox(height: 16),
-
         TextFormField(
           controller: _fibIbanController,
           decoration: const InputDecoration(
@@ -299,11 +302,10 @@ class _AddPaymentMethodScreenState extends ConsumerState<AddPaymentMethodScreen>
         Text(
           'ZAIN CASH Details',
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+                fontWeight: FontWeight.bold,
+              ),
         ),
         const SizedBox(height: 16),
-
         TextFormField(
           controller: _zainPhoneController,
           decoration: const InputDecoration(
@@ -328,7 +330,6 @@ class _AddPaymentMethodScreenState extends ConsumerState<AddPaymentMethodScreen>
           },
         ),
         const SizedBox(height: 16),
-
         TextFormField(
           controller: _zainPinController,
           decoration: const InputDecoration(
@@ -353,7 +354,6 @@ class _AddPaymentMethodScreenState extends ConsumerState<AddPaymentMethodScreen>
           },
         ),
         const SizedBox(height: 16),
-
         TextFormField(
           controller: _zainHolderNameController,
           decoration: const InputDecoration(
@@ -374,11 +374,10 @@ class _AddPaymentMethodScreenState extends ConsumerState<AddPaymentMethodScreen>
         Text(
           '${_selectedType.toUpperCase()} Card Details',
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+                fontWeight: FontWeight.bold,
+              ),
         ),
         const SizedBox(height: 16),
-
         TextFormField(
           controller: _cardNumberController,
           decoration: const InputDecoration(
@@ -402,7 +401,6 @@ class _AddPaymentMethodScreenState extends ConsumerState<AddPaymentMethodScreen>
           },
         ),
         const SizedBox(height: 16),
-
         Row(
           children: [
             Expanded(
@@ -458,7 +456,6 @@ class _AddPaymentMethodScreenState extends ConsumerState<AddPaymentMethodScreen>
           ],
         ),
         const SizedBox(height: 16),
-
         TextFormField(
           controller: _cardHolderNameController,
           decoration: const InputDecoration(
@@ -492,8 +489,12 @@ class _AddPaymentMethodScreenState extends ConsumerState<AddPaymentMethodScreen>
             fibAccountNumber: _fibAccountController.text,
             fibHolderName: _fibHolderNameController.text,
             fibPhoneNumber: '+964${_fibPhoneController.text}',
-            fibBranch: _fibBranchController.text.isNotEmpty ? _fibBranchController.text : '',
-            fibIban: _fibIbanController.text.isNotEmpty ? _fibIbanController.text : '',
+            fibBranch: _fibBranchController.text.isNotEmpty
+                ? _fibBranchController.text
+                : '',
+            fibIban: _fibIbanController.text.isNotEmpty
+                ? _fibIbanController.text
+                : '',
             isDefault: _setAsDefault,
           );
           break;
@@ -501,7 +502,9 @@ class _AddPaymentMethodScreenState extends ConsumerState<AddPaymentMethodScreen>
           request = AddPaymentMethodRequest.zainCash(
             zainPhoneNumber: '+964${_zainPhoneController.text}',
             zainPin: _zainPinController.text,
-            zainHolderName: _zainHolderNameController.text.isNotEmpty ? _zainHolderNameController.text : '',
+            zainHolderName: _zainHolderNameController.text.isNotEmpty
+                ? _zainHolderNameController.text
+                : '',
             isDefault: _setAsDefault,
           );
           break;

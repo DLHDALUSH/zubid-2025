@@ -46,13 +46,18 @@ class BiddingState {
   }
 }
 
-// Bidding Provider
-class BiddingNotifier extends StateNotifier<BiddingState> {
-  final BiddingRepository _biddingRepository;
-  final String auctionId;
+// Bidding Provider (Riverpod 3.x)
+class BiddingNotifier extends Notifier<BiddingState> {
+  BiddingNotifier(this.auctionId);
 
-  BiddingNotifier(this._biddingRepository, this.auctionId) 
-      : super(const BiddingState());
+  final String auctionId;
+  late final BiddingRepository _biddingRepository;
+
+  @override
+  BiddingState build() {
+    _biddingRepository = ref.read(biddingRepositoryProvider);
+    return const BiddingState();
+  }
 
   Future<void> loadBids() async {
     state = state.copyWith(isLoading: true, error: null);
@@ -93,13 +98,14 @@ class BiddingNotifier extends StateNotifier<BiddingState> {
         success: (bid) {
           // Add new bid to the list
           final updatedBids = [bid, ...state.bids];
-          
+
           state = state.copyWith(
             isPlacingBid: false,
             bids: updatedBids,
             latestBid: bid,
           );
-          AppLogger.info('Bid placed successfully: \$${amount.toStringAsFixed(2)}');
+          AppLogger.info(
+              'Bid placed successfully: \$${amount.toStringAsFixed(2)}');
           return true;
         },
         error: (error) {
@@ -167,9 +173,7 @@ class BiddingNotifier extends StateNotifier<BiddingState> {
 }
 
 // Provider factory
-final biddingProvider = StateNotifierProvider.family<BiddingNotifier, BiddingState, String>(
-  (ref, auctionId) {
-    final biddingRepository = ref.read(biddingRepositoryProvider);
-    return BiddingNotifier(biddingRepository, auctionId);
-  },
+final biddingProvider =
+    NotifierProvider.family<BiddingNotifier, BiddingState, String>(
+  (auctionId) => BiddingNotifier(auctionId),
 );

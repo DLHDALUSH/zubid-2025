@@ -39,11 +39,14 @@ class PaymentProcessingState {
   bool get isFailed => currentPayment?.isFailed == true;
 }
 
-class PaymentProcessingNotifier extends StateNotifier<PaymentProcessingState> {
-  final PaymentRepository _repository;
+class PaymentProcessingNotifier extends Notifier<PaymentProcessingState> {
+  late final PaymentRepository _repository;
 
-  PaymentProcessingNotifier(this._repository)
-      : super(const PaymentProcessingState());
+  @override
+  PaymentProcessingState build() {
+    _repository = ref.read(paymentRepositoryProvider);
+    return const PaymentProcessingState();
+  }
 
   Future<bool> processPayment(PaymentRequest request) async {
     state = const PaymentProcessingState(
@@ -253,11 +256,9 @@ class PaymentProcessingNotifier extends StateNotifier<PaymentProcessingState> {
 
 // Providers
 final paymentProcessingProvider =
-    StateNotifierProvider<PaymentProcessingNotifier, PaymentProcessingState>(
-        (ref) {
-  final repository = ref.read(paymentRepositoryProvider);
-  return PaymentProcessingNotifier(repository);
-});
+    NotifierProvider<PaymentProcessingNotifier, PaymentProcessingState>(
+  PaymentProcessingNotifier.new,
+);
 
 // Computed providers
 final isPaymentProcessingProvider = Provider<bool>((ref) {

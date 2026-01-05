@@ -109,7 +109,7 @@ class _BannerCarouselState extends ConsumerState<BannerCarousel> {
                     decoration: BoxDecoration(
                       color: _currentIndex == index
                           ? Colors.white
-                          : Colors.white.withOpacity(0.5),
+                          : Colors.white.withValues(alpha: 0.5),
                       borderRadius: BorderRadius.circular(4),
                     ),
                   );
@@ -138,7 +138,7 @@ class _BannerCarouselState extends ConsumerState<BannerCarousel> {
                 end: Alignment.bottomCenter,
                 colors: [
                   Colors.transparent,
-                  Colors.black.withOpacity(0.7),
+                  Colors.black.withValues(alpha: 0.7),
                 ],
                 stops: const [0.5, 1.0],
               ),
@@ -195,12 +195,12 @@ class _BannerCarouselState extends ConsumerState<BannerCarousel> {
 
   Widget _buildPlaceholder() {
     return Container(
-      color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
       child: Center(
         child: Icon(
           Icons.image,
           size: 48,
-          color: Theme.of(context).colorScheme.primary.withOpacity(0.5),
+          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
         ),
       ),
     );

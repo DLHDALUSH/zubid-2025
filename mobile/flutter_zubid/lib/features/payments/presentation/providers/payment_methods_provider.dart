@@ -36,10 +36,14 @@ class PaymentMethodsState {
   bool get hasPaymentMethods => paymentMethods.isNotEmpty;
 }
 
-class PaymentMethodsNotifier extends StateNotifier<PaymentMethodsState> {
-  final PaymentRepository _repository;
+class PaymentMethodsNotifier extends Notifier<PaymentMethodsState> {
+  late final PaymentRepository _repository;
 
-  PaymentMethodsNotifier(this._repository) : super(const PaymentMethodsState());
+  @override
+  PaymentMethodsState build() {
+    _repository = ref.read(paymentRepositoryProvider);
+    return const PaymentMethodsState();
+  }
 
   Future<void> loadPaymentMethods() async {
     state = state.copyWith(isLoading: true, error: null);
@@ -48,9 +52,8 @@ class PaymentMethodsNotifier extends StateNotifier<PaymentMethodsState> {
 
     result.when(
       success: (paymentMethods) {
-        final defaultMethod = paymentMethods
-            .where((method) => method.isDefault)
-            .firstOrNull;
+        final defaultMethod =
+            paymentMethods.where((method) => method.isDefault).firstOrNull;
 
         state = PaymentMethodsState(
           isLoading: false,
@@ -77,8 +80,8 @@ class PaymentMethodsNotifier extends StateNotifier<PaymentMethodsState> {
     return result.when(
       success: (paymentMethod) {
         final updatedMethods = [...state.paymentMethods, paymentMethod];
-        final defaultMethod = paymentMethod.isDefault 
-            ? paymentMethod 
+        final defaultMethod = paymentMethod.isDefault
+            ? paymentMethod
             : state.defaultPaymentMethod;
 
         state = state.copyWith(
@@ -86,7 +89,7 @@ class PaymentMethodsNotifier extends StateNotifier<PaymentMethodsState> {
           paymentMethods: updatedMethods,
           defaultPaymentMethod: defaultMethod,
         );
-        
+
         AppLogger.info('Added payment method: ${paymentMethod.id}');
         return true;
       },
@@ -111,7 +114,7 @@ class PaymentMethodsNotifier extends StateNotifier<PaymentMethodsState> {
         final updatedMethods = state.paymentMethods
             .where((method) => method.id != paymentMethodId)
             .toList();
-        
+
         final defaultMethod = state.defaultPaymentMethod?.id == paymentMethodId
             ? null
             : state.defaultPaymentMethod;
@@ -121,7 +124,7 @@ class PaymentMethodsNotifier extends StateNotifier<PaymentMethodsState> {
           paymentMethods: updatedMethods,
           defaultPaymentMethod: defaultMethod,
         );
-        
+
         AppLogger.info('Deleted payment method: $paymentMethodId');
         return true;
       },
@@ -157,7 +160,7 @@ class PaymentMethodsNotifier extends StateNotifier<PaymentMethodsState> {
           paymentMethods: updatedMethods,
           defaultPaymentMethod: updatedMethod,
         );
-        
+
         AppLogger.info('Set default payment method: $paymentMethodId');
         return true;
       },
@@ -177,15 +180,11 @@ class PaymentMethodsNotifier extends StateNotifier<PaymentMethodsState> {
   }
 
   PaymentMethodModel? getPaymentMethodById(String id) {
-    return state.paymentMethods
-        .where((method) => method.id == id)
-        .firstOrNull;
+    return state.paymentMethods.where((method) => method.id == id).firstOrNull;
   }
 
   List<PaymentMethodModel> getPaymentMethodsByType(String type) {
-    return state.paymentMethods
-        .where((method) => method.type == type)
-        .toList();
+    return state.paymentMethods.where((method) => method.type == type).toList();
   }
 
   List<PaymentMethodModel> getVerifiedPaymentMethods() {
@@ -196,17 +195,18 @@ class PaymentMethodsNotifier extends StateNotifier<PaymentMethodsState> {
 }
 
 // Providers
-final paymentMethodsProvider = StateNotifierProvider<PaymentMethodsNotifier, PaymentMethodsState>((ref) {
-  final repository = ref.read(paymentRepositoryProvider);
-  return PaymentMethodsNotifier(repository);
-});
+final paymentMethodsProvider =
+    NotifierProvider<PaymentMethodsNotifier, PaymentMethodsState>(
+  PaymentMethodsNotifier.new,
+);
 
 // Computed providers
 final defaultPaymentMethodProvider = Provider<PaymentMethodModel?>((ref) {
   return ref.watch(paymentMethodsProvider).defaultPaymentMethod;
 });
 
-final verifiedPaymentMethodsProvider = Provider<List<PaymentMethodModel>>((ref) {
+final verifiedPaymentMethodsProvider =
+    Provider<List<PaymentMethodModel>>((ref) {
   final state = ref.watch(paymentMethodsProvider);
   return state.paymentMethods
       .where((method) => method.isVerified && !method.isExpired)
@@ -215,9 +215,7 @@ final verifiedPaymentMethodsProvider = Provider<List<PaymentMethodModel>>((ref) 
 
 final cardPaymentMethodsProvider = Provider<List<PaymentMethodModel>>((ref) {
   final state = ref.watch(paymentMethodsProvider);
-  return state.paymentMethods
-      .where((method) => method.type == 'card')
-      .toList();
+  return state.paymentMethods.where((method) => method.type == 'card').toList();
 });
 
 final paypalPaymentMethodsProvider = Provider<List<PaymentMethodModel>>((ref) {

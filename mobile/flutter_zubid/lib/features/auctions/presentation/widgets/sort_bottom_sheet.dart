@@ -92,14 +92,28 @@ class _SortBottomSheetState extends State<SortBottomSheet> {
               ),
             ],
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           // Sort Options
-          ..._sortOptions.map((option) => _buildSortOption(option)),
-          
+          RadioGroup<String>(
+            groupValue: _selectedSortBy,
+            onChanged: (value) {
+              if (value != null) {
+                setState(() {
+                  _selectedSortBy = value;
+                });
+              }
+            },
+            child: Column(
+              children: _sortOptions
+                  .map((option) => _buildSortOption(option))
+                  .toList(),
+            ),
+          ),
+
           const SizedBox(height: 16),
-          
+
           // Sort Order
           Card(
             child: Padding(
@@ -113,9 +127,7 @@ class _SortBottomSheetState extends State<SortBottomSheet> {
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  
                   const SizedBox(height: 12),
-                  
                   Row(
                     children: [
                       Expanded(
@@ -141,9 +153,9 @@ class _SortBottomSheetState extends State<SortBottomSheet> {
               ),
             ),
           ),
-          
+
           const SizedBox(height: 24),
-          
+
           // Apply Button
           ElevatedButton(
             onPressed: () {
@@ -152,7 +164,7 @@ class _SortBottomSheetState extends State<SortBottomSheet> {
             },
             child: const Text('Apply Sort'),
           ),
-          
+
           const SizedBox(height: 16),
         ],
       ),
@@ -167,19 +179,14 @@ class _SortBottomSheetState extends State<SortBottomSheet> {
       margin: const EdgeInsets.only(bottom: 8),
       child: RadioListTile<String>(
         value: option.key,
-        groupValue: _selectedSortBy,
-        onChanged: (value) {
-          setState(() {
-            _selectedSortBy = value!;
-          });
-        },
+        // groupValue and onChanged are managed by RadioGroup ancestor
         title: Row(
           children: [
             Icon(
               option.icon,
               size: 20,
-              color: isSelected 
-                  ? theme.colorScheme.primary 
+              color: isSelected
+                  ? theme.colorScheme.primary
                   : theme.colorScheme.onSurface.withValues(alpha: 0.6),
             ),
             const SizedBox(width: 12),
@@ -198,7 +205,6 @@ class _SortBottomSheetState extends State<SortBottomSheet> {
             color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
           ),
         ),
-        activeColor: theme.colorScheme.primary,
       ),
     );
   }
@@ -223,13 +229,13 @@ class _SortBottomSheetState extends State<SortBottomSheet> {
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           border: Border.all(
-            color: isSelected 
-                ? theme.colorScheme.primary 
+            color: isSelected
+                ? theme.colorScheme.primary
                 : theme.colorScheme.outline.withValues(alpha: 0.3),
             width: isSelected ? 2 : 1,
           ),
           borderRadius: BorderRadius.circular(8),
-          color: isSelected 
+          color: isSelected
               ? theme.colorScheme.primaryContainer.withValues(alpha: 0.3)
               : null,
         ),
@@ -237,8 +243,8 @@ class _SortBottomSheetState extends State<SortBottomSheet> {
           children: [
             Icon(
               icon,
-              color: isSelected 
-                  ? theme.colorScheme.primary 
+              color: isSelected
+                  ? theme.colorScheme.primary
                   : theme.colorScheme.onSurface.withValues(alpha: 0.6),
             ),
             const SizedBox(height: 8),

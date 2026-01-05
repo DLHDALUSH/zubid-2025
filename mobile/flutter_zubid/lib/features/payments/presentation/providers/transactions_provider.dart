@@ -47,10 +47,14 @@ class TransactionsState {
   bool get hasTransactions => transactions.isNotEmpty;
 }
 
-class TransactionsNotifier extends StateNotifier<TransactionsState> {
-  final PaymentRepository _repository;
+class TransactionsNotifier extends Notifier<TransactionsState> {
+  late final PaymentRepository _repository;
 
-  TransactionsNotifier(this._repository) : super(const TransactionsState());
+  @override
+  TransactionsState build() {
+    _repository = ref.read(paymentRepositoryProvider);
+    return const TransactionsState();
+  }
 
   Future<void> loadTransactions({
     bool refresh = false,
@@ -128,23 +132,22 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
 
   Future<TransactionModel?> getTransaction(String transactionId) async {
     // First check if we already have it in state
-    final existingTransaction = state.transactions
-        .where((t) => t.id == transactionId)
-        .firstOrNull;
-    
+    final existingTransaction =
+        state.transactions.where((t) => t.id == transactionId).firstOrNull;
+
     if (existingTransaction != null) {
       return existingTransaction;
     }
 
     // Fetch from API
     final result = await _repository.getTransaction(transactionId);
-    
+
     return result.when(
       success: (transaction) {
         // Add to state if not already present
         final updatedTransactions = [...state.transactions, transaction];
         state = state.copyWith(transactions: updatedTransactions);
-        
+
         AppLogger.info('Retrieved transaction: $transactionId');
         return transaction;
       },
@@ -173,11 +176,11 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
 
   void updateTransaction(TransactionModel updatedTransaction) {
     final updatedTransactions = state.transactions.map((transaction) {
-      return transaction.id == updatedTransaction.id 
-          ? updatedTransaction 
+      return transaction.id == updatedTransaction.id
+          ? updatedTransaction
           : transaction;
     }).toList();
-    
+
     state = state.copyWith(transactions: updatedTransactions);
     AppLogger.info('Updated transaction in state: ${updatedTransaction.id}');
   }
@@ -190,10 +193,10 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
 }
 
 // Providers
-final transactionsProvider = StateNotifierProvider<TransactionsNotifier, TransactionsState>((ref) {
-  final repository = ref.read(paymentRepositoryProvider);
-  return TransactionsNotifier(repository);
-});
+final transactionsProvider =
+    NotifierProvider<TransactionsNotifier, TransactionsState>(
+  TransactionsNotifier.new,
+);
 
 // Filtered providers
 final paymentTransactionsProvider = Provider<List<TransactionModel>>((ref) {

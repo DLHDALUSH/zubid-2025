@@ -55,23 +55,27 @@ class AuctionCreationState {
   }
 
   bool get hasError => error != null;
-  bool get hasImages => selectedImages.isNotEmpty || uploadedImageUrls.isNotEmpty;
+  bool get hasImages =>
+      selectedImages.isNotEmpty || uploadedImageUrls.isNotEmpty;
   bool get canCreateAuction => draftAuction?.isValid == true && hasImages;
   int get totalImages => selectedImages.length + uploadedImageUrls.length;
 }
 
-class AuctionCreationNotifier extends StateNotifier<AuctionCreationState> {
-  final AuctionCreationRepository _repository;
+class AuctionCreationNotifier extends Notifier<AuctionCreationState> {
+  late final AuctionCreationRepository _repository;
 
-  AuctionCreationNotifier(this._repository) : super(const AuctionCreationState()) {
+  @override
+  AuctionCreationState build() {
+    _repository = ref.read(auctionCreationRepositoryProvider);
     _loadCategories();
+    return const AuctionCreationState();
   }
 
   Future<void> _loadCategories() async {
     state = state.copyWith(isLoading: true, error: null);
 
     final result = await _repository.getCategories();
-    
+
     result.when(
       success: (categories) {
         state = state.copyWith(
@@ -100,7 +104,7 @@ class AuctionCreationNotifier extends StateNotifier<AuctionCreationState> {
       state = state.copyWith(error: 'Maximum 12 images allowed');
       return;
     }
-    
+
     state = state.copyWith(
       selectedImages: newImages,
       error: null,
@@ -125,7 +129,8 @@ class AuctionCreationNotifier extends StateNotifier<AuctionCreationState> {
   }
 
   void reorderImages(int oldIndex, int newIndex) {
-    if (oldIndex < state.selectedImages.length && newIndex < state.selectedImages.length) {
+    if (oldIndex < state.selectedImages.length &&
+        newIndex < state.selectedImages.length) {
       final newImages = [...state.selectedImages];
       final item = newImages.removeAt(oldIndex);
       newImages.insert(newIndex, item);
@@ -140,7 +145,7 @@ class AuctionCreationNotifier extends StateNotifier<AuctionCreationState> {
     state = state.copyWith(isUploading: true, uploadProgress: 0.0, error: null);
 
     final result = await _repository.uploadImages(state.selectedImages);
-    
+
     return result.when(
       success: (imageUrls) {
         state = state.copyWith(
@@ -208,7 +213,7 @@ class AuctionCreationNotifier extends StateNotifier<AuctionCreationState> {
     );
 
     final result = await _repository.createAuction(finalRequest);
-    
+
     return result.when(
       success: (response) {
         state = state.copyWith(isLoading: false);
@@ -239,10 +244,10 @@ class AuctionCreationNotifier extends StateNotifier<AuctionCreationState> {
 }
 
 // Providers
-final auctionCreationProvider = StateNotifierProvider<AuctionCreationNotifier, AuctionCreationState>((ref) {
-  final repository = ref.read(auctionCreationRepositoryProvider);
-  return AuctionCreationNotifier(repository);
-});
+final auctionCreationProvider =
+    NotifierProvider<AuctionCreationNotifier, AuctionCreationState>(
+  AuctionCreationNotifier.new,
+);
 
 final categoriesProvider = Provider<List<CategoryModel>>((ref) {
   return ref.watch(auctionCreationProvider).categories;

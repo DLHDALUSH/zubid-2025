@@ -58,11 +58,15 @@ class AuctionState {
   bool get hasFilters => currentFilters != null && !currentFilters!.isEmpty;
 }
 
-// Auction Provider
-class AuctionNotifier extends StateNotifier<AuctionState> {
-  final AuctionRepository _auctionRepository;
+// Auction Provider (Riverpod 3.x)
+class AuctionNotifier extends Notifier<AuctionState> {
+  late final AuctionRepository _auctionRepository;
 
-  AuctionNotifier(this._auctionRepository) : super(const AuctionState());
+  @override
+  AuctionState build() {
+    _auctionRepository = ref.read(auctionRepositoryProvider);
+    return const AuctionState();
+  }
 
   Future<void> loadAuctions({bool refresh = false}) async {
     if (refresh) {
@@ -161,7 +165,7 @@ class AuctionNotifier extends StateNotifier<AuctionState> {
   Future<void> searchAuctions(String query) async {
     final filters = state.currentFilters?.copyWith(searchQuery: query) ??
         AuctionSearchFilters(searchQuery: query);
-    
+
     state = state.copyWith(currentFilters: filters);
     await loadAuctions(refresh: true);
   }
@@ -200,7 +204,8 @@ class AuctionNotifier extends StateNotifier<AuctionState> {
             isLoading: false,
             categories: categories,
           );
-          AppLogger.info('Categories loaded successfully: ${categories.length}');
+          AppLogger.info(
+              'Categories loaded successfully: ${categories.length}');
         },
         error: (error) {
           state = state.copyWith(
@@ -221,10 +226,9 @@ class AuctionNotifier extends StateNotifier<AuctionState> {
 }
 
 // Provider instances
-final auctionProvider = StateNotifierProvider<AuctionNotifier, AuctionState>((ref) {
-  final auctionRepository = ref.read(auctionRepositoryProvider);
-  return AuctionNotifier(auctionRepository);
-});
+final auctionProvider = NotifierProvider<AuctionNotifier, AuctionState>(
+  AuctionNotifier.new,
+);
 
 final auctionsProvider = Provider<List<AuctionModel>>((ref) {
   return ref.watch(auctionProvider).auctions;

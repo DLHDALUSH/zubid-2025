@@ -46,6 +46,7 @@ class _SocialLoginButtonsState extends ConsumerState<SocialLoginButtons> {
 
   Future<void> _handleGoogleSignIn(BuildContext context, WidgetRef ref) async {
     setState(() => _isLoading = true);
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
 
     try {
       AppLogger.userAction('Google login attempted');
@@ -63,14 +64,15 @@ class _SocialLoginButtonsState extends ConsumerState<SocialLoginButtons> {
         },
         error: (error) {
           if (mounted) {
-            _showErrorSnackBar(context, error);
+            _showErrorSnackBarWithMessenger(scaffoldMessenger, error);
           }
         },
       );
     } catch (e) {
       AppLogger.error('Google login error', error: e);
       if (mounted) {
-        _showErrorSnackBar(context, 'Google login failed. Please try again.');
+        _showErrorSnackBarWithMessenger(
+            scaffoldMessenger, 'Google login failed. Please try again.');
       }
     } finally {
       if (mounted) {
@@ -81,6 +83,7 @@ class _SocialLoginButtonsState extends ConsumerState<SocialLoginButtons> {
 
   Future<void> _handleAppleSignIn(BuildContext context, WidgetRef ref) async {
     setState(() => _isLoading = true);
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
 
     try {
       AppLogger.userAction('Apple login attempted');
@@ -98,14 +101,15 @@ class _SocialLoginButtonsState extends ConsumerState<SocialLoginButtons> {
         },
         error: (error) {
           if (mounted) {
-            _showErrorSnackBar(context, error);
+            _showErrorSnackBarWithMessenger(scaffoldMessenger, error);
           }
         },
       );
     } catch (e) {
       AppLogger.error('Apple login error', error: e);
       if (mounted) {
-        _showErrorSnackBar(context, 'Apple login failed. Please try again.');
+        _showErrorSnackBarWithMessenger(
+            scaffoldMessenger, 'Apple login failed. Please try again.');
       }
     } finally {
       if (mounted) {
@@ -139,11 +143,11 @@ class _SocialLoginButtonsState extends ConsumerState<SocialLoginButtons> {
     context.go('/home');
   }
 
-  void _showErrorSnackBar(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
+  void _showErrorSnackBarWithMessenger(
+      ScaffoldMessengerState messenger, String message) {
+    messenger.showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: Theme.of(context).colorScheme.error,
         duration: const Duration(seconds: 3),
       ),
     );

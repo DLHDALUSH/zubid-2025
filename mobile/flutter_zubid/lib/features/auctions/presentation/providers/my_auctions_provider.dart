@@ -38,10 +38,14 @@ class MyAuctionsState {
   bool get hasError => error != null;
 }
 
-class MyAuctionsNotifier extends StateNotifier<MyAuctionsState> {
-  final AuctionCreationRepository _repository;
+class MyAuctionsNotifier extends Notifier<MyAuctionsState> {
+  late final AuctionCreationRepository _repository;
 
-  MyAuctionsNotifier(this._repository) : super(const MyAuctionsState());
+  @override
+  MyAuctionsState build() {
+    _repository = ref.read(auctionCreationRepositoryProvider);
+    return const MyAuctionsState();
+  }
 
   Future<void> loadAuctions({bool refresh = false}) async {
     if (refresh) {
@@ -104,15 +108,14 @@ class MyAuctionsNotifier extends StateNotifier<MyAuctionsState> {
     return result.when(
       success: (success) {
         // Remove the auction from the list
-        final updatedAuctions = state.auctions
-            .where((auction) => auction.id != auctionId)
-            .toList();
-        
+        final updatedAuctions =
+            state.auctions.where((auction) => auction.id != auctionId).toList();
+
         state = state.copyWith(
           isLoading: false,
           auctions: updatedAuctions,
         );
-        
+
         AppLogger.info('Auction deleted successfully: $auctionId');
         return true;
       },
@@ -138,12 +141,12 @@ class MyAuctionsNotifier extends StateNotifier<MyAuctionsState> {
         final updatedAuctions = state.auctions.map((auction) {
           return auction.id == auctionId ? updatedAuction : auction;
         }).toList();
-        
+
         state = state.copyWith(
           isLoading: false,
           auctions: updatedAuctions,
         );
-        
+
         AppLogger.info('Auction ended early successfully: $auctionId');
         return true;
       },
@@ -172,17 +175,17 @@ class MyAuctionsNotifier extends StateNotifier<MyAuctionsState> {
     final updatedAuctions = state.auctions.map((auction) {
       return auction.id == updatedAuction.id ? updatedAuction : auction;
     }).toList();
-    
+
     state = state.copyWith(auctions: updatedAuctions);
     AppLogger.info('Auction updated in list: ${updatedAuction.id}');
   }
 }
 
 // Providers
-final myAuctionsProvider = StateNotifierProvider<MyAuctionsNotifier, MyAuctionsState>((ref) {
-  final repository = ref.read(auctionCreationRepositoryProvider);
-  return MyAuctionsNotifier(repository);
-});
+final myAuctionsProvider =
+    NotifierProvider<MyAuctionsNotifier, MyAuctionsState>(
+  MyAuctionsNotifier.new,
+);
 
 // Filtered providers for different auction statuses
 final activeAuctionsProvider = Provider<List<AuctionModel>>((ref) {
@@ -192,7 +195,9 @@ final activeAuctionsProvider = Provider<List<AuctionModel>>((ref) {
 
 final endedAuctionsProvider = Provider<List<AuctionModel>>((ref) {
   final auctions = ref.watch(myAuctionsProvider).auctions;
-  return auctions.where((auction) => auction.hasEnded && !(auction.hasSold ?? false)).toList();
+  return auctions
+      .where((auction) => auction.hasEnded && !(auction.hasSold ?? false))
+      .toList();
 });
 
 final soldAuctionsProvider = Provider<List<AuctionModel>>((ref) {

@@ -32,17 +32,21 @@ class BannerState {
   }
 }
 
-// Banner notifier
-class BannerNotifier extends StateNotifier<BannerState> {
-  final BannerRepository _repository;
+// Banner notifier (Riverpod 3.x)
+class BannerNotifier extends Notifier<BannerState> {
+  late final BannerRepository _repository;
 
-  BannerNotifier(this._repository) : super(BannerState());
+  @override
+  BannerState build() {
+    _repository = ref.read(bannerRepositoryProvider);
+    return BannerState();
+  }
 
   Future<void> loadBanners() async {
     if (state.isLoading) return;
-    
+
     state = state.copyWith(isLoading: true, error: null);
-    
+
     try {
       final banners = await _repository.getBanners();
       state = state.copyWith(banners: banners, isLoading: false);
@@ -58,8 +62,6 @@ class BannerNotifier extends StateNotifier<BannerState> {
 }
 
 // Main provider
-final bannerProvider = StateNotifierProvider<BannerNotifier, BannerState>((ref) {
-  final repository = ref.watch(bannerRepositoryProvider);
-  return BannerNotifier(repository);
-});
-
+final bannerProvider = NotifierProvider<BannerNotifier, BannerState>(
+  BannerNotifier.new,
+);

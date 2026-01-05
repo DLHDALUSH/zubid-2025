@@ -7,7 +7,8 @@ class PaymentMethodSelector extends ConsumerStatefulWidget {
   const PaymentMethodSelector({super.key});
 
   @override
-  ConsumerState<PaymentMethodSelector> createState() => _PaymentMethodSelectorState();
+  ConsumerState<PaymentMethodSelector> createState() =>
+      _PaymentMethodSelectorState();
 }
 
 class _PaymentMethodSelectorState extends ConsumerState<PaymentMethodSelector> {
@@ -60,15 +61,24 @@ class _PaymentMethodSelectorState extends ConsumerState<PaymentMethodSelector> {
                 fontWeight: FontWeight.w600,
               ),
             ),
-            
             const SizedBox(height: 16),
-            
-            ..._paymentMethods.map((method) => _buildPaymentMethodTile(
-              theme,
-              method,
-              _selectedMethod == method.id,
-            )),
-            
+            RadioGroup<String>(
+              groupValue: _selectedMethod,
+              onChanged: (value) {
+                if (value != null) {
+                  _selectPaymentMethod(value);
+                }
+              },
+              child: Column(
+                children: _paymentMethods
+                    .map((method) => _buildPaymentMethodTile(
+                          theme,
+                          method,
+                          _selectedMethod == method.id,
+                        ))
+                    .toList(),
+              ),
+            ),
             if (_selectedMethod == 'stripe') ...[
               const SizedBox(height: 16),
               _buildCreditCardForm(theme),
@@ -89,19 +99,20 @@ class _PaymentMethodSelectorState extends ConsumerState<PaymentMethodSelector> {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: method.isEnabled ? () => _selectPaymentMethod(method.id) : null,
+          onTap:
+              method.isEnabled ? () => _selectPaymentMethod(method.id) : null,
           borderRadius: BorderRadius.circular(8),
           child: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               border: Border.all(
-                color: isSelected 
+                color: isSelected
                     ? theme.colorScheme.primary
                     : theme.colorScheme.outline.withValues(alpha: 0.3),
                 width: isSelected ? 2 : 1,
               ),
               borderRadius: BorderRadius.circular(8),
-              color: isSelected 
+              color: isSelected
                   ? theme.colorScheme.primaryContainer.withValues(alpha: 0.1)
                   : null,
             ),
@@ -109,13 +120,13 @@ class _PaymentMethodSelectorState extends ConsumerState<PaymentMethodSelector> {
               children: [
                 Icon(
                   method.icon,
-                  color: method.isEnabled 
-                      ? (isSelected ? theme.colorScheme.primary : theme.colorScheme.onSurface)
+                  color: method.isEnabled
+                      ? (isSelected
+                          ? theme.colorScheme.primary
+                          : theme.colorScheme.onSurface)
                       : theme.colorScheme.onSurface.withValues(alpha: 0.4),
                 ),
-                
                 const SizedBox(width: 16),
-                
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -124,34 +135,35 @@ class _PaymentMethodSelectorState extends ConsumerState<PaymentMethodSelector> {
                         method.name,
                         style: theme.textTheme.bodyLarge?.copyWith(
                           fontWeight: FontWeight.w600,
-                          color: method.isEnabled 
+                          color: method.isEnabled
                               ? theme.colorScheme.onSurface
-                              : theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                              : theme.colorScheme.onSurface
+                                  .withValues(alpha: 0.4),
                         ),
                       ),
                       const SizedBox(height: 2),
                       Text(
                         method.description,
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: method.isEnabled 
-                              ? theme.colorScheme.onSurface.withValues(alpha: 0.6)
-                              : theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                          color: method.isEnabled
+                              ? theme.colorScheme.onSurface
+                                  .withValues(alpha: 0.6)
+                              : theme.colorScheme.onSurface
+                                  .withValues(alpha: 0.4),
                         ),
                       ),
                     ],
                   ),
                 ),
-                
                 if (method.isEnabled)
                   Radio<String>(
                     value: method.id,
-                    groupValue: _selectedMethod,
-                    onChanged: (value) => _selectPaymentMethod(value!),
-                    activeColor: theme.colorScheme.primary,
+                    // groupValue and onChanged are managed by RadioGroup ancestor
                   )
                 else
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: theme.colorScheme.surfaceContainerHighest,
                       borderRadius: BorderRadius.circular(4),
@@ -187,9 +199,7 @@ class _PaymentMethodSelectorState extends ConsumerState<PaymentMethodSelector> {
               fontWeight: FontWeight.w600,
             ),
           ),
-          
           const SizedBox(height: 12),
-          
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -227,7 +237,7 @@ class _PaymentMethodSelectorState extends ConsumerState<PaymentMethodSelector> {
     setState(() {
       _selectedMethod = methodId;
     });
-    
+
     ref.read(buyNowProvider.notifier).setPaymentMethod(methodId);
   }
 }
