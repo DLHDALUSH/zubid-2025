@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, session, abort, send_from_directory, make_response
+from flask import Flask, request, jsonify, session, abort, send_from_directory, make_response, g
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from flask_wtf.csrf import CSRFProtect, generate_csrf
@@ -276,8 +276,6 @@ def teardown_request(exception=None):
 # =============================================================================
 # Supports both /api/endpoint and /api/v1/endpoint for backward compatibility
 # This allows gradual migration to versioned API without breaking existing clients
-
-from flask import g
 
 @app.before_request
 def handle_api_versioning():
