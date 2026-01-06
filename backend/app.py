@@ -81,8 +81,8 @@ if not https_enabled and ('onrender.com' in hostname or 'duckdns.org' in hostnam
 app.config['SESSION_COOKIE_NAME'] = 'zubid_session'  # Explicit session cookie name
 app.config['SESSION_COOKIE_SECURE'] = https_enabled
 app.config['SESSION_COOKIE_HTTPONLY'] = True
-# Use 'Lax' for same-origin requests (frontend served from Flask on port 5000)
-app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+# Use 'None' for cross-origin requests in development, 'Lax' for production
+app.config['SESSION_COOKIE_SAMESITE'] = 'None' if not https_enabled else 'Lax'
 app.config['PERMANENT_SESSION_LIFETIME'] = 86400  # 24 hours
 # Database connection pooling (only for non-SQLite databases)
 # For serverless environments like Render.com, use NullPool to avoid connection limits
@@ -220,11 +220,20 @@ limiter = Limiter(
 # CORS configuration - restrict origins in production
 cors_origins = os.getenv('CORS_ORIGINS', '*')
 if cors_origins == '*':
-    # Development/default mode - allow all origins for API access (mobile apps, web)
-    # For APIs that need to be accessed from mobile apps, we use permissive CORS
+    # Development/default mode - allow localhost origins for proper credential handling
+    # Modern browsers require specific origins when using credentials
+    development_origins = [
+        'http://localhost:3000',
+        'http://localhost:5000',
+        'http://127.0.0.1:3000',
+        'http://127.0.0.1:5000',
+        'http://10.0.2.2:5000',  # Android emulator
+        'capacitor://localhost',  # Capacitor apps
+        'ionic://localhost'       # Ionic apps
+    ]
     CORS(app,
-         supports_credentials=True,  # Allow credentials even with * (modern browsers require specific origin for this though)
-         origins="*",  # Allow any origin (required for mobile apps)
+         supports_credentials=True,
+         origins=development_origins,
          allow_headers=['Content-Type', 'X-CSRFToken', 'Authorization'],
          expose_headers=['Set-Cookie'],
          methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'])
@@ -982,11 +991,32 @@ def login_required(f):
 def admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
+        app.logger.info(f"[ADMIN_CHECK] Session data: {dict(session)}")
+        app.logger.info(f"[ADMIN_CHECK] Session keys: {list(session.keys())}")
+
         if 'user_id' not in session:
+            app.logger.warning(f"[ADMIN_CHECK] No user_id in session, returning 401")
             return jsonify({'error': 'Authentication required'}), 401
-        user = User.query.get(session['user_id'])
-        if not user or user.role != 'admin':
+
+        user_id = session['user_id']
+        app.logger.info(f"[ADMIN_CHECK] Checking admin status for user_id: {user_id}")
+
+        user = User.query.get(user_id)
+        if not user:
+            app.logger.warning(f"[ADMIN_CHECK] User not found for user_id: {user_id}")
+            return jsonify({'error': 'User not found'}), 404
+
+        app.logger.info(f"[ADMIN_CHECK] User found: {user.username}, role: {user.role}, active: {user.is_active}")
+
+        if user.role != 'admin':
+            app.logger.warning(f"[ADMIN_CHECK] User {user.username} is not admin (role: {user.role})")
             return jsonify({'error': 'Admin access required'}), 403
+
+        if not user.is_active:
+            app.logger.warning(f"[ADMIN_CHECK] Admin user {user.username} is not active")
+            return jsonify({'error': 'Account is deactivated'}), 403
+
+        app.logger.info(f"[ADMIN_CHECK] Admin access granted for user: {user.username}")
         return f(*args, **kwargs)
     return decorated_function
 
@@ -1614,7 +1644,11 @@ def login():
         session.permanent = True
         session['user_id'] = user.id
         session.modified = True  # Force Flask to send the Set-Cookie header
-        app.logger.info(f"User {user.username} (ID: {user.id}) logged in. Session ID: {session.get('user_id')}")
+
+        app.logger.info(f"[LOGIN] User {user.username} (ID: {user.id}) logged in successfully")
+        app.logger.info(f"[LOGIN] Session user_id set to: {session.get('user_id')}")
+        app.logger.info(f"[LOGIN] Full session data: {dict(session)}")
+        app.logger.info(f"[LOGIN] User role: {user.role}, active: {user.is_active}")
 
         # Create default preferences if they don't exist
         if not user.preferences:
@@ -2117,16 +2151,36 @@ def change_password():
         app.logger.error(f"Change password error: {str(e)}")
         return jsonify({'error': f'Server error: {str(e)}'}), 500
 
+# Debug endpoint to check session status
+@app.route('/api/debug/session', methods=['GET'])
+def debug_session():
+    """Debug endpoint to check session status"""
+    return jsonify({
+        'session_data': dict(session),
+        'session_keys': list(session.keys()),
+        'has_user_id': 'user_id' in session,
+        'user_id': session.get('user_id'),
+        'session_id': session.get('_id', 'No session ID'),
+        'cookies': dict(request.cookies)
+    })
+
 @app.route('/api/user/profile', methods=['GET'])
 @login_required
 def get_profile():
     user_id = session.get('user_id')
-    app.logger.info(f"get_profile called. Session user_id: {user_id}")
+    app.logger.info(f"[PROFILE] get_profile called. Session user_id: {user_id}")
+    app.logger.info(f"[PROFILE] Full session data: {dict(session)}")
+    app.logger.info(f"[PROFILE] Request cookies: {dict(request.cookies)}")
+    app.logger.info(f"[PROFILE] Request headers: {dict(request.headers)}")
+
     user = User.query.get(user_id)
 
     if not user:
-        app.logger.error(f"User not found for ID: {user_id}")
+        app.logger.error(f"[PROFILE] User not found for ID: {user_id}")
         return jsonify({'error': 'User not found'}), 404
+
+    app.logger.info(f"[PROFILE] User found: {user.username}, role: {user.role}, active: {user.is_active}")
+    app.logger.info(f"[PROFILE] Returning profile data with role: {user.role}")
 
     # Get user preferences
     preferences = user.preferences

@@ -152,7 +152,7 @@ class EnhancedNotificationService {
   final List<NotificationTemplate> _notificationHistory = [];
 
   // Notification settings
-  Map<NotificationCategory, bool> _categorySettings = {
+  final Map<NotificationCategory, bool> _categorySettings = {
     NotificationCategory.auction: true,
     NotificationCategory.bid: true,
     NotificationCategory.message: true,

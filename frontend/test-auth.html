@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZUBID - Authentication Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .info {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>ZUBID Authentication Test</h1>
+        
+        <div class="form-group">
+            <label for="username">Username:</label>
+            <input type="text" id="username" value="admin" placeholder="Enter username">
+        </div>
+        
+        <div class="form-group">
+            <label for="password">Password:</label>
+            <input type="password" id="password" value="Admin123!@#" placeholder="Enter password">
+        </div>
+        
+        <button onclick="testLogin()">Test Login</button>
+        <button onclick="testProfile()">Test Get Profile</button>
+        <button onclick="testAdminAuth()">Test Admin Auth</button>
+        <button onclick="testLogout()">Test Logout</button>
+        <button onclick="clearResults()">Clear Results</button>
+        
+        <div id="result" class="result info">
+            Ready to test authentication...
+            
+            Environment: <span id="env-info">Loading...</span>
+            API Base URL: <span id="api-info">Loading...</span>
+        </div>
+    </div>
+
+    <!-- Include configuration and API files -->
+    <script src="config.js"></script>
+    <script src="api.js"></script>
+    
+    <script>
+        // Display environment info
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('env-info').textContent = window.ZUBID_CONFIG?.environment || 'Unknown';
+            document.getElementById('api-info').textContent = window.API_BASE_URL || 'Not set';
+        });
+
+        function showResult(message, type = 'info') {
+            const resultDiv = document.getElementById('result');
+            resultDiv.textContent = message;
+            resultDiv.className = `result ${type}`;
+        }
+
+        async function testLogin() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            if (!username || !password) {
+                showResult('Please enter both username and password', 'error');
+                return;
+            }
+            
+            try {
+                showResult('Attempting login...', 'info');
+                const response = await UserAPI.login({ username, password });
+                showResult(`Login successful!\n\nResponse:\n${JSON.stringify(response, null, 2)}`, 'success');
+            } catch (error) {
+                showResult(`Login failed!\n\nError: ${error.message}\nStatus: ${error.status}\nStack: ${error.stack}`, 'error');
+            }
+        }
+
+        async function testProfile() {
+            try {
+                showResult('Getting user profile...', 'info');
+                const response = await UserAPI.getProfile();
+                showResult(`Profile retrieved successfully!\n\nResponse:\n${JSON.stringify(response, null, 2)}`, 'success');
+            } catch (error) {
+                showResult(`Profile request failed!\n\nError: ${error.message}\nStatus: ${error.status}\nStack: ${error.stack}`, 'error');
+            }
+        }
+
+        async function testAdminAuth() {
+            try {
+                showResult('Testing admin authentication...', 'info');
+                
+                // First get profile
+                const profile = await UserAPI.getProfile();
+                
+                let result = `Profile Response:\n${JSON.stringify(profile, null, 2)}\n\n`;
+                
+                if (!profile) {
+                    result += 'RESULT: No profile response - user not logged in';
+                    showResult(result, 'error');
+                    return;
+                }
+                
+                if (profile.role !== 'admin') {
+                    result += `RESULT: User role is '${profile.role}', not 'admin' - access denied`;
+                    showResult(result, 'error');
+                    return;
+                }
+                
+                result += 'RESULT: Admin authentication successful!';
+                showResult(result, 'success');
+                
+            } catch (error) {
+                showResult(`Admin auth test failed!\n\nError: ${error.message}\nStatus: ${error.status}\nStack: ${error.stack}`, 'error');
+            }
+        }
+
+        async function testLogout() {
+            try {
+                showResult('Logging out...', 'info');
+                const response = await UserAPI.logout();
+                showResult(`Logout successful!\n\nResponse:\n${JSON.stringify(response, null, 2)}`, 'success');
+            } catch (error) {
+                showResult(`Logout failed!\n\nError: ${error.message}\nStatus: ${error.status}`, 'error');
+            }
+        }
+
+        function clearResults() {
+            showResult('Results cleared. Ready for testing...', 'info');
+        }
+    </script>
+</body>
+</html>

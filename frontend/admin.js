@@ -19,8 +19,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 async function checkAdminAuth() {
     try {
         console.log('Checking admin authentication...');
+        console.log('Current URL:', window.location.href);
+        console.log('API Base URL:', window.API_BASE_URL || 'Not set');
+
         const response = await UserAPI.getProfile();
         console.log('Profile response:', response);
+        console.log('Response type:', typeof response);
 
         if (!response) {
             console.error('No response from profile endpoint');
@@ -30,6 +34,9 @@ async function checkAdminAuth() {
             }, 2000);
             return;
         }
+
+        console.log('User role from response:', response.role);
+        console.log('Expected role: admin');
 
         if (response.role !== 'admin') {
             console.error('User role is not admin:', response.role);
@@ -57,10 +64,13 @@ async function checkAdminAuth() {
         console.error('Admin auth error:', error);
         console.error('Error message:', error.message);
         console.error('Error status:', error.status);
+        console.error('Error stack:', error.stack);
 
         // Check if it's an authentication error
         if (error.status === 401 || error.message.includes('Authentication required')) {
             showToast('Please login to access admin portal', 'error');
+        } else if (error.status === 403) {
+            showToast('Access denied. Admin privileges required.', 'error');
         } else {
             showToast('Error checking admin privileges: ' + error.message, 'error');
         }

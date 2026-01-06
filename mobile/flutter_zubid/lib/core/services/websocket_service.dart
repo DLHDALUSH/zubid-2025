@@ -263,7 +263,7 @@ class WebSocketService {
     _reconnectTimer = Timer(_reconnectDelay, () {
       _reconnectAttempts++;
       AppLogger.info(
-          'Attempting to reconnect (${_reconnectAttempts}/$_maxReconnectAttempts)');
+          'Attempting to reconnect ($_reconnectAttempts/$_maxReconnectAttempts)');
       _updateConnectionState(WebSocketConnectionState.reconnecting);
       connect();
     });
