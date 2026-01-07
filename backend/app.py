@@ -15,6 +15,7 @@ from sqlalchemy.orm import joinedload, selectinload
 import os
 import json
 import logging
+import time
 from logging.handlers import RotatingFileHandler
 from PIL import Image as PILImage
 import qrcode
@@ -212,7 +213,7 @@ else:
 limiter = Limiter(
     app=app,
     key_func=get_remote_address,
-    default_limits=["1000 per day", "200 per hour"],
+    default_limits=["2000 per day", "500 per hour"],  # Increased limits for auction polling
     storage_uri=os.getenv('RATELIMIT_STORAGE_URL', 'memory://'),  # Use Redis in production
     enabled=os.getenv('RATE_LIMIT_ENABLED', 'true').lower() == 'true'
 )
@@ -2883,8 +2884,19 @@ def get_auctions():
         return jsonify({'error': f'Failed to fetch auctions: {error_msg}'}), 500
 
 @app.route('/api/auctions/<int:auction_id>', methods=['GET'])
+@limiter.limit("300 per hour")  # More generous limit for auction detail polling
 def get_auction(auction_id):
     try:
+        # Add cache headers to reduce unnecessary requests
+        response_headers = {
+            'Cache-Control': 'public, max-age=5',  # Cache for 5 seconds
+            'ETag': f'auction-{auction_id}-{int(time.time() // 5)}'  # ETag changes every 5 seconds
+        }
+
+        # Check if client has cached version
+        if request.headers.get('If-None-Match') == response_headers['ETag']:
+            return '', 304, response_headers
+
         auction = Auction.query.get_or_404(auction_id)
         now = datetime.now(timezone.utc)
         # Ensure end_time is timezone-aware for comparison
@@ -2931,7 +2943,7 @@ def get_auction(auction_id):
             'winner_id': auction.winner_id,
             'qr_code_url': auction.qr_code_url,
             'video_url': auction.video_url
-        }), 200
+        }), 200, response_headers
     except Exception as e:
         db.session.rollback()
         print(f"Error in get_auction: {str(e)}")
@@ -3176,6 +3188,7 @@ def update_auction(auction_id):
 
 # Bidding APIs
 @app.route('/api/auctions/<int:auction_id>/bids', methods=['GET'])
+@limiter.limit("200 per hour")  # Generous limit for bid history polling
 def get_bids(auction_id):
     try:
         auction = Auction.query.get_or_404(auction_id)

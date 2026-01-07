@@ -254,7 +254,51 @@ const AuctionAPI = {
     },
     
     getById: async (id) => {
-        return apiRequest(`/auctions/${id}`);
+        // Add cache headers to reduce server load
+        const headers = {};
+        const cacheKey = `auction-${id}-etag`;
+        const cachedETag = localStorage.getItem(cacheKey);
+
+        if (cachedETag) {
+            headers['If-None-Match'] = cachedETag;
+        }
+
+        try {
+            const response = await fetch(`${getApiBaseUrl()}/auctions/${id}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...headers
+                },
+                credentials: 'include'
+            });
+
+            // Handle 304 Not Modified - use cached data
+            if (response.status === 304) {
+                const cachedData = localStorage.getItem(`auction-${id}-data`);
+                if (cachedData) {
+                    return JSON.parse(cachedData);
+                }
+            }
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            // Cache the ETag and data
+            const etag = response.headers.get('ETag');
+            if (etag) {
+                localStorage.setItem(cacheKey, etag);
+                localStorage.setItem(`auction-${id}-data`, JSON.stringify(data));
+            }
+
+            return data;
+        } catch (error) {
+            console.error('Error fetching auction:', error);
+            throw error;
+        }
     },
     
     create: async (auctionData) => {

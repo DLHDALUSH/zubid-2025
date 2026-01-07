@@ -1039,19 +1039,21 @@ function updateCurrentWinner(winnerBid) {
 // Real-time updates with enhanced notifications
 function startRealTimeUpdates() {
     if (bidInterval) clearInterval(bidInterval);
-    
+
     let lastBidCount = auctionData ? auctionData.bid_count : 0;
     let lastCurrentBid = auctionData ? auctionData.current_bid : 0;
-    let pollInterval = 5000; // Start with 5 seconds
+    let pollInterval = 15000; // Start with 15 seconds to avoid rate limiting
     let consecutiveNoChanges = 0;
-    
+    let maxPollInterval = 60000; // Maximum 1 minute between polls
+    let minPollInterval = 10000; // Minimum 10 seconds between polls
+
     const pollBids = async () => {
         try {
             if (!auctionId || auctionData?.status === 'ended') {
                 clearInterval(bidInterval);
                 return;
             }
-            
+
             const updatedAuction = await AuctionAPI.getById(auctionId);
             const oldCurrentBid = auctionData ? auctionData.current_bid : 0;
             const oldBidCount = auctionData ? auctionData.bid_count : 0;
@@ -1203,10 +1205,43 @@ function startRealTimeUpdates() {
                 setTimeout(() => {
                     window.location.reload();
                 }, 2000);
+            } else {
+                // Adaptive polling: increase interval if no changes, decrease if there are changes
+                if (updatedAuction.current_bid === lastCurrentBid && updatedAuction.bid_count === lastBidCount) {
+                    consecutiveNoChanges++;
+                    // Gradually increase polling interval up to maxPollInterval
+                    pollInterval = Math.min(maxPollInterval, pollInterval + 5000);
+                } else {
+                    consecutiveNoChanges = 0;
+                    // Reset to faster polling when there's activity, but respect minimum
+                    pollInterval = minPollInterval;
+                }
+
+                // Check time remaining - poll more frequently if auction is ending soon
+                if (auctionData && auctionData.end_time) {
+                    const timeLeft = new Date(auctionData.end_time) - new Date();
+                    if (timeLeft < 300000) { // Less than 5 minutes
+                        pollInterval = Math.max(minPollInterval, 8000); // 8 seconds
+                    } else if (timeLeft < 900000) { // Less than 15 minutes
+                        pollInterval = Math.max(minPollInterval, 12000); // 12 seconds
+                    }
+                }
+
+                // Update tracking variables
+                lastBidCount = updatedAuction.bid_count;
+                lastCurrentBid = updatedAuction.current_bid;
+
+                // Restart interval with new timing
+                clearInterval(bidInterval);
+                bidInterval = setInterval(pollBids, pollInterval);
             }
         } catch (error) {
             console.error('Error updating auction:', error);
             // Don't show toast for every error to avoid spam
+            // On error, increase polling interval to reduce load
+            pollInterval = Math.min(maxPollInterval, pollInterval + 10000);
+            clearInterval(bidInterval);
+            bidInterval = setInterval(pollBids, pollInterval);
         }
     };
     
