@@ -4017,25 +4017,7 @@ body::after {
     gap: 1rem;
 }
 
-/* Gallery Card V2 */
-.gallery-card-v2 {
-    background: #fff;
-    border-radius: 16px;
-    overflow: hidden;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-}
-
-[data-theme="dark"] .gallery-card-v2 {
-    background: #1e293b;
-}
-
-.main-image-container-v2 {
-    position: relative;
-    width: 100%;
-    aspect-ratio: 16/10;
-    background: #f8fafc;
-    overflow: hidden;
-}
+/* Legacy Gallery Card V2 - Replaced by new design above */
 
 [data-theme="dark"] .main-image-container-v2 {
     background: #0f172a;
