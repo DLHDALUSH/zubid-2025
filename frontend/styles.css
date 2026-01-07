@@ -48,8 +48,24 @@
 
    ======================================== */
 
-/* Import Modern Design System */
-@import url('modern-design-system.css');
+/* Modern Design System Integrated Below */
+
+/* ==========================================
+   🚀 VISUAL TEST - MODERN DESIGN ACTIVE
+   ========================================== */
+
+/* This should make buttons have a bright blue background to confirm the new CSS is loading */
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    border: none !important;
+    box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3) !important;
+    transform: translateY(-2px) !important;
+}
+
+.btn-primary:hover {
+    transform: translateY(-4px) !important;
+    box-shadow: 0 12px 40px rgba(102, 126, 234, 0.4) !important;
+}
 
 /* ============================================
    ENHANCED SAMSUNG ONE UI DESIGN SYSTEM
