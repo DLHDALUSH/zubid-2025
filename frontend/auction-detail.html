@@ -16,7 +16,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css?v=20250107-modern-design-system">
+    <link rel="stylesheet" href="styles.css?v=20250107-modern-design-system-v4">
     <!-- Enhanced Utilities -->
 	    <script src="utils.js" defer></script>
 	    <script src="enhanced-utils.js" defer></script>
@@ -244,13 +244,13 @@
     </nav>
 
     <!-- Auction Detail - Modern Redesign -->
-    <section class="auction-detail-section">
-        <div class="container">
-            <div id="loadingIndicator" class="loading-modern">
+    <section class="auction-detail-section" style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%) !important;">
+        <div class="auction-detail-wrapper">
+            <div id="loadingIndicator" class="loading-modern" style="display: none;">
                 <div class="loading-spinner"></div>
                 <span>Loading auction details...</span>
             </div>
-            <div id="auctionDetail" class="auction-detail-wrapper" style="display: none;">
+            <div id="auctionDetail" style="display: block;">
 
                 <!-- Breadcrumb -->
                 <nav class="auction-breadcrumb">
@@ -265,7 +265,7 @@
                     <!-- Left Column - Gallery & Description -->
                     <div class="auction-left-column animate-fade-in-up">
                         <!-- Gallery Card -->
-                        <div class="gallery-card-v2">
+                        <div class="gallery-card-v2" style="background: linear-gradient(145deg, #ffffff 0%, #fafafa 100%) !important; border-radius: 20px !important; padding: 1.5rem !important; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08) !important;">
                             <div class="main-image-container-v2">
                                 <img id="mainAuctionImage" src="" alt="Auction Item" class="main-auction-image-v2">
                                 <div class="image-badge-overlay">

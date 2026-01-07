@@ -2647,12 +2647,10 @@ body::after {
    ============================================ */
 
 .auction-detail-section {
-    padding: var(--space-6, 1.5rem) 0 var(--space-16, 4rem);
-    min-height: 100vh;
-    background: linear-gradient(135deg,
-        var(--color-neutral-50, #f8fafc) 0%,
-        var(--color-neutral-100, #f1f5f9) 100%);
-    position: relative;
+    padding: 1.5rem 0 4rem !important;
+    min-height: 100vh !important;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%) !important;
+    position: relative !important;
 }
 
 .auction-detail-section::before {
@@ -2773,17 +2771,17 @@ body::after {
 
 /* 🖼️ ENHANCED GALLERY CARD */
 .gallery-card-v2 {
-    background: linear-gradient(145deg, #ffffff 0%, #fafafa 100%);
-    border-radius: var(--radius-2xl, 20px);
-    padding: var(--space-6, 1.5rem);
+    background: linear-gradient(145deg, #ffffff 0%, #fafafa 100%) !important;
+    border-radius: 20px !important;
+    padding: 1.5rem !important;
     box-shadow:
         0 8px 32px rgba(0, 0, 0, 0.08),
         0 2px 8px rgba(0, 0, 0, 0.04),
-        inset 0 1px 0 rgba(255, 255, 255, 0.9);
-    border: 1px solid rgba(0, 0, 0, 0.04);
-    position: relative;
-    overflow: hidden;
-    transition: all var(--duration-300, 0.3s) var(--ease-out, ease-out);
+        inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+    border: 1px solid rgba(0, 0, 0, 0.04) !important;
+    position: relative !important;
+    overflow: hidden !important;
+    transition: all 0.3s ease-out !important;
 }
 
 .gallery-card-v2::before {
@@ -16907,9 +16905,8 @@ body {
 }
 
 @media (max-width: 768px) {
-    .auction-detail-section {
-        padding: 1rem 0 6rem;
-    }
+    /* Legacy rule - overridden by new responsive design above */
+}
 
     .auction-breadcrumb {
         font-size: 0.8rem;
