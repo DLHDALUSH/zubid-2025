@@ -1921,6 +1921,18 @@
     100% { background-position: -200% 0; }
 }
 
+/* Toast slide-in animation */
+@keyframes slideInRight {
+    from {
+        transform: translateX(120%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
 /* ==========================================
    SCROLLBAR STYLING
    ========================================== */
@@ -1950,7 +1962,8 @@
 /* ==========================================
    TOAST / NOTIFICATIONS
    ========================================== */
-.admin-toast {
+.admin-toast,
+.toast {
     position: fixed;
     bottom: 2rem;
     right: 2rem;
@@ -1964,18 +1977,40 @@
     gap: 0.75rem;
     z-index: 9999;
     animation: slideInRight 0.3s ease;
+    color: var(--admin-text);
+    font-weight: 500;
+    font-size: 0.9rem;
+    min-width: 300px;
+    max-width: 500px;
+    backdrop-filter: blur(20px);
 }
 
-.admin-toast.success {
+.admin-toast.success,
+.toast.success {
     border-left: 4px solid var(--admin-success);
+    background: linear-gradient(135deg, var(--admin-success-bg), var(--admin-bg-card-solid));
+    color: var(--admin-success);
 }
 
-.admin-toast.error {
+.admin-toast.error,
+.toast.error {
     border-left: 4px solid var(--admin-danger);
+    background: linear-gradient(135deg, var(--admin-danger-bg), var(--admin-bg-card-solid));
+    color: var(--admin-danger);
 }
 
-.admin-toast.warning {
+.admin-toast.warning,
+.toast.warning {
     border-left: 4px solid var(--admin-warning);
+    background: linear-gradient(135deg, var(--admin-warning-bg), var(--admin-bg-card-solid));
+    color: var(--admin-warning);
+}
+
+.admin-toast.info,
+.toast.info {
+    border-left: 4px solid var(--admin-info);
+    background: linear-gradient(135deg, var(--admin-info-bg), var(--admin-bg-card-solid));
+    color: var(--admin-info);
 }
 
 @keyframes slideInRight {
