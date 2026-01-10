@@ -72,18 +72,50 @@ class AuthNotifier extends Notifier<AuthState> {
           return true;
         },
         error: (error) {
+          // Provide more user-friendly error messages
+          String userFriendlyError = error;
+          if (error.toLowerCase().contains('connection') ||
+              error.toLowerCase().contains('timeout') ||
+              error.toLowerCase().contains('network')) {
+            userFriendlyError =
+                'Network connection error. Please check your internet connection and try again.';
+          } else if (error.toLowerCase().contains('server error') ||
+              error.toLowerCase().contains('internal error') ||
+              error.toLowerCase().contains('500')) {
+            userFriendlyError =
+                'Server is temporarily unavailable. Please try again in a few moments.\n\nTip: Try using the demo credentials:\nUsername: admin\nPassword: Admin123!@#';
+          } else if (error.toLowerCase().contains('invalid credentials') ||
+              error.toLowerCase().contains('unauthorized') ||
+              error.toLowerCase().contains('401')) {
+            userFriendlyError =
+                'Invalid username or password. Please check your credentials and try again.\n\nTip: Try the demo credentials:\nUsername: admin\nPassword: Admin123!@#';
+          }
+
           state = state.copyWith(
             isLoading: false,
-            error: error,
+            error: userFriendlyError,
           );
           AppLogger.error('Login failed', error: error);
           return false;
         },
       );
     } catch (e) {
+      String errorMessage = 'An unexpected error occurred. Please try again.';
+
+      // Check if it's a network-related error
+      if (e.toString().toLowerCase().contains('connection') ||
+          e.toString().toLowerCase().contains('network') ||
+          e.toString().toLowerCase().contains('timeout')) {
+        errorMessage =
+            'Network connection error. Please check your internet connection and try again.';
+      } else {
+        errorMessage =
+            'An unexpected error occurred. Please try again.\n\nTip: Try the demo credentials:\nUsername: admin\nPassword: Admin123!@#';
+      }
+
       state = state.copyWith(
         isLoading: false,
-        error: 'An unexpected error occurred',
+        error: errorMessage,
       );
       AppLogger.error('Login exception', error: e);
       return false;
