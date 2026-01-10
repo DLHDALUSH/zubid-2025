@@ -1,8 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:ui';
 
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:battery_plus/battery_plus.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 
 import '../utils/logger.dart';
 import 'storage_service.dart';
@@ -63,8 +66,31 @@ class PerformanceService {
   Timer? _memoryTimer;
   final List<int> _memoryUsage = [];
 
+  // Network request tracking
+  final List<NetworkRequestMetrics> _networkMetrics = [];
+  final Map<String, Stopwatch> _activeNetworkRequests = {};
+
+  // UI rendering tracking
+  final List<PerformanceMetrics> _uiRenderMetrics = [];
+  Timer? _uiRenderTimer;
+
+  // Battery monitoring
+  final Battery _battery = Battery();
+  Timer? _batteryTimer;
+  final List<int> _batteryLevels = [];
+
+  // Performance alerts
+  final StreamController<PerformanceAlert> _alertsController =
+      StreamController<PerformanceAlert>.broadcast();
+
+  // Analytics integration
+  final Map<String, dynamic> _analyticsData = {};
+
   // Public streams
   Stream<PerformanceMetrics> get metricsStream => _metricsController.stream;
+  Stream<NetworkRequestMetrics> get networkMetricsStream =>
+      Stream.fromIterable(_networkMetrics);
+  Stream<PerformanceAlert> get alertsStream => _alertsController.stream;
 
   /// Initialize performance monitoring
   Future<void> initialize() async {
@@ -89,8 +115,12 @@ class PerformanceService {
   /// Dispose resources
   void dispose() {
     _memoryTimer?.cancel();
+    _uiRenderTimer?.cancel();
+    _batteryTimer?.cancel();
     _metricsController.close();
+    _alertsController.close();
     _activeTimers.clear();
+    _activeNetworkRequests.clear();
   }
 
   /// Start timing an operation
@@ -237,11 +267,202 @@ class PerformanceService {
   String exportMetrics() {
     final data = {
       'metrics': _metrics.map((m) => m.toJson()).toList(),
+      'networkMetrics': _networkMetrics.map((m) => m.toJson()).toList(),
+      'uiRenderMetrics': _uiRenderMetrics.map((m) => m.toJson()).toList(),
+      'batteryLevels': _batteryLevels,
+      'analyticsData': _analyticsData,
       'deviceInfo': _deviceInfo,
       'exportTimestamp': DateTime.now().toIso8601String(),
     };
 
     return json.encode(data);
+  }
+
+  /// Network request performance tracking
+  void startNetworkRequest(String url, String method) {
+    final requestId = '$method:$url:${DateTime.now().millisecondsSinceEpoch}';
+    _activeNetworkRequests[requestId] = Stopwatch()..start();
+  }
+
+  void endNetworkRequest(String url, String method,
+      {int? statusCode,
+      int bytesSent = 0,
+      int bytesReceived = 0,
+      String? error}) {
+    final requestId = '$method:$url:${DateTime.now().millisecondsSinceEpoch}';
+    final stopwatch = _activeNetworkRequests.remove(requestId);
+    if (stopwatch == null) return;
+
+    stopwatch.stop();
+    final metrics = NetworkRequestMetrics(
+      url: url,
+      method: method,
+      statusCode: statusCode,
+      duration: stopwatch.elapsed,
+      timestamp: DateTime.now(),
+      bytesSent: bytesSent,
+      bytesReceived: bytesReceived,
+      error: error,
+    );
+
+    _networkMetrics.add(metrics);
+
+    // Check for slow network requests
+    if (metrics.duration.inMilliseconds > 5000) {
+      _triggerAlert('slow_network', 'Slow network request detected',
+          {'url': url, 'duration': metrics.duration.inMilliseconds});
+    }
+
+    // Clean up old network metrics
+    if (_networkMetrics.length > 1000) {
+      _networkMetrics.removeRange(0, _networkMetrics.length - 1000);
+    }
+  }
+
+  /// UI rendering performance tracking
+  void startUIRenderTracking() {
+    _uiRenderTimer = Timer.periodic(const Duration(milliseconds: 16), (timer) {
+      // This is a simplified UI render tracking
+      // In a real implementation, you might use FrameTiming from dart:ui
+      final renderTime = DateTime.now().millisecondsSinceEpoch;
+      final metrics = PerformanceMetrics(
+        operation: 'ui_render',
+        duration: const Duration(milliseconds: 16), // Approximate frame time
+        timestamp: DateTime.now(),
+        metadata: {'frameTime': renderTime},
+      );
+
+      _uiRenderMetrics.add(metrics);
+
+      // Check for dropped frames (simplified)
+      if (_uiRenderMetrics.length > 60) {
+        // Check last second
+        final recentRenders =
+            _uiRenderMetrics.sublist(_uiRenderMetrics.length - 60);
+        final avgRenderTime = recentRenders
+                .map((m) => m.duration.inMilliseconds)
+                .reduce((a, b) => a + b) /
+            recentRenders.length;
+
+        if (avgRenderTime > 16) {
+          // More than 60fps
+          _triggerAlert('ui_performance', 'UI rendering performance degraded',
+              {'avgRenderTime': avgRenderTime});
+        }
+
+        // Keep only recent metrics
+        if (_uiRenderMetrics.length > 3600) {
+          // Keep last minute
+          _uiRenderMetrics.removeRange(0, _uiRenderMetrics.length - 3600);
+        }
+      }
+    });
+  }
+
+  void stopUIRenderTracking() {
+    _uiRenderTimer?.cancel();
+    _uiRenderTimer = null;
+  }
+
+  /// Battery usage monitoring
+  Future<void> startBatteryMonitoring() async {
+    try {
+      _batteryTimer = Timer.periodic(const Duration(minutes: 5), (timer) async {
+        final level = await _battery.batteryLevel;
+        _batteryLevels.add(level);
+
+        // Keep only last 24 readings (2 hours)
+        if (_batteryLevels.length > 24) {
+          _batteryLevels.removeAt(0);
+        }
+
+        // Check for rapid battery drain
+        if (_batteryLevels.length >= 2) {
+          final current = _batteryLevels.last;
+          final previous = _batteryLevels[_batteryLevels.length - 2];
+          final drainRate = previous - current;
+
+          if (drainRate > 10) {
+            // More than 10% drain in 5 minutes
+            _triggerAlert('battery_drain', 'Rapid battery drain detected',
+                {'drainRate': drainRate, 'currentLevel': current});
+          }
+        }
+      });
+    } catch (e) {
+      AppLogger.error('Failed to start battery monitoring', error: e);
+    }
+  }
+
+  void stopBatteryMonitoring() {
+    _batteryTimer?.cancel();
+    _batteryTimer = null;
+  }
+
+  /// Analytics integration
+  void trackAnalyticsEvent(String event, Map<String, dynamic> data) {
+    _analyticsData[event] = {
+      'count': (_analyticsData[event]?['count'] ?? 0) + 1,
+      'lastOccurrence': DateTime.now().toIso8601String(),
+      'data': data,
+    };
+  }
+
+  /// Real-time performance alerts
+  void _triggerAlert(String type, String message, Map<String, dynamic> data) {
+    final alert = PerformanceAlert(
+      type: type,
+      message: message,
+      timestamp: DateTime.now(),
+      data: data,
+    );
+
+    _alertsController.add(alert);
+    AppLogger.warning('Performance Alert: $message', tag: 'PERFORMANCE');
+  }
+
+  /// Get network performance statistics
+  Map<String, dynamic> getNetworkStats() {
+    if (_networkMetrics.isEmpty) {
+      return {'totalRequests': 0, 'avgResponseTime': 0, 'errorRate': 0};
+    }
+
+    final totalRequests = _networkMetrics.length;
+    final totalTime = _networkMetrics
+        .map((m) => m.duration.inMilliseconds)
+        .reduce((a, b) => a + b);
+    final avgResponseTime = totalTime / totalRequests;
+    final errorCount = _networkMetrics.where((m) => m.error != null).length;
+    final errorRate = errorCount / totalRequests;
+
+    return {
+      'totalRequests': totalRequests,
+      'avgResponseTime': avgResponseTime,
+      'errorRate': errorRate,
+      'slowRequests':
+          _networkMetrics.where((m) => m.duration.inMilliseconds > 3000).length,
+    };
+  }
+
+  /// Get UI performance statistics
+  Map<String, dynamic> getUIPerformanceStats() {
+    if (_uiRenderMetrics.isEmpty) {
+      return {'avgRenderTime': 0, 'droppedFrames': 0};
+    }
+
+    final avgRenderTime = _uiRenderMetrics
+            .map((m) => m.duration.inMilliseconds)
+            .reduce((a, b) => a + b) /
+        _uiRenderMetrics.length;
+
+    final droppedFrames =
+        _uiRenderMetrics.where((m) => m.duration.inMilliseconds > 16).length;
+
+    return {
+      'avgRenderTime': avgRenderTime,
+      'droppedFrames': droppedFrames,
+      'totalFrames': _uiRenderMetrics.length,
+    };
   }
 
   // Private helper methods

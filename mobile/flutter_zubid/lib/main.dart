@@ -3,11 +3,14 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 import 'app.dart';
 import 'core/config/environment.dart';
 import 'core/services/notification_service.dart';
 import 'core/services/storage_service.dart';
+import 'core/utils/logger.dart';
 import 'firebase_options.dart';
 import 'features/auctions/data/models/auction_model.dart';
 import 'features/auctions/data/models/bid_model.dart';
@@ -21,29 +24,48 @@ import 'features/profile/data/models/profile_model.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Track app startup performance
+  final startupTimer = Stopwatch()..start();
+
   // Set system UI and orientation
   _setSystemUI();
 
-  // Initialize basic services with error handling
-  await _initializeServices();
+  // Initialize crash reporting first
+  await _initializeCrashReporting();
 
-  runApp(
-    const ProviderScope(
-      child: ZubidApp(),
-    ),
-  );
+  // Initialize basic services with error handling
+  final initSuccess = await _initializeServices();
+
+  startupTimer.stop();
+  AppLogger.performance('App Startup', startupTimer.elapsed,
+      details: 'Total initialization time');
+
+  // Run app or show error screen
+  if (initSuccess) {
+    runApp(
+      const ProviderScope(
+        child: ZubidApp(),
+      ),
+    );
+  } else {
+    runApp(const ErrorApp());
+  }
 }
 
-Future<void> _initializeServices() async {
+Future<bool> _initializeServices() async {
   try {
     // Initialize environment
     EnvironmentConfig.printConfig();
+
+    // Check for app updates
+    await _checkForUpdates();
 
     // Initialize Hive FIRST (before StorageService)
     try {
       await _initHive();
     } catch (e) {
-      debugPrint('Hive initialization failed: $e');
+      AppLogger.error('Hive initialization failed', error: e);
+      return false;
     }
 
     // Initialize Firebase with error handling
@@ -52,7 +74,8 @@ Future<void> _initializeServices() async {
         options: DefaultFirebaseOptions.currentPlatform,
       );
     } catch (e) {
-      debugPrint('Firebase initialization failed: $e');
+      AppLogger.warning('Firebase initialization failed, continuing without it',
+          error: e);
       // Continue without Firebase for now
     }
 
@@ -60,19 +83,25 @@ Future<void> _initializeServices() async {
     try {
       await StorageService.init();
     } catch (e) {
-      debugPrint('Storage initialization failed: $e');
+      AppLogger.error('Storage initialization failed', error: e);
+      return false;
     }
 
     // Initialize notifications
     try {
       await NotificationService.init();
     } catch (e) {
-      debugPrint('Notification service initialization failed: $e');
+      AppLogger.warning('Notification service initialization failed', error: e);
     }
 
-    debugPrint('ZUBID Mobile App Starting...');
+    // Initialize background tasks
+    await _initializeBackgroundTasks();
+
+    AppLogger.info('ZUBID Mobile App Starting...');
+    return true;
   } catch (error) {
-    debugPrint('Service initialization error: $error');
+    AppLogger.error('Service initialization error', error: error);
+    return false;
   }
 }
 
