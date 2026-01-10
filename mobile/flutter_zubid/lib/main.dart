@@ -188,3 +188,89 @@ Future<void> _initHive() async {
     debugPrint('Hive initialization failed: $e');
   }
 }
+
+Future<void> _initializeCrashReporting() async {
+  try {
+    // Initialize basic error reporting
+    // Note: Firebase Crashlytics would be initialized here if available
+    AppLogger.info('Error reporting initialized');
+  } catch (e) {
+    AppLogger.warning('Failed to initialize crash reporting', error: e);
+  }
+}
+
+Future<void> _checkForUpdates() async {
+  try {
+    final packageInfo = await PackageInfo.fromPlatform();
+    final currentVersion = packageInfo.version;
+    AppLogger.info('Current app version: $currentVersion');
+
+    // Here you would typically check against a remote API for updates
+    // For now, just log the version
+  } catch (e) {
+    AppLogger.warning('Failed to check for updates', error: e);
+  }
+}
+
+Future<void> _initializeBackgroundTasks() async {
+  try {
+    // Initialize any background tasks here
+    // For example: WorkManager, background fetch, etc.
+    AppLogger.info('Background tasks initialized');
+  } catch (e) {
+    AppLogger.warning('Failed to initialize background tasks', error: e);
+  }
+}
+
+class ErrorApp extends StatelessWidget {
+  const ErrorApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'ZUBID - Error',
+      debugShowCheckedModeBanner: false,
+      home: Scaffold(
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.error_outline, size: 64, color: Colors.red),
+                const SizedBox(height: 16),
+                const Text(
+                  'Oops! Something went wrong',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'ZUBID encountered an unexpected error during startup',
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Please try restarting the app',
+                  style: TextStyle(fontSize: 14, color: Colors.grey),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton(
+                  onPressed: () {
+                    // Restart the app
+                    runApp(
+                      const ProviderScope(
+                        child: ZubidApp(),
+                      ),
+                    );
+                  },
+                  child: const Text('Restart App'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

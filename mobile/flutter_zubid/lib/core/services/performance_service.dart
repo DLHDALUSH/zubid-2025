@@ -10,6 +10,72 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import '../utils/logger.dart';
 import 'storage_service.dart';
 
+class NetworkRequestMetrics {
+  final String url;
+  final String method;
+  final int? statusCode;
+  final Duration duration;
+  final DateTime timestamp;
+  final int bytesSent;
+  final int bytesReceived;
+  final String? error;
+
+  const NetworkRequestMetrics({
+    required this.url,
+    required this.method,
+    this.statusCode,
+    required this.duration,
+    required this.timestamp,
+    this.bytesSent = 0,
+    this.bytesReceived = 0,
+    this.error,
+  });
+
+  Map<String, dynamic> toJson() => {
+        'url': url,
+        'method': method,
+        'statusCode': statusCode,
+        'duration_ms': duration.inMilliseconds,
+        'timestamp': timestamp.toIso8601String(),
+        'bytesSent': bytesSent,
+        'bytesReceived': bytesReceived,
+        'error': error,
+      };
+
+  factory NetworkRequestMetrics.fromJson(Map<String, dynamic> json) =>
+      NetworkRequestMetrics(
+        url: json['url'],
+        method: json['method'],
+        statusCode: json['statusCode'],
+        duration: Duration(milliseconds: json['duration_ms']),
+        timestamp: DateTime.parse(json['timestamp']),
+        bytesSent: json['bytesSent'] ?? 0,
+        bytesReceived: json['bytesReceived'] ?? 0,
+        error: json['error'],
+      );
+}
+
+class PerformanceAlert {
+  final String type;
+  final String message;
+  final DateTime timestamp;
+  final Map<String, dynamic> data;
+
+  const PerformanceAlert({
+    required this.type,
+    required this.message,
+    required this.timestamp,
+    this.data = const {},
+  });
+
+  Map<String, dynamic> toJson() => {
+        'type': type,
+        'message': message,
+        'timestamp': timestamp.toIso8601String(),
+        'data': data,
+      };
+}
+
 class PerformanceMetrics {
   final String operation;
   final Duration duration;
@@ -74,8 +140,7 @@ class PerformanceService {
   final List<PerformanceMetrics> _uiRenderMetrics = [];
   Timer? _uiRenderTimer;
 
-  // Battery monitoring
-  final Battery _battery = Battery();
+  // Battery monitoring (simplified - would use battery_plus if available)
   Timer? _batteryTimer;
   final List<int> _batteryLevels = [];
 
