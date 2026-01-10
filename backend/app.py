@@ -4509,8 +4509,8 @@ def init_db():
         # Check and add cashback_amount column to Invoice table if missing
         try:
             inspector = inspect(db.engine)
-            invoice_columns = [col['name'] for col in inspector.get_columns('invoice')]
-            if 'cashback_amount' not in invoice_columns:
+            columns = [col['name'] for col in inspector.get_columns('invoice')]
+            if 'cashback_amount' not in columns:
                 print("Adding cashback_amount column to Invoice table...")
                 try:
                     with db.engine.connect() as conn:
