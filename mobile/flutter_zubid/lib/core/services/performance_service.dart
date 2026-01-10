@@ -4,7 +4,7 @@ import 'dart:io';
 import 'dart:ui';
 
 import 'package:device_info_plus/device_info_plus.dart';
-import 'package:battery_plus/battery_plus.dart';
+
 import 'package:connectivity_plus/connectivity_plus.dart';
 
 import '../utils/logger.dart';

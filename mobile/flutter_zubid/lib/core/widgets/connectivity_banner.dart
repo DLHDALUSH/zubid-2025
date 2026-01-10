@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 
 import '../services/connectivity_service.dart';
 
@@ -13,11 +14,6 @@ class ConnectivityBanner extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Use provided connectivity status or fall back to provider
-    if (connectivityStatus != null) {
-      return _buildBannerWithStatus(connectivityStatus!, ref);
-    }
-
     final connectivityAsync = ref.watch(connectivityStatusProvider);
     return connectivityAsync.when(
       data: (status) =>
@@ -109,8 +105,6 @@ class ConnectivityBanner extends ConsumerWidget {
         return ConnectivityResult.none;
       case ConnectivityStatus.checking:
         return ConnectivityResult.none; // Will show checking banner
-      default:
-        return ConnectivityResult.none;
     }
   }
 }

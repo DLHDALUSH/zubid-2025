@@ -22,10 +22,12 @@ class _ZubidAppState extends ConsumerState<ZubidApp>
     with WidgetsBindingObserver {
   bool _isInitialized = false;
   ConnectivityResult _connectivityStatus = ConnectivityResult.none;
+  late ConnectivityService _connectivityService;
 
   @override
   void initState() {
     super.initState();
+    _connectivityService = ConnectivityService();
     WidgetsBinding.instance.addObserver(this);
     _initializeApp();
   }
@@ -81,22 +83,23 @@ class _ZubidAppState extends ConsumerState<ZubidApp>
 
   Future<void> _setupConnectivityMonitoring() async {
     try {
-      final connectivityService = ConnectivityService();
-      await connectivityService.initialize();
-
-      connectivityService.connectivityStream.listen((result) {
+      _connectivityService.connectivityStream.listen((status) {
         if (mounted) {
           setState(() {
-            _connectivityStatus = result;
+            // Convert ConnectivityStatus to ConnectivityResult for compatibility
+            _connectivityStatus = status == ConnectivityStatus.connected
+                ? ConnectivityResult.wifi
+                : ConnectivityResult.none;
           });
         }
-        AppLogger.info('Connectivity changed: $result');
+        AppLogger.info('Connectivity changed: $status');
       });
 
       // Get initial connectivity status
-      final initialStatus = await connectivityService.checkConnectivity();
+      final isConnected = await _connectivityService.isConnected();
       setState(() {
-        _connectivityStatus = initialStatus;
+        _connectivityStatus =
+            isConnected ? ConnectivityResult.wifi : ConnectivityResult.none;
       });
     } catch (e) {
       AppLogger.error('Failed to setup connectivity monitoring', error: e);
@@ -105,11 +108,11 @@ class _ZubidAppState extends ConsumerState<ZubidApp>
 
   Future<void> _checkConnectivity() async {
     try {
-      final connectivityService = ConnectivityService();
-      final status = await connectivityService.checkConnectivity();
+      final isConnected = await _connectivityService.isConnected();
       if (mounted) {
         setState(() {
-          _connectivityStatus = status;
+          _connectivityStatus =
+              isConnected ? ConnectivityResult.wifi : ConnectivityResult.none;
         });
       }
     } catch (e) {
@@ -170,7 +173,6 @@ class _ZubidAppState extends ConsumerState<ZubidApp>
         ],
         builder: (context, child) {
           return ConnectivityBanner(
-            connectivityStatus: _connectivityStatus,
             child: child ?? const SizedBox.shrink(),
           );
         },

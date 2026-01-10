@@ -1,10 +1,5 @@
 import 'dart:developer' as developer;
-import 'dart:io';
-import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:http/http.dart' as http;
-import '../services/performance_service.dart';
 
 class AppLogger {
   static const String _tag = 'ZUBID';
