@@ -1,9 +1,7 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/admin/presentation/screens/admin_dashboard_screen.dart';
-import '../../features/auth/presentation/providers/auth_provider.dart';
 import '../../features/auctions/data/models/auction_model.dart';
 import '../../features/auctions/presentation/screens/auction_detail_screen.dart';
 import '../../features/auctions/presentation/screens/auction_list_screen.dart';

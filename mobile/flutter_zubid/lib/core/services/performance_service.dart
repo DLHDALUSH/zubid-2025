@@ -433,7 +433,8 @@ class PerformanceService {
   Future<void> startBatteryMonitoring() async {
     try {
       _batteryTimer = Timer.periodic(const Duration(minutes: 5), (timer) async {
-        final level = await _battery.batteryLevel;
+        // TODO: Implement battery monitoring with battery_plus package
+        final level = 100; // Mock battery level for now
         _batteryLevels.add(level);
 
         // Keep only last 24 readings (2 hours)

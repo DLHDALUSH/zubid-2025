@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/models/auction_model.dart';
 import '../../data/repositories/auction_repository.dart';
+import '../../data/providers/auction_providers.dart';
 import '../../../../core/utils/logger.dart';
 
 // Watchlist State
@@ -72,15 +73,16 @@ class WatchlistNotifier extends Notifier<WatchlistState> {
     try {
       AppLogger.info('Loading watchlist - page: ${state.currentPage}');
 
-      final result = await _auctionRepository.getWatchlist(
+      final result = await _auctionRepository.getWatchList(
         page: refresh ? 1 : state.currentPage,
         limit: 20,
       );
 
       result.when(
         success: (auctions) {
-          final updatedAuctions = refresh ? auctions : [...state.auctions, ...auctions];
-          
+          final updatedAuctions =
+              refresh ? auctions : [...state.auctions, ...auctions];
+
           state = state.copyWith(
             auctions: updatedAuctions,
             isLoading: false,
@@ -88,7 +90,8 @@ class WatchlistNotifier extends Notifier<WatchlistState> {
             currentPage: refresh ? 2 : state.currentPage + 1,
           );
 
-          AppLogger.info('Watchlist loaded successfully: ${auctions.length} items');
+          AppLogger.info(
+              'Watchlist loaded successfully: ${auctions.length} items');
         },
         error: (error) {
           state = state.copyWith(
@@ -114,7 +117,7 @@ class WatchlistNotifier extends Notifier<WatchlistState> {
     state = state.copyWith(isLoadingMore: true);
 
     try {
-      final result = await _auctionRepository.getWatchlist(
+      final result = await _auctionRepository.getWatchList(
         page: state.currentPage,
         limit: 20,
       );
@@ -147,14 +150,16 @@ class WatchlistNotifier extends Notifier<WatchlistState> {
   // Remove from watchlist
   Future<bool> removeFromWatchlist(int auctionId) async {
     try {
-      final result = await _auctionRepository.removeFromWatchlist(auctionId);
-      
+      final result = await _auctionRepository.removeFromWatchList(auctionId);
+
       return result.when(
         success: (success) {
           // Remove from local state
-          final updatedAuctions = state.auctions.where((auction) => auction.id != auctionId).toList();
+          final updatedAuctions = state.auctions
+              .where((auction) => auction.id != auctionId)
+              .toList();
           state = state.copyWith(auctions: updatedAuctions);
-          
+
           AppLogger.info('Removed auction $auctionId from watchlist');
           return true;
         },

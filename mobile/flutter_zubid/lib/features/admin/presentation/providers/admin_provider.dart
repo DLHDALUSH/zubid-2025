@@ -36,10 +36,14 @@ class AdminState {
 }
 
 // Admin Notifier
-class AdminNotifier extends StateNotifier<AdminState> {
-  final AdminRepository _adminRepository;
+class AdminNotifier extends Notifier<AdminState> {
+  late final AdminRepository _adminRepository;
 
-  AdminNotifier(this._adminRepository) : super(const AdminState());
+  @override
+  AdminState build() {
+    _adminRepository = ref.read(adminRepositoryProvider);
+    return const AdminState();
+  }
 
   /// Load admin statistics
   Future<void> loadStats() async {
@@ -86,7 +90,6 @@ class AdminNotifier extends StateNotifier<AdminState> {
 }
 
 // Provider
-final adminProvider = StateNotifierProvider<AdminNotifier, AdminState>((ref) {
-  final adminRepository = ref.read(adminRepositoryProvider);
-  return AdminNotifier(adminRepository);
-});
+final adminProvider = NotifierProvider<AdminNotifier, AdminState>(
+  AdminNotifier.new,
+);
