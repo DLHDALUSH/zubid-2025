@@ -4,6 +4,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 
 import '../../../../core/network/api_result.dart';
 import '../../../../core/utils/logger.dart';
+import '../../../../core/services/storage_service.dart';
 import '../models/auth_response_model.dart';
 import '../models/user_model.dart';
 import 'auth_repository.dart';
@@ -40,13 +41,21 @@ class SocialAuthRepository {
       // Ensure GoogleSignIn is initialized (v7.x requirement)
       await _ensureInitialized();
 
-      // 1. Authenticate with Google to get the user's identity
+      // 1. Sign in with Google to get the user's account
       final googleUser = await _googleSignIn.authenticate();
+
+      // 2. Get the authentication tokens
+      final googleAuth = googleUser.authentication;
+      final idToken = googleAuth.idToken;
+
+      if (idToken == null) {
+        return const ApiResult.failure('Failed to get Google ID token');
+      }
 
       AppLogger.info('Google sign-in successful for: ${googleUser.email}');
 
-      // 2. Create auth response from Google user data
-      // Note: In v7.x, server auth codes are obtained via authorizationClient if needed
+      // 3. For now, create a mock successful response since backend Google auth is not fully configured
+      // TODO: Implement proper backend Google authentication when Google OAuth is configured
 
       // Parse display name into first and last name
       String? firstName;
@@ -78,6 +87,17 @@ class SocialAuthRepository {
         refreshToken: 'refresh_google_${DateTime.now().millisecondsSinceEpoch}',
         user: mockUser,
       );
+
+      // Save authentication data
+      if (mockResponse.token != null) {
+        await StorageService.saveAuthToken(mockResponse.token!);
+      }
+      if (mockResponse.refreshToken != null) {
+        await StorageService.saveRefreshToken(mockResponse.refreshToken!);
+      }
+      if (mockResponse.user != null) {
+        await StorageService.saveUserData(mockResponse.user!);
+      }
 
       AppLogger.info('Google authentication successful for: ${mockUser.email}');
       return ApiResult.success(mockResponse);

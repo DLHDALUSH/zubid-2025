@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
 import '../../../../core/widgets/loading_widget.dart';
 import '../../../../core/widgets/error_widget.dart' as custom;
-import '../providers/auction_provider.dart';
+import '../providers/watchlist_provider.dart';
 import '../widgets/auction_card.dart';
 
 class WatchlistScreen extends ConsumerStatefulWidget {
@@ -21,16 +21,14 @@ class _WatchlistScreenState extends ConsumerState<WatchlistScreen> {
     super.initState();
     // Load Watchlist when screen initializes
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      // TODO: Load Watchlist from provider
-      // ref.read(watchlistProvider.notifier).loadWatchlist();
+      ref.read(watchlistProvider.notifier).loadWatchlist();
     });
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    // TODO: Replace with actual Watchlist provider
-    final auctionState = ref.watch(auctionProvider);
+    final watchlistState = ref.watch(watchlistProvider);
 
     return Scaffold(
       appBar: CustomAppBar(
@@ -45,23 +43,33 @@ class _WatchlistScreenState extends ConsumerState<WatchlistScreen> {
       ),
       body: RefreshIndicator(
         onRefresh: () async {
-          // TODO: Refresh Watchlist
-          await ref.read(auctionProvider.notifier).refresh();
+          await ref.read(watchlistProvider.notifier).refresh();
         },
-        child: auctionState.isLoading && auctionState.auctions.isEmpty
+        child: watchlistState.isLoading && watchlistState.auctions.isEmpty
             ? const LoadingWidget()
-            : auctionState.error != null && auctionState.auctions.isEmpty
+            : watchlistState.error != null && watchlistState.auctions.isEmpty
                 ? custom.CustomErrorWidget(
-                    message: auctionState.error!,
-                    onRetry: () => ref.read(auctionProvider.notifier).refresh(),
+                    message: watchlistState.error!,
+                    onRetry: () =>
+                        ref.read(watchlistProvider.notifier).refresh(),
                   )
-                : auctionState.auctions.isEmpty
+                : watchlistState.auctions.isEmpty
                     ? _buildEmptyState(theme)
                     : ListView.builder(
                         padding: const EdgeInsets.all(16),
-                        itemCount: auctionState.auctions.length,
+                        itemCount: watchlistState.auctions.length +
+                            (watchlistState.isLoadingMore ? 1 : 0),
                         itemBuilder: (context, index) {
-                          final auction = auctionState.auctions[index];
+                          if (index >= watchlistState.auctions.length) {
+                            return const Center(
+                              child: Padding(
+                                padding: EdgeInsets.all(16),
+                                child: CircularProgressIndicator(),
+                              ),
+                            );
+                          }
+
+                          final auction = watchlistState.auctions[index];
                           return Padding(
                             padding: const EdgeInsets.only(bottom: 16),
                             child: AuctionCard(
@@ -69,7 +77,7 @@ class _WatchlistScreenState extends ConsumerState<WatchlistScreen> {
                               onTap: () => context
                                   .push('/auctions/detail/${auction.id}'),
                               onWatchlistToggle: () =>
-                                  _toggleWatchlist(auction),
+                                  _removeFromWatchlist(auction.id),
                             ),
                           );
                         },
@@ -114,22 +122,18 @@ class _WatchlistScreenState extends ConsumerState<WatchlistScreen> {
     );
   }
 
-  Future<void> _toggleWatchlist(dynamic auction) async {
-    final success =
-        await ref.read(auctionProvider.notifier).toggleWatchList(auction);
+  Future<void> _removeFromWatchlist(int auctionId) async {
+    final success = await ref
+        .read(watchlistProvider.notifier)
+        .removeFromWatchlist(auctionId);
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            success
-                ? auction.isWatched
-                    ? 'Removed from watchlist'
-                    : 'Added to watchlist'
-                : 'Failed to update watchlist',
-          ),
-          backgroundColor:
-              success ? Colors.green : Theme.of(context).colorScheme.error,
+          content: Text(success
+              ? 'Removed from watchlist'
+              : 'Failed to remove from watchlist'),
+          backgroundColor: success ? Colors.green : Colors.red,
         ),
       );
     }

@@ -65,15 +65,32 @@ class BiddingNotifier extends Notifier<BiddingState> {
     try {
       final bids = await _biddingRepository.getBids(auctionId);
 
-      final sortedBids = List<BidModel>.from(bids)
-        ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      // Group bids by user_id and keep only the highest bid per user
+      final Map<int, BidModel> bidsByUser = {};
+      for (final bid in bids) {
+        final userId = bid.userId;
+        if (!bidsByUser.containsKey(userId) ||
+            bid.amount > bidsByUser[userId]!.amount) {
+          bidsByUser[userId] = bid;
+        } else if (bid.amount == bidsByUser[userId]!.amount) {
+          // If same amount, keep the most recent one
+          if (bid.createdAt.isAfter(bidsByUser[userId]!.createdAt)) {
+            bidsByUser[userId] = bid;
+          }
+        }
+      }
+
+      // Convert back to list and sort by amount (highest first)
+      final sortedBids = bidsByUser.values.toList()
+        ..sort((a, b) => b.amount.compareTo(a.amount));
 
       state = state.copyWith(
         isLoading: false,
         bids: sortedBids,
         latestBid: sortedBids.isNotEmpty ? sortedBids.first : null,
       );
-      AppLogger.info('Loaded ${bids.length} bids for auction: $auctionId');
+      AppLogger.info(
+          'Loaded ${bids.length} total bids, showing ${sortedBids.length} unique bidders for auction: $auctionId');
     } catch (e) {
       state = state.copyWith(
         isLoading: false,

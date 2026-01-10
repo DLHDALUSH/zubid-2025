@@ -163,7 +163,9 @@ class _AuctionDetailScreenState extends ConsumerState<AuctionDetailScreen>
               children: [
                 // Image Gallery
                 AuctionImageGallery(
-                  images: auction.images ?? [],
+                  images: auction.images?.isNotEmpty == true
+                      ? auction.images!
+                      : auction.imageUrls,
                   heroTag: 'auction-${auction.id}',
                 ),
                 // Gradient Overlay

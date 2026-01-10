@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import '../providers/admin_provider.dart';
 
 class AdminDashboardScreen extends ConsumerStatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -17,6 +19,11 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
+
+    // Load admin stats when screen initializes
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(adminProvider.notifier).loadStats();
+    });
   }
 
   @override
@@ -26,15 +33,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
   }
 
   void _refreshData() {
-    setState(() {
-      // Trigger refresh
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Dashboard refreshed'),
-        duration: Duration(seconds: 1),
-      ),
-    );
+    ref.read(adminProvider.notifier).refreshStats();
   }
 
   @override
@@ -74,6 +73,8 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
   }
 
   Widget _buildOverviewTab(ThemeData theme) {
+    final adminState = ref.watch(adminProvider);
+
     return RefreshIndicator(
       onRefresh: () async {
         _refreshData();
@@ -91,49 +92,66 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
               ),
             ),
             const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildStatCard(
-                    title: 'Total Users',
-                    value: '1,234',
-                    icon: Icons.people,
-                    color: Colors.blue,
-                  ),
+
+            if (adminState.isLoading && !adminState.hasStats)
+              const Center(child: CircularProgressIndicator())
+            else if (adminState.hasError)
+              Center(
+                child: Column(
+                  children: [
+                    Text('Error: ${adminState.error}'),
+                    ElevatedButton(
+                      onPressed: _refreshData,
+                      child: const Text('Retry'),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildStatCard(
-                    title: 'Active Auctions',
-                    value: '56',
-                    icon: Icons.gavel,
-                    color: Colors.green,
+              )
+            else ...[
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildStatCard(
+                      title: 'Total Users',
+                      value: adminState.stats?.totalUsers.toString() ?? '0',
+                      icon: Icons.people,
+                      color: Colors.blue,
+                    ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildStatCard(
-                    title: 'Total Revenue',
-                    value: '\$12,345',
-                    icon: Icons.attach_money,
-                    color: Colors.orange,
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildStatCard(
+                      title: 'Active Auctions',
+                      value: adminState.stats?.activeAuctions.toString() ?? '0',
+                      icon: Icons.gavel,
+                      color: Colors.green,
+                    ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildStatCard(
-                    title: 'Pending Reports',
-                    value: '3',
-                    icon: Icons.report,
-                    color: Colors.red,
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildStatCard(
+                      title: 'Total Auctions',
+                      value: adminState.stats?.totalAuctions.toString() ?? '0',
+                      icon: Icons.gavel_outlined,
+                      color: Colors.orange,
+                    ),
                   ),
-                ),
-              ],
-            ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildStatCard(
+                      title: 'Total Bids',
+                      value: adminState.stats?.totalBids.toString() ?? '0',
+                      icon: Icons.trending_up,
+                      color: Colors.purple,
+                    ),
+                  ),
+                ],
+              ),
+            ],
 
             const SizedBox(height: 32),
 
@@ -165,6 +183,13 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
                   icon: Icons.gavel_outlined,
                   onTap: () {
                     _tabController.animateTo(2);
+                  },
+                ),
+                _buildActionCard(
+                  title: 'Create Auction',
+                  icon: Icons.add_circle_outline,
+                  onTap: () {
+                    context.push('/auctions/create');
                   },
                 ),
                 _buildActionCard(

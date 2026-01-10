@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../auctions/presentation/providers/auction_provider.dart';
 import '../../../auctions/presentation/widgets/auction_card.dart';
+import '../../../banners/presentation/widgets/banner_carousel.dart';
+import '../../../banners/presentation/providers/banner_provider.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
 import '../../../../core/widgets/loading_widget.dart';
 import '../../../../core/widgets/error_widget.dart' as custom;
@@ -18,9 +20,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    // Load auctions when screen initializes
+    // Load auctions and banners when screen initializes
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(auctionProvider.notifier).loadAuctions(refresh: true);
+      ref.read(bannerProvider.notifier).loadBanners();
     });
   }
 
@@ -65,7 +68,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     Text(
                       'بازاڕی بکە بەو نرخەی خۆت بە دڵتە',
                       style: theme.textTheme.titleMedium?.copyWith(
-                        color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                        color:
+                            theme.colorScheme.onSurface.withValues(alpha: 0.7),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -81,9 +85,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         const SizedBox(width: 12),
                         Expanded(
                           child: OutlinedButton.icon(
-                            onPressed: () => context.push('/auctions/create'),
-                            icon: const Icon(Icons.add),
-                            label: const Text('Create Auction'),
+                            onPressed: () => context.push('/watchlist'),
+                            icon: const Icon(Icons.favorite_outline),
+                            label: const Text('My Watchlist'),
                           ),
                         ),
                       ],
@@ -91,6 +95,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ],
                 ),
               ),
+            ),
+
+            // Banner Carousel
+            const SliverToBoxAdapter(
+              child: BannerCarousel(),
             ),
 
             // Featured Auctions Section
@@ -138,20 +147,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         Icon(
                           Icons.gavel_outlined,
                           size: 64,
-                          color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+                          color: theme.colorScheme.onSurface
+                              .withValues(alpha: 0.3),
                         ),
                         const SizedBox(height: 16),
                         Text(
                           'No auctions available',
                           style: theme.textTheme.titleMedium?.copyWith(
-                            color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                            color: theme.colorScheme.onSurface
+                                .withValues(alpha: 0.6),
                           ),
                         ),
                         const SizedBox(height: 8),
                         Text(
                           'Be the first to create an auction!',
                           style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                            color: theme.colorScheme.onSurface
+                                .withValues(alpha: 0.5),
                           ),
                         ),
                       ],

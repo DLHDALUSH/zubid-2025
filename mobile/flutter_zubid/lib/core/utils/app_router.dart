@@ -1,11 +1,13 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/admin/presentation/screens/admin_dashboard_screen.dart';
+import '../../features/auth/presentation/providers/auth_provider.dart';
 import '../../features/auctions/data/models/auction_model.dart';
 import '../../features/auctions/presentation/screens/auction_detail_screen.dart';
 import '../../features/auctions/presentation/screens/auction_list_screen.dart';
-import '../../features/auctions/presentation/screens/create_auction_screen.dart';
+import '../../features/auctions/presentation/screens/admin_create_auction_screen.dart';
 import '../../features/auctions/presentation/screens/my_auctions_screen.dart';
 import '../../features/auctions/presentation/screens/watchlist_screen.dart';
 import '../../features/auth/presentation/screens/forgot_password_screen.dart';
@@ -24,8 +26,9 @@ import '../../features/profile/presentation/screens/profile_screen.dart';
 import '../../features/splash/presentation/screens/splash_screen.dart';
 import '../../features/legal/presentation/screens/terms_of_service_screen.dart';
 import '../../features/legal/presentation/screens/privacy_policy_screen.dart';
-import '../../features/settings/presentation/screens/settings_screen.dart';
+import '../../features/settings/presentation/screens/about_screen.dart';
 import '../../features/settings/presentation/screens/help_support_screen.dart';
+import '../../features/settings/presentation/screens/settings_screen.dart';
 import '../widgets/error_screen.dart';
 import '../widgets/main_layout.dart';
 import 'app_routes.dart';
@@ -83,7 +86,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       // Create Auction - separate top-level route
       GoRoute(
         path: '/auctions/create',
-        builder: (context, state) => const CreateAuctionScreen(),
+        builder: (context, state) => const AdminCreateAuctionScreen(),
       ),
 
       // Profile Routes
@@ -175,9 +178,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: AppRoutes.about,
-        builder: (context, state) => const ErrorScreen(
-          error: 'About screen coming soon!',
-        ),
+        builder: (context, state) => const AboutScreen(),
       ),
 
       // Legal

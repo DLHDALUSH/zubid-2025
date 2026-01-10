@@ -712,6 +712,10 @@ class User(db.Model):
     # Mobile app fields
     fcm_token = db.Column(db.String(255), nullable=True)  # Firebase Cloud Messaging token for push notifications
 
+    # Social authentication fields
+    google_id = db.Column(db.String(100), nullable=True, unique=True)  # Google OAuth user ID
+    profile_picture = db.Column(db.String(500), nullable=True)  # Profile picture URL from social providers
+
     # Explicitly specify foreign_keys to avoid ambiguity
     auctions = db.relationship('Auction', foreign_keys='Auction.seller_id', backref='seller', lazy=True)
     won_auctions = db.relationship('Auction', foreign_keys='Auction.winner_id', backref='winner', lazy=True)
@@ -2054,6 +2058,159 @@ def forgot_password():
         app.logger.error(f"Forgot password error: {str(e)}")
         return jsonify({'error': f'Server error: {str(e)}'}), 500
 
+@app.route('/api/auth/google', methods=['POST'])
+@limiter.limit("10 per minute")
+def google_auth():
+    """Authenticate user with Google ID token"""
+    try:
+        if not request.json:
+            return jsonify({'error': 'No JSON data received'}), 400
+
+        id_token = request.json.get('token', '').strip()
+        if not id_token:
+            return jsonify({'error': 'Google ID token is required'}), 400
+
+        # Verify Google ID token
+        try:
+            from google.oauth2 import id_token as google_id_token
+            from google.auth.transport import requests as google_requests
+
+            # Get Google client ID from environment
+            google_client_id = os.getenv('GOOGLE_CLIENT_ID')
+            if not google_client_id:
+                app.logger.warning("Google OAuth not configured")
+                return jsonify({'error': 'Google authentication not configured'}), 500
+
+            # Verify the token
+            idinfo = google_id_token.verify_oauth2_token(
+                id_token, google_requests.Request(), google_client_id)
+
+            # Get user info from Google
+            google_user_id = idinfo['sub']
+            email = idinfo.get('email', '')
+            name = idinfo.get('name', '')
+            given_name = idinfo.get('given_name', '')
+            family_name = idinfo.get('family_name', '')
+            picture = idinfo.get('picture', '')
+
+            if not email:
+                return jsonify({'error': 'Email not provided by Google'}), 400
+
+            # Check if user exists
+            user = User.query.filter_by(email=email).first()
+
+            if user:
+                # User exists, log them in
+                if not user.is_active:
+                    return jsonify({'error': 'Account is deactivated. Please contact support.'}), 403
+
+                # Update user info from Google if needed
+                if not user.google_id:
+                    user.google_id = google_user_id
+                if not user.profile_picture and picture:
+                    user.profile_picture = picture
+
+                db.session.commit()
+
+                # Generate session token
+                session_token = secrets.token_urlsafe(32)
+                user.session_token = session_token
+                user.last_login = datetime.now(timezone.utc)
+                db.session.commit()
+
+                app.logger.info(f"Google login successful for user: {user.username}")
+
+                return jsonify({
+                    'success': True,
+                    'message': 'Login successful',
+                    'user': {
+                        'id': user.id,
+                        'username': user.username,
+                        'email': user.email,
+                        'first_name': user.first_name,
+                        'last_name': user.last_name,
+                        'phone': user.phone,
+                        'profile_picture': user.profile_picture,
+                        'is_verified': user.is_verified,
+                        'role': user.role,
+                        'created_at': user.created_at.isoformat() if user.created_at else None,
+                    },
+                    'token': session_token
+                }), 200
+
+            else:
+                # User doesn't exist, create new account
+                # Generate username from email or name
+                username = email.split('@')[0]
+                counter = 1
+                original_username = username
+                while User.query.filter_by(username=username).first():
+                    username = f"{original_username}{counter}"
+                    counter += 1
+
+                # Create new user
+                new_user = User(
+                    username=username,
+                    email=email,
+                    first_name=given_name or name.split(' ')[0] if name else '',
+                    last_name=family_name or ' '.join(name.split(' ')[1:]) if name and ' ' in name else '',
+                    google_id=google_user_id,
+                    profile_picture=picture,
+                    is_verified=True,  # Google accounts are pre-verified
+                    is_active=True,
+                    role='user',
+                    created_at=datetime.now(timezone.utc)
+                )
+
+                # Set a random password (user won't use it since they login with Google)
+                import secrets
+                random_password = secrets.token_urlsafe(16)
+                new_user.set_password(random_password)
+
+                db.session.add(new_user)
+                db.session.commit()
+
+                # Generate session token
+                session_token = secrets.token_urlsafe(32)
+                new_user.session_token = session_token
+                new_user.last_login = datetime.now(timezone.utc)
+                db.session.commit()
+
+                app.logger.info(f"New Google user registered: {new_user.username}")
+
+                return jsonify({
+                    'success': True,
+                    'message': 'Account created and login successful',
+                    'user': {
+                        'id': new_user.id,
+                        'username': new_user.username,
+                        'email': new_user.email,
+                        'first_name': new_user.first_name,
+                        'last_name': new_user.last_name,
+                        'phone': new_user.phone,
+                        'profile_picture': new_user.profile_picture,
+                        'is_verified': new_user.is_verified,
+                        'role': new_user.role,
+                        'created_at': new_user.created_at.isoformat() if new_user.created_at else None,
+                    },
+                    'token': session_token
+                }), 201
+
+        except ImportError:
+            app.logger.warning("Google OAuth library not installed. Run: pip install google-auth")
+            return jsonify({'error': 'Google authentication not available'}), 500
+        except ValueError as e:
+            app.logger.warning(f"Invalid Google token: {e}")
+            return jsonify({'error': 'Invalid Google token'}), 400
+        except Exception as e:
+            app.logger.error(f"Google token verification failed: {e}")
+            return jsonify({'error': 'Failed to verify Google token'}), 400
+
+    except Exception as e:
+        app.logger.error(f"Google authentication error: {str(e)}")
+        return jsonify({'error': 'Authentication failed'}), 500
+
+
 @app.route('/api/reset-password', methods=['POST'])
 @limiter.limit("5 per minute")
 def reset_password():
@@ -2190,6 +2347,26 @@ def get_profile():
     total_bids = len(user.bids) if hasattr(user, 'bids') and user.bids else 0
     total_wins = Auction.query.filter_by(winner_id=user.id).count()
 
+    # Calculate total spent from invoices
+    total_spent = 0.0
+    try:
+        invoices = Invoice.query.filter_by(user_id=user.id, payment_status='paid').all()
+        total_spent = sum(invoice.total_amount for invoice in invoices)
+    except Exception as e:
+        app.logger.warning(f"Could not calculate total_spent for user {user.id}: {e}")
+
+    # Calculate user rating based on successful transactions
+    rating = None
+    try:
+        if total_wins > 0:
+            # Simple rating calculation: base 4.0 + bonus for completion rate
+            completed_transactions = Invoice.query.filter_by(user_id=user.id, payment_status='paid').count()
+            completion_rate = completed_transactions / total_wins if total_wins > 0 else 0
+            rating = 4.0 + (completion_rate * 1.0)  # Max 5.0 rating
+            rating = min(5.0, max(1.0, rating))  # Clamp between 1.0 and 5.0
+    except Exception as e:
+        app.logger.warning(f"Could not calculate rating for user {user.id}: {e}")
+
     # Return profile wrapped in 'profile' key (expected by Flutter app)
     return jsonify({
         'profile': {
@@ -2227,8 +2404,8 @@ def get_profile():
             # User stats
             'total_bids': total_bids,
             'total_wins': total_wins,
-            'total_spent': 0.0,  # TODO: Calculate from invoices
-            'rating': 5.0,  # TODO: Implement rating system
+            'total_spent': total_spent,
+            'rating': rating,
             # User preferences
             'preferences': {
                 'theme': preferences.theme if preferences else 'light',
@@ -3638,6 +3815,187 @@ def get_featured():
         import traceback
         traceback.print_exc()
         return jsonify({'error': f'Failed to fetch featured auctions: {str(e)}'}), 500
+
+# Banner APIs
+@app.route('/api/banners', methods=['GET'])
+def get_banners():
+    """Get promotional banners for home screen"""
+    try:
+        # For now, return sample banners. In production, this would come from database
+        banners = [
+            {
+                'id': 1,
+                'title': 'Welcome to ZUBID',
+                'description': 'Start bidding on amazing items today!',
+                'image_url': '/static/images/banner1.jpg',
+                'link_url': '/auctions',
+                'is_active': True,
+                'order': 1
+            },
+            {
+                'id': 2,
+                'title': 'Featured Auctions',
+                'description': 'Don\'t miss out on these exclusive items',
+                'image_url': '/static/images/banner2.jpg',
+                'link_url': '/auctions?featured=true',
+                'is_active': True,
+                'order': 2
+            },
+            {
+                'id': 3,
+                'title': 'Create Your Auction',
+                'description': 'Sell your items to the highest bidder',
+                'image_url': '/static/images/banner3.jpg',
+                'link_url': '/auctions/create',
+                'is_active': True,
+                'order': 3
+            }
+        ]
+
+        return jsonify({'banners': banners}), 200
+    except Exception as e:
+        print(f"Error in get_banners: {str(e)}")
+        return jsonify({'error': 'Failed to fetch banners', 'banners': []}), 500
+
+# Transaction APIs
+@app.route('/api/transactions', methods=['GET'])
+@login_required
+def get_transactions():
+    """Get user's transaction history"""
+    try:
+        user_id = session['user_id']
+        page = request.args.get('page', 1, type=int)
+        limit = request.args.get('limit', 20, type=int)
+        transaction_type = request.args.get('type')  # payment, refund, etc.
+        status = request.args.get('status')  # pending, completed, failed
+
+        # Build query for user's invoices (which represent transactions)
+        query = Invoice.query.filter_by(user_id=user_id)
+
+        # Apply filters
+        if status:
+            if status == 'completed':
+                query = query.filter_by(payment_status='paid')
+            elif status == 'pending':
+                query = query.filter_by(payment_status='pending')
+            elif status == 'failed':
+                query = query.filter_by(payment_status='failed')
+
+        # Order by creation date (newest first)
+        query = query.order_by(Invoice.created_at.desc())
+
+        # Paginate
+        invoices = query.offset((page - 1) * limit).limit(limit).all()
+
+        # Convert invoices to transaction format
+        transactions = []
+        for invoice in invoices:
+            # Map payment status to transaction status
+            if invoice.payment_status == 'paid':
+                trans_status = 'completed'
+            elif invoice.payment_status == 'pending':
+                trans_status = 'pending'
+            elif invoice.payment_status == 'failed':
+                trans_status = 'failed'
+            else:
+                trans_status = 'cancelled'
+
+            # Determine transaction type
+            trans_type = 'payment'  # Most transactions are payments
+
+            transactions.append({
+                'id': str(invoice.id),
+                'type': trans_type,
+                'status': trans_status,
+                'amount': invoice.total_amount,
+                'currency': 'USD',
+                'description': f'Payment for auction item',
+                'referenceId': str(invoice.auction_id) if invoice.auction_id else None,
+                'referenceType': 'auction',
+                'paymentMethodId': None,
+                'paymentMethodType': invoice.payment_method,
+                'paymentMethodLast4': None,
+                'feeAmount': invoice.delivery_fee,
+                'netAmount': invoice.total_amount - invoice.delivery_fee,
+                'failureReason': None,
+                'metadata': {
+                    'auction_id': invoice.auction_id,
+                    'delivery_fee': invoice.delivery_fee,
+                    'cashback_amount': invoice.cashback_amount
+                },
+                'createdAt': invoice.created_at.isoformat() if invoice.created_at else None,
+                'updatedAt': invoice.created_at.isoformat() if invoice.created_at else None,
+                'completedAt': invoice.paid_at.isoformat() if invoice.paid_at else None,
+            })
+
+        return jsonify({
+            'data': transactions,
+            'page': page,
+            'limit': limit,
+            'total': len(transactions)
+        }), 200
+
+    except Exception as e:
+        print(f"Error in get_transactions: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': f'Failed to get transactions: {str(e)}'}), 500
+
+@app.route('/api/transactions/<transaction_id>', methods=['GET'])
+@login_required
+def get_transaction(transaction_id):
+    """Get specific transaction details"""
+    try:
+        user_id = session['user_id']
+
+        # Find invoice by ID (transaction_id maps to invoice ID)
+        invoice = Invoice.query.filter_by(id=int(transaction_id), user_id=user_id).first()
+
+        if not invoice:
+            return jsonify({'error': 'Transaction not found'}), 404
+
+        # Map payment status to transaction status
+        if invoice.payment_status == 'paid':
+            trans_status = 'completed'
+        elif invoice.payment_status == 'pending':
+            trans_status = 'pending'
+        elif invoice.payment_status == 'failed':
+            trans_status = 'failed'
+        else:
+            trans_status = 'cancelled'
+
+        transaction = {
+            'id': str(invoice.id),
+            'type': 'payment',
+            'status': trans_status,
+            'amount': invoice.total_amount,
+            'currency': 'USD',
+            'description': f'Payment for auction item',
+            'referenceId': str(invoice.auction_id) if invoice.auction_id else None,
+            'referenceType': 'auction',
+            'paymentMethodId': None,
+            'paymentMethodType': invoice.payment_method,
+            'paymentMethodLast4': None,
+            'feeAmount': invoice.delivery_fee,
+            'netAmount': invoice.total_amount - invoice.delivery_fee,
+            'failureReason': None,
+            'metadata': {
+                'auction_id': invoice.auction_id,
+                'delivery_fee': invoice.delivery_fee,
+                'cashback_amount': invoice.cashback_amount
+            },
+            'createdAt': invoice.created_at.isoformat() if invoice.created_at else None,
+            'updatedAt': invoice.created_at.isoformat() if invoice.created_at else None,
+            'completedAt': invoice.paid_at.isoformat() if invoice.paid_at else None,
+        }
+
+        return jsonify({'data': transaction}), 200
+
+    except ValueError:
+        return jsonify({'error': 'Invalid transaction ID'}), 400
+    except Exception as e:
+        print(f"Error in get_transaction: {str(e)}")
+        return jsonify({'error': f'Failed to get transaction: {str(e)}'}), 500
 
 # Test endpoint to verify server is running
 @app.route('/api/test', methods=['GET'])

@@ -107,11 +107,12 @@ class AuctionCreationRepository {
       };
 
       final response = await _apiClient.get(
-        '/auctions/my-auctions',
+        '/user/auctions',
         queryParameters: queryParams,
       );
 
-      final auctions = (response.data['auctions'] as List<dynamic>)
+      // The backend returns a direct array, not wrapped in 'auctions' key
+      final auctions = (response.data as List<dynamic>)
           .map((json) => AuctionModel.fromJson(json))
           .toList();
 
