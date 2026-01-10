@@ -712,9 +712,10 @@ class User(db.Model):
     # Mobile app fields
     fcm_token = db.Column(db.String(255), nullable=True)  # Firebase Cloud Messaging token for push notifications
 
-    # Social authentication fields
-    google_id = db.Column(db.String(100), nullable=True, unique=True)  # Google OAuth user ID
-    profile_picture = db.Column(db.String(500), nullable=True)  # Profile picture URL from social providers
+    # Social authentication fields - TEMPORARILY DISABLED FOR PRODUCTION COMPATIBILITY
+    # TODO: Re-enable after running database migration on production server
+    # google_id = db.Column(db.String(100), nullable=True, unique=True)  # Google OAuth user ID
+    # profile_picture = db.Column(db.String(500), nullable=True)  # Profile picture URL from social providers
 
     # Explicitly specify foreign_keys to avoid ambiguity
     auctions = db.relationship('Auction', foreign_keys='Auction.seller_id', backref='seller', lazy=True)
@@ -2105,10 +2106,11 @@ def google_auth():
                     return jsonify({'error': 'Account is deactivated. Please contact support.'}), 403
 
                 # Update user info from Google if needed
-                if not user.google_id:
-                    user.google_id = google_user_id
-                if not user.profile_picture and picture:
-                    user.profile_picture = picture
+                # TEMPORARILY DISABLED - missing columns in production DB
+                # if not user.google_id:
+                #     user.google_id = google_user_id
+                # if not user.profile_picture and picture:
+                #     user.profile_picture = picture
 
                 db.session.commit()
 
@@ -2149,17 +2151,34 @@ def google_auth():
                     counter += 1
 
                 # Create new user
+                # TEMPORARILY DISABLED - missing columns in production DB
+                # new_user = User(
+                #     username=username,
+                #     email=email,
+                #     first_name=given_name or name.split(' ')[0] if name else '',
+                #     last_name=family_name or ' '.join(name.split(' ')[1:]) if name and ' ' in name else '',
+                #     google_id=google_user_id,
+                #     profile_picture=picture,
+                #     is_verified=True,  # Google accounts are pre-verified
+                #     is_active=True,
+                #     role='user',
+                #     created_at=datetime.now(timezone.utc)
+                # )
+
+                # Temporary user creation without problematic columns
                 new_user = User(
                     username=username,
                     email=email,
+                    password_hash='',  # No password for Google users
+                    id_number=f'GOOGLE_{google_user_id[:10]}',  # Temporary ID
+                    birth_date=date(1990, 1, 1),  # Default birth date
+                    address='Google User',  # Temporary address
+                    phone='+1-000-0000',  # Temporary phone
                     first_name=given_name or name.split(' ')[0] if name else '',
                     last_name=family_name or ' '.join(name.split(' ')[1:]) if name and ' ' in name else '',
-                    google_id=google_user_id,
-                    profile_picture=picture,
-                    is_verified=True,  # Google accounts are pre-verified
+                    email_verified=True,  # Google accounts are pre-verified
                     is_active=True,
-                    role='user',
-                    created_at=datetime.now(timezone.utc)
+                    role='user'
                 )
 
                 # Set a random password (user won't use it since they login with Google)
