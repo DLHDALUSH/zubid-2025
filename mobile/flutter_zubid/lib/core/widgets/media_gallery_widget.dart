@@ -1,8 +1,6 @@
 import 'dart:convert';
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view.dart';
-import 'package:photo_view/photo_view_gallery.dart';
 
 import '../config/app_config.dart';
 import '../utils/logger.dart';
@@ -53,7 +51,7 @@ class _MediaGalleryWidgetState extends State<MediaGalleryWidget> {
           onTap: () => _showFullScreenGallery(context),
           child: Hero(
             tag: widget.heroTag ?? 'media-gallery',
-            child: Container(
+            child: SizedBox(
               height: widget.height,
               child: PageView.builder(
                 controller: _pageController,

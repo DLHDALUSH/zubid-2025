@@ -260,8 +260,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           label: 'Address *',
           validator: (value) {
             if (value == null || value.isEmpty) return 'Address is required';
-            if (value.length < 5)
+            if (value.length < 5) {
               return 'Address must be at least 5 characters';
+            }
             return null;
           },
           maxLines: 2,

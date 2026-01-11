@@ -20,9 +20,10 @@ void main() {
       ),
     );
 
-    // Verify the app loads without crashing
-    // The app uses router, so we just verify it renders
-    await tester.pumpAndSettle(const Duration(seconds: 2));
+    // Smoke test: ensure the app can render at least one frame.
+    // Avoid pumpAndSettle here because the app may have ongoing animations
+    // (e.g., splash screen timers) that prevent settling.
+    await tester.pump();
 
     // Check that we have a MaterialApp somewhere in the widget tree
     expect(find.byType(MaterialApp), findsOneWidget);

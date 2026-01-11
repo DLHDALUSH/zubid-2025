@@ -1,0 +1,74 @@
+<svg width="400" height="100" viewBox="0 0 400 100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Dark mode gradients -->
+    <linearGradient id="darkGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00ffff;stop-opacity:1" />
+      <stop offset="40%" style="stop-color:#7c3aed;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ec4899;stop-opacity:1" />
+    </linearGradient>
+    
+    <linearGradient id="darkAccent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#ff6b35;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#fbbf24;stop-opacity:1" />
+    </linearGradient>
+    
+    <filter id="darkGlow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    
+    <filter id="darkShadow">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+  
+  <!-- Dark background -->
+  <rect x="0" y="0" width="400" height="100" fill="#0f172a" rx="8"/>
+  
+  <!-- Enhanced icon for dark mode -->
+  <g transform="translate(15, 15)" filter="url(#darkShadow)">
+    <polygon points="35,8 55,18 55,38 35,48 15,38 15,18" 
+             fill="none" stroke="url(#darkGradient)" stroke-width="2.5" opacity="0.9"/>
+    
+    <path d="M22 22 L48 22 L28 32 L48 32 L22 42" 
+          fill="none" stroke="url(#darkGradient)" stroke-width="3.5" 
+          stroke-linecap="round" stroke-linejoin="round" opacity="1"/>
+    
+    <path d="M52 26 L62 18 L62 34 Z" fill="url(#darkAccent)" opacity="0.95" filter="url(#darkGlow)"/>
+    
+    <circle cx="65" cy="12" r="2.5" fill="url(#darkAccent)" opacity="0.9"/>
+    <circle cx="70" cy="22" r="1.8" fill="url(#darkGradient)" opacity="0.7"/>
+    <circle cx="65" cy="32" r="1.2" fill="url(#darkAccent)" opacity="0.8"/>
+  </g>
+  
+  <!-- Main text -->
+  <text x="120" y="45" font-family="'Segoe UI', 'Helvetica Neue', sans-serif" font-size="42" font-weight="300" 
+        fill="url(#darkGradient)" letter-spacing="1px">ZU</text>
+  <text x="200" y="45" font-family="'Segoe UI', 'Helvetica Neue', sans-serif" font-size="42" font-weight="800" 
+        fill="url(#darkGradient)" letter-spacing="1px">BID</text>
+  
+  <!-- Subtitle -->
+  <text x="120" y="65" font-family="'Segoe UI', 'Helvetica Neue', sans-serif" font-size="11" 
+        fill="#a0aec0" letter-spacing="1.5px" font-weight="500">AUCTION PLATFORM</text>
+  
+  <!-- Accent underline -->
+  <line x1="120" y1="72" x2="280" y2="72" stroke="url(#darkAccent)" stroke-width="2" opacity="0.8"/>
+  
+  <!-- Feature badges -->
+  <g transform="translate(310, 20)">
+    <rect x="0" y="0" width="50" height="14" rx="7" fill="url(#darkGradient)" opacity="0.15" stroke="url(#darkGradient)" stroke-width="1" opacity="0.4"/>
+    <text x="25" y="10" font-family="'Segoe UI', sans-serif" font-size="7" font-weight="600"
+          text-anchor="middle" fill="url(#darkGradient)">REAL-TIME</text>
+    
+    <rect x="0" y="18" width="50" height="14" rx="7" fill="url(#darkAccent)" opacity="0.15" stroke="url(#darkAccent)" stroke-width="1" opacity="0.4"/>
+    <text x="25" y="28" font-family="'Segoe UI', sans-serif" font-size="7" font-weight="600"
+          text-anchor="middle" fill="url(#darkAccent)">MOBILE</text>
+  </g>
+  
+  <!-- Decorative accent -->
+  <path d="M320 60 Q335 55 350 60 Q335 65 320 60" fill="url(#darkGradient)" opacity="0.3"/>
+</svg>
+

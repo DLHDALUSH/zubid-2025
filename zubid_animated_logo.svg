@@ -1,0 +1,106 @@
+<svg width="400" height="100" viewBox="0 0 400 100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      @keyframes gradientShift {
+        0% { stop-color: #00d4ff; }
+        50% { stop-color: #5b73ff; }
+        100% { stop-color: #00d4ff; }
+      }
+      @keyframes accentPulse {
+        0%, 100% { opacity: 0.8; }
+        50% { opacity: 1; }
+      }
+      @keyframes floatUp {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-3px); }
+      }
+      @keyframes rotateIcon {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      @keyframes shimmer {
+        0% { stroke-dashoffset: 100; }
+        100% { stroke-dashoffset: 0; }
+      }
+      .glow-text { animation: textGlow 2s ease-in-out infinite; }
+      @keyframes textGlow {
+        0%, 100% { filter: drop-shadow(0 0 0px rgba(91, 115, 255, 0.5)); }
+        50% { filter: drop-shadow(0 0 8px rgba(91, 115, 255, 0.8)); }
+      }
+      .pulse-element { animation: accentPulse 2s ease-in-out infinite; }
+      .float-element { animation: floatUp 3s ease-in-out infinite; }
+      .rotate-icon { animation: rotateIcon 20s linear infinite; }
+    </style>
+    
+    <linearGradient id="animGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00d4ff;stop-opacity:1" />
+      <stop offset="40%" style="stop-color:#5b73ff;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#9c27b0;stop-opacity:1" />
+    </linearGradient>
+    
+    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#ff6b35;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#f7931e;stop-opacity:1" />
+    </linearGradient>
+    
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+  
+  <!-- Background -->
+  <rect x="0" y="0" width="400" height="100" fill="#f8f9ff" rx="8"/>
+  
+  <!-- Animated icon -->
+  <g transform="translate(15, 15)" filter="url(#shadow)" class="rotate-icon">
+    <polygon points="35,8 55,18 55,38 35,48 15,38 15,18" 
+             fill="none" stroke="url(#animGradient)" stroke-width="2.5" opacity="0.8"/>
+    
+    <path d="M22 22 L48 22 L28 32 L48 32 L22 42" 
+          fill="none" stroke="url(#animGradient)" stroke-width="3.5" 
+          stroke-linecap="round" stroke-linejoin="round" opacity="0.95"/>
+    
+    <path d="M52 26 L62 18 L62 34 Z" fill="url(#accentGrad)" class="pulse-element" filter="url(#glow)"/>
+  </g>
+  
+  <!-- Floating accent dots -->
+  <circle cx="80" cy="27" r="2.5" fill="url(#accentGrad)" class="float-element" opacity="0.8"/>
+  <circle cx="85" cy="37" r="1.8" fill="url(#animGradient)" class="float-element" opacity="0.6" style="animation-delay: 0.5s;"/>
+  <circle cx="80" cy="47" r="1.2" fill="url(#accentGrad)" class="float-element" opacity="0.7" style="animation-delay: 1s;"/>
+  
+  <!-- Animated text -->
+  <text x="120" y="45" font-family="'Segoe UI', 'Helvetica Neue', sans-serif" font-size="42" font-weight="300" 
+        fill="url(#animGradient)" letter-spacing="1px" class="glow-text">ZU</text>
+  <text x="200" y="45" font-family="'Segoe UI', 'Helvetica Neue', sans-serif" font-size="42" font-weight="800" 
+        fill="url(#animGradient)" letter-spacing="1px" class="glow-text" style="animation-delay: 0.3s;">BID</text>
+  
+  <!-- Subtitle -->
+  <text x="120" y="65" font-family="'Segoe UI', 'Helvetica Neue', sans-serif" font-size="11" 
+        fill="#888" letter-spacing="1.5px" font-weight="500">AUCTION PLATFORM</text>
+  
+  <!-- Animated underline -->
+  <line x1="120" y1="72" x2="280" y2="72" stroke="url(#accentGrad)" stroke-width="2" class="pulse-element"/>
+  
+  <!-- Feature badges -->
+  <g transform="translate(310, 20)">
+    <rect x="0" y="0" width="50" height="14" rx="7" fill="url(#animGradient)" opacity="0.12" stroke="url(#animGradient)" stroke-width="1" opacity="0.3"/>
+    <text x="25" y="10" font-family="'Segoe UI', sans-serif" font-size="7" font-weight="600"
+          text-anchor="middle" fill="url(#animGradient)">REAL-TIME</text>
+    
+    <rect x="0" y="18" width="50" height="14" rx="7" fill="url(#accentGrad)" opacity="0.12" stroke="url(#accentGrad)" stroke-width="1" opacity="0.3"/>
+    <text x="25" y="28" font-family="'Segoe UI', sans-serif" font-size="7" font-weight="600"
+          text-anchor="middle" fill="url(#accentGrad)">MOBILE</text>
+  </g>
+  
+  <!-- Decorative accent -->
+  <path d="M320 60 Q335 55 350 60 Q335 65 320 60" fill="url(#animGradient)" class="pulse-element" opacity="0.25"/>
+</svg>
+

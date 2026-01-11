@@ -158,7 +158,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
     }
 
     return _wrapWithBorderRadius(
-      Container(
+      SizedBox(
         width: widget.width,
         height: widget.height,
         child: content,
