@@ -119,9 +119,9 @@ echo - Production APK: zubid-production-release.apk
 echo - Production App Bundle: zubid-production-release.aab
 echo.
 echo Environment Configurations:
-echo - Development: https://zubid-2025.onrender.com/api
-echo - Staging: https://zubid-staging.onrender.com/api
-echo - Production: https://zubidauction.duckdns.org/api
+echo - Development: http://10.0.2.2:5000/api
+echo - Staging: https://zubid-2025.onrender.com/api
+echo - Production: https://zubid-2025.onrender.com/api
 echo.
 echo Installation Instructions:
 echo 1. For testing: Install the appropriate APK file

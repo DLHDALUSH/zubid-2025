@@ -71,7 +71,7 @@ echo [INFO] 📱 Installation Instructions:
 echo [INFO] 1. Transfer the APK file to your Android device
 echo [INFO] 2. Enable "Install from unknown sources" in Android settings
 echo [INFO] 3. Install the APK file
-echo [INFO] 4. The app will connect to: https://zubidauction.duckdns.org/api
+echo [INFO] 4. The app will connect to: https://zubid-2025.onrender.com/api
 echo.
 echo [INFO] 🔧 APK Files:
 echo [INFO] - Debug APK (for testing): build\outputs\zubid-debug.apk
