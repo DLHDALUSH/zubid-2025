@@ -10,7 +10,6 @@ import '../../../../core/widgets/loading_overlay.dart';
 import '../../data/models/login_request_model.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/auth_header.dart';
-import '../widgets/social_login_buttons.dart';
 
 // Route constants for better maintainability
 const String _homeRoute = '/home';
@@ -249,27 +248,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     onPressed: _handleLogin,
                     isLoading: authState.isLoading,
                   ),
-
-                  const SizedBox(height: 24),
-
-                  // Divider
-                  const Row(
-                    children: [
-                      Expanded(child: Divider()),
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 16),
-                        child: Text(
-                          'OR',
-                        ),
-                      ),
-                      Expanded(child: Divider()),
-                    ],
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // Social Login Buttons
-                  const SocialLoginButtons(),
 
                   const SizedBox(height: 32),
 

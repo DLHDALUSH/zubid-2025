@@ -48,11 +48,13 @@ dependencies:
   local_auth: ^3.0.0
   crypto: ^3.0.3
   flutter_secure_storage: ^10.0.0
-  google_sign_in: ^7.2.0
+  # google_sign_in: ^7.2.0  # Removed - using email/password only
   # sign_in_with_apple: ^5.0.0  # Temporarily disabled due to build issues
 
   # Media & Files
   image_picker: ^1.0.4
+  video_player: ^2.8.1
+  chewie: ^1.7.4
   # file_picker: ^6.1.1  # Temporarily disabled due to build issues
   permission_handler: ^12.0.1
   path_provider: ^2.1.1

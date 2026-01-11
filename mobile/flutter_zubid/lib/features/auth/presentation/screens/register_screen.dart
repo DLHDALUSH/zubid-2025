@@ -11,7 +11,6 @@ import '../../../../core/widgets/loading_overlay.dart';
 import '../../data/models/register_request_model.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/auth_header.dart';
-import '../widgets/social_login_buttons.dart';
 
 // Route constants
 const String _loginRoute = '/login';
@@ -73,7 +72,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     if (!_acceptTerms) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('You must accept the terms and conditions to register.'),
+          content:
+              Text('You must accept the terms and conditions to register.'),
           backgroundColor: Colors.orange,
         ),
       );
@@ -81,7 +81,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     }
 
     // Format birth date as YYYY-MM-DD
-    final birthDateStr = '${_selectedBirthDate!.year}-${_selectedBirthDate!.month.toString().padLeft(2, '0')}-${_selectedBirthDate!.day.toString().padLeft(2, '0')}';
+    final birthDateStr =
+        '${_selectedBirthDate!.year}-${_selectedBirthDate!.month.toString().padLeft(2, '0')}-${_selectedBirthDate!.day.toString().padLeft(2, '0')}';
 
     final request = RegisterRequestModel(
       username: _usernameController.text.trim(),
@@ -91,8 +92,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       idNumber: _idNumberController.text.trim(),
       birthDate: birthDateStr,
       address: _addressController.text.trim(),
-      firstName: _firstNameController.text.trim().isNotEmpty ? _firstNameController.text.trim() : null,
-      lastName: _lastNameController.text.trim().isNotEmpty ? _lastNameController.text.trim() : null,
+      firstName: _firstNameController.text.trim().isNotEmpty
+          ? _firstNameController.text.trim()
+          : null,
+      lastName: _lastNameController.text.trim().isNotEmpty
+          ? _lastNameController.text.trim()
+          : null,
       acceptTerms: _acceptTerms,
     );
 
@@ -102,7 +107,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       AppLogger.userAction('Registration successful for ${request.email}');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Registration successful! Please check your email to verify your account.'),
+          content: Text(
+              'Registration successful! Please check your email to verify your account.'),
           backgroundColor: Colors.green,
         ),
       );
@@ -116,7 +122,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       context: context,
       initialDate: _selectedBirthDate ?? DateTime(2000, 1, 1),
       firstDate: DateTime(1900),
-      lastDate: DateTime.now().subtract(const Duration(days: 365 * 18)), // Must be 18+
+      lastDate: DateTime.now()
+          .subtract(const Duration(days: 365 * 18)), // Must be 18+
       helpText: 'Select your date of birth',
     );
     if (picked != null && picked != _selectedBirthDate) {
@@ -129,7 +136,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
-    
+
     ref.listen(authProvider, (_, state) {
       if (state.error != null) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -166,10 +173,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     onPressed: _handleRegister,
                     isLoading: authState.isLoading,
                   ),
-                  const SizedBox(height: 24),
-                  const _AuthDivider(),
-                  const SizedBox(height: 24),
-                  const SocialLoginButtons(),
                   const SizedBox(height: 32),
                   _buildLoginLink(),
                 ],
@@ -257,7 +260,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           label: 'Address *',
           validator: (value) {
             if (value == null || value.isEmpty) return 'Address is required';
-            if (value.length < 5) return 'Address must be at least 5 characters';
+            if (value.length < 5)
+              return 'Address must be at least 5 characters';
             return null;
           },
           maxLines: 2,
@@ -269,8 +273,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           obscureText: _obscurePassword,
           validator: Validators.password,
           suffixIcon: IconButton(
-            icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility),
-            onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+            icon: Icon(
+                _obscurePassword ? Icons.visibility_off : Icons.visibility),
+            onPressed: () =>
+                setState(() => _obscurePassword = !_obscurePassword),
           ),
         ),
         const SizedBox(height: 16),
@@ -278,18 +284,22 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           controller: _confirmPasswordController,
           label: 'Confirm Password *',
           obscureText: _obscureConfirmPassword,
-          validator: (value) => Validators.confirmPassword(value, _passwordController.text),
+          validator: (value) =>
+              Validators.confirmPassword(value, _passwordController.text),
           suffixIcon: IconButton(
-            icon: Icon(_obscureConfirmPassword ? Icons.visibility_off : Icons.visibility),
-            onPressed: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
+            icon: Icon(_obscureConfirmPassword
+                ? Icons.visibility_off
+                : Icons.visibility),
+            onPressed: () => setState(
+                () => _obscureConfirmPassword = !_obscureConfirmPassword),
           ),
         ),
         const SizedBox(height: 8),
         Text(
           '* Required fields',
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: Theme.of(context).hintColor,
-          ),
+                color: Theme.of(context).hintColor,
+              ),
         ),
       ],
     );
@@ -310,14 +320,18 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               children: [
                 TextSpan(
                   text: 'Terms of Service',
-                  style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
-                  recognizer: TapGestureRecognizer()..onTap = () => context.push(_termsOfServiceRoute),
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold, color: Colors.blue),
+                  recognizer: TapGestureRecognizer()
+                    ..onTap = () => context.push(_termsOfServiceRoute),
                 ),
                 const TextSpan(text: ' and '),
                 TextSpan(
                   text: 'Privacy Policy',
-                  style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
-                  recognizer: TapGestureRecognizer()..onTap = () => context.push(_privacyPolicyRoute),
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold, color: Colors.blue),
+                  recognizer: TapGestureRecognizer()
+                    ..onTap = () => context.push(_privacyPolicyRoute),
                 ),
               ],
             ),
@@ -336,27 +350,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           onPressed: () => context.go(_loginRoute),
           child: const Text('Sign In'),
         ),
-      ],
-    );
-  }
-}
-
-class _AuthDivider extends StatelessWidget {
-  const _AuthDivider();
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        const Expanded(child: Divider()),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Text(
-            'OR',
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-        ),
-        const Expanded(child: Divider()),
       ],
     );
   }
