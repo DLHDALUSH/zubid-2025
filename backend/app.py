@@ -6489,6 +6489,243 @@ def init_database_endpoint():
         db.session.rollback()
         return jsonify({'error': f'Init failed: {str(e)}'}), 500
 
+@app.route('/api/admin/clear-data', methods=['POST'])
+def clear_database_data():
+    """Clear all data from the database (admin only)"""
+    try:
+        # Security check - only allow in development or with proper authentication
+        flask_env = os.getenv('FLASK_ENV', 'development').lower()
+        if flask_env == 'production':
+            # In production, require admin authentication
+            auth_header = request.headers.get('Authorization', '')
+            if not auth_header.startswith('Bearer ') or auth_header.split(' ')[1] != 'admin-clear-token':
+                return jsonify({'error': 'Unauthorized'}), 401
+
+        # Clear data in correct order (respecting foreign key constraints)
+        db.session.execute(text('DELETE FROM bid'))
+        db.session.execute(text('DELETE FROM invoice'))
+        db.session.execute(text('DELETE FROM image'))
+        db.session.execute(text('DELETE FROM auction'))
+        db.session.execute(text('DELETE FROM user WHERE role != \'admin\''))  # Keep admin
+        db.session.execute(text('DELETE FROM category'))
+
+        db.session.commit()
+
+        return jsonify({
+            'message': 'Database data cleared successfully',
+            'cleared': True
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': f'Clear failed: {str(e)}'}), 500
+
+@app.route('/api/admin/seed-data', methods=['POST'])
+def seed_database_data():
+    """Seed the database with sample data (admin only)"""
+    try:
+        # Security check - only allow in development or with proper authentication
+        flask_env = os.getenv('FLASK_ENV', 'development').lower()
+        if flask_env == 'production':
+            # In production, require admin authentication
+            auth_header = request.headers.get('Authorization', '')
+            if not auth_header.startswith('Bearer ') or auth_header.split(' ')[1] != 'admin-seed-token':
+                return jsonify({'error': 'Unauthorized'}), 401
+
+        # Create categories
+        categories_data = [
+            {'name': 'Electronics', 'description': 'Smartphones, laptops, gaming consoles, and electronic devices'},
+            {'name': 'Vehicles', 'description': 'Cars, motorcycles, boats, and automotive parts'},
+            {'name': 'Jewelry & Watches', 'description': 'Fine jewelry, luxury watches, and precious stones'},
+            {'name': 'Art & Collectibles', 'description': 'Paintings, sculptures, antiques, and collectible items'},
+            {'name': 'Fashion & Accessories', 'description': 'Designer clothing, shoes, bags, and fashion accessories'},
+            {'name': 'Home & Garden', 'description': 'Furniture, appliances, garden tools, and home decor'},
+            {'name': 'Sports & Recreation', 'description': 'Sports equipment, outdoor gear, and recreational items'},
+            {'name': 'Books & Media', 'description': 'Books, movies, music, and educational materials'}
+        ]
+
+        created_categories = []
+        for cat_data in categories_data:
+            # Check if category already exists
+            existing = Category.query.filter_by(name=cat_data['name']).first()
+            if not existing:
+                category = Category(
+                    name=cat_data['name'],
+                    description=cat_data['description'],
+                    is_active=True
+                )
+                db.session.add(category)
+                created_categories.append(category)
+
+        db.session.commit()
+
+        # Create sample users
+        users_data = [
+            {
+                'username': 'ahmed_collector',
+                'email': 'ahmed@example.com',
+                'phone': '+9647701234567',
+                'id_number': 'IQ123456789',
+                'birth_date': date(1990, 3, 15),
+                'address': 'Al-Mansour District, Baghdad, Iraq',
+                'balance': 5000.0
+            },
+            {
+                'username': 'sara_antiques',
+                'email': 'sara@example.com',
+                'phone': '+9647701234568',
+                'id_number': 'IQ987654321',
+                'birth_date': date(1988, 7, 22),
+                'address': 'Karrada District, Baghdad, Iraq',
+                'balance': 7500.0
+            },
+            {
+                'username': 'omar_tech',
+                'email': 'omar@example.com',
+                'phone': '+9647701234569',
+                'id_number': 'IQ456789123',
+                'birth_date': date(1992, 11, 8),
+                'address': 'Jadriya District, Baghdad, Iraq',
+                'balance': 3200.0
+            }
+        ]
+
+        created_users = []
+        for user_data in users_data:
+            # Check if user already exists
+            existing = User.query.filter_by(username=user_data['username']).first()
+            if not existing:
+                user = User(
+                    username=user_data['username'],
+                    email=user_data['email'],
+                    password_hash=generate_password_hash('User123!@#'),
+                    role='user',
+                    id_number=user_data['id_number'],
+                    birth_date=user_data['birth_date'],
+                    phone=user_data['phone'],
+                    address=user_data['address'],
+                    email_verified=True,
+                    phone_verified=True,
+                    is_active=True,
+                    balance=user_data['balance'],
+                    created_at=datetime.now(timezone.utc)
+                )
+                db.session.add(user)
+                created_users.append(user)
+
+        db.session.commit()
+
+        return jsonify({
+            'message': 'Database seeded successfully',
+            'categories_created': len(created_categories),
+            'users_created': len(created_users),
+            'seeded': True
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': f'Seed failed: {str(e)}'}), 500
+
+@app.route('/api/admin/auctions', methods=['POST'])
+def create_admin_auction():
+    """Create an auction via admin API"""
+    try:
+        # Security check - only allow in development or with proper authentication
+        flask_env = os.getenv('FLASK_ENV', 'development').lower()
+        if flask_env == 'production':
+            # In production, require admin authentication
+            auth_header = request.headers.get('Authorization', '')
+            if not auth_header.startswith('Bearer ') or auth_header.split(' ')[1] != 'admin-auction-token':
+                return jsonify({'error': 'Unauthorized'}), 401
+
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+
+        # Get admin user as seller
+        admin_user = User.query.filter_by(role='admin').first()
+        if not admin_user:
+            return jsonify({'error': 'Admin user not found'}), 404
+
+        # Parse end_time
+        end_time = datetime.fromisoformat(data['end_time'].replace('Z', '+00:00'))
+
+        # Create auction
+        auction = Auction(
+            item_name=data['item_name'],
+            description=data['description'],
+            starting_price=data['starting_price'],
+            current_price=data.get('current_price', data['starting_price']),
+            category_id=data['category_id'],
+            seller_id=admin_user.id,
+            condition=data.get('condition', 'Used'),
+            location=data.get('location', 'Baghdad, Iraq'),
+            featured_image_url=data.get('featured_image_url'),
+            end_time=end_time,
+            is_featured=data.get('is_featured', False),
+            status='active',
+            created_at=datetime.now(timezone.utc)
+        )
+
+        db.session.add(auction)
+        db.session.commit()
+
+        return jsonify({
+            'message': 'Auction created successfully',
+            'auction_id': auction.id,
+            'item_name': auction.item_name
+        }), 201
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': f'Auction creation failed: {str(e)}'}), 500
+
+@app.route('/api/admin/categories', methods=['POST'])
+def create_admin_category():
+    """Create a category via admin API"""
+    try:
+        # Security check - only allow in development or with proper authentication
+        flask_env = os.getenv('FLASK_ENV', 'development').lower()
+        if flask_env == 'production':
+            # In production, require admin authentication
+            auth_header = request.headers.get('Authorization', '')
+            if not auth_header.startswith('Bearer ') or auth_header.split(' ')[1] != 'admin-category-token':
+                return jsonify({'error': 'Unauthorized'}), 401
+
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+
+        # Check if category already exists
+        existing = Category.query.filter_by(name=data['name']).first()
+        if existing:
+            return jsonify({
+                'message': 'Category already exists',
+                'category_id': existing.id,
+                'name': existing.name
+            }), 200
+
+        # Create category
+        category = Category(
+            name=data['name'],
+            description=data.get('description', ''),
+            is_active=True,
+            created_at=datetime.now(timezone.utc)
+        )
+
+        db.session.add(category)
+        db.session.commit()
+
+        return jsonify({
+            'message': 'Category created successfully',
+            'category_id': category.id,
+            'name': category.name
+        }), 201
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': f'Category creation failed: {str(e)}'}), 500
+
 if __name__ == '__main__':
     init_db()
 
