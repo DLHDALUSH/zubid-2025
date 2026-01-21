@@ -13,6 +13,10 @@ from datetime import datetime
 PRODUCTION_URL = "https://zubid-2025.onrender.com"
 API_BASE = f"{PRODUCTION_URL}/api"
 
+# Default admin credentials (must match production seeding)
+ADMIN_USERNAME = "admin"
+ADMIN_PASSWORD = "Admin123!@#"
+
 def test_endpoint(name, url, method="GET", data=None, headers=None):
     """Test a single endpoint and return the result."""
     print(f"🧪 Testing {name}...")
@@ -69,36 +73,47 @@ def main():
         auctions = response.json()
         print(f"   🏷️ Found {len(auctions)} auctions")
     
-    # 5. Test authentication endpoints
-    success, response = test_endpoint("Login Endpoint", f"{API_BASE}/auth/login", "POST", {
-        "username": "test",
-        "password": "test"
+    # 5. Test authentication endpoints (using real admin credentials)
+    success, response = test_endpoint("Login Endpoint", f"{API_BASE}/login", "POST", {
+        "username": ADMIN_USERNAME,
+        "password": ADMIN_PASSWORD
     })
     results["auth_login"] = success
     
-    # 6. Test registration endpoint
-    success, response = test_endpoint("Register Endpoint", f"{API_BASE}/auth/register", "POST", {
-        "username": "test_user",
-        "email": "test@example.com",
-        "password": "Test123!@#"
-    })
+    # 6. Test registration endpoint (creates a lightweight healthcheck user)
+    timestamp = int(time.time())
+    register_payload = {
+        "username": f"healthcheck_{timestamp}",
+        "email": f"healthcheck_{timestamp}@example.com",
+        "password": "Test123!@#",
+        "id_number": f"HC{timestamp}",
+        "birth_date": "1990-01-01",
+        "phone": f"+1000{timestamp}",
+        "address": "Healthcheck User Address",
+    }
+    success, response = test_endpoint("Register Endpoint", f"{API_BASE}/register", "POST", register_payload)
     results["auth_register"] = success
     
-    # 7. Test WebSocket endpoint (basic connection test)
+    # 7. Test WebSocket endpoint (optional, only if dependency and endpoint exist)
     print("🧪 Testing WebSocket Connection...")
     try:
-        import websocket
-        ws_url = f"wss://zubid-2025.onrender.com/ws"
-        ws = websocket.create_connection(ws_url, timeout=10)
-        ws.close()
-        print("   ✅ WebSocket Connection - SUCCESS")
-        results["websocket"] = True
+        try:
+            import websocket  # type: ignore
+        except ImportError:
+            print("   ⚠️ websocket-client not installed - skipping WebSocket test")
+            results["websocket"] = None
+        else:
+            ws_url = f"wss://zubid-2025.onrender.com/ws"
+            ws = websocket.create_connection(ws_url, timeout=10)
+            ws.close()
+            print("   ✅ WebSocket Connection - SUCCESS")
+            results["websocket"] = True
     except Exception as e:
         print(f"   ❌ WebSocket Connection - ERROR: {str(e)}")
         results["websocket"] = False
     
-    # 8. Test static files
-    success, response = test_endpoint("Static Files", f"{PRODUCTION_URL}/static/css/style.css")
+    # 8. Test static files (main stylesheet from frontend)
+    success, response = test_endpoint("Static Files (styles.css)", f"{PRODUCTION_URL}/styles.css")
     results["static_files"] = success
     
     # 9. Test admin page
@@ -110,8 +125,9 @@ def main():
     print("📊 TEST SUMMARY")
     print("=" * 50)
     
-    total_tests = len(results)
-    passed_tests = sum(1 for result in results.values() if result)
+    # Treat tests with value None as "skipped" (e.g., optional WebSocket test)
+    total_tests = len([r for r in results.values() if r is not None])
+    passed_tests = sum(1 for r in results.values() if r is True)
     failed_tests = total_tests - passed_tests
     
     print(f"✅ Passed: {passed_tests}/{total_tests}")
@@ -120,7 +136,12 @@ def main():
     
     print("\n📋 Detailed Results:")
     for test_name, result in results.items():
-        status = "✅ PASS" if result else "❌ FAIL"
+        if result is True:
+            status = "✅ PASS"
+        elif result is False:
+            status = "❌ FAIL"
+        else:
+            status = "⏭️ SKIPPED"
         print(f"   {test_name}: {status}")
     
     # Recommendations
@@ -140,10 +161,13 @@ def main():
     else:
         print("❌ Authentication endpoints may need configuration")
     
-    if results.get("websocket", False):
+    websocket_result = results.get("websocket", None)
+    if websocket_result is True:
         print("✅ Real-time bidding should work")
-    else:
+    elif websocket_result is False:
         print("❌ WebSocket connection failed - real-time features may not work")
+    else:
+        print("ℹ️ WebSocket test skipped (dependency not installed or feature not enabled)")
     
     print("\n🌐 Access URLs:")
     print(f"   Web App: {PRODUCTION_URL}")
