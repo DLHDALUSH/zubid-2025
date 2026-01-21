@@ -4559,7 +4559,7 @@ def scan_corrupted_images():
     # Scan User profile images
     users = User.query.all()
     for user in users:
-        issue = check_url(user.profile_image, 'user', user.id, 'profile_image')
+        issue = check_url(user.profile_photo, 'user', user.id, 'profile_photo')
         if issue:
             issue['username'] = user.username
             corrupted.append(issue)
@@ -4613,9 +4613,9 @@ def fix_corrupted_image(source_type, source_id):
             if not user:
                 return jsonify({'error': 'User not found'}), 404
 
-            user.profile_image = new_url if new_url else None
+            user.profile_photo = new_url if new_url else None
             db.session.commit()
-            return jsonify({'message': f'User {source_id} profile image updated'}), 200
+            return jsonify({'message': f'User {source_id} profile photo updated'}), 200
 
         else:
             return jsonify({'error': f'Unknown source type: {source_type}'}), 400
@@ -4675,8 +4675,8 @@ def delete_all_corrupted_images():
     # Clear corrupted user profile images
     users = User.query.all()
     for user in users:
-        if is_corrupted(user.profile_image):
-            user.profile_image = None
+        if is_corrupted(user.profile_photo):
+            user.profile_photo = None
             fixed_count += 1
 
     db.session.commit()

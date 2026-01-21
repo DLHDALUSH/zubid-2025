@@ -264,7 +264,7 @@ const AuctionAPI = {
         }
 
         try {
-            const response = await fetch(`${getApiBaseUrl()}/auctions/${id}`, {
+            const response = await fetch(`${API_BASE_URL}/auctions/${id}`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
