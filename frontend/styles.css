@@ -221,8 +221,8 @@ html, body {
     --font-size-4xl: 2.5rem;
 }
 
-/* 🌙 SAMSUNG ONE UI DARK MODE */
-[data-theme="dark"] {
+	/* 🌙 SAMSUNG ONE UI DARK MODE */
+	[data-theme="dark"] {
     /* Dark mode background colors */
     --bg-color: #121212;
     --bg-light: #1e1e1e;
@@ -264,10 +264,108 @@ html, body {
     /* Dark mode cards */
     --card-bg: #1e1e1e;
     --card-border: rgba(255, 255, 255, 0.08);
-    --card-shadow-premium: 0 2px 12px rgba(0, 0, 0, 0.4);
-}
+	    --card-shadow-premium: 0 2px 12px rgba(0, 0, 0, 0.4);
+	}
 
-/* Samsung One UI Dark mode element overrides */
+	/* ==========================================
+	   🎨 COLOR SCHEME VARIANTS (LIGHT & DARK)
+	   ========================================== */
+
+		/* Classic – Electric Fusion palette (vibrant but on neutral surfaces) */
+		[data-color-scheme="classic"] {
+		    /* Electric blue as primary */
+		    --primary-color: #00F0FF;
+		    --primary-dark: #00b4c5;
+		    --primary-light: #00FF81;
+		    --primary-glow: rgba(0, 240, 255, 0.32);
+		    /* Warm oranges as accent */
+		    --accent-color: #FF6800;
+		    --accent-dark: #cc5200;
+		    --accent-light: #FFA900;
+		    /* Neutral, light backgrounds for balance */
+		    --bg-color: #f9fafb;
+		    --bg-light: #ffffff;
+		    --text-color: #020617;
+		    --text-secondary: #475569;
+		    /* Gradient blending the full Electric Fusion range */
+		    --gradient-start: #00F0FF;
+		    --gradient-mid: #00FF81;
+		    --gradient-end: #FF6800;
+		}
+
+		[data-theme="dark"][data-color-scheme="classic"] {
+		    --bg-color: #020617;
+		    --bg-light: #020617;
+		    --bg-dark: #020617;
+		    --primary-color: #00F0FF;
+		    --primary-dark: #00b4c5;
+		    --primary-glow: rgba(0, 240, 255, 0.45);
+		    --accent-color: #FFA900;
+		    --text-color: #e5e7eb;
+		    --text-secondary: #9ca3af;
+		}
+
+		/* Emerald – Electric Fusion cool variant (blue/green focus) */
+		[data-color-scheme="emerald"] {
+		    --primary-color: #00FF81; /* vibrant green */
+		    --primary-dark: #00cc66;
+		    --primary-light: #00F0FF; /* touches of electric blue */
+		    --primary-glow: rgba(0, 255, 129, 0.32);
+		    --accent-color: #00F0FF;
+		    --accent-dark: #00b4c5;
+		    --accent-light: #00FF81;
+		    --bg-color: #f4f9f6; /* slightly cooler neutral */
+		    --bg-light: #ffffff;
+		    --text-color: #020617;
+		    --text-secondary: #475569;
+		    --gradient-start: #00FF81;
+		    --gradient-mid: #00F0FF;
+		    --gradient-end: #FFA900;
+		}
+
+		[data-theme="dark"][data-color-scheme="emerald"] {
+		    --bg-color: #020617;
+		    --bg-light: #020617;
+		    --bg-dark: #020617;
+		    --primary-color: #00FF81;
+		    --primary-dark: #00cc66;
+		    --primary-glow: rgba(0, 255, 129, 0.45);
+		    --accent-color: #00F0FF;
+		    --text-color: #e5e7eb;
+		    --text-secondary: #9ca3af;
+		}
+
+		/* Amber – Electric Fusion warm variant (orange focus) */
+		[data-color-scheme="amber"] {
+		    --primary-color: #FF6800;
+		    --primary-dark: #cc5200;
+		    --primary-light: #FFA900;
+		    --primary-glow: rgba(255, 104, 0, 0.32);
+		    --accent-color: #00F0FF; /* blue accent against warm surfaces */
+		    --accent-dark: #00b4c5;
+		    --accent-light: #00FF81;
+		    --bg-color: #fff7ed; /* warm neutral background */
+		    --bg-light: #ffffff;
+		    --text-color: #111827;
+		    --text-secondary: #4b5563;
+		    --gradient-start: #FF6800;
+		    --gradient-mid: #FFA900;
+		    --gradient-end: #00F0FF;
+		}
+
+		[data-theme="dark"][data-color-scheme="amber"] {
+		    --bg-color: #020617;
+		    --bg-light: #020617;
+		    --bg-dark: #020617;
+		    --primary-color: #FFA900;
+		    --primary-dark: #cc5200;
+		    --primary-glow: rgba(255, 168, 0, 0.45);
+		    --accent-color: #00F0FF;
+		    --text-color: #f9fafb;
+		    --text-secondary: #e5e7eb;
+		}
+
+	/* Samsung One UI Dark mode element overrides */
 [data-theme="dark"] .auction-card,
 [data-theme="dark"] .modal-content,
 [data-theme="dark"] .form-group input,
@@ -840,6 +938,53 @@ body::after {
     align-items: center;
     gap: 1rem;
 }
+
+	/* 🎨 Color Scheme Switcher */
+	.color-scheme-switcher {
+	    display: flex;
+	    align-items: center;
+	    gap: 0.4rem;
+	    padding: 0.25rem 0.5rem;
+	    border-radius: 999px;
+	    background: rgba(15, 23, 42, 0.03);
+	}
+
+	.color-scheme-dot {
+	    width: 10px;
+	    height: 10px;
+	    border-radius: 999px;
+	    border: 2px solid transparent;
+	    background: var(--primary-color);
+	    cursor: pointer;
+	    opacity: 0.7;
+	    transition: transform var(--transition-fast), box-shadow var(--transition-fast), opacity var(--transition-fast), border-color var(--transition-fast);
+	}
+
+	.color-scheme-dot.is-active {
+	    opacity: 1;
+	    transform: scale(1.2);
+	    box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.06);
+	    border-color: var(--primary-color);
+	}
+
+	/* Palette previews for each scheme */
+	.color-scheme-dot[data-color-scheme-select="classic"] {
+		    background: linear-gradient(135deg, #00F0FF, #00FF81, #FF6800);
+		}
+		
+		.color-scheme-dot[data-color-scheme-select="emerald"] {
+		    background: linear-gradient(135deg, #00FF81, #00F0FF, #FFA900);
+		}
+		
+		.color-scheme-dot[data-color-scheme-select="amber"] {
+		    background: linear-gradient(135deg, #FF6800, #FFA900, #00F0FF);
+		}
+
+	@media (max-width: 768px) {
+	    .color-scheme-switcher {
+	        display: none;
+	    }
+	}
 
 /* 🌙 Theme Toggle Button */
 .theme-toggle {
