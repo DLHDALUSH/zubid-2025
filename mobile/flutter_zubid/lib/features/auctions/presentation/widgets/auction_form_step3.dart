@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/widgets/custom_text_field.dart';
+import '../../data/models/create_auction_model.dart';
 import '../providers/auction_creation_provider.dart';
 
 class AuctionFormStep3 extends ConsumerStatefulWidget {
@@ -16,11 +17,11 @@ class _AuctionFormStep3State extends ConsumerState<AuctionFormStep3> {
   final _formKey = GlobalKey<FormState>();
   final _startingBidController = TextEditingController();
   final _buyNowPriceController = TextEditingController();
-  
+
   DateTime? _selectedEndTime;
   bool _hasBuyNowPrice = false;
   int _selectedDuration = 7; // days
-  
+
   final List<int> _durationOptions = [1, 3, 5, 7, 10, 14, 21, 30];
 
   @override
@@ -31,7 +32,8 @@ class _AuctionFormStep3State extends ConsumerState<AuctionFormStep3> {
       _startingBidController.text = draftAuction.startingBid.toStringAsFixed(2);
       if (draftAuction.buyNowPrice != null) {
         _hasBuyNowPrice = true;
-        _buyNowPriceController.text = draftAuction.buyNowPrice!.toStringAsFixed(2);
+        _buyNowPriceController.text =
+            draftAuction.buyNowPrice!.toStringAsFixed(2);
       }
       _selectedEndTime = draftAuction.endTime;
     } else {
@@ -64,25 +66,26 @@ class _AuctionFormStep3State extends ConsumerState<AuctionFormStep3> {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            
+
             const SizedBox(height: 8),
-            
+
             Text(
               'Set your starting bid and auction duration',
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
               ),
             ),
-            
+
             const SizedBox(height: 24),
-            
+
             // Starting Bid
             CustomTextField(
               controller: _startingBidController,
               label: 'Starting Bid',
               hint: '0.00',
               prefixText: '\$',
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
               inputFormatters: [
                 FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
               ],
@@ -101,9 +104,9 @@ class _AuctionFormStep3State extends ConsumerState<AuctionFormStep3> {
               },
               onChanged: _updateDraft,
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // Buy Now Price Toggle
             CheckboxListTile(
               title: const Text('Enable Buy It Now'),
@@ -120,7 +123,7 @@ class _AuctionFormStep3State extends ConsumerState<AuctionFormStep3> {
               },
               contentPadding: EdgeInsets.zero,
             ),
-            
+
             // Buy Now Price Field
             if (_hasBuyNowPrice) ...[
               const SizedBox(height: 8),
@@ -129,7 +132,8 @@ class _AuctionFormStep3State extends ConsumerState<AuctionFormStep3> {
                 label: 'Buy It Now Price',
                 hint: '0.00',
                 prefixText: '\$',
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
                 inputFormatters: [
                   FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
                 ],
@@ -139,8 +143,9 @@ class _AuctionFormStep3State extends ConsumerState<AuctionFormStep3> {
                       return 'Buy It Now price is required';
                     }
                     final buyNowPrice = double.tryParse(value);
-                    final startingBid = double.tryParse(_startingBidController.text);
-                    
+                    final startingBid =
+                        double.tryParse(_startingBidController.text);
+
                     if (buyNowPrice == null || buyNowPrice <= 0) {
                       return 'Please enter a valid Buy It Now price';
                     }
@@ -153,9 +158,9 @@ class _AuctionFormStep3State extends ConsumerState<AuctionFormStep3> {
                 onChanged: _updateDraft,
               ),
             ],
-            
+
             const SizedBox(height: 24),
-            
+
             // Duration Selection
             Text(
               'Auction Duration',
@@ -163,9 +168,9 @@ class _AuctionFormStep3State extends ConsumerState<AuctionFormStep3> {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            
+
             const SizedBox(height: 12),
-            
+
             Wrap(
               spacing: 8,
               runSpacing: 8,
@@ -178,12 +183,13 @@ class _AuctionFormStep3State extends ConsumerState<AuctionFormStep3> {
                     if (selected) {
                       setState(() {
                         _selectedDuration = days;
-                        _selectedEndTime = DateTime.now().add(Duration(days: days));
+                        _selectedEndTime =
+                            DateTime.now().add(Duration(days: days));
                       });
                       _updateDraft();
                     }
                   },
-                  backgroundColor: isSelected 
+                  backgroundColor: isSelected
                       ? theme.colorScheme.primaryContainer
                       : theme.colorScheme.surfaceContainerHighest,
                   selectedColor: theme.colorScheme.primaryContainer,
@@ -191,14 +197,15 @@ class _AuctionFormStep3State extends ConsumerState<AuctionFormStep3> {
                 );
               }).toList(),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // End Time Display
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                color: theme.colorScheme.surfaceContainerHighest
+                    .withValues(alpha: 0.5),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
@@ -234,14 +241,15 @@ class _AuctionFormStep3State extends ConsumerState<AuctionFormStep3> {
                 ],
               ),
             ),
-            
+
             const SizedBox(height: 24),
-            
+
             // Pricing Tips
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
+                color:
+                    theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Column(
@@ -264,9 +272,7 @@ class _AuctionFormStep3State extends ConsumerState<AuctionFormStep3> {
                       ),
                     ],
                   ),
-                  
                   const SizedBox(height: 12),
-                  
                   Text(
                     '• Research similar items to set competitive prices\n'
                     '• Lower starting bids can attract more bidders\n'
@@ -289,10 +295,20 @@ class _AuctionFormStep3State extends ConsumerState<AuctionFormStep3> {
 
   String _formatDateTime(DateTime dateTime) {
     final months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec'
     ];
-    
+
     final month = months[dateTime.month - 1];
     final day = dateTime.day;
     final year = dateTime.year;
@@ -300,12 +316,46 @@ class _AuctionFormStep3State extends ConsumerState<AuctionFormStep3> {
     final minute = dateTime.minute.toString().padLeft(2, '0');
     final amPm = hour >= 12 ? 'PM' : 'AM';
     final displayHour = hour > 12 ? hour - 12 : (hour == 0 ? 12 : hour);
-    
+
     return '$month $day, $year at $displayHour:$minute $amPm';
   }
 
   void _updateDraft([String? value]) {
-    // Validate form and update draft
     _formKey.currentState?.validate();
+    // Save draft to provider for persistence across steps
+    _saveDraftToProvider();
+  }
+
+  void _saveDraftToProvider() {
+    final currentDraft = ref.read(auctionCreationProvider).draftAuction;
+    final selectedCategory = ref.read(auctionCreationProvider).selectedCategory;
+
+    // Parse pricing values
+    final startingBid = double.tryParse(_startingBidController.text) ?? 0.0;
+    final buyNowPrice =
+        _hasBuyNowPrice ? double.tryParse(_buyNowPriceController.text) : null;
+
+    // Create or update draft with current form values
+    final draft = CreateAuctionRequest(
+      title: currentDraft?.title ?? '',
+      description: currentDraft?.description ?? '',
+      categoryId: selectedCategory?.id ?? currentDraft?.categoryId ?? 0,
+      startingBid: startingBid,
+      buyNowPrice: buyNowPrice,
+      endTime: _selectedEndTime ??
+          DateTime.now().add(Duration(days: _selectedDuration)),
+      imageUrls: currentDraft?.imageUrls ?? [],
+      condition: currentDraft?.condition ?? 'New',
+      brand: currentDraft?.brand,
+      model: currentDraft?.model,
+      shippingInfo: currentDraft?.shippingInfo ??
+          const ShippingInfo(
+            domesticShippingCost: 0.0,
+            shippingMethod: 'Standard Shipping',
+            shipsTo: ['Domestic'],
+          ),
+    );
+
+    ref.read(auctionCreationProvider.notifier).saveDraft(draft);
   }
 }

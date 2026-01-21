@@ -4,6 +4,7 @@ import '../../data/models/login_request_model.dart';
 import '../../data/models/register_request_model.dart';
 import '../../data/models/forgot_password_request_model.dart';
 import '../../data/repositories/auth_repository.dart';
+import '../../../../core/services/notification_service.dart';
 import '../../../../core/utils/logger.dart';
 
 // Auth State
@@ -60,7 +61,7 @@ class AuthNotifier extends Notifier<AuthState> {
       final result = await _authRepository.login(request);
 
       return result.when(
-        success: (response) {
+        success: (response) async {
           state = state.copyWith(
             isLoading: false,
             isAuthenticated: true,
@@ -69,6 +70,10 @@ class AuthNotifier extends Notifier<AuthState> {
             user: response.user,
           );
           AppLogger.info('Login successful for user: ${response.user?.email}');
+
+          // Register FCM token with backend for push notifications
+          NotificationService.registerTokenWithBackend();
+
           return true;
         },
         error: (error) {
@@ -193,6 +198,9 @@ class AuthNotifier extends Notifier<AuthState> {
 
   Future<void> logout() async {
     try {
+      // Unregister FCM token before logout
+      await NotificationService.unregisterTokenFromBackend();
+
       await _authRepository.logout();
       state = const AuthState();
       AppLogger.info('User logged out successfully');

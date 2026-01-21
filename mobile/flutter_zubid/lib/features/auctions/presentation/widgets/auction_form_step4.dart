@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/widgets/custom_text_field.dart';
+import '../../data/models/create_auction_model.dart';
 import '../providers/auction_creation_provider.dart';
 
 class AuctionFormStep4 extends ConsumerStatefulWidget {
@@ -19,12 +20,12 @@ class _AuctionFormStep4State extends ConsumerState<AuctionFormStep4> {
   final _handlingTimeController = TextEditingController();
   final _returnPolicyController = TextEditingController();
   final _shippingNotesController = TextEditingController();
-  
+
   String _selectedShippingMethod = 'Standard Shipping';
   bool _allowInternationalShipping = false;
   bool _freeShipping = false;
   int _handlingTime = 1;
-  
+
   final List<String> _shippingMethods = [
     'Standard Shipping',
     'Express Shipping',
@@ -37,27 +38,30 @@ class _AuctionFormStep4State extends ConsumerState<AuctionFormStep4> {
   void initState() {
     super.initState();
     _handlingTimeController.text = _handlingTime.toString();
-    
+
     final draftAuction = ref.read(auctionCreationProvider).draftAuction;
     if (draftAuction != null) {
-      _shippingCostController.text = draftAuction.shippingInfo.domesticShippingCost.toStringAsFixed(2);
+      _shippingCostController.text =
+          draftAuction.shippingInfo.domesticShippingCost.toStringAsFixed(2);
       _selectedShippingMethod = draftAuction.shippingInfo.shippingMethod;
       _allowInternationalShipping = draftAuction.allowInternationalShipping;
       _freeShipping = draftAuction.shippingInfo.freeShipping;
       _handlingTime = draftAuction.handlingTime;
       _handlingTimeController.text = _handlingTime.toString();
-      
+
       if (draftAuction.shippingInfo.internationalShippingCost != null) {
-        _internationalShippingController.text = 
-            draftAuction.shippingInfo.internationalShippingCost!.toStringAsFixed(2);
+        _internationalShippingController.text = draftAuction
+            .shippingInfo.internationalShippingCost!
+            .toStringAsFixed(2);
       }
-      
+
       if (draftAuction.returnPolicy != null) {
         _returnPolicyController.text = draftAuction.returnPolicy!;
       }
-      
+
       if (draftAuction.shippingInfo.shippingNotes != null) {
-        _shippingNotesController.text = draftAuction.shippingInfo.shippingNotes!;
+        _shippingNotesController.text =
+            draftAuction.shippingInfo.shippingNotes!;
       }
     }
   }
@@ -89,18 +93,18 @@ class _AuctionFormStep4State extends ConsumerState<AuctionFormStep4> {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            
+
             const SizedBox(height: 8),
-            
+
             Text(
               'Set shipping options and review your listing',
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
               ),
             ),
-            
+
             const SizedBox(height: 24),
-            
+
             // Shipping Method
             DropdownButtonFormField<String>(
               initialValue: _selectedShippingMethod,
@@ -129,9 +133,9 @@ class _AuctionFormStep4State extends ConsumerState<AuctionFormStep4> {
                 }
               },
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // Free Shipping Toggle
             CheckboxListTile(
               title: const Text('Free Shipping'),
@@ -148,7 +152,7 @@ class _AuctionFormStep4State extends ConsumerState<AuctionFormStep4> {
               },
               contentPadding: EdgeInsets.zero,
             ),
-            
+
             // Shipping Cost
             if (!_freeShipping) ...[
               const SizedBox(height: 8),
@@ -157,7 +161,8 @@ class _AuctionFormStep4State extends ConsumerState<AuctionFormStep4> {
                 label: 'Domestic Shipping Cost',
                 hint: '0.00',
                 prefixText: '\$',
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
                 inputFormatters: [
                   FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
                 ],
@@ -176,9 +181,9 @@ class _AuctionFormStep4State extends ConsumerState<AuctionFormStep4> {
                 onChanged: (value) => _saveDraft(),
               ),
             ],
-            
+
             const SizedBox(height: 16),
-            
+
             // International Shipping
             CheckboxListTile(
               title: const Text('International Shipping'),
@@ -195,7 +200,7 @@ class _AuctionFormStep4State extends ConsumerState<AuctionFormStep4> {
               },
               contentPadding: EdgeInsets.zero,
             ),
-            
+
             if (_allowInternationalShipping) ...[
               const SizedBox(height: 8),
               CustomTextField(
@@ -203,7 +208,8 @@ class _AuctionFormStep4State extends ConsumerState<AuctionFormStep4> {
                 label: 'International Shipping Cost',
                 hint: '0.00',
                 prefixText: '\$',
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
                 inputFormatters: [
                   FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
                 ],
@@ -222,9 +228,9 @@ class _AuctionFormStep4State extends ConsumerState<AuctionFormStep4> {
                 onChanged: (value) => _saveDraft(),
               ),
             ],
-            
+
             const SizedBox(height: 16),
-            
+
             // Handling Time
             CustomTextField(
               controller: _handlingTimeController,
@@ -252,9 +258,9 @@ class _AuctionFormStep4State extends ConsumerState<AuctionFormStep4> {
                 _saveDraft();
               },
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // Return Policy
             CustomTextField(
               controller: _returnPolicyController,
@@ -264,9 +270,9 @@ class _AuctionFormStep4State extends ConsumerState<AuctionFormStep4> {
               maxLength: 500,
               onChanged: (value) => _saveDraft(),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // Shipping Notes
             CustomTextField(
               controller: _shippingNotesController,
@@ -276,9 +282,9 @@ class _AuctionFormStep4State extends ConsumerState<AuctionFormStep4> {
               maxLength: 200,
               onChanged: (value) => _saveDraft(),
             ),
-            
+
             const SizedBox(height: 24),
-            
+
             // Review Section
             _buildReviewSection(theme),
           ],
@@ -289,7 +295,7 @@ class _AuctionFormStep4State extends ConsumerState<AuctionFormStep4> {
 
   Widget _buildReviewSection(ThemeData theme) {
     final creationState = ref.watch(auctionCreationProvider);
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -299,13 +305,12 @@ class _AuctionFormStep4State extends ConsumerState<AuctionFormStep4> {
             fontWeight: FontWeight.bold,
           ),
         ),
-        
         const SizedBox(height: 16),
-        
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+            color: theme.colorScheme.surfaceContainerHighest
+                .withValues(alpha: 0.5),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Column(
@@ -315,24 +320,30 @@ class _AuctionFormStep4State extends ConsumerState<AuctionFormStep4> {
               Row(
                 children: [
                   Icon(
-                    creationState.canCreateAuction ? Icons.check_circle : Icons.error,
-                    color: creationState.canCreateAuction ? Colors.green : Colors.red,
+                    creationState.canCreateAuction
+                        ? Icons.check_circle
+                        : Icons.error,
+                    color: creationState.canCreateAuction
+                        ? Colors.green
+                        : Colors.red,
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    creationState.canCreateAuction 
+                    creationState.canCreateAuction
                         ? 'Ready to create auction'
                         : 'Please complete all required fields',
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.bold,
-                      color: creationState.canCreateAuction ? Colors.green : Colors.red,
+                      color: creationState.canCreateAuction
+                          ? Colors.green
+                          : Colors.red,
                     ),
                   ),
                 ],
               ),
-              
+
               const SizedBox(height: 16),
-              
+
               // Checklist
               _buildChecklistItem(
                 theme,
@@ -374,13 +385,14 @@ class _AuctionFormStep4State extends ConsumerState<AuctionFormStep4> {
           Icon(
             isCompleted ? Icons.check_circle : Icons.radio_button_unchecked,
             size: 16,
-            color: isCompleted ? Colors.green : theme.colorScheme.onSurfaceVariant,
+            color:
+                isCompleted ? Colors.green : theme.colorScheme.onSurfaceVariant,
           ),
           const SizedBox(width: 8),
           Text(
             text,
             style: theme.textTheme.bodySmall?.copyWith(
-              color: isCompleted 
+              color: isCompleted
                   ? theme.colorScheme.onSurfaceVariant
                   : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
             ),
@@ -391,12 +403,57 @@ class _AuctionFormStep4State extends ConsumerState<AuctionFormStep4> {
   }
 
   void _saveDraft() {
-    // Get current draft and update with shipping info
-    final currentState = ref.read(auctionCreationProvider);
-    if (currentState.selectedCategory != null) {
-      // This would normally create a complete CreateAuctionRequest
-      // For now, we'll just validate the form
-      _formKey.currentState?.validate();
-    }
+    _formKey.currentState?.validate();
+    _saveDraftToProvider();
+  }
+
+  void _saveDraftToProvider() {
+    final currentDraft = ref.read(auctionCreationProvider).draftAuction;
+    final selectedCategory = ref.read(auctionCreationProvider).selectedCategory;
+
+    if (currentDraft == null) return;
+
+    // Build shipping info from form values
+    final shippingCost = _freeShipping
+        ? 0.0
+        : (double.tryParse(_shippingCostController.text) ?? 0.0);
+    final internationalShippingCost = _allowInternationalShipping
+        ? double.tryParse(_internationalShippingController.text)
+        : null;
+
+    final shippingInfo = ShippingInfo(
+      domesticShippingCost: shippingCost,
+      internationalShippingCost: internationalShippingCost,
+      shippingMethod: _selectedShippingMethod,
+      shipsTo: _allowInternationalShipping
+          ? ['Domestic', 'International']
+          : ['Domestic'],
+      shippingNotes: _shippingNotesController.text.trim().isEmpty
+          ? null
+          : _shippingNotesController.text.trim(),
+      freeShipping: _freeShipping,
+    );
+
+    // Create updated draft with shipping info
+    final draft = CreateAuctionRequest(
+      title: currentDraft.title,
+      description: currentDraft.description,
+      categoryId: selectedCategory?.id ?? currentDraft.categoryId,
+      startingBid: currentDraft.startingBid,
+      buyNowPrice: currentDraft.buyNowPrice,
+      endTime: currentDraft.endTime,
+      imageUrls: currentDraft.imageUrls,
+      condition: currentDraft.condition,
+      brand: currentDraft.brand,
+      model: currentDraft.model,
+      shippingInfo: shippingInfo,
+      allowInternationalShipping: _allowInternationalShipping,
+      returnPolicy: _returnPolicyController.text.trim().isEmpty
+          ? null
+          : _returnPolicyController.text.trim(),
+      handlingTime: _handlingTime,
+    );
+
+    ref.read(auctionCreationProvider.notifier).saveDraft(draft);
   }
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/widgets/custom_text_field.dart';
+import '../../data/models/create_auction_model.dart';
 import '../providers/auction_creation_provider.dart';
 
 class AuctionFormStep1 extends ConsumerStatefulWidget {
@@ -17,7 +18,7 @@ class _AuctionFormStep1State extends ConsumerState<AuctionFormStep1> {
   final _descriptionController = TextEditingController();
   final _brandController = TextEditingController();
   final _modelController = TextEditingController();
-  
+
   String _selectedCondition = 'New';
   final List<String> _conditions = [
     'New',
@@ -68,18 +69,18 @@ class _AuctionFormStep1State extends ConsumerState<AuctionFormStep1> {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            
+
             const SizedBox(height: 8),
-            
+
             Text(
               'Provide the basic details about your item',
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
               ),
             ),
-            
+
             const SizedBox(height: 24),
-            
+
             // Title Field
             CustomTextField(
               controller: _titleController,
@@ -97,9 +98,9 @@ class _AuctionFormStep1State extends ConsumerState<AuctionFormStep1> {
               },
               onChanged: _updateDraft,
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // Description Field
             CustomTextField(
               controller: _descriptionController,
@@ -118,9 +119,9 @@ class _AuctionFormStep1State extends ConsumerState<AuctionFormStep1> {
               },
               onChanged: _updateDraft,
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // Condition Dropdown
             DropdownButtonFormField<String>(
               initialValue: _selectedCondition,
@@ -155,9 +156,9 @@ class _AuctionFormStep1State extends ConsumerState<AuctionFormStep1> {
                 return null;
               },
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // Brand Field (Optional)
             CustomTextField(
               controller: _brandController,
@@ -165,9 +166,9 @@ class _AuctionFormStep1State extends ConsumerState<AuctionFormStep1> {
               hint: 'Enter the brand name',
               onChanged: _updateDraft,
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // Model Field (Optional)
             CustomTextField(
               controller: _modelController,
@@ -175,14 +176,15 @@ class _AuctionFormStep1State extends ConsumerState<AuctionFormStep1> {
               hint: 'Enter the model name/number',
               onChanged: _updateDraft,
             ),
-            
+
             const SizedBox(height: 24),
-            
+
             // Tips Card
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
+                color:
+                    theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Column(
@@ -205,9 +207,7 @@ class _AuctionFormStep1State extends ConsumerState<AuctionFormStep1> {
                       ),
                     ],
                   ),
-                  
                   const SizedBox(height: 12),
-                  
                   Text(
                     '• Use specific keywords in your title\n'
                     '• Be honest about the item\'s condition\n'
@@ -229,8 +229,40 @@ class _AuctionFormStep1State extends ConsumerState<AuctionFormStep1> {
   }
 
   void _updateDraft([String? value]) {
-    // For now, we'll just validate the form
-    // The actual draft saving will be handled when moving to next step
     _formKey.currentState?.validate();
+    // Save draft to provider for persistence across steps
+    _saveDraftToProvider();
+  }
+
+  void _saveDraftToProvider() {
+    final currentDraft = ref.read(auctionCreationProvider).draftAuction;
+    final selectedCategory = ref.read(auctionCreationProvider).selectedCategory;
+
+    // Create or update draft with current form values
+    final draft = CreateAuctionRequest(
+      title: _titleController.text.trim(),
+      description: _descriptionController.text.trim(),
+      categoryId: selectedCategory?.id ?? currentDraft?.categoryId ?? 0,
+      startingBid: currentDraft?.startingBid ?? 0.0,
+      buyNowPrice: currentDraft?.buyNowPrice,
+      endTime:
+          currentDraft?.endTime ?? DateTime.now().add(const Duration(days: 7)),
+      imageUrls: currentDraft?.imageUrls ?? [],
+      condition: _selectedCondition,
+      brand: _brandController.text.trim().isEmpty
+          ? null
+          : _brandController.text.trim(),
+      model: _modelController.text.trim().isEmpty
+          ? null
+          : _modelController.text.trim(),
+      shippingInfo: currentDraft?.shippingInfo ??
+          const ShippingInfo(
+            domesticShippingCost: 0.0,
+            shippingMethod: 'Standard Shipping',
+            shipsTo: ['Domestic'],
+          ),
+    );
+
+    ref.read(auctionCreationProvider.notifier).saveDraft(draft);
   }
 }

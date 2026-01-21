@@ -204,7 +204,7 @@ class _AuctionDetailScreenState extends ConsumerState<AuctionDetailScreen>
           ),
         ),
 
-        // Main Content - Redesigned Layout
+        // Main Content - Redesigned Layout with Interactive Elements
         SliverToBoxAdapter(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -212,11 +212,18 @@ class _AuctionDetailScreenState extends ConsumerState<AuctionDetailScreen>
               // Title and Basic Info Section
               _buildTitleSection(auction, theme),
 
-              // Price and Bidding Section
-              _buildPricingSection(auction, theme),
+              // Compact Price and Timer Section (more interactive)
+              _buildCompactPricingSection(auction, theme),
+
+              // Action Buttons Row (Watch, Share)
+              _buildActionButtons(auction, theme),
+
+              // Inline Bid Input (prominent, if live)
+              if (auction.isLive) _buildInlineBidInput(auction, theme),
 
               // Buy It Now Button (prominent)
-              if (auction.isLive) _buildBuyNowButton(auction, theme),
+              if (auction.isLive && auction.hasBuyNow)
+                _buildBuyNowButton(auction, theme),
 
               // Condition and Details Section
               _buildConditionSection(auction, theme),
@@ -224,14 +231,12 @@ class _AuctionDetailScreenState extends ConsumerState<AuctionDetailScreen>
               // Seller Information Section
               _buildSellerSection(auction, theme),
 
-              // Bidding Section (if live)
-              if (auction.isLive) _buildBiddingSection(auction, theme),
+              // Collapsible Description Section (more interactive)
+              _buildCompactDescription(auction, theme),
+              const SizedBox(height: 12),
 
-              // Description Section
-              _buildDescriptionSection(auction, theme),
-
-              // Bid History Section
-              _buildBidHistorySection(auction, theme),
+              // Collapsible Bid History Section (more interactive)
+              _buildCollapsibleBidHistory(auction, theme),
 
               // Shipping and Return Policy
               _buildShippingSection(auction, theme),
@@ -429,7 +434,6 @@ class _AuctionDetailScreenState extends ConsumerState<AuctionDetailScreen>
 
   // =============== NEW SIMPLIFIED COMPONENTS ===============
 
-  // ignore: unused_element
   Widget _buildCompactPricingSection(AuctionModel auction, ThemeData theme) {
     final isEndingSoon = auction.isLive && auction.timeRemaining.inMinutes < 60;
 
@@ -521,7 +525,6 @@ class _AuctionDetailScreenState extends ConsumerState<AuctionDetailScreen>
     );
   }
 
-  // ignore: unused_element
   Widget _buildActionButtons(AuctionModel auction, ThemeData theme) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -556,7 +559,6 @@ class _AuctionDetailScreenState extends ConsumerState<AuctionDetailScreen>
     );
   }
 
-  // ignore: unused_element
   Widget _buildInlineBidInput(AuctionModel auction, ThemeData theme) {
     final biddingState = ref.watch(biddingProvider(auction.id.toString()));
 
@@ -662,7 +664,6 @@ class _AuctionDetailScreenState extends ConsumerState<AuctionDetailScreen>
     );
   }
 
-  // ignore: unused_element
   Widget _buildCompactDescription(AuctionModel auction, ThemeData theme) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -739,7 +740,6 @@ class _AuctionDetailScreenState extends ConsumerState<AuctionDetailScreen>
     );
   }
 
-  // ignore: unused_element
   Widget _buildCollapsibleBidHistory(AuctionModel auction, ThemeData theme) {
     final biddingState = ref.watch(biddingProvider(auction.id.toString()));
 
@@ -1280,6 +1280,7 @@ class _AuctionDetailScreenState extends ConsumerState<AuctionDetailScreen>
     );
   }
 
+  // ignore: unused_element
   Widget _buildPricingSection(AuctionModel auction, ThemeData theme) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -1577,6 +1578,7 @@ class _AuctionDetailScreenState extends ConsumerState<AuctionDetailScreen>
     );
   }
 
+  // ignore: unused_element
   Widget _buildBiddingSection(AuctionModel auction, ThemeData theme) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -1655,6 +1657,7 @@ class _AuctionDetailScreenState extends ConsumerState<AuctionDetailScreen>
     );
   }
 
+  // ignore: unused_element
   Widget _buildDescriptionSection(AuctionModel auction, ThemeData theme) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -1681,6 +1684,7 @@ class _AuctionDetailScreenState extends ConsumerState<AuctionDetailScreen>
     );
   }
 
+  // ignore: unused_element
   Widget _buildBidHistorySection(AuctionModel auction, ThemeData theme) {
     final biddingState = ref.watch(biddingProvider(auction.id.toString()));
 
