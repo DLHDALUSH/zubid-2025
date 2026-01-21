@@ -6753,7 +6753,7 @@ if __name__ == '__main__':
     print(f"Environment: {flask_env.upper()}")
     print(f"Debug mode: {'ON' if debug_mode else 'OFF'}")
     if is_prod:
-        print("⚠️  PRODUCTION MODE - Security features enabled")
+        print("[!] PRODUCTION MODE - Security features enabled")
     print("="*50 + "\n")
     
     try:
