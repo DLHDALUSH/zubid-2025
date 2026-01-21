@@ -429,6 +429,7 @@ class _AuctionDetailScreenState extends ConsumerState<AuctionDetailScreen>
 
   // =============== NEW SIMPLIFIED COMPONENTS ===============
 
+  // ignore: unused_element
   Widget _buildCompactPricingSection(AuctionModel auction, ThemeData theme) {
     final isEndingSoon = auction.isLive && auction.timeRemaining.inMinutes < 60;
 
@@ -520,6 +521,7 @@ class _AuctionDetailScreenState extends ConsumerState<AuctionDetailScreen>
     );
   }
 
+  // ignore: unused_element
   Widget _buildActionButtons(AuctionModel auction, ThemeData theme) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -554,6 +556,7 @@ class _AuctionDetailScreenState extends ConsumerState<AuctionDetailScreen>
     );
   }
 
+  // ignore: unused_element
   Widget _buildInlineBidInput(AuctionModel auction, ThemeData theme) {
     final biddingState = ref.watch(biddingProvider(auction.id.toString()));
 
@@ -659,6 +662,7 @@ class _AuctionDetailScreenState extends ConsumerState<AuctionDetailScreen>
     );
   }
 
+  // ignore: unused_element
   Widget _buildCompactDescription(AuctionModel auction, ThemeData theme) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -735,6 +739,7 @@ class _AuctionDetailScreenState extends ConsumerState<AuctionDetailScreen>
     );
   }
 
+  // ignore: unused_element
   Widget _buildCollapsibleBidHistory(AuctionModel auction, ThemeData theme) {
     final biddingState = ref.watch(biddingProvider(auction.id.toString()));
 

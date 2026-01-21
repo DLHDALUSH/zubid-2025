@@ -2,8 +2,6 @@ import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
 import 'package:local_auth/local_auth.dart';
-import 'package:local_auth_platform_interface/local_auth_platform_interface.dart'
-    as platform;
 import 'package:flutter/services.dart';
 
 import '../utils/logger.dart';
@@ -231,14 +229,14 @@ class BiometricService {
     return digest.toString();
   }
 
-  /// Map platform biometric types to our enum
-  AppBiometricType _mapBiometricType(platform.BiometricType platformType) {
-    switch (platformType) {
-      case platform.BiometricType.fingerprint:
+  /// Map biometric types to our enum
+  AppBiometricType _mapBiometricType(BiometricType biometricType) {
+    switch (biometricType) {
+      case BiometricType.fingerprint:
         return AppBiometricType.fingerprint;
-      case platform.BiometricType.face:
+      case BiometricType.face:
         return AppBiometricType.face;
-      case platform.BiometricType.iris:
+      case BiometricType.iris:
         return AppBiometricType.iris;
       default:
         return AppBiometricType.none;

@@ -27,7 +27,7 @@ class AboutScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
-                    color: theme.colorScheme.primary.withOpacity(0.3),
+                    color: theme.colorScheme.primary.withValues(alpha: 0.3),
                     blurRadius: 20,
                     offset: const Offset(0, 8),
                   ),
@@ -39,9 +39,9 @@ class AboutScreen extends StatelessWidget {
                 size: 64,
               ),
             ),
-            
+
             const SizedBox(height: 24),
-            
+
             Text(
               'ZUBID',
               style: theme.textTheme.headlineMedium?.copyWith(
@@ -49,27 +49,27 @@ class AboutScreen extends StatelessWidget {
                 color: theme.colorScheme.primary,
               ),
             ),
-            
+
             const SizedBox(height: 8),
-            
+
             Text(
               'Auction Platform',
               style: theme.textTheme.titleMedium?.copyWith(
-                color: theme.colorScheme.onSurface.withOpacity(0.7),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
               ),
             ),
-            
+
             const SizedBox(height: 8),
-            
+
             Text(
               'Version 1.0.0',
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurface.withOpacity(0.5),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
               ),
             ),
-            
+
             const SizedBox(height: 32),
-            
+
             // Description
             Card(
               child: Padding(
@@ -107,9 +107,9 @@ class AboutScreen extends StatelessWidget {
                 ),
               ),
             ),
-            
+
             const SizedBox(height: 24),
-            
+
             // Contact Information
             Card(
               child: Padding(
@@ -143,18 +143,18 @@ class AboutScreen extends StatelessWidget {
                 ),
               ),
             ),
-            
+
             const SizedBox(height: 24),
-            
+
             // Copyright
             Text(
               '© 2024 ZUBID. All rights reserved.',
               style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurface.withOpacity(0.5),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
               ),
               textAlign: TextAlign.center,
             ),
-            
+
             const SizedBox(height: 32),
           ],
         ),

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -18,14 +20,21 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   late AnimationController _logoController;
   late AnimationController _textController;
   late AnimationController _backgroundController;
-  
+
+  // Timers used for sequencing animations/navigation.
+  // Stored so they can be cancelled in dispose() to avoid pending timers in
+  // widget tests and callbacks firing after the widget is gone.
+  Timer? _logoTimer;
+  Timer? _textTimer;
+  Timer? _navigationTimer;
+
   late Animation<double> _logoScaleAnimation;
   late Animation<double> _logoOpacityAnimation;
   late Animation<double> _logoRotationAnimation;
-  
+
   late Animation<double> _textOpacityAnimation;
   late Animation<Offset> _textSlideAnimation;
-  
+
   late Animation<Color?> _backgroundColorAnimation;
 
   @override
@@ -41,7 +50,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       duration: const Duration(milliseconds: 2000),
       vsync: this,
     );
-    
+
     _logoScaleAnimation = Tween<double>(
       begin: 0.0,
       end: 1.0,
@@ -49,7 +58,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       parent: _logoController,
       curve: const Interval(0.0, 0.6, curve: Curves.elasticOut),
     ));
-    
+
     _logoOpacityAnimation = Tween<double>(
       begin: 0.0,
       end: 1.0,
@@ -57,7 +66,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       parent: _logoController,
       curve: const Interval(0.0, 0.4, curve: Curves.easeIn),
     ));
-    
+
     _logoRotationAnimation = Tween<double>(
       begin: -0.5,
       end: 0.0,
@@ -71,7 +80,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       duration: const Duration(milliseconds: 1500),
       vsync: this,
     );
-    
+
     _textOpacityAnimation = Tween<double>(
       begin: 0.0,
       end: 1.0,
@@ -79,7 +88,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       parent: _textController,
       curve: const Interval(0.0, 0.8, curve: Curves.easeIn),
     ));
-    
+
     _textSlideAnimation = Tween<Offset>(
       begin: const Offset(0, 1),
       end: Offset.zero,
@@ -93,7 +102,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       duration: const Duration(milliseconds: 3000),
       vsync: this,
     );
-    
+
     _backgroundColorAnimation = ColorTween(
       begin: const Color(0xFF1A237E), // Deep blue
       end: const Color(0xFF3F51B5), // Indigo
@@ -103,7 +112,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     ));
   }
 
-  void _startAnimationSequence() async {
+  void _startAnimationSequence() {
     // Set status bar style
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(
@@ -116,28 +125,34 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
     // Start background animation
     _backgroundController.forward();
-    
+
     // Start logo animation after a short delay
-    await Future.delayed(const Duration(milliseconds: 300));
-    _logoController.forward();
-    
+    _logoTimer = Timer(const Duration(milliseconds: 300), () {
+      if (!mounted) return;
+      _logoController.forward();
+    });
+
     // Start text animation after logo starts
-    await Future.delayed(const Duration(milliseconds: 800));
-    _textController.forward();
-    
+    _textTimer = Timer(const Duration(milliseconds: 1100), () {
+      if (!mounted) return;
+      _textController.forward();
+    });
+
     // Navigate after all animations complete
-    await Future.delayed(const Duration(milliseconds: 3500));
-    _navigateToNextScreen();
+    _navigationTimer = Timer(const Duration(milliseconds: 4600), () {
+      if (!mounted) return;
+      _navigateToNextScreen();
+    });
   }
 
   void _navigateToNextScreen() async {
     if (!mounted) return;
-    
+
     try {
       // Check if user is logged in
       final token = await StorageService.getAuthToken();
       final authState = ref.read(authProvider);
-      
+
       if (token != null && authState.user != null) {
         // User is logged in, go to home
         if (mounted) {
@@ -159,6 +174,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
   @override
   void dispose() {
+    _logoTimer?.cancel();
+    _textTimer?.cancel();
+    _navigationTimer?.cancel();
+
     _logoController.dispose();
     _textController.dispose();
     _backgroundController.dispose();
@@ -188,7 +207,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                 children: [
                   // Top spacer
                   const Expanded(flex: 2, child: SizedBox()),
-                  
+
                   // Logo section
                   Expanded(
                     flex: 3,
@@ -210,7 +229,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                       ),
                     ),
                   ),
-                  
+
                   // Text section
                   Expanded(
                     flex: 2,
@@ -227,7 +246,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                       },
                     ),
                   ),
-                  
+
                   // Bottom spacer
                   const Expanded(flex: 1, child: SizedBox()),
                 ],

@@ -237,19 +237,47 @@ class ErrorBoundary extends StatefulWidget {
 class _ErrorBoundaryState extends State<ErrorBoundary> {
   Object? _error;
   StackTrace? _stackTrace;
+  void Function(FlutterErrorDetails details)? _previousOnError;
+
+  late final void Function(FlutterErrorDetails details) _handler =
+      _handleFlutterError;
+
+  void _handleFlutterError(FlutterErrorDetails details) {
+    AppLogger.error('Flutter Error',
+        error: details.exception, stackTrace: details.stack);
+
+    // If the boundary is already disposed, don't call setState.
+    if (!mounted) {
+      _previousOnError?.call(details);
+      return;
+    }
+
+    setState(() {
+      _error = details.exception;
+      _stackTrace = details.stack;
+    });
+
+    // Preserve any previous handler (e.g. Flutter test binding) so errors are
+    // still reported correctly.
+    _previousOnError?.call(details);
+  }
 
   @override
   void initState() {
     super.initState();
     // Catch Flutter errors
-    FlutterError.onError = (FlutterErrorDetails details) {
-      AppLogger.error('Flutter Error',
-          error: details.exception, stackTrace: details.stack);
-      setState(() {
-        _error = details.exception;
-        _stackTrace = details.stack;
-      });
-    };
+    _previousOnError = FlutterError.onError;
+    FlutterError.onError = _handler;
+  }
+
+  @override
+  void dispose() {
+    // Restore the previous handler so we don't keep a stale reference to this
+    // State after disposal (which can cause setState-after-dispose).
+    if (identical(FlutterError.onError, _handler)) {
+      FlutterError.onError = _previousOnError;
+    }
+    super.dispose();
   }
 
   @override

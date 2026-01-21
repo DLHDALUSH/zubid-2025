@@ -103,7 +103,6 @@ class AuctionState {
 class AuctionNotifier extends Notifier<AuctionState> {
   late final AuctionRepository _auctionRepository;
   Timer? _refreshTimer;
-  static const Duration _cacheValidDuration = Duration(minutes: 5);
   static const Duration _autoRefreshInterval = Duration(minutes: 10);
 
   @override

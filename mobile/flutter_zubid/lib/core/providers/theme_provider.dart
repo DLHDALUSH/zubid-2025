@@ -7,13 +7,20 @@ import '../services/storage_service.dart';
 class ThemeModeNotifier extends Notifier<ThemeMode> {
   @override
   ThemeMode build() {
-    _loadTheme();
+    // Load from storage after the first build so we don't crash the provider
+    // if storage isn't ready yet.
+    Future.microtask(_loadTheme);
     return ThemeMode.system;
   }
 
-  void _loadTheme() {
-    final savedTheme = StorageService.getThemeMode();
-    state = _themeFromString(savedTheme);
+  Future<void> _loadTheme() async {
+    try {
+      await StorageService.ensureInitialized();
+      final savedTheme = StorageService.getThemeMode();
+      state = _themeFromString(savedTheme);
+    } catch (_) {
+      // Keep default ThemeMode.system
+    }
   }
 
   ThemeMode _themeFromString(String themeStr) {
@@ -63,4 +70,3 @@ final isDarkModeProvider = Provider<bool>((ref) {
   final themeMode = ref.watch(themeModeProvider);
   return themeMode == ThemeMode.dark;
 });
-
