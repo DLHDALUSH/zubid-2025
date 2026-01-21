@@ -35,7 +35,6 @@ class BiometricService {
   BiometricService._();
 
   final LocalAuthentication _localAuth = LocalAuthentication();
-  static const String _biometricKeyPrefix = 'biometric_';
   static const String _biometricHashKey = 'biometric_hash';
 
   /// Check if biometric authentication is available on the device

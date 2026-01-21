@@ -58,13 +58,18 @@ class AuctionModelAdapter extends TypeAdapter<AuctionModel> {
       minimumBid: fields[38] as double?,
       currentBid: fields[39] as double?,
       hasSold: fields[40] as bool?,
+      sellerReviewCount: fields[41] as int?,
+      sellerMemberSince: fields[42] as DateTime?,
+      sellerActiveAuctions: fields[43] as int?,
+      sellerTotalSales: fields[44] as int?,
+      sellerSuccessRate: fields[45] as double?,
     );
   }
 
   @override
   void write(BinaryWriter writer, AuctionModel obj) {
     writer
-      ..writeByte(41)
+      ..writeByte(46)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -146,7 +151,17 @@ class AuctionModelAdapter extends TypeAdapter<AuctionModel> {
       ..writeByte(39)
       ..write(obj.currentBid)
       ..writeByte(40)
-      ..write(obj.hasSold);
+      ..write(obj.hasSold)
+      ..writeByte(41)
+      ..write(obj.sellerReviewCount)
+      ..writeByte(42)
+      ..write(obj.sellerMemberSince)
+      ..writeByte(43)
+      ..write(obj.sellerActiveAuctions)
+      ..writeByte(44)
+      ..write(obj.sellerTotalSales)
+      ..writeByte(45)
+      ..write(obj.sellerSuccessRate);
   }
 
   @override
@@ -209,6 +224,13 @@ AuctionModel _$AuctionModelFromJson(Map<String, dynamic> json) => AuctionModel(
       minimumBid: (json['minimum_bid'] as num?)?.toDouble(),
       currentBid: (json['current_bid'] as num?)?.toDouble(),
       hasSold: json['has_sold'] as bool?,
+      sellerReviewCount: (json['seller_review_count'] as num?)?.toInt(),
+      sellerMemberSince: json['seller_member_since'] == null
+          ? null
+          : DateTime.parse(json['seller_member_since'] as String),
+      sellerActiveAuctions: (json['seller_active_auctions'] as num?)?.toInt(),
+      sellerTotalSales: (json['seller_total_sales'] as num?)?.toInt(),
+      sellerSuccessRate: (json['seller_success_rate'] as num?)?.toDouble(),
     );
 
 Map<String, dynamic> _$AuctionModelToJson(AuctionModel instance) =>
@@ -254,4 +276,9 @@ Map<String, dynamic> _$AuctionModelToJson(AuctionModel instance) =>
       'minimum_bid': instance.minimumBid,
       'current_bid': instance.currentBid,
       'has_sold': instance.hasSold,
+      'seller_review_count': instance.sellerReviewCount,
+      'seller_member_since': instance.sellerMemberSince?.toIso8601String(),
+      'seller_active_auctions': instance.sellerActiveAuctions,
+      'seller_total_sales': instance.sellerTotalSales,
+      'seller_success_rate': instance.sellerSuccessRate,
     };

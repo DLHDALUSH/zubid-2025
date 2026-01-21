@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
 
 import 'core/config/theme_config.dart';
 import 'core/providers/theme_provider.dart';
@@ -21,7 +20,6 @@ class ZubidApp extends ConsumerStatefulWidget {
 class _ZubidAppState extends ConsumerState<ZubidApp>
     with WidgetsBindingObserver {
   bool _isInitialized = false;
-  ConnectivityResult _connectivityStatus = ConnectivityResult.none;
   late ConnectivityService _connectivityService;
 
   @override
@@ -84,22 +82,7 @@ class _ZubidAppState extends ConsumerState<ZubidApp>
   Future<void> _setupConnectivityMonitoring() async {
     try {
       _connectivityService.connectivityStream.listen((status) {
-        if (mounted) {
-          setState(() {
-            // Convert ConnectivityStatus to ConnectivityResult for compatibility
-            _connectivityStatus = status == ConnectivityStatus.connected
-                ? ConnectivityResult.wifi
-                : ConnectivityResult.none;
-          });
-        }
         AppLogger.info('Connectivity changed: $status');
-      });
-
-      // Get initial connectivity status
-      final isConnected = await _connectivityService.isConnected();
-      setState(() {
-        _connectivityStatus =
-            isConnected ? ConnectivityResult.wifi : ConnectivityResult.none;
       });
     } catch (e) {
       AppLogger.error('Failed to setup connectivity monitoring', error: e);
@@ -109,12 +92,8 @@ class _ZubidAppState extends ConsumerState<ZubidApp>
   Future<void> _checkConnectivity() async {
     try {
       final isConnected = await _connectivityService.isConnected();
-      if (mounted) {
-        setState(() {
-          _connectivityStatus =
-              isConnected ? ConnectivityResult.wifi : ConnectivityResult.none;
-        });
-      }
+      AppLogger.info(
+          'Connectivity check: ${isConnected ? "connected" : "disconnected"}');
     } catch (e) {
       AppLogger.error('Failed to check connectivity', error: e);
     }

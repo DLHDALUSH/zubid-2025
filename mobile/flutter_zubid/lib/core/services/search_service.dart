@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 
-
 import '../utils/logger.dart';
 import 'storage_service.dart';
 import '../../features/auctions/data/models/auction_model.dart';
@@ -15,7 +14,6 @@ class SearchService {
   SearchService._();
 
   static const String _searchHistoryKey = 'advanced_search_history';
-  static const String _searchPreferencesKey = 'search_preferences';
   static const String _popularSearchesKey = 'popular_searches';
   static const int _maxHistoryItems = 50;
   static const int _maxSuggestions = 10;
