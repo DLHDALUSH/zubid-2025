@@ -1,32 +1,33 @@
 /* ========================================
    🏆 ZUBID PROFESSIONAL ADMIN PORTAL
    Premium Dashboard Design System v3.0
-   Ultra-Modern Enterprise Grade UI
+   Electric Fusion Theme - Enterprise Grade UI
    ======================================== */
 
 /* ==========================================
    CSS VARIABLES - DARK MODE (Default)
+   Electric Fusion Palette: #00F0FF, #00FF81, #FFA900, #FF6800
    ========================================== */
 :root,
 [data-theme="dark"] {
-    /* Primary Colors - Vibrant Indigo/Violet */
-    --admin-primary: #6366f1;
-    --admin-primary-light: #818cf8;
-    --admin-primary-dark: #4f46e5;
-    --admin-primary-glow: rgba(99, 102, 241, 0.4);
-    --admin-primary-rgb: 99, 102, 241;
+    /* Primary Colors - Electric Blue / Cyan */
+    --admin-primary: #00F0FF;
+    --admin-primary-light: #00FF81;
+    --admin-primary-dark: #00b4c5;
+    --admin-primary-glow: rgba(0, 240, 255, 0.4);
+    --admin-primary-rgb: 0, 240, 255;
 
-    /* Accent Colors */
-    --admin-accent: #06b6d4;
-    --admin-accent-light: #22d3ee;
-    --admin-purple: #8b5cf6;
-    --admin-purple-light: #a78bfa;
-    --admin-pink: #ec4899;
-    --admin-orange: #f97316;
-    --admin-emerald: #10b981;
-    --admin-amber: #f59e0b;
-    --admin-rose: #f43f5e;
-    --admin-sky: #0ea5e9;
+    /* Accent Colors - Electric Fusion Palette */
+    --admin-accent: #00FF81;
+    --admin-accent-light: #66ffb3;
+    --admin-purple: #00F0FF;
+    --admin-purple-light: #66f7ff;
+    --admin-pink: #FF6800;
+    --admin-orange: #FF6800;
+    --admin-emerald: #00FF81;
+    --admin-amber: #FFA900;
+    --admin-rose: #FF6800;
+    --admin-sky: #00F0FF;
 
     /* Status Colors */
     --admin-success: #10b981;
@@ -41,7 +42,7 @@
     --admin-info: #3b82f6;
     --admin-info-bg: rgba(59, 130, 246, 0.1);
 
-    /* Background Colors - Deep Dark Theme */
+    /* Background Colors - Deep Dark Theme with Electric Fusion accents */
     --admin-bg-body: #030712;
     --admin-bg-dark: #0f172a;
     --admin-bg-card: rgba(15, 23, 42, 0.7);
@@ -49,13 +50,13 @@
     --admin-bg-card-hover: rgba(30, 41, 59, 0.9);
     --admin-bg-hover: #334155;
     --admin-bg-input: rgba(15, 23, 42, 0.9);
-    --admin-bg-sidebar: linear-gradient(180deg, #0f172a 0%, #1e1b4b 100%);
-    --admin-bg-gradient: linear-gradient(135deg, #030712 0%, #1e1b4b 50%, #030712 100%);
-    --admin-bg-mesh: radial-gradient(at 40% 20%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
-                     radial-gradient(at 80% 0%, rgba(139, 92, 246, 0.1) 0px, transparent 50%),
-                     radial-gradient(at 0% 50%, rgba(6, 182, 212, 0.08) 0px, transparent 50%),
-                     radial-gradient(at 80% 50%, rgba(236, 72, 153, 0.06) 0px, transparent 50%),
-                     radial-gradient(at 0% 100%, rgba(16, 185, 129, 0.08) 0px, transparent 50%);
+    --admin-bg-sidebar: linear-gradient(180deg, #0f172a 0%, #062a2e 100%);
+    --admin-bg-gradient: linear-gradient(135deg, #030712 0%, #062a2e 50%, #030712 100%);
+    --admin-bg-mesh: radial-gradient(at 40% 20%, rgba(0, 240, 255, 0.15) 0px, transparent 50%),
+                     radial-gradient(at 80% 0%, rgba(0, 255, 129, 0.1) 0px, transparent 50%),
+                     radial-gradient(at 0% 50%, rgba(255, 169, 0, 0.08) 0px, transparent 50%),
+                     radial-gradient(at 80% 50%, rgba(255, 104, 0, 0.06) 0px, transparent 50%),
+                     radial-gradient(at 0% 100%, rgba(0, 255, 129, 0.08) 0px, transparent 50%);
 
     /* Glass Morphism */
     --admin-glass-bg: rgba(15, 23, 42, 0.6);
@@ -72,17 +73,17 @@
     /* Border Colors */
     --admin-border: rgba(51, 65, 85, 0.6);
     --admin-border-light: rgba(71, 85, 105, 0.4);
-    --admin-border-glow: rgba(99, 102, 241, 0.3);
+    --admin-border-glow: rgba(0, 240, 255, 0.3);
 
-    /* Shadows - Enhanced Depth */
+    /* Shadows - Enhanced Depth with Electric Fusion glow */
     --admin-shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
     --admin-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
     --admin-shadow-md: 0 4px 20px rgba(0, 0, 0, 0.5);
     --admin-shadow-lg: 0 8px 40px rgba(0, 0, 0, 0.6);
     --admin-shadow-xl: 0 20px 60px rgba(0, 0, 0, 0.7);
-    --admin-shadow-glow: 0 0 60px rgba(99, 102, 241, 0.2);
-    --admin-shadow-glow-sm: 0 0 20px rgba(99, 102, 241, 0.15);
-    --admin-shadow-card: 0 4px 24px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.05);
+    --admin-shadow-glow: 0 0 60px rgba(0, 240, 255, 0.2);
+    --admin-shadow-glow-sm: 0 0 20px rgba(0, 240, 255, 0.15);
+    --admin-shadow-card: 0 4px 24px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(0, 240, 255, 0.05);
 
     /* Layout */
     --admin-sidebar-width: 280px;
@@ -104,16 +105,17 @@
 
 /* ==========================================
    CSS VARIABLES - LIGHT MODE
+   Electric Fusion Palette with adjusted saturation for light backgrounds
    ========================================== */
 [data-theme="light"] {
-    /* Primary Colors - Same */
-    --admin-primary: #6366f1;
-    --admin-primary-light: #818cf8;
-    --admin-primary-dark: #4f46e5;
-    --admin-primary-glow: rgba(99, 102, 241, 0.15);
-    --admin-primary-rgb: 99, 102, 241;
+    /* Primary Colors - Electric Fusion (slightly darker for contrast on light bg) */
+    --admin-primary: #00c5d1;
+    --admin-primary-light: #00d96d;
+    --admin-primary-dark: #009ba6;
+    --admin-primary-glow: rgba(0, 240, 255, 0.15);
+    --admin-primary-rgb: 0, 197, 209;
 
-    /* Background Colors - Clean Light Theme */
+    /* Background Colors - Clean Light Theme with Electric Fusion tint */
     --admin-bg-body: #f8fafc;
     --admin-bg-dark: #f1f5f9;
     --admin-bg-card: rgba(255, 255, 255, 0.9);
@@ -121,17 +123,17 @@
     --admin-bg-card-hover: rgba(255, 255, 255, 1);
     --admin-bg-hover: #f1f5f9;
     --admin-bg-input: rgba(255, 255, 255, 0.95);
-    --admin-bg-sidebar: linear-gradient(180deg, #1e293b 0%, #334155 100%);
-    --admin-bg-gradient: linear-gradient(135deg, #f8fafc 0%, #e0e7ff 50%, #f8fafc 100%);
-    --admin-bg-mesh: radial-gradient(at 40% 20%, rgba(99, 102, 241, 0.08) 0px, transparent 50%),
-                     radial-gradient(at 80% 0%, rgba(139, 92, 246, 0.05) 0px, transparent 50%),
-                     radial-gradient(at 0% 50%, rgba(6, 182, 212, 0.04) 0px, transparent 50%),
-                     radial-gradient(at 80% 50%, rgba(236, 72, 153, 0.03) 0px, transparent 50%);
+    --admin-bg-sidebar: linear-gradient(180deg, #0f172a 0%, #062a2e 100%);
+    --admin-bg-gradient: linear-gradient(135deg, #f8fafc 0%, #e0fffe 50%, #f8fafc 100%);
+    --admin-bg-mesh: radial-gradient(at 40% 20%, rgba(0, 240, 255, 0.08) 0px, transparent 50%),
+                     radial-gradient(at 80% 0%, rgba(0, 255, 129, 0.05) 0px, transparent 50%),
+                     radial-gradient(at 0% 50%, rgba(255, 169, 0, 0.04) 0px, transparent 50%),
+                     radial-gradient(at 80% 50%, rgba(255, 104, 0, 0.03) 0px, transparent 50%);
 
     /* Glass Morphism */
     --admin-glass-bg: rgba(255, 255, 255, 0.8);
-    --admin-glass-border: rgba(99, 102, 241, 0.15);
-    --admin-glass-shadow: 0 8px 32px rgba(99, 102, 241, 0.08);
+    --admin-glass-border: rgba(0, 240, 255, 0.15);
+    --admin-glass-shadow: 0 8px 32px rgba(0, 240, 255, 0.08);
     --admin-glass-blur: blur(20px);
 
     /* Text Colors */
@@ -141,25 +143,25 @@
     --admin-text-dark: #94a3b8;
 
     /* Status Backgrounds for Light Mode */
-    --admin-success-bg: rgba(16, 185, 129, 0.08);
-    --admin-warning-bg: rgba(245, 158, 11, 0.08);
+    --admin-success-bg: rgba(0, 255, 129, 0.1);
+    --admin-warning-bg: rgba(255, 169, 0, 0.1);
     --admin-danger-bg: rgba(239, 68, 68, 0.08);
-    --admin-info-bg: rgba(59, 130, 246, 0.08);
+    --admin-info-bg: rgba(0, 240, 255, 0.1);
 
     /* Border Colors */
     --admin-border: rgba(203, 213, 225, 0.6);
     --admin-border-light: rgba(226, 232, 240, 0.6);
-    --admin-border-glow: rgba(99, 102, 241, 0.2);
+    --admin-border-glow: rgba(0, 240, 255, 0.2);
 
-    /* Shadows */
+    /* Shadows with Electric Fusion glow */
     --admin-shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
     --admin-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
     --admin-shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
     --admin-shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.1);
     --admin-shadow-xl: 0 20px 60px rgba(0, 0, 0, 0.12);
-    --admin-shadow-glow: 0 0 40px rgba(99, 102, 241, 0.08);
-    --admin-shadow-glow-sm: 0 0 20px rgba(99, 102, 241, 0.06);
-    --admin-shadow-card: 0 4px 24px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(0, 0, 0, 0.03);
+    --admin-shadow-glow: 0 0 40px rgba(0, 240, 255, 0.08);
+    --admin-shadow-glow-sm: 0 0 20px rgba(0, 240, 255, 0.06);
+    --admin-shadow-card: 0 4px 24px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(0, 240, 255, 0.05);
 }
 
 /* ==========================================

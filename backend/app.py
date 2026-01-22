@@ -6627,25 +6627,18 @@ def seed_database_data():
         return jsonify({'error': f'Seed failed: {str(e)}'}), 500
 
 @app.route('/api/admin/auctions', methods=['POST'])
+@admin_required
 def create_admin_auction():
-    """Create an auction via admin API"""
+    """Create an auction via admin API - requires admin authentication"""
     try:
-        # Security check - only allow in development or with proper authentication
-        flask_env = os.getenv('FLASK_ENV', 'development').lower()
-        if flask_env == 'production':
-            # In production, require admin authentication
-            auth_header = request.headers.get('Authorization', '')
-            if not auth_header.startswith('Bearer ') or auth_header.split(' ')[1] != 'admin-auction-token':
-                return jsonify({'error': 'Unauthorized'}), 401
-
         data = request.get_json()
         if not data:
             return jsonify({'error': 'No data provided'}), 400
 
-        # Get admin user as seller
-        admin_user = User.query.filter_by(role='admin').first()
-        if not admin_user:
-            return jsonify({'error': 'Admin user not found'}), 404
+        # Use the current logged-in admin as seller
+        admin_user = User.query.get(session.get('user_id'))
+        if not admin_user or admin_user.role != 'admin':
+            return jsonify({'error': 'Admin authentication required'}), 401
 
         # Parse end_time
         end_time = datetime.fromisoformat(data['end_time'].replace('Z', '+00:00'))
