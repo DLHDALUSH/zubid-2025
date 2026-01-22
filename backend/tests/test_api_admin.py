@@ -47,7 +47,7 @@ class TestAdminUsers:
     def test_update_user_as_admin(self, admin_client, test_user):
         """Test updating user as admin"""
         response = admin_client.put(f'/api/admin/users/{test_user.id}', json={
-            'is_verified': True
+            'is_active': True
         })
         assert response.status_code in [200, 204]
     
@@ -59,7 +59,7 @@ class TestAdminUsers:
             username='deleteme',
             email='deleteme@example.com',
             phone='1231231234',
-            is_verified=True
+            is_active=True
         )
         user_to_delete.set_password('DeleteMe123!')
         db_session.session.add(user_to_delete)
@@ -133,8 +133,7 @@ class TestAdminCategories:
         """Test creating category as admin"""
         response = admin_client.post('/api/admin/categories', json={
             'name': 'New Admin Category',
-            'description': 'Created by admin',
-            'icon': 'new-icon'
+            'description': 'Created by admin'
         })
         assert response.status_code in [200, 201]
     
@@ -148,27 +147,28 @@ class TestAdminCategories:
     def test_delete_category_as_admin(self, admin_client, db_session):
         """Test deleting category as admin"""
         from app import Category
-        
+
         category = Category(
             name='Category to Delete',
             description='This will be deleted',
-            icon='delete-icon',
+            icon_url='https://example.com/delete-icon.png',
             is_active=True
         )
         db_session.session.add(category)
         db_session.session.commit()
-        
+
         response = admin_client.delete(f'/api/admin/categories/{category.id}')
         assert response.status_code in [200, 204, 400]  # 400 if category has auctions
 
 
 class TestAdminReturnRequests:
     """Test admin return request management"""
-    
+
     def test_get_return_requests_as_admin(self, admin_client):
         """Test getting return requests as admin"""
         response = admin_client.get('/api/admin/return-requests')
         if response.status_code == 200:
             data = response.get_json()
-            assert 'requests' in data or isinstance(data, list)
+            # API returns 'return_requests' key, not 'requests'
+            assert 'return_requests' in data or 'requests' in data or isinstance(data, list)
 

@@ -256,6 +256,15 @@
                             Featured Auction
                         </label>
                     </div>
+                    <div class="admin-form-group">
+                        <label>Extend End Time (optional)</label>
+                        <input type="datetime-local" id="editEndTime" class="admin-input">
+                        <small style="color: var(--admin-text-muted);">Leave empty to keep current end time. Setting a new time will reactivate ended/cancelled auctions.</small>
+                    </div>
+                    <div class="admin-form-group">
+                        <label>Item Name (optional)</label>
+                        <input type="text" id="editItemName" class="admin-input" placeholder="Leave empty to keep current name">
+                    </div>
                     <input type="hidden" id="editAuctionId">
                     <div class="admin-form-actions">
                         <button type="submit" class="admin-btn admin-btn-primary">Update Auction</button>

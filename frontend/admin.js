@@ -382,7 +382,22 @@ const AdminAPI = {
             return { message: 'User deleted successfully' };
         }
     },
-    
+
+    // Suspend user (set is_active to false)
+    suspendUser: async (userId) => {
+        return AdminAPI.updateUser(userId, { is_active: false });
+    },
+
+    // Activate user (set is_active to true)
+    activateUser: async (userId) => {
+        return AdminAPI.updateUser(userId, { is_active: true });
+    },
+
+    // Extend auction time
+    extendAuction: async (auctionId, newEndTime) => {
+        return AdminAPI.updateAuction(auctionId, { end_time: newEndTime });
+    },
+
     getAuctions: async (page = 1, status = '') => {
         const params = new URLSearchParams({ page, per_page: 20 });
         if (status) params.append('status', status);

@@ -103,7 +103,7 @@ def test_category(db_session):
     category = Category(
         name='Test Category',
         description='A test category',
-        icon='test-icon',
+        icon_url='https://example.com/test-icon.png',
         is_active=True
     )
     db_session.session.add(category)

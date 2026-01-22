@@ -4066,15 +4066,15 @@ def update_user(user_id):
     try:
         if not request.json:
             return jsonify({'error': 'No JSON data received'}), 400
-        
+
         data = request.json
         user = User.query.get_or_404(user_id)
-        
+
         if 'role' in data:
             if data['role'] not in ['user', 'admin']:
                 return jsonify({'error': 'Invalid role. Must be "user" or "admin"'}), 400
             user.role = data['role']
-        
+
         if 'email' in data:
             if not data['email'] or not data['email'].strip():
                 return jsonify({'error': 'Email cannot be empty'}), 400
@@ -4083,9 +4083,25 @@ def update_user(user_id):
             if existing and existing.id != user_id:
                 return jsonify({'error': 'Email already in use by another user'}), 400
             user.email = data['email'].strip()
-        
+
+        # Support is_active for suspend/activate functionality
+        if 'is_active' in data:
+            # Prevent deactivating admin users (safety check)
+            if user.role == 'admin' and data['is_active'] == False:
+                return jsonify({'error': 'Cannot deactivate admin users'}), 403
+            user.is_active = bool(data['is_active'])
+
         db.session.commit()
-        return jsonify({'message': 'User updated successfully'}), 200
+        return jsonify({
+            'message': 'User updated successfully',
+            'user': {
+                'id': user.id,
+                'username': user.username,
+                'email': user.email,
+                'role': user.role,
+                'is_active': user.is_active
+            }
+        }), 200
     except Exception as e:
         db.session.rollback()
         print(f"Error updating user: {str(e)}")
@@ -4312,20 +4328,54 @@ def update_auction_admin(auction_id):
     try:
         if not request.json:
             return jsonify({'error': 'No JSON data received'}), 400
-        
+
         data = request.json
         auction = Auction.query.get_or_404(auction_id)
-        
+
         if 'status' in data:
             if data['status'] not in ['active', 'ended', 'cancelled']:
                 return jsonify({'error': 'Invalid status. Must be "active", "ended", or "cancelled"'}), 400
             auction.status = data['status']
-        
+
         if 'featured' in data:
             auction.featured = bool(data['featured'])
-        
+
+        # Support end_time extension
+        if 'end_time' in data:
+            try:
+                new_end_time = datetime.fromisoformat(data['end_time'].replace('Z', '+00:00'))
+                # Ensure new end time is in the future
+                now = datetime.now(timezone.utc)
+                if new_end_time <= now:
+                    return jsonify({'error': 'New end time must be in the future'}), 400
+                auction.end_time = new_end_time
+                # If auction was ended/cancelled and time is extended, reactivate it
+                if auction.status in ['ended', 'cancelled']:
+                    auction.status = 'active'
+            except ValueError as e:
+                return jsonify({'error': f'Invalid end_time format: {str(e)}'}), 400
+
+        # Support title/item_name update
+        if 'item_name' in data:
+            if not data['item_name'] or not data['item_name'].strip():
+                return jsonify({'error': 'Item name cannot be empty'}), 400
+            auction.item_name = data['item_name'].strip()
+
+        # Support description update
+        if 'description' in data:
+            auction.description = data['description']
+
         db.session.commit()
-        return jsonify({'message': 'Auction updated successfully'}), 200
+        return jsonify({
+            'message': 'Auction updated successfully',
+            'auction': {
+                'id': auction.id,
+                'item_name': auction.item_name,
+                'status': auction.status,
+                'featured': auction.featured,
+                'end_time': auction.end_time.isoformat() if auction.end_time else None
+            }
+        }), 200
     except Exception as e:
         db.session.rollback()
         print(f"Error updating auction: {str(e)}")
@@ -4706,8 +4756,6 @@ def create_category_admin():
         category = Category(name=category_name, description=category_description)
         db.session.add(category)
         db.session.commit()
-        # Clear categories cache after modification
-        _get_cached_categories.cache_clear()
         return jsonify({'message': 'Category created', 'id': category.id}), 201
     except Exception as e:
         db.session.rollback()
@@ -4739,10 +4787,8 @@ def update_category_admin(category_id):
         
         if 'description' in data:
             category.description = data.get('description', '').strip()
-        
+
         db.session.commit()
-        # Clear categories cache after modification
-        _get_cached_categories.cache_clear()
         return jsonify({'message': 'Category updated successfully'}), 200
     except Exception as e:
         db.session.rollback()
@@ -4766,8 +4812,6 @@ def delete_category_admin(category_id):
         
         db.session.delete(category)
         db.session.commit()
-        # Clear categories cache after modification
-        _get_cached_categories.cache_clear()
         return jsonify({'message': 'Category deleted successfully'}), 200
     except Exception as e:
         db.session.rollback()

@@ -433,29 +433,74 @@ function toggleAdvancedFilters() {
 }
 
 // Bulk operations
-function bulkSuspendUsers() {
+async function bulkSuspendUsers() {
     if (selectedUsers.size === 0) return;
 
-    if (confirm(`Are you sure you want to suspend ${selectedUsers.size} selected users?`)) {
-        showToast(`Suspending ${selectedUsers.size} users...`, 'warning');
-        setTimeout(() => {
-            showToast('Users suspended successfully', 'success');
-            clearSelection();
-            loadUsers();
-        }, 2000);
+    // Filter out admin users
+    const usersToSuspend = Array.from(selectedUsers).filter(userId => {
+        const user = usersData.find(u => u.id === userId);
+        return user && user.role !== 'admin';
+    });
+
+    if (usersToSuspend.length === 0) {
+        showToast('Cannot suspend admin users', 'error');
+        return;
+    }
+
+    if (confirm(`Are you sure you want to suspend ${usersToSuspend.length} selected users?`)) {
+        showToast(`Suspending ${usersToSuspend.length} users...`, 'warning');
+
+        let successCount = 0;
+        let failCount = 0;
+
+        for (const userId of usersToSuspend) {
+            try {
+                await AdminAPI.suspendUser(userId);
+                successCount++;
+            } catch (error) {
+                console.error(`Failed to suspend user ${userId}:`, error);
+                failCount++;
+            }
+        }
+
+        if (failCount > 0) {
+            showToast(`Suspended ${successCount} users. Failed: ${failCount}`, 'warning');
+        } else {
+            showToast(`Successfully suspended ${successCount} users`, 'success');
+        }
+
+        clearSelection();
+        await loadUsers(currentPage);
     }
 }
 
-function bulkActivateUsers() {
+async function bulkActivateUsers() {
     if (selectedUsers.size === 0) return;
 
     if (confirm(`Are you sure you want to activate ${selectedUsers.size} selected users?`)) {
         showToast(`Activating ${selectedUsers.size} users...`, 'info');
-        setTimeout(() => {
-            showToast('Users activated successfully', 'success');
-            clearSelection();
-            loadUsers();
-        }, 2000);
+
+        let successCount = 0;
+        let failCount = 0;
+
+        for (const userId of selectedUsers) {
+            try {
+                await AdminAPI.activateUser(userId);
+                successCount++;
+            } catch (error) {
+                console.error(`Failed to activate user ${userId}:`, error);
+                failCount++;
+            }
+        }
+
+        if (failCount > 0) {
+            showToast(`Activated ${successCount} users. Failed: ${failCount}`, 'warning');
+        } else {
+            showToast(`Successfully activated ${successCount} users`, 'success');
+        }
+
+        clearSelection();
+        await loadUsers(currentPage);
     }
 }
 
@@ -581,25 +626,41 @@ async function handleUpdateUser(event) {
     }
 }
 
-function suspendUser(userId) {
+async function suspendUser(userId) {
     const user = usersData.find(u => u.id === userId);
     if (!user) return;
 
-    if (confirm(`Are you sure you want to suspend ${user.fullName}?\n\nNote: This will change their role. Use with caution.`)) {
-        showToast(`Suspending ${user.fullName}...`, 'warning');
-        // Note: Backend doesn't have a status field yet, so we show a message
-        showToast('User suspension requires backend status field implementation', 'info');
+    // Prevent suspending admin users
+    if (user.role === 'admin') {
+        showToast('Cannot suspend admin users', 'error');
+        return;
+    }
+
+    if (confirm(`Are you sure you want to suspend ${user.fullName}?\n\nThis will deactivate their account and prevent them from logging in.`)) {
+        try {
+            showToast(`Suspending ${user.fullName}...`, 'warning');
+            await AdminAPI.suspendUser(userId);
+            showToast(`${user.fullName} has been suspended`, 'success');
+            await loadUsers(currentPage);
+        } catch (error) {
+            showToast(error.message || 'Failed to suspend user', 'error');
+        }
     }
 }
 
-function activateUser(userId) {
+async function activateUser(userId) {
     const user = usersData.find(u => u.id === userId);
     if (!user) return;
 
     if (confirm(`Are you sure you want to activate ${user.fullName}?`)) {
-        showToast(`Activating ${user.fullName}...`, 'info');
-        // Note: Backend doesn't have a status field yet
-        showToast('User activation requires backend status field implementation', 'info');
+        try {
+            showToast(`Activating ${user.fullName}...`, 'info');
+            await AdminAPI.activateUser(userId);
+            showToast(`${user.fullName} has been activated`, 'success');
+            await loadUsers(currentPage);
+        } catch (error) {
+            showToast(error.message || 'Failed to activate user', 'error');
+        }
     }
 }
 

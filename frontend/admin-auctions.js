@@ -99,6 +99,11 @@ function editAuction(auctionId, status, featured) {
     document.getElementById('editAuctionId').value = auctionId;
     document.getElementById('editStatus').value = status;
     document.getElementById('editFeatured').checked = featured;
+    // Clear optional fields
+    const endTimeInput = document.getElementById('editEndTime');
+    const itemNameInput = document.getElementById('editItemName');
+    if (endTimeInput) endTimeInput.value = '';
+    if (itemNameInput) itemNameInput.value = '';
     const modal = document.getElementById('editAuctionModal');
     modal.classList.add('active');
     modal.style.display = 'flex';
@@ -106,13 +111,27 @@ function editAuction(auctionId, status, featured) {
 
 async function handleUpdateAuction(event) {
     event.preventDefault();
-    
+
     const auctionId = document.getElementById('editAuctionId').value;
     const data = {
         status: document.getElementById('editStatus').value,
         featured: document.getElementById('editFeatured').checked
     };
-    
+
+    // Add end_time if provided (for time extension)
+    const endTimeInput = document.getElementById('editEndTime');
+    if (endTimeInput && endTimeInput.value) {
+        // Convert local datetime to ISO format with timezone
+        const localDate = new Date(endTimeInput.value);
+        data.end_time = localDate.toISOString();
+    }
+
+    // Add item_name if provided
+    const itemNameInput = document.getElementById('editItemName');
+    if (itemNameInput && itemNameInput.value.trim()) {
+        data.item_name = itemNameInput.value.trim();
+    }
+
     try {
         await AdminAPI.updateAuction(auctionId, data);
         showToast('Auction updated successfully', 'success');
